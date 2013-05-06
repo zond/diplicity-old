@@ -1,0 +1,29 @@
+package web
+
+import (
+	"appengine"
+	"net/http"
+)
+
+func index(w http.ResponseWriter, r *http.Request) {
+	data := getRequestData(w, r)
+	renderHtml(w, r, htmlTemplates, "index.html", data)
+}
+
+func allJs(w http.ResponseWriter, r *http.Request) {
+	if !appengine.IsDevAppServer() {
+		w.Header().Set("Cache-Control", "public, max-age=864000")
+	}
+	data := getRequestData(w, r)
+	w.Header().Set("Content-Type", "application/javascript; charset=UTF-8")
+	renderText(w, r, jsTemplates, "app.js", data)
+}
+
+func allCss(w http.ResponseWriter, r *http.Request) {
+	if !appengine.IsDevAppServer() {
+		w.Header().Set("Cache-Control", "public, max-age=864000")
+	}
+	data := getRequestData(w, r)
+	w.Header().Set("Content-Type", "text/css; charset=UTF-8")
+	renderText(w, r, cssTemplates, "common.css", data)
+}
