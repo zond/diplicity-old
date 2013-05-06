@@ -1,0 +1,15 @@
+application: diplicity
+version: 1
+runtime: go
+api_version: go1
+
+handlers:
+- url: /favicon.ico
+  static_files: img/favicon.ico
+  mime_type: image/png
+  upload: favicon\.ico
+- url: /img/(.*)
+  static_files: img/\1
+  upload: img/(.*)
+- url: /.*
+  script: _go_app
