@@ -16,6 +16,7 @@ func allJs(w http.ResponseWriter, r *http.Request) {
 	}
 	data := getRequestData(w, r)
 	w.Header().Set("Content-Type", "application/javascript; charset=UTF-8")
+	renderText(w, r, jsTemplates, "jquery.mobile-1.3.1.min.js", data)
 	renderText(w, r, jsTemplates, "app.js", data)
 }
 
@@ -25,5 +26,6 @@ func allCss(w http.ResponseWriter, r *http.Request) {
 	}
 	data := getRequestData(w, r)
 	w.Header().Set("Content-Type", "text/css; charset=UTF-8")
+	renderText(w, r, cssTemplates, "jquery.mobile-1.3.1.min.css", data)
 	renderText(w, r, cssTemplates, "common.css", data)
 }
