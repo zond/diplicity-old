@@ -7,6 +7,20 @@
 		<script src="/js/{{.Version}}/all" type="text/javascript"></script>
 	</head>
 	<body>
-		<img class="map" src="/img/maps/standard.svg">
+		<div data-role="page">
+			<div data-role="content">
+				<img class="map panzoom-elements" src="/img/maps/standard.svg">
+			</div>
+			<div data-role="footer" data-id="foo1" data-position="fixed">
+				<div data-role="navbar">
+					<ul>
+						<li><a class="ui-btn-active ui-state-persist">Map</a></li>
+						<li><a>Chat</a></li>
+						<li><a>Orders</a></li>
+						<li><a>Results</a></li>
+					</ul>
+				</div>
+			</div>
+		</div>
 	</body>
 </html>
