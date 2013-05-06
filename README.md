@@ -1,0 +1,4 @@
+diplicity
+=========
+
+Next generation Droidippy
