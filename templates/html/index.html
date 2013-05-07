@@ -1,7 +1,7 @@
 <html>
 	<head>
 		<title>Diplicity</title>
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
 		<link rel="shortcut icon" href="/favicon.ico" />
 		<link href="/css/{{.Version}}/all" rel="stylesheet" media="screen">
 		<script src="/js/{{.Version}}/all" type="text/javascript"></script>
@@ -10,7 +10,9 @@
 		<div data-role="page">
 			<div data-role="content">
 				<div class="map-container">
-					<img class="map" src="/img/maps/standard.svg">
+					<img id="map" src="/img/maps/standard.svg">
+				</div>
+				<div id="log">
 				</div>
 			</div>
 			<div data-role="footer" data-id="foo1" data-position="fixed">
