@@ -1,61 +1,85 @@
 
+var MAX_ZOOM = 4;
+
 function log(s) {
-  $('#log').html($('#log').html() + s + '<br/>');
+  $('#log').html(s + '<br/>' + $('#log').html());
 }
 
-function panZoom(id) {
-  var el = document.getElementById(id);
-	var t1s = null;
-	var t2s = null;
-	var t1 = null;
-	var t2 = null;
-
-	el.addEventListener('touchstart',function(event) {
-	  _.each(event.changedTouches, function(ev) {
-		  if (t1s == null) {
-			  log('start 1');
-			  t1s = ev;
-			} else if (t2s == null && ev.identifier != t1s.identifier) {
-			  log('start 2');
-			  t2s = ev;
+function panZoom(selector) {
+  $(selector).each(function(ind, el) {
+	  var element = $(el);
+		var scale = 1;
+		var zoom = 1;
+		var deltaX = 0;
+		var deltaY = 0;
+		var dragX = 0;
+		var dragY = 0;
+		var transforming = false;
+		var container = element.parent().hammer({ 
+			prevent_default: true,
+		});
+		var state = function() {
+		  return JSON.stringify({
+			  scale: scale,
+				zoom: zoom,
+				deltaX: deltaX,
+				deltaY: deltaY,
+				dragX: dragX,
+				dragY: dragY,
+			}, null, 2);
+		};
+		var execute = function() {
+			element.css('-webkit-transform', 'translate3d(' + parseInt(deltaX + dragX) + 'px,' + parseInt(deltaY + dragY) + 'px,0px) scale3d(' + (scale * zoom) + ',' + (scale * zoom) + ',1)');
+		};
+		container.bind('drag', function(e) {
+		  if (!transforming) {
+				dragX = e.gesture.deltaX;
+				dragY = e.gesture.deltaY;
+				var bottom = deltaY + dragY + element.height() * scale * zoom + element.height() * (1 - scale * zoom) * 0.5;
+				if (bottom < $(window).height() / 2) {
+				  deltaY = $(window).height() / 2 + deltaY - bottom;
+				}
+				var top = deltaY + dragY + element.height() * (1 - scale * zoom) * 0.5;
+				if (top > $(window).height() / 2) {
+				  deltaY = $(window).height() / 2 + deltaY - top;
+				}
+				var left = deltaX + dragX + element.width() * (1 - scale * zoom) * 0.5;
+				if (left > $(window).width() / 2) {
+				  deltaX = $(window).width() / 2 + deltaX - left;
+				}
+				var right = deltaX + dragX + element.width() * scale * zoom + element.width() * (1 - scale * zoom) * 0.5;
+				if (right < $(window).width() / 2) {
+				  deltaX = $(window).width() / 2 + deltaX - right;
+				}
+				execute();
 			}
 		});
-	}, false);
-
-	el.addEventListener('touchmove',function(event) {
-	  _.each(event.changedTouches, function(ev) {
-		  if (t1s != null && ev.identitier == t1s.identifier) {
-			  log('move 1');
-			  t1 = ev;
-			} else if (t2s != null && ev.identifier == t2s.identifier) {
-			  log('move 2');
-			  t2 = ev;
+		container.bind('dragend', function(e) {
+		  if (!transforming) {
+				deltaX += dragX;
+				deltaY += dragY;
+				dragX = 0;
+				dragY = 0;
 			}
 		});
-		if (t1s != null && t2s != null && t1 != null && t2 != null) {
-			log('zoom!');
-		  var before = Math.sqrt(Math.pow(t1s.pageX - t2s.pageX, 2) + Math.pow(t1s.pageY - t2s.pageY, 2));
-			var after =  Math.sqrt(Math.pow(t1.pageX - t2.pageX, 2) + Math.pow(t1.pageY - t2.pageY, 2));
-			$('#map').width($('#map').width() * (after / before));
-		}
-	}, false);
-
-	el.addEventListener('touchend',function(event) {
-	  _.each(event.changedTouches, function(ev) {
-		  if (t1s != null && ev.identifier == t1s.identifier) {
-			  log('stop 1');
-			  t1s = null;
-				t1 = null;
-			} else if (t2s != null && ev.identifier == t2s.identifier) {
-			  log('stop 2');
-			  t2s = null;
-				t2 = null;
+		container.bind('transformstart', function(e) {
+		  transforming = true;
+		});
+		container.bind('transform', function(e){
+		  if ((e.gesture.scale > 1 && scale * e.gesture.scale < MAX_ZOOM) || (e.gesture.scale < 1 && scale * e.gesture.scale > (1 / MAX_ZOOM))) {
+				zoom = e.gesture.scale;
+				execute();
 			}
 		});
-	}, false);
+		container.bind('transformend', function(e) {
+		  scale = scale * zoom;
+			zoom = 1;
+			transforming = false;
+		});
+	});
 }
 
 $(document).ready(function() {
-  panZoom('map');
+  panZoom('.map');
 });
 

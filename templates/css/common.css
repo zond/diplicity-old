@@ -1,6 +1,20 @@
 .map-container {
 	width: 100%;
 	height: 100%;
-	-webkit-transform: translate3d(0, 0, 0);
-	overflow: scroll;
+	position: absolute;
+	z-index: 100;
+}
+
+#log {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	z-index: 0;
+}
+
+.map {
+	-webkit-transform: translate3d(0,0,0) scale3d(1,1,1);
+	position: absolute;
+	left: 0;
+	top: 0;
 }
