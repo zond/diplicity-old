@@ -7,7 +7,7 @@ import (
 
 func index(w http.ResponseWriter, r *http.Request) {
 	data := getRequestData(w, r)
-	renderHtml(w, r, htmlTemplates, "index.html", data)
+	renderText(w, r, htmlTemplates, "index.html", data)
 }
 
 func allJs(w http.ResponseWriter, r *http.Request) {

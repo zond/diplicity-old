@@ -3,14 +3,15 @@ package web
 import (
 	"appengine"
 	"fmt"
-	htmlTemplate "html/template"
+	"io/ioutil"
 	"net/http"
-	textTemplate "text/template"
+	"os"
+	"text/template"
 )
 
-var htmlTemplates = htmlTemplate.Must(htmlTemplate.New("htmlTemplates").ParseGlob("templates/html/*.html"))
-var jsTemplates = textTemplate.Must(textTemplate.New("jsTemplates").ParseGlob("templates/js/*.js"))
-var cssTemplates = textTemplate.Must(textTemplate.New("cssTemplates").ParseGlob("templates/css/*.css"))
+var htmlTemplates = template.Must(template.New("htmlTemplates").ParseGlob("templates/html/*.html"))
+var jsTemplates = template.Must(template.New("jsTemplates").ParseGlob("templates/js/*.js"))
+var cssTemplates = template.Must(template.New("cssTemplates").ParseGlob("templates/css/*.css"))
 
 type requestData struct {
 	response http.ResponseWriter
@@ -30,14 +31,19 @@ func (self requestData) Version() string {
 	return appengine.VersionID(self.context)
 }
 
-func renderHtml(w http.ResponseWriter, r *http.Request, templates *htmlTemplate.Template, template string, data interface{}) {
-	w.Header().Set("Content-Type", "text/html; charset=UTF-8")
-	if err := templates.ExecuteTemplate(w, template, data); err != nil {
-		panic(fmt.Errorf("While rendering HTML: %v", err))
+func (self requestData) Inline(p string) string {
+	in, err := os.Open(p)
+	if err != nil {
+		panic(err)
 	}
+	b, err := ioutil.ReadAll(in)
+	if err != nil {
+		panic(err)
+	}
+	return string(b)
 }
 
-func renderText(w http.ResponseWriter, r *http.Request, templates *textTemplate.Template, template string, data interface{}) {
+func renderText(w http.ResponseWriter, r *http.Request, templates *template.Template, template string, data interface{}) {
 	if err := templates.ExecuteTemplate(w, template, data); err != nil {
 		panic(fmt.Errorf("While rendering text: %v", err))
 	}
