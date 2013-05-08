@@ -7,7 +7,14 @@ import (
 
 func index(w http.ResponseWriter, r *http.Request) {
 	data := getRequestData(w, r)
+	w.Header().Set("Content-Type", "text/html; charset=UTF-8")
 	renderText(w, r, htmlTemplates, "index.html", data)
+}
+
+func appCache(w http.ResponseWriter, r *http.Request) {
+	data := getRequestData(w, r)
+	w.Header().Set("Content-Type", "AddType text/cache-manifest .appcache; charset=UTF-8")
+	renderText(w, r, textTemplates, "diplicity.appcache", data)
 }
 
 func allJs(w http.ResponseWriter, r *http.Request) {

@@ -1,0 +1,8 @@
+CACHE MANIFEST
+/
+/css/{{.Version}}/all
+/js/{{.Version}}/all
+/img/maps/standard.svg
+/img/ajax-loader.gif
+/img/DroidSerif-Regular.ttf
+

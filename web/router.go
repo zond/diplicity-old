@@ -9,6 +9,7 @@ func init() {
 	router := mux.NewRouter()
 	router.HandleFunc("/js/{ver}/all", allJs)
 	router.HandleFunc("/css/{ver}/all", allCss)
+	router.HandleFunc("/diplicity.appcache", appCache)
 	router.HandleFunc("/", index)
 	http.Handle("/", router)
 }
