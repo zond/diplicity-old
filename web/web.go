@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"os"
 	"text/template"
 	"time"
 )
@@ -30,9 +29,14 @@ func getRequestData(w http.ResponseWriter, r *http.Request) requestData {
 	}
 }
 
+var debugVersion int64
+
 func (self requestData) Version() string {
-	if os.Getenv("NOCACHE") == "t" && appengine.IsDevAppServer() {
-		return fmt.Sprintf("%v.%v", appengine.VersionID(self.context), time.Now().UnixNano())
+	if appengine.IsDevAppServer() {
+		if debugVersion == 0 {
+			debugVersion = time.Now().UnixNano()
+		}
+		return fmt.Sprintf("%v.%v", appengine.VersionID(self.context), debugVersion)
 	}
 	return appengine.VersionID(self.context)
 }

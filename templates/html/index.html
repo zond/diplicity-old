@@ -7,22 +7,47 @@
 		<script src="/js/{{.Version}}/all" type="text/javascript"></script>
 	</head>
 	<body>
-		<div data-role="page">
+		<div data-role="page" id="home">
+			<div data-role="header" data-position="fixed">
+				<h1>Diplicity</h1>
+				<a href="#" class="ui-btn-right">Menu</a>
+			</div>
+			<div data-role="content">
+				<ul data-role="listview">
+					<li><a href="#game">England, Spring 1901, Movement</a></li>
+				</ul>
+			</div>
+			<div data-role="footer" data-position="fixed">
+				<div data-role="navbar">
+					<ul>
+						<li><a class="ui-btn-active ui-state-persist">Games</a></li>
+						<li><a href="#">Join</a></li>
+						<li><a href="#">Create</a></li>
+						<li><a href="#">History</a></li>
+					</ul>
+				</div>
+			</div>
+		</div>
+		<div data-role="page" id="game">
+			<div data-role="header" data-position="fixed">
+				<a href="#home">Home</a>
+				<h1>Diplicity</h1>
+				<a href="#">Menu</a>
+			</div>
 			<div data-role="content">
 				<div class="map-container">
 				  <div class="map">
 					{{.Inline "img/maps/standard.svg"}}
 					</div>
 				</div>
-				<pre id="log"></pre>
 			</div>
-			<div data-role="footer" data-id="foo1" data-position="fixed">
+			<div data-role="footer" data-position="fixed">
 				<div data-role="navbar">
 					<ul>
 						<li><a class="ui-btn-active ui-state-persist">Map</a></li>
-						<li><a>Chat</a></li>
-						<li><a>Orders</a></li>
-						<li><a>Results</a></li>
+						<li><a href="#">Chat</a></li>
+						<li><a href="#">Orders</a></li>
+						<li><a href="#">Results</a></li>
 					</ul>
 				</div>
 			</div>
