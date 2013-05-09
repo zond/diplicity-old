@@ -1,8 +1,6 @@
 window.Games = Backbone.Collection.extend({
 
-  url: function() {
-		return '/games';
-	},
+  url: '/games',
 
 	model: Game,
 

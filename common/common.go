@@ -1,6 +1,8 @@
 package common
 
 import (
+	"encoding/json"
+	"io"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -31,6 +33,20 @@ func MustParseInt(s string) (result int) {
 		panic(err)
 	}
 	return
+}
+
+func SetContentType(w http.ResponseWriter, typ string) {
+	w.Header().Set("Content-Type", typ)
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
+}
+
+func MustEncodeJSON(w io.Writer, i interface{}) {
+	if err := json.NewEncoder(w).Encode(i); err != nil {
+		panic(err)
+	}
 }
 
 func MostAccepted(r *http.Request, def, name string) string {
