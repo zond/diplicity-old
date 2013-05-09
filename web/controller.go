@@ -27,6 +27,7 @@ func allJs(w http.ResponseWriter, r *http.Request) {
 	renderText(w, r, jsTemplates, "jquery.mobile-1.3.1.min.js", data)
 	renderText(w, r, jsTemplates, "jquery.hammer.min.js", data)
 	renderText(w, r, jsTemplates, "underscore-min.js", data)
+	renderText(w, r, jsTemplates, "util.js", data)
 	renderText(w, r, jsTemplates, "app.js", data)
 }
 

@@ -8,6 +8,7 @@ import (
 	"os"
 	"text/template"
 	"time"
+	"translation"
 )
 
 var htmlTemplates = template.Must(template.New("htmlTemplates").ParseGlob("templates/html/*.html"))
@@ -16,27 +17,41 @@ var jsTemplates = template.Must(template.New("jsTemplates").ParseGlob("templates
 var cssTemplates = template.Must(template.New("cssTemplates").ParseGlob("templates/css/*.css"))
 
 type requestData struct {
-	response http.ResponseWriter
-	request  *http.Request
-	context  appengine.Context
+	response     http.ResponseWriter
+	request      *http.Request
+	context      appengine.Context
+	translations map[string]string
 }
 
-func getRequestData(w http.ResponseWriter, r *http.Request) requestData {
-	return requestData{
-		response: w,
-		request:  r,
-		context:  appengine.NewContext(r),
+func getRequestData(w http.ResponseWriter, r *http.Request) (result requestData) {
+	result = requestData{
+		response:     w,
+		request:      r,
+		context:      appengine.NewContext(r),
+		translations: translation.GetTranslations(r),
 	}
+	return
 }
 
-var debugVersion int64
+func (self requestData) I(phrase string, args ...string) string {
+	pattern, ok := self.translations[phrase]
+	if !ok {
+		panic(fmt.Errorf("Found no translation for %v", phrase))
+	}
+	if len(args) > 0 {
+		return fmt.Sprintf(pattern, args)
+	}
+	return pattern
+}
+
+var debugVersion time.Time
 
 func (self requestData) Version() string {
 	if appengine.IsDevAppServer() {
-		if debugVersion == 0 {
-			debugVersion = time.Now().UnixNano()
+		if debugVersion.Before(time.Now().Add(-time.Second)) {
+			debugVersion = time.Now()
 		}
-		return fmt.Sprintf("%v.%v", appengine.VersionID(self.context), debugVersion)
+		return fmt.Sprintf("%v.%v", appengine.VersionID(self.context), debugVersion.UnixNano())
 	}
 	return appengine.VersionID(self.context)
 }

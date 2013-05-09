@@ -9,30 +9,30 @@
 	<body>
 		<div data-role="page" id="home">
 			<div data-role="header" data-position="fixed">
-				<h1>Diplicity</h1>
-				<a href="#" data-icon="gear" class="ui-btn-right">Menu</a>
+				<h1>{{.I "Diplicity" }}</h1>
+				<a href="#" data-icon="gear" class="ui-btn-right">{{.I "Menu" }}</a>
 			</div>
 			<div data-role="content">
 				<ul data-role="listview">
-					<li><a href="#game">England, Spring 1901, Movement</a></li>
+					<li><a href="#game">{{.I "England" }}, {{.I "Spring" }} 1901, {{.I "Movement" }}</a></li>
 				</ul>
 			</div>
 			<div data-role="footer" data-position="fixed">
 				<div data-role="navbar">
 					<ul>
-						<li><a class="ui-btn-active ui-state-persist">Games</a></li>
-						<li><a href="#">Join</a></li>
-						<li><a href="#">Create</a></li>
-						<li><a href="#">History</a></li>
+						<li><a class="ui-btn-active ui-state-persist">{{.I "Games" }}</a></li>
+						<li><a href="#">{{.I "Join" }}</a></li>
+						<li><a href="#">{{.I "Create" }}</a></li>
+						<li><a href="#">{{.I "History" }}</a></li>
 					</ul>
 				</div>
 			</div>
 		</div>
 		<div data-role="page" id="game">
 			<div data-role="header" data-position="fixed">
-				<a data-icon="home" href="#home">Home</a>
-				<h1>Diplicity</h1>
-				<a data-icon="gear" href="#">Menu</a>
+				<a data-icon="home" href="#home">{{.I "Home" }}</a>
+				<h1>{{.I "Diplicity" }}</h1>
+				<a data-icon="gear" href="#">{{.I "Menu" }}</a>
 			</div>
 			<div data-role="content">
 				<div class="map-container">
@@ -44,10 +44,10 @@
 			<div data-role="footer" data-position="fixed">
 				<div data-role="navbar">
 					<ul>
-						<li><a class="ui-btn-active ui-state-persist">Map</a></li>
-						<li><a href="#">Chat</a></li>
-						<li><a href="#">Orders</a></li>
-						<li><a href="#">Results</a></li>
+						<li><a class="ui-btn-active ui-state-persist">{{.I "Map" }}</a></li>
+						<li><a href="#">{{.I "Chat" }}</a></li>
+						<li><a href="#">{{.I "Orders" }}</a></li>
+						<li><a href="#">{{.I "Results" }}</a></li>
 					</ul>
 				</div>
 			</div>
