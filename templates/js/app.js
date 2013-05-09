@@ -31,6 +31,25 @@ function panZoom(selector) {
 		var execute = function() {
 			element.css('-webkit-transform', 'translate3d(' + parseInt(deltaX + dragX) + 'px,' + parseInt(deltaY + dragY) + 'px,0px) scale3d(' + (scale * zoom) + ',' + (scale * zoom) + ',1)');
 		};
+		container.bind('mousewheel', function(e) {
+		  e.preventDefault();
+			var wantedZoom = 1;
+			if (e.originalEvent.wheelDelta > 0) {
+			  wantedZoom = 1 + e.originalEvent.wheelDelta / $(window).height();
+				if (wantedZoom > 2) {
+				  wantedZoom = 2;
+				}
+			} else {
+			  wantedZoom = 1 - e.originalEvent.wheelDelta / -$(window).height();
+				if (wantedZoom < 0.5) {
+				  wantedZoom = 0.5;
+				}
+			}
+			if ((wantedZoom > 1 && scale * wantedZoom < MAX_ZOOM) || (wantedZoom < 1 && scale * wantedZoom > (1 / MAX_ZOOM))) {
+				scale = scale * wantedZoom;
+				execute();
+			}
+		});
 		container.bind('drag', function(e) {
 		  if (!transforming) {
 				dragX = e.gesture.deltaX;
