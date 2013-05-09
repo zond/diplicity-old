@@ -27,8 +27,19 @@ func allJs(w http.ResponseWriter, r *http.Request) {
 	renderText(w, r, jsTemplates, "jquery.mobile-1.3.1.min.js", data)
 	renderText(w, r, jsTemplates, "jquery.hammer.min.js", data)
 	renderText(w, r, jsTemplates, "underscore-min.js", data)
+	renderText(w, r, jsTemplates, "backbone-min.js", data)
 	renderText(w, r, jsTemplates, "util.js", data)
 	renderText(w, r, jsTemplates, "app.js", data)
+	for _, templ := range jsModelTemplates.Templates() {
+		if err := templ.Execute(w, data); err != nil {
+			panic(err)
+		}
+	}
+	for _, templ := range jsCollectionTemplates.Templates() {
+		if err := templ.Execute(w, data); err != nil {
+			panic(err)
+		}
+	}
 }
 
 func allCss(w http.ResponseWriter, r *http.Request) {
