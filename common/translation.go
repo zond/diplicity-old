@@ -1,7 +1,6 @@
-package translation
+package common
 
 import (
-	"common"
 	"net/http"
 	"strings"
 )
@@ -9,6 +8,7 @@ import (
 var en = map[string]string{
 	"Diplicity": "Diplicity",
 	"Menu":      "Menu",
+	"Logout":    "Logout",
 	"England":   "England",
 	"Spring":    "Spring",
 	"Movement":  "Movement",
@@ -27,14 +27,14 @@ var languages = map[string]map[string]string{
 	"en": en,
 }
 
-func GetLanguage(r *http.Request) string {
-	bestLanguage := common.MostAccepted(r, "default", "Accept-Language")
+func getLanguage(r *http.Request) string {
+	bestLanguage := MostAccepted(r, "default", "Accept-Language")
 	parts := strings.Split(bestLanguage, "-")
 	return parts[0]
 }
 
-func GetTranslations(r *http.Request) (result map[string]string) {
-	language := GetLanguage(r)
+func getTranslations(r *http.Request) (result map[string]string) {
+	language := getLanguage(r)
 	result, ok := languages[language]
 	if !ok {
 		result = en

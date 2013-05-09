@@ -10,7 +10,7 @@
 		<div data-role="page" id="home">
 			<div data-role="header" data-position="fixed">
 				<h1>{{.I "Diplicity" }}</h1>
-				<a href="#" data-icon="gear" class="ui-btn-right">{{.I "Menu" }}</a>
+				<a href="#menu" data-icon="gear" class="ui-btn-right">{{.I "Menu" }}</a>
 			</div>
 			<div data-role="content">
 				<ul data-role="listview">
@@ -28,11 +28,20 @@
 				</div>
 			</div>
 		</div>
+		<div data-role="page" id="menu">
+			<div data-role="header" data-position="fixed">
+				<a data-icon="home" href="#home">{{.I "Home" }}</a>
+				<h1>{{.I "Diplicity" }}</h1>
+			</div>
+			<div data-role="content">
+				<a href="{{.LogoutURL}}" data-role="button" data-mini="true">{{.I "Logout" }}</a>
+			</div>
+		</div>
 		<div data-role="page" id="game">
 			<div data-role="header" data-position="fixed">
 				<a data-icon="home" href="#home">{{.I "Home" }}</a>
 				<h1>{{.I "Diplicity" }}</h1>
-				<a data-icon="gear" href="#">{{.I "Menu" }}</a>
+				<a data-icon="gear" href="#menu">{{.I "Menu" }}</a>
 			</div>
 			<div data-role="content">
 				<div class="map-container">

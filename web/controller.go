@@ -2,17 +2,18 @@ package web
 
 import (
 	"appengine"
+	"common"
 	"net/http"
 )
 
 func index(w http.ResponseWriter, r *http.Request) {
-	data := getRequestData(w, r)
+	data := common.GetRequestData(w, r)
 	w.Header().Set("Content-Type", "text/html; charset=UTF-8")
 	renderText(w, r, htmlTemplates, "index.html", data)
 }
 
 func appCache(w http.ResponseWriter, r *http.Request) {
-	data := getRequestData(w, r)
+	data := common.GetRequestData(w, r)
 	w.Header().Set("Content-Type", "AddType text/cache-manifest .appcache; charset=UTF-8")
 	renderText(w, r, textTemplates, "diplicity.appcache", data)
 }
@@ -21,7 +22,7 @@ func allJs(w http.ResponseWriter, r *http.Request) {
 	if !appengine.IsDevAppServer() {
 		w.Header().Set("Cache-Control", "public, max-age=864000")
 	}
-	data := getRequestData(w, r)
+	data := common.GetRequestData(w, r)
 	w.Header().Set("Content-Type", "application/javascript; charset=UTF-8")
 	renderText(w, r, jsTemplates, "jquery-2.0.0.min.js", data)
 	renderText(w, r, jsTemplates, "jquery.mobile-1.3.1.min.js", data)
@@ -46,7 +47,7 @@ func allCss(w http.ResponseWriter, r *http.Request) {
 	if !appengine.IsDevAppServer() {
 		w.Header().Set("Cache-Control", "public, max-age=864000")
 	}
-	data := getRequestData(w, r)
+	data := common.GetRequestData(w, r)
 	w.Header().Set("Content-Type", "text/css; charset=UTF-8")
 	renderText(w, r, cssTemplates, "jquery.mobile-1.3.1.min.css", data)
 	renderText(w, r, cssTemplates, "common.css", data)

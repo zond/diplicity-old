@@ -22,6 +22,8 @@ func init() {
 	router.HandleFunc("/diplicity.appcache", appCache)
 	router.HandleFunc("/", index)
 
+	router.Path("/user").MatcherFunc(wantsJSON).Methods("GET").HandlerFunc(common.GetUser)
+
 	gamesRouter := router.PathPrefix("/games").MatcherFunc(wantsJSON).Subrouter()
 	gamesRouter.Methods("GET").HandlerFunc(games.GetGames)
 
