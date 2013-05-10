@@ -12,5 +12,5 @@ $(function(){
   
   userPage.render();
   });
-});
+})
   
