@@ -4,7 +4,7 @@ $(function(){
   el:'.page',
   render:function(){
     alert("rendered");
-    this.$el.html('hi there, the rendering worked');
+    this.$el.html("hi there, the rendering worked");
   }
   });
   
