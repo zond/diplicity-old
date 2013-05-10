@@ -1,10 +1,10 @@
 $(function(){
   alert("blah");
   var UserPage=Backbone.View.extend({
-  el:'.page',
+  el:$("body"),
   render:function(){
     alert("rendered");
-    this.$el.html("hi there, the rendering worked");
+    this.el.html('hi there, the rendering worked');
   }
   });
   
