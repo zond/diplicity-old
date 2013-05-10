@@ -3,6 +3,7 @@ $(function(){
   var UserPage=Backbone.View.extend({
   el:'.page',
   render:function(){
+    alert("rendered");
     this.$el.html('hi there, the rendering worked');
   }
   });
