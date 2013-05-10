@@ -1,4 +1,5 @@
 $(function(){
+  alert("blah");
   var UserPage=Backbone.View.extend({
   el:'.page',
   render:function(){
