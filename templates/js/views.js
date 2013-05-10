@@ -4,6 +4,7 @@ $(function(){
     el2:$("#map"),
     render:function(){
       this.el1.html('hi there, the rendering worked');
+      alert("hi");
       $(document).ready ( function () {
         this.el2.svg({loadURL: 'https://github.com/cmconnor/diplicity/blob/master/img/maps/standard.svg'});
       });
