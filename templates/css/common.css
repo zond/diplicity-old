@@ -11,10 +11,10 @@
 	top: 0;
 }
 
-.login-button {
+.when-logged-in {
 	display: none;
 }
 
-.logout-button {
+.when-logged-out {
 	display: none;
 }

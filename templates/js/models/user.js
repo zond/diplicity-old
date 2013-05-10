@@ -4,11 +4,11 @@ window.User = Backbone.Model.extend({
 		var that = this;
 		this.on('sync', function() {
 			if (that.get('email') == null || that.get('email') == '') {
-				$('.login-button').css('display', 'block');
-				$('.logout-button').css('display', 'none');
+				$('.when-logged-out').css('display', 'block');
+				$('.when-logged-in').css('display', 'none');
 			} else {
-				$('.login-button').css('display', 'none');
-				$('.logout-button').css('display', 'block');
+				$('.when-logged-out').css('display', 'none');
+				$('.when-logged-in').css('display', 'block');
 			}
 		});
 	},

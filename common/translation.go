@@ -7,6 +7,9 @@ import (
 
 var en = map[string]string{
 	"Log in to see your games": "Log in to see your games",
+	"Log in to create a game":  "Log in to create a game",
+	"Private":                  "Private",
+	"Public":                   "Public",
 	"Diplicity":                "Diplicity",
 	"Menu":                     "Menu",
 	"Logout":                   "Logout",
@@ -15,6 +18,8 @@ var en = map[string]string{
 	"seasons":                  "{'Spring': 'Spring', 'Fall': 'Fall'}",
 	"phase_types":              "{'Movement': 'Movement', 'Retreat': 'Retreat', 'Adjustment': 'Adjustment'}",
 	"England":                  "England",
+	"Variant":                  "Variant",
+	"Standard":                 "Standard",
 	"Spring":                   "Spring",
 	"Movement":                 "Movement",
 	"Games":                    "Games",

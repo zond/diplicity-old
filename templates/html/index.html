@@ -7,16 +7,15 @@
 		<script src="/js/{{.Version}}/all" type="text/javascript"></script>
 	</head>
 	<body>
+		
 		<div data-role="page" id="home">
 			<div data-role="header" data-position="fixed">
 				<h1>{{.I "Diplicity" }}</h1>
 				<a href="#menu" data-icon="gear" class="ui-btn-right">{{.I "Menu" }}</a>
 			</div>
 			<div data-role="content">
-				<ul data-role="listview" class="login-button">
-					<li><a href="/login">{{.I "Log in to see your games" }}</a></li>
-				</ul>
-				<ul data-role="listview" class="games">
+				<a href="/login" class="when-logged-out" data-role="button" data-mini="true">{{.I "Log in to see your games" }}</a>
+				<ul class="when-logged-in" data-role="listview" class="games">
 				</ul>
 			</div>
 			<div data-role="footer" data-position="fixed">
@@ -24,22 +23,54 @@
 					<ul>
 						<li><a class="ui-btn-active ui-state-persist">{{.I "Games" }}</a></li>
 						<li><a href="#">{{.I "Join" }}</a></li>
-						<li><a href="#">{{.I "Create" }}</a></li>
+						<li><a href="#create-game">{{.I "Create" }}</a></li>
 						<li><a href="#">{{.I "History" }}</a></li>
 					</ul>
 				</div>
 			</div>
 		</div>
+
+    <div data-role="page" id="create-game">
+			<div data-role="header" data-position="fixed">
+				<a data-icon="home" href="#home">{{.I "Home" }}</a>
+				<h1>{{.I "Diplicity" }}</h1>
+				<a data-icon="gear" href="#menu">{{.I "Menu" }}</a>
+			</div>
+			<div data-role="content">
+				<a href="/login" class="when-logged-out" data-role="button" data-mini="true">{{.I "Log in to create a game" }}</a>
+				<form class="when-logged-in">
+					<select data-mini="true" name="create-game-variant" id="create-game-variant">
+						{{range .Variants}}<option value="{{.Id}}">{{.Translation}}</option>{{end}}
+					</select>
+					<select name="create-game-private" id="create-game-variant" data-role="slider">
+						<option value="true">{{.I "Private" }}</option>
+						<option value="false">{{.I "Public" }}</option>
+					</select>
+				</form>
+			</div>
+			<div data-role="footer" data-position="fixed">
+				<div data-role="navbar">
+					<ul>
+						<li><a href="#home">{{.I "Games" }}</a></li>
+						<li><a href="#">{{.I "Join" }}</a></li>
+						<li><a class="ui-btn-active ui-state-persist" href="#create-game">{{.I "Create" }}</a></li>
+						<li><a href="#">{{.I "History" }}</a></li>
+					</ul>
+				</div>
+			</div>
+		</div>
+
 		<div data-role="page" id="menu">
 			<div data-role="header" data-position="fixed">
 				<a data-icon="home" href="#home">{{.I "Home" }}</a>
 				<h1>{{.I "Diplicity" }}</h1>
 			</div>
 			<div data-role="content">
-				<a href="/login" class="login-button" data-role="button" data-mini="true">{{.I "Login" }}</a>
-				<a href="/logout" class="logout-button" data-role="button" data-mini="true">{{.I "Logout" }}</a>
+				<a href="/login" class="when-logged-out" data-role="button" data-mini="true">{{.I "Login" }}</a>
+				<a href="/logout" class="when-logged-in" data-role="button" data-mini="true">{{.I "Logout" }}</a>
 			</div>
 		</div>
+		
 		<div data-role="page" id="game">
 			<div data-role="header" data-position="fixed">
 				<a data-icon="home" href="#home">{{.I "Home" }}</a>
