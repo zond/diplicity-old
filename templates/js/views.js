@@ -1,8 +1,19 @@
 $(function(){
   var UserPage=Backbone.View.extend({
-  el:$(".page"),
+  el1:$(".page"),
+  el2:$("#E"),
   render:function(){
-    this.el.html('hi there, the rendering worked');
+    this.el1.html('hi there, the rendering worked');
+	 var D=document.getElementById(el2);
+	 var SVGDoc=D.getSVGDocument();
+	 var SVGRoot=SVGDoc.documentElement;
+	 var who=SVGRoot.firstChild.nextSibling;
+	 var whoName="<"+who.nodeName;
+	 var whoHow=who.attributes.item(0);
+	 var whoNow=whoHow.nodeName;
+	 var whoWhat=whoHow.nodeValue+">";
+	 var alert(whoName+" "+whoNow+"="+whoWhat);
+
   }
   });
   
@@ -10,15 +21,7 @@ $(function(){
   
   userPage.render();
   
-  alert("loading svg");
- D=document.getElementById("E");
- SVGDoc=D.getSVGDocument();
-  SVGRoot=SVGDoc.documentElement;
- who=SVGRoot.firstChild.nextSibling;
- whoName="<"+who.nodeName;
-  whoHow=who.attributes.item(0);
-  whoNow=whoHow.nodeName;
- whoWhat=whoHow.nodeValue+">";
-  alert(whoName+" "+whoNow+"="+whoWhat);
+
+
 });
   
