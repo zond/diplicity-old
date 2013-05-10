@@ -1,0 +1,52 @@
+
+<svg 
+   xmlns='http://www.w3.org/2000/svg' 
+   xmlns:xlink='http://www.w3.org/1999/xlink'
+   onload='startup(evt)'>
+
+<script><![CDATA[
+  var SVGDocument = null;
+  var SVGRoot = null;
+  var count=0;
+  CO=new Array("red","magenta","blue",
+    "cyan","green","yellow","orange")
+ var svgns = 'http://www.w3.org/2000/svg';
+ var xlinkns = 'http://www.w3.org/1999/xlink';
+
+function startup(evt){
+  O=evt.target
+  SVGDoc = O.ownerDocument;
+  SVGRoot = SVGDoc.documentElement;
+  O.setAttribute("onclick","putit(evt)")
+  top.Sput=build
+}
+function putit(evt){
+
+   x=evt.clientX; 
+ 	y=evt.clientY; 
+	build(x,y)
+}
+function build(x,y){
+	N = SVGDoc.createElementNS(svgns,"ellipse");
+	N.setAttributeNS(svgns,"id", "P"+count); 
+	N.setAttribute("onmousedown", "ha("+count+")");
+	N.setAttribute("cx", x); 
+	N.setAttribute("cy", y); 
+	N.setAttribute("rx", 30); 
+	N.setAttribute("ry", 20); 
+	N.setAttribute("opacity",.5);
+	N.setAttribute("fill", CO[count++%CO.length]);
+	SVGRoot.appendChild(N);
+}
+function ha(c){
+  alert("My id is 'P"+c+"'")
+}
+  ]]></script>
+<rect id="P" x="0" y="0" width="100%" height="100%" fill="#dff"/>
+<text id="T" x="40" y="25" font-family="impact" font-size="16;">
+Click anywhere
+</text>
+</svg>
+
+
+
