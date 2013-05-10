@@ -37,6 +37,10 @@ func MustParseFloat64(s string) (result float64) {
 	return
 }
 
+func UserRoot(c appengine.Context, email string) *datastore.Key {
+	return datastore.NewKey(c, "Root", email, 0, nil)
+}
+
 func MustParseInt64(s string) (result int64) {
 	var err error
 	if result, err = strconv.ParseInt(s, 10, 64); err != nil {

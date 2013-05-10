@@ -7,16 +7,12 @@ $(window).load(function() {
 	});
   panZoom('.map');
 	var user = new User();
-	var userChanged = function() {
-		if (user.get('email') == null || user.get('email') == '') {
-			$('.login-button').css('display', 'block');
-			$('.logout-button').css('display', 'none');
-		} else {
-			$('.login-button').css('display', 'none');
-			$('.logout-button').css('display', 'block');
+	var gameMembers = new GameMembers();
+	user.bind('change', function() {
+	  if (user.get('email') != null && user.get('email') != '') {
+			gameMembers.fetch();
 		}
-	};
-	user.on('sync', userChanged);
+	});
 	user.fetch();
 });
 

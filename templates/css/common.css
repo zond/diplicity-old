@@ -10,3 +10,11 @@
 	left: 0;
 	top: 0;
 }
+
+.login-button {
+	display: none;
+}
+
+.logout-button {
+	display: none;
+}
