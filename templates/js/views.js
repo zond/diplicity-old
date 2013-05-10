@@ -10,7 +10,7 @@ $(function(){
   
   userPage.render();
   
-  
+  alert("loading svg");
  D=document.getElementById("E");
  SVGDoc=D.getSVGDocument();
   SVGRoot=SVGDoc.documentElement;
