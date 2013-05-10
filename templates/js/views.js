@@ -1,4 +1,5 @@
-var UserPage=Backbone.View.extend({
+$(function(){
+  var UserPage=Backbone.View.extend({
   el:'.page',
   render:function(){
     this.$el.html('hi there, the rendering worked');
@@ -8,5 +9,5 @@ var UserPage=Backbone.View.extend({
   var userPage=new UserPage();
   
   userPage.render();
-  
+});
   
