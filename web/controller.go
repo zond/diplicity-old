@@ -6,6 +6,17 @@ import (
 	"net/http"
 )
 
+func preflight(w http.ResponseWriter, r *http.Request) {
+	common.SetContentType(w, "text/plain; charset=UTF-8")
+	w.WriteHeader(204)
+}
+
+func reload(w http.ResponseWriter, r *http.Request) {
+	data := common.GetRequestData(w, r)
+	w.Header().Set("Content-Type", "text/html; charset=UTF-8")
+	renderText(w, r, htmlTemplates, "reload.html", data)
+}
+
 func index(w http.ResponseWriter, r *http.Request) {
 	data := common.GetRequestData(w, r)
 	w.Header().Set("Content-Type", "text/html; charset=UTF-8")

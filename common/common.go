@@ -288,13 +288,45 @@ func HostURL(r *http.Request) string {
 	if r.TLS != nil {
 		scheme = "https"
 	}
-	return fmt.Sprintf("%v://%v", scheme, r.Host)
+	return fmt.Sprintf("%v://%v/reload", scheme, r.Host)
+}
+
+func Login(w http.ResponseWriter, r *http.Request) {
+	data := GetRequestData(w, r)
+	loginUrl, err := user.LoginURL(data.Context, HostURL(data.Request))
+	if err != nil {
+		panic(err)
+	}
+	data.Response.Header().Set("Location", loginUrl)
+	data.Response.WriteHeader(302)
+}
+
+func Logout(w http.ResponseWriter, r *http.Request) {
+	data := GetRequestData(w, r)
+	logoutUrl, err := user.LogoutURL(data.Context, HostURL(data.Request))
+	if err != nil {
+		panic(err)
+	}
+	data.Response.Header().Set("Location", logoutUrl)
+	data.Response.WriteHeader(302)
+}
+
+type jsonUser struct {
+	Admin bool   `json:"admin"`
+	Email string `json:"email"`
 }
 
 func GetUser(w http.ResponseWriter, r *http.Request) {
 	data := GetRequestData(w, r)
 	SetContentType(w, "application/json; charset=UTF-8")
-	MustEncodeJSON(w, data.User)
+	if data.User == nil {
+		MustEncodeJSON(w, jsonUser{})
+	} else {
+		MustEncodeJSON(w, jsonUser{
+			Admin: data.User.Admin,
+			Email: data.User.Email,
+		})
+	}
 }
 
 type RequestData struct {
@@ -316,24 +348,13 @@ func GetRequestData(w http.ResponseWriter, r *http.Request) (result RequestData)
 	return
 }
 
-func (self RequestData) LogoutURL() string {
-	result, err := user.LogoutURL(self.Context, HostURL(self.Request))
-	if err != nil {
-		panic(err)
-	}
-	return result
-}
-
-func (self RequestData) LoginURL() string {
-	result, err := user.LoginURL(self.Context, HostURL(self.Request))
-	if err != nil {
-		panic(err)
-	}
-	return result
-}
-
 func (self RequestData) Authenticated() bool {
 	if self.User == nil {
+		loginUrl, err := user.LoginURL(self.Context, HostURL(self.Request))
+		if err != nil {
+			panic(err)
+		}
+		self.Response.Header().Set("Location", loginUrl)
 		self.Response.WriteHeader(401)
 		fmt.Fprintln(self.Response, "Unauthorized")
 		return false

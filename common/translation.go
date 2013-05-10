@@ -9,6 +9,7 @@ var en = map[string]string{
 	"Diplicity": "Diplicity",
 	"Menu":      "Menu",
 	"Logout":    "Logout",
+	"Login":     "Login",
 	"England":   "England",
 	"Spring":    "Spring",
 	"Movement":  "Movement",

@@ -17,10 +17,19 @@ func wantsHTML(r *http.Request, m *mux.RouteMatch) bool {
 
 func init() {
 	router := mux.NewRouter()
+
+	// Pre flights
+	router.Methods("OPTIONS").HandlerFunc(preflight)
+
+	// Static content
 	router.HandleFunc("/js/{ver}/all", allJs)
 	router.HandleFunc("/css/{ver}/all", allCss)
 	router.HandleFunc("/diplicity.appcache", appCache)
+	router.HandleFunc("/reload", reload)
 	router.HandleFunc("/", index)
+
+	router.Path("/login").Methods("GET").HandlerFunc(common.Login)
+	router.Path("/logout").Methods("GET").HandlerFunc(common.Logout)
 
 	router.Path("/user").MatcherFunc(wantsJSON).Methods("GET").HandlerFunc(common.GetUser)
 

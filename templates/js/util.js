@@ -110,19 +110,16 @@ Backbone.sync = function(method, model, options) {
 		if (cached != null) {
 		  console.log('Fetched', urlBefore, 'from localStorage');
 		  model.set(JSON.parse(cached));
+			model.trigger('sync');
 		}
-	} else if (!navigator.onLine) {
-		throw new Error('Only reading models is allowed when offline');
 	}
-	if (navigator.onLine) {
-		var oldSuccess = options.success;
-		options.success = function(obj, stat, xhr) {
-			var urlAfter = options.url || _.result(model, 'url') || urlError();
-			localStorage.setItem(urlAfter, JSON.stringify(obj));
-			console.log('Stored', urlAfter, 'in localStorage');
-			oldSuccess(obj, stat, xhr);
-		};
-		oldBackboneSync(method, model, options);
-	}
+	var oldSuccess = options.success;
+	options.success = function(obj, stat, xhr) {
+		var urlAfter = options.url || _.result(model, 'url') || urlError();
+		localStorage.setItem(urlAfter, JSON.stringify(obj));
+		console.log('Stored', urlAfter, 'in localStorage');
+		oldSuccess(obj, stat, xhr);
+	};
+	oldBackboneSync(method, model, options);
 };
 
