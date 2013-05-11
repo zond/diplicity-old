@@ -14,8 +14,8 @@
 				<a href="#menu" data-icon="gear" class="ui-btn-right">{{.I "Menu" }}</a>
 			</div>
 			<div data-role="content">
-				<a href="/login" class="when-logged-out" data-role="button" data-mini="true">{{.I "Log in to see your games" }}</a>
-				<ul class="when-logged-in" data-role="listview" class="games">
+				<a href="/login" class="when-logged-out" data-role="button">{{.I "Log in to see your games" }}</a>
+				<ul class="when-logged-in games" data-role="listview" class="games">
 				</ul>
 			</div>
 			<div data-role="footer" data-position="fixed">
@@ -37,15 +37,16 @@
 				<a data-icon="gear" href="#menu">{{.I "Menu" }}</a>
 			</div>
 			<div data-role="content">
-				<a href="/login" class="when-logged-out" data-role="button" data-mini="true">{{.I "Log in to create a game" }}</a>
-				<form class="when-logged-in">
-					<select data-mini="true" name="create-game-variant" id="create-game-variant">
+				<a href="/login" class="when-logged-out" data-role="button">{{.I "Log in to create a game" }}</a>
+				<form class="when-logged-in create-game-form">
+					<select class="create-game-variant">
 						{{range .Variants}}<option value="{{.Id}}">{{.Translation}}</option>{{end}}
 					</select>
-					<select name="create-game-private" id="create-game-variant" data-role="slider">
-						<option value="true">{{.I "Private" }}</option>
+					<select data-role="slider" class="create-game-private">
 						<option value="false">{{.I "Public" }}</option>
+						<option value="true">{{.I "Private" }}</option>
 					</select>
+					<a href="#" class="create-game-button" data-role="button" data-icon="plus">{{.I "Create" }}</a>
 				</form>
 			</div>
 			<div data-role="footer" data-position="fixed">
@@ -66,8 +67,8 @@
 				<h1>{{.I "Diplicity" }}</h1>
 			</div>
 			<div data-role="content">
-				<a href="/login" class="when-logged-out" data-role="button" data-mini="true">{{.I "Login" }}</a>
-				<a href="/logout" class="when-logged-in" data-role="button" data-mini="true">{{.I "Logout" }}</a>
+				<a href="/login" class="when-logged-out" data-role="button">{{.I "Login" }}</a>
+				<a href="/logout" class="when-logged-in" data-role="button">{{.I "Logout" }}</a>
 			</div>
 		</div>
 		

@@ -4,6 +4,7 @@ import (
 	"appengine"
 	"appengine/datastore"
 	"appengine/user"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -18,15 +19,33 @@ const (
 	nilCache
 )
 
+const (
+	standard = "standard"
+)
+
 type Variant struct {
 	Id          string
 	Name        string
 	Translation string
 }
 
-var Variants = []Variant{
-	Variant{
-		Id:   "standard",
+type Variants []Variant
+
+func (self Variants) Len() int {
+	return len(self)
+}
+
+func (self Variants) Less(i, j int) bool {
+	return bytes.Compare([]byte(self[i].Name), []byte(self[j].Name)) < 0
+}
+
+func (self Variants) Swap(i, j int) {
+	self[i], self[j] = self[j], self[i]
+}
+
+var VariantMap = map[string]Variant{
+	standard: Variant{
+		Id:   standard,
 		Name: "Standard",
 	},
 }
@@ -87,6 +106,12 @@ func SetContentType(w http.ResponseWriter, typ string) {
 
 func MustEncodeJSON(w io.Writer, i interface{}) {
 	if err := json.NewEncoder(w).Encode(i); err != nil {
+		panic(err)
+	}
+}
+
+func MustDecodeJSON(r io.Reader, result interface{}) {
+	if err := json.NewDecoder(r).Decode(result); err != nil {
 		panic(err)
 	}
 }

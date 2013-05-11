@@ -10,6 +10,8 @@ var en = map[string]string{
 	"Log in to create a game":  "Log in to create a game",
 	"Private":                  "Private",
 	"Public":                   "Public",
+	"forming":                  "forming",
+	"undecided":                "undecided",
 	"Diplicity":                "Diplicity",
 	"Menu":                     "Menu",
 	"Logout":                   "Logout",

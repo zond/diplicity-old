@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"sort"
 	"time"
 )
 
@@ -29,11 +30,13 @@ func GetRequestData(w http.ResponseWriter, r *http.Request) (result RequestData)
 	return
 }
 
-func (self RequestData) Variants() []Variant {
-	for index, _ := range Variants {
-		Variants[index].Translation = self.I(Variants[index].Name)
+func (self RequestData) Variants() (result Variants) {
+	for _, variant := range VariantMap {
+		variant.Translation = self.I(variant.Name)
+		result = append(result, variant)
 	}
-	return Variants
+	sort.Sort(result)
+	return
 }
 
 func (self RequestData) Authenticated() bool {

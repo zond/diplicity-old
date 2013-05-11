@@ -38,7 +38,7 @@ type Phase struct {
 }
 
 func findLatestPhaseByGameId(c appengine.Context, gameId *datastore.Key) *Phase {
-	var phases Phases
+	var phases []Phase
 	ids, err := datastore.NewQuery(phaseKind).Ancestor(gameId).Order("Ordinal<").Limit(1).GetAll(c, &phases)
 	common.AssertOkError(err)
 	for index, id := range ids {
@@ -47,7 +47,7 @@ func findLatestPhaseByGameId(c appengine.Context, gameId *datastore.Key) *Phase 
 	if len(phases) == 0 {
 		return nil
 	}
-	return phases[0]
+	return &phases[0]
 }
 
 func GetLatestPhasesByGameIds(c appengine.Context, gameIds []*datastore.Key) (result Phases) {
@@ -55,16 +55,20 @@ func GetLatestPhasesByGameIds(c appengine.Context, gameIds []*datastore.Key) (re
 	values := make([]interface{}, len(gameIds))
 	funcs := make([]func() interface{}, len(gameIds))
 	for index, id := range gameIds {
+		var phase Phase
+		values[index] = &phase
 		cacheKeys[index] = latestPhaseByGameIdKey(id)
 		idCopy := id
 		funcs[index] = func() interface{} {
 			return findLatestPhaseByGameId(c, idCopy)
 		}
 	}
-	common.MemoizeMulti(c, cacheKeys, values, funcs)
+	existed := common.MemoizeMulti(c, cacheKeys, values, funcs)
 	result = make(Phases, len(gameIds))
 	for index, value := range values {
-		result[index] = value.(*Phase)
+		if existed[index] {
+			result[index] = value.(*Phase)
+		}
 	}
 	return
 }
@@ -74,10 +78,38 @@ type GameMembers []*GameMember
 type GameMember struct {
 	Id     *datastore.Key `json:"id" datastore:"-"`
 	GameId *datastore.Key `json:"game_id"`
-	Nation string         `json:"nation"`
+	Nation string         `json:"nation,omitempty"`
 
-	Game  *Game  `json:"game" datastore:"-"`
-	Phase *Phase `json:"phase" datastore:"-"`
+	Game  *Game  `json:"game,omitempty" datastore:"-"`
+	Phase *Phase `json:"phase,omitempty" datastore:"-"`
+}
+
+func (self *GameMember) CreateWithGame(c appengine.Context, email string) (result *GameMember, err error) {
+	result = self
+	err = datastore.RunInTransaction(c, func(c appengine.Context) error {
+		if self.Game, err = self.Game.Save(c); err != nil {
+			return err
+		}
+		self.GameId = self.Game.Id
+		_, err = self.Save(c, email)
+		return err
+	}, &datastore.TransactionOptions{XG: true})
+	return
+}
+
+func (self *GameMember) Save(c appengine.Context, email string) (result *GameMember, err error) {
+	result = self
+	if self.GameId == nil {
+		err = fmt.Errorf("%+v is missing GameId", self)
+		return
+	}
+	if self.Id == nil {
+		self.Id, err = datastore.Put(c, datastore.NewKey(c, gameMemberKind, "", 0, common.UserRoot(c, email)), self)
+	} else {
+		_, err = datastore.Put(c, self.Id, self)
+	}
+	common.MemDel(c, gameMembersByUserKey(email))
+	return
 }
 
 func findGameMembersByUser(c appengine.Context, email string) (result GameMembers) {
@@ -98,10 +130,12 @@ func GetGameMembersByUser(c appengine.Context, email string) (result GameMembers
 		gameIds[index] = gameMember.GameId
 	}
 	for index, game := range GetGamesByIds(c, gameIds) {
-		result[index].Game = game
+		gameCopy := game
+		result[index].Game = gameCopy
 	}
 	for index, phase := range GetLatestPhasesByGameIds(c, gameIds) {
-		result[index].Phase = phase
+		phaseCopy := phase
+		result[index].Phase = phaseCopy
 	}
 	if result == nil {
 		result = make(GameMembers, 0)
@@ -114,13 +148,30 @@ type Games []*Game
 type Game struct {
 	Id      *datastore.Key `json:"id" datastore:"-"`
 	Variant string         `json:"variant"`
+	Private bool           `json:"private"`
 }
 
-func findGameById(c appengine.Context, id *datastore.Key) (result Game) {
+func (self *Game) Save(c appengine.Context) (result *Game, err error) {
+	result = self
+	if _, ok := common.VariantMap[self.Variant]; !ok {
+		err = fmt.Errorf("Unknown variant: %v", self.Variant)
+		return
+	}
+	if self.Id == nil {
+		self.Id, err = datastore.Put(c, datastore.NewKey(c, gameKind, "", 0, nil), self)
+	} else {
+		_, err = datastore.Put(c, self.Id, self)
+	}
+	common.MemDel(c, gameByIdKey(self.Id))
+	return
+}
+
+func findGameById(c appengine.Context, id *datastore.Key) *Game {
+	var result Game
 	err := datastore.Get(c, id, &result)
 	common.AssertOkError(err)
 	result.Id = id
-	return
+	return &result
 }
 
 func GetGamesByIds(c appengine.Context, ids []*datastore.Key) (result Games) {
@@ -128,16 +179,20 @@ func GetGamesByIds(c appengine.Context, ids []*datastore.Key) (result Games) {
 	values := make([]interface{}, len(ids))
 	funcs := make([]func() interface{}, len(ids))
 	for index, id := range ids {
+		var game Game
+		values[index] = &game
 		cacheKeys[index] = gameByIdKey(id)
 		idCopy := id
 		funcs[index] = func() interface{} {
 			return findGameById(c, idCopy)
 		}
 	}
-	common.MemoizeMulti(c, cacheKeys, values, funcs)
+	existed := common.MemoizeMulti(c, cacheKeys, values, funcs)
 	result = make(Games, len(ids))
 	for index, value := range values {
-		result[index] = value.(*Game)
+		if existed[index] {
+			result[index] = value.(*Game)
+		}
 	}
 	return
 }

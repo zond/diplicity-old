@@ -28,13 +28,21 @@ func init() {
 	router.HandleFunc("/reload", reload)
 	router.HandleFunc("/", index)
 
+	// Login/logout redirects
 	router.Path("/login").Methods("GET").HandlerFunc(common.Login)
 	router.Path("/logout").Methods("GET").HandlerFunc(common.Logout)
 
+	/*
+		JSON endpoints
+	*/
+
+	// Logged in user
 	router.Path("/user").MatcherFunc(wantsJSON).Methods("GET").HandlerFunc(common.GetUser)
 
+	// Games of which the user is a member
 	gamesRouter := router.PathPrefix("/games").MatcherFunc(wantsJSON).Subrouter()
 	gamesRouter.Methods("GET").HandlerFunc(games.GetGames)
+	gamesRouter.Methods("POST").HandlerFunc(games.CreateGame)
 
 	http.Handle("/", router)
 }
