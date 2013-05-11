@@ -9,9 +9,12 @@ $(window).load(function() {
 	panZoom('.map');
 
 	var gameMembers = new GameMembers();
-	var user = new User({}, {
-		gameMembers: gameMembers,
-	});
+	var user = new User();
+
+  $('.games').append(new GameMembersView({ 
+		user: user,
+	}).render().el);
+
 	user.fetch();
 
   $('.create-game-button').on('click', function(ev) {
