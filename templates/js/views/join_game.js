@@ -1,7 +1,5 @@
 window.JoinGameView = Backbone.View.extend({
 
-  tagName: 'form',
-
   template: _.template($('#join_game_underscore').html()),
 
 	initialize: function(options) {
@@ -25,7 +23,7 @@ window.JoinGameView = Backbone.View.extend({
 		this.$el.html(this.template({}));
 	  var that = this;
 		this.collection.forEach(function(model) {
-			that.$('fieldset').append(new FormingGameView({ model: model }).render().el);
+			that.$('div.container').append(new FormingGameView({ model: model }).render().el);
 		});
 		this.$el.trigger('create');
 		return this;

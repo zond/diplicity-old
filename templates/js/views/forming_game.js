@@ -1,7 +1,5 @@
 window.FormingGameView = Backbone.View.extend({
 
-  tagName: 'select',
-
   template: _.template($('#forming_game_underscore').html()),
 
 	initialize: function() {
