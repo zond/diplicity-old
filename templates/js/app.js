@@ -1,7 +1,6 @@
 
 $(window).load(function() {
 
-
 	$(document).ajaxError(function(event, jqXHR, ajaxSettings, thrownError) {
 		if (jqXHR.status == 401) {
 			console.log(jqXHR.getResponseHeader("Location"));
