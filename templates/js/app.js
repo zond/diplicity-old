@@ -7,6 +7,7 @@ $(window).load(function() {
 		}
 	});
 	panZoom('.map');
+
 	var gameMembers = new GameMembers();
 	var user = new User({}, {
 		gameMembers: gameMembers,

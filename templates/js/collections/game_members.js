@@ -16,7 +16,7 @@ window.GameMembers = Backbone.Collection.extend({
 	render: function() {
 	  $('fieldset.games').empty();
 		this.each(function(member) {
-			$('fieldset.games').append(member.render());
+			$('fieldset.games').append(new GameMemberView({ model: member }).render().el);
 		});
 		$('fieldset.games').trigger('create');
 	},

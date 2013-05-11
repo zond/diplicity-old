@@ -42,12 +42,18 @@ func allJs(w http.ResponseWriter, r *http.Request) {
 	renderText(w, r, jsTemplates, "backbone-min.js", data)
 	renderText(w, r, jsTemplates, "util.js", data)
 	renderText(w, r, jsTemplates, "app.js", data)
+	render_Templates(data)
 	for _, templ := range jsModelTemplates.Templates() {
 		if err := templ.Execute(w, data); err != nil {
 			panic(err)
 		}
 	}
 	for _, templ := range jsCollectionTemplates.Templates() {
+		if err := templ.Execute(w, data); err != nil {
+			panic(err)
+		}
+	}
+	for _, templ := range jsViewTemplates.Templates() {
 		if err := templ.Execute(w, data); err != nil {
 			panic(err)
 		}
