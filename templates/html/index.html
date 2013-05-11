@@ -15,8 +15,10 @@
 			</div>
 			<div data-role="content">
 				<a href="/login" class="when-logged-out" data-role="button">{{.I "Log in to see your games" }}</a>
-				<ul class="when-logged-in games" data-role="listview" class="games">
-				</ul>
+				<form class="when-logged-in">
+					<fieldset data-role="controlgroup" class="games">
+					</fieldset>
+				</form>
 			</div>
 			<div data-role="footer" data-position="fixed">
 				<div data-role="navbar">

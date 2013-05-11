@@ -14,12 +14,11 @@ window.GameMembers = Backbone.Collection.extend({
 	},
 
 	render: function() {
-	  $('ul.games').empty();
+	  $('fieldset.games').empty();
 		this.each(function(member) {
-			$('ul.games').append('<li><a href="#">{0}</a></li>'.format(member.describe()));
+			$('fieldset.games').append(member.render());
 		});
-		$('ul.games.ui-listview').listview('refresh');
-		$('ul.games').not('.ui-listview').trigger('create');
+		$('fieldset.games').trigger('create');
 	},
 
 });

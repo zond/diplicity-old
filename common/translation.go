@@ -9,6 +9,8 @@ var en = map[string]string{
 	"Log in to see your games": "Log in to see your games",
 	"Log in to create a game":  "Log in to create a game",
 	"Private":                  "Private",
+	"View":                     "View",
+	"Settings":                 "Settings",
 	"Public":                   "Public",
 	"forming":                  "forming",
 	"undecided":                "undecided",
