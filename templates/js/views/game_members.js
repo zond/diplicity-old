@@ -1,7 +1,5 @@
 window.GameMembersView = Backbone.View.extend({
 
-  tagName: 'form',
-
   template: _.template($('#game_members_underscore').html()),
 
 	initialize: function(options) {
@@ -24,7 +22,7 @@ window.GameMembersView = Backbone.View.extend({
 		this.$el.html(this.template({}));
 	  var that = this;
 		this.collection.forEach(function(model) {
-			that.$('fieldset').append(new GameMemberView({ model: model }).render().el);
+			that.$('div.container').append(new GameMemberView({ model: model }).render().el);
 		});
 		this.$el.trigger('create');
 		return this;

@@ -1,4 +1,5 @@
-<option value="#"><%- model.describe() %></option> 
-<option value="#">{{.I "View" }}</option>
-<option value="#">{{.I "Settings" }}</option>
-
+<div data-role="collapsible">
+	<h3><%= model.describe() %></h3>
+	<a data-role="button" href="#">{{.I "View" }}<a>
+	<a data-role="button" href="#">{{.I "Settings" }}<a>
+</div>
