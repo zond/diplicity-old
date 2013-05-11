@@ -1,0 +1,9 @@
+<select class="create-game-variant">
+	{{range .Variants}}<option value="{{.Id}}">{{.Translation}}</option>{{end}}
+</select>
+<select data-role="slider" class="create-game-private">
+	<option value="false">{{.I "Public" }}</option>
+	<option value="true">{{.I "Private" }}</option>
+</select>
+<a href="#" class="create-game-button" data-role="button" data-icon="plus">{{.I "Create" }}</a>
+

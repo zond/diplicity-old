@@ -1,4 +1,5 @@
 window.GameMember = Backbone.Model.extend({
+
   render: function() {
 	  return (
 			'<select>' +

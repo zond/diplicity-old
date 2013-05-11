@@ -21,6 +21,7 @@ func CreateGame(w http.ResponseWriter, r *http.Request) {
 		common.SetContentType(w, "application/json; charset=UTF-8")
 		if _, err := (&member).CreateWithGame(data.Context, data.User.Email); err != nil {
 			data.Response.WriteHeader(500)
+			data.Context.Infof("%v", err)
 			common.MustEncodeJSON(w, err)
 		} else {
 			common.MustEncodeJSON(w, member)

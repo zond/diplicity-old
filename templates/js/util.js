@@ -112,14 +112,14 @@ Backbone.sync = function(method, model, options) {
 		  model.set(JSON.parse(cached));
 			model.trigger('sync');
 		}
+		var oldSuccess = options.success;
+		options.success = function(obj, stat, xhr) {
+			var urlAfter = options.url || _.result(model, 'url') || urlError();
+			localStorage.setItem(urlAfter, JSON.stringify(obj));
+			console.log('Stored', urlAfter, 'in localStorage');
+			oldSuccess(obj, stat, xhr);
+		};
 	}
-	var oldSuccess = options.success;
-	options.success = function(obj, stat, xhr) {
-		var urlAfter = options.url || _.result(model, 'url') || urlError();
-		localStorage.setItem(urlAfter, JSON.stringify(obj));
-		console.log('Stored', urlAfter, 'in localStorage');
-		oldSuccess(obj, stat, xhr);
-	};
 	oldBackboneSync(method, model, options);
 };
 

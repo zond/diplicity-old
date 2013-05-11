@@ -12,24 +12,15 @@ $(window).load(function() {
 	var user = new User();
 
   $('.games').append(new GameMembersView({ 
+	  collection: gameMembers,
 		user: user,
 	}).render().el);
 
-	user.fetch();
+	$('.create-game').append(new CreateGameView({
+	  collection: gameMembers,
+	}).render().el);
 
-  $('.create-game-button').on('click', function(ev) {
-	  var form = $(ev.target).closest('.create-game-form');
-		gameMembers.create({
-		  game: {
-				variant: form.find('select.create-game-variant').val(),
-				private: form.find('select.create-game-private').val() == 'true',
-			},
-		}, {
-		  success: function() {
-				$.mobile.changePage('#home');
-			},
-		});
-	});
+	user.fetch();
 
 });
 
