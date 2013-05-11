@@ -5,7 +5,15 @@ import (
 	"net/http"
 )
 
-func GetGames(w http.ResponseWriter, r *http.Request) {
+func GetFormingGames(w http.ResponseWriter, r *http.Request) {
+	data := common.GetRequestData(w, r)
+	if data.Authenticated() {
+		common.SetContentType(w, "application/json; charset=UTF-8")
+		common.MustEncodeJSON(w, GetFormingGamesForUser(data.Context, data.User.Email))
+	}
+}
+
+func GetGameMembers(w http.ResponseWriter, r *http.Request) {
 	data := common.GetRequestData(w, r)
 	if data.Authenticated() {
 		common.SetContentType(w, "application/json; charset=UTF-8")
@@ -13,7 +21,7 @@ func GetGames(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func CreateGame(w http.ResponseWriter, r *http.Request) {
+func CreateGameMemberWithGame(w http.ResponseWriter, r *http.Request) {
 	data := common.GetRequestData(w, r)
 	if data.Authenticated() {
 		var member GameMember

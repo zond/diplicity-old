@@ -20,6 +20,11 @@ $(window).load(function() {
 	  collection: gameMembers,
 	}).render().el);
 
+	$('.join-game').append(new JoinGameView({
+	  user: user,
+	  collection: gameMembers,
+	}).render().el);
+
 	user.fetch();
 
 });

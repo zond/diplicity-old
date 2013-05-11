@@ -8,7 +8,9 @@ import (
 var en = map[string]string{
 	"Log in to see your games": "Log in to see your games",
 	"Log in to create a game":  "Log in to create a game",
+	"Log in to join a game":    "Log in to join a game",
 	"Private":                  "Private",
+	"Details":                  "Details",
 	"View":                     "View",
 	"Settings":                 "Settings",
 	"Public":                   "Public",

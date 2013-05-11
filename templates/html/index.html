@@ -7,6 +7,8 @@
 		<script src="/js/{{.Version}}/all" type="text/javascript"></script>
 	</head>
 	<body>
+
+		<!-- 'home' view, the first view you see, listing the games you are in -->
 		
 		<div data-role="page" id="home">
 			<div data-role="header" data-position="fixed">
@@ -21,14 +23,41 @@
 			<div data-role="footer" data-position="fixed">
 				<div data-role="navbar">
 					<ul>
-						<li><a class="ui-btn-active ui-state-persist">{{.I "Games" }}</a></li>
-						<li><a href="#">{{.I "Join" }}</a></li>
+						<li><a class="ui-btn-active ui-state-persist" href="#home">{{.I "Games" }}</a></li>
+						<li><a href="#join-game">{{.I "Join" }}</a></li>
 						<li><a href="#create-game">{{.I "Create" }}</a></li>
 						<li><a href="#">{{.I "History" }}</a></li>
 					</ul>
 				</div>
 			</div>
 		</div>
+
+		<!-- 'join game' view, for listing forming games and selecting one to join -->
+
+    <div data-role="page" id="join-game">
+			<div data-role="header" data-position="fixed">
+				<a data-icon="home" href="#home">{{.I "Home" }}</a>
+				<h1>{{.I "Diplicity" }}</h1>
+				<a data-icon="gear" href="#menu">{{.I "Menu" }}</a>
+			</div>
+			<div data-role="content">
+				<a href="/login" class="when-logged-out" data-role="button">{{.I "Log in to join a game" }}</a>
+				<div class="when-logged-in join-game">
+				</div>
+			</div>
+			<div data-role="footer" data-position="fixed">
+				<div data-role="navbar">
+					<ul>
+						<li><a href="#home">{{.I "Games" }}</a></li>
+						<li><a class="ui-btn-active ui-state-persist" href="#join-game">{{.I "Join" }}</a></li>
+						<li><a href="#create-game">{{.I "Create" }}</a></li>
+						<li><a href="#">{{.I "History" }}</a></li>
+					</ul>
+				</div>
+			</div>
+		</div>
+
+		<!-- 'create game' view, for creating new games -->
 
     <div data-role="page" id="create-game">
 			<div data-role="header" data-position="fixed">
@@ -45,13 +74,15 @@
 				<div data-role="navbar">
 					<ul>
 						<li><a href="#home">{{.I "Games" }}</a></li>
-						<li><a href="#">{{.I "Join" }}</a></li>
+						<li><a href="#join-game">{{.I "Join" }}</a></li>
 						<li><a class="ui-btn-active ui-state-persist" href="#create-game">{{.I "Create" }}</a></li>
 						<li><a href="#">{{.I "History" }}</a></li>
 					</ul>
 				</div>
 			</div>
 		</div>
+
+    <!-- 'menu' view, for settings and logging in and out -->
 
 		<div data-role="page" id="menu">
 			<div data-role="header" data-position="fixed">
@@ -63,7 +94,9 @@
 				<a href="/logout" class="when-logged-in" data-role="button">{{.I "Logout" }}</a>
 			</div>
 		</div>
-		
+
+    <!-- 'game' view for playing a game -->
+
 		<div data-role="page" id="game">
 			<div data-role="header" data-position="fixed">
 				<a data-icon="home" href="#home">{{.I "Home" }}</a>
@@ -80,7 +113,7 @@
 			<div data-role="footer" data-position="fixed">
 				<div data-role="navbar">
 					<ul>
-						<li><a class="ui-btn-active ui-state-persist">{{.I "Map" }}</a></li>
+						<li><a class="ui-btn-active ui-state-persist" href="#">{{.I "Map" }}</a></li>
 						<li><a href="#">{{.I "Chat" }}</a></li>
 						<li><a href="#">{{.I "Orders" }}</a></li>
 						<li><a href="#">{{.I "Results" }}</a></li>

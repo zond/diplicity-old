@@ -1,6 +1,6 @@
 window.GameMembers = Backbone.Collection.extend({
 
-  url: '/games',
+  url: '/games/member',
 
 	model: GameMember,
 

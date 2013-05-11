@@ -8,11 +8,11 @@ import (
 )
 
 const (
-	game           = "Game"
-	allGamesKey    = "Games{All}"
-	gameMemberKind = "GameMember"
-	gameKind       = "Game"
-	phaseKind      = "Phase"
+	game            = "Game"
+	formingGamesKey = "Games{Started:false}"
+	gameMemberKind  = "GameMember"
+	gameKind        = "Game"
+	phaseKind       = "Phase"
 )
 
 func gameMembersByUserKey(k string) string {
@@ -147,8 +147,41 @@ type Games []*Game
 
 type Game struct {
 	Id      *datastore.Key `json:"id" datastore:"-"`
+	Started bool           `json:"started"`
 	Variant string         `json:"variant"`
 	Private bool           `json:"private"`
+}
+
+func findFormingGames(c appengine.Context) (result Games) {
+	ids, err := datastore.NewQuery(gameKind).Filter("Started=", false).GetAll(c, &result)
+	common.AssertOkError(err)
+	for index, id := range ids {
+		result[index].Id = id
+	}
+	return
+}
+
+func GetFormingGamesForUser(c appengine.Context, email string) (result Games) {
+	memberMap := make(map[string]bool)
+	for _, member := range GetGameMembersByUser(c, email) {
+		memberMap[member.GameId.Encode()] = true
+	}
+
+	var preResult Games
+	common.Memoize(c, formingGamesKey, &preResult, func() interface{} {
+		return findFormingGames(c)
+	})
+
+	for _, game := range preResult {
+		if !memberMap[game.Id.Encode()] {
+			result = append(result, game)
+		}
+	}
+
+	if result == nil {
+		result = make(Games, 0)
+	}
+	return
 }
 
 func (self *Game) Save(c appengine.Context) (result *Game, err error) {
@@ -159,6 +192,7 @@ func (self *Game) Save(c appengine.Context) (result *Game, err error) {
 	}
 	if self.Id == nil {
 		self.Id, err = datastore.Put(c, datastore.NewKey(c, gameKind, "", 0, nil), self)
+		common.MemDel(c, formingGamesKey)
 	} else {
 		_, err = datastore.Put(c, self.Id, self)
 	}

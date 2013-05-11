@@ -1,8 +1,8 @@
-window.GameMemberView = Backbone.View.extend({
+window.FormingGameView = Backbone.View.extend({
 
   tagName: 'select',
 
-  template: _.template($('#game_member_underscore').html()),
+  template: _.template($('#forming_game_underscore').html()),
 
 	initialize: function() {
 	  _.bindAll(this, 'render');
