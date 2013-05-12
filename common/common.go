@@ -7,6 +7,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	cla "github.com/zond/godip/classical/common"
+	dip "github.com/zond/godip/common"
 	"io"
 	"net/http"
 	"regexp"
@@ -27,6 +29,8 @@ type Variant struct {
 	Id          string
 	Name        string
 	Translation string
+	PhaseTypes  []dip.PhaseType
+	Nations     []dip.Nation
 }
 
 type Variants []Variant
@@ -45,8 +49,10 @@ func (self Variants) Swap(i, j int) {
 
 var VariantMap = map[string]Variant{
 	standard: Variant{
-		Id:   standard,
-		Name: "Standard",
+		Id:         standard,
+		Name:       "Standard",
+		PhaseTypes: cla.PhaseTypes,
+		Nations:    cla.Nations,
 	},
 }
 
@@ -102,6 +108,17 @@ func SetContentType(w http.ResponseWriter, typ string) {
 	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.Header().Set("Access-Control-Allow-Credentials", "true")
+}
+
+func MustMarshalJSON(i interface{}) (result []byte) {
+	var err error
+	result, err = json.Marshal(i)
+	AssertOkError(err)
+	return
+}
+
+func MustUnmarshalJSON(data []byte, result interface{}) {
+	AssertOkError(json.Unmarshal(data, result))
 }
 
 func MustEncodeJSON(w io.Writer, i interface{}) {

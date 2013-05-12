@@ -2,6 +2,17 @@ window.CreateGameView = Backbone.View.extend({
 
   template: _.template($('#create_game_underscore').html()),
 
+  phaseTypes: function(variant) {
+	  {{range .Variants}}if (variant == '{{.Id}}') {
+		  var rval = [];
+			{{range .PhaseTypes}}rval.push('{{.}}');
+			{{end}}
+			return rval;
+		}
+		{{end}}
+		return [];
+	},
+
   events: {
 	  "click .create-game-button": "createGame",
 	},
@@ -23,9 +34,10 @@ window.CreateGameView = Backbone.View.extend({
 
   render: function() {
 		this.$el.html(this.template({}));
-    this.$('.create-game-variant').selectmenu();
-    this.$('.create-game-private').slider();
-		this.$('.create-game-button').button();
+		_.each(this.phaseTypes(this.$('.create-game-variant').val()), function(type) {
+		  this.$('.deadlines').append(new DeadlineSliderView({ phaseType: type }).render().el);
+		});
+		this.$('.deadlines').trigger('create');
 		this.delegateEvents();
 		return this;
 	},

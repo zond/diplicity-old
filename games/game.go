@@ -5,6 +5,20 @@ import (
 	"appengine/datastore"
 	"common"
 	"fmt"
+	dip "github.com/zond/godip/common"
+)
+
+type Minutes int
+
+type ChatFlag int
+
+const (
+	White ChatFlag = 1 << iota
+	Grey
+	Black
+	Group
+	Conference
+	Private
 )
 
 const (
@@ -31,9 +45,9 @@ type Phases []*Phase
 
 type Phase struct {
 	Id      *datastore.Key `json:"id"`
-	Season  string         `json:"season"`
+	Season  dip.Season     `json:"season"`
 	Year    int            `json:"year"`
-	Type    int            `json:"type"`
+	Type    dip.PhaseType  `json:"type"`
 	Ordinal int            `json:"ordinal"`
 }
 
@@ -78,7 +92,7 @@ type GameMembers []*GameMember
 type GameMember struct {
 	Id     *datastore.Key `json:"id" datastore:"-"`
 	GameId *datastore.Key `json:"game_id"`
-	Nation string         `json:"nation,omitempty"`
+	Nation dip.Nation     `json:"nation,omitempty"`
 
 	Game  *Game  `json:"game,omitempty" datastore:"-"`
 	Phase *Phase `json:"phase,omitempty" datastore:"-"`
@@ -149,7 +163,20 @@ type Game struct {
 	Id      *datastore.Key `json:"id" datastore:"-"`
 	Started bool           `json:"started"`
 	Variant string         `json:"variant"`
+	EndYear int            `json:"end_year"`
 	Private bool           `json:"private"`
+
+	SerializedDeadlines []byte             `json:"-"`
+	Deadlines           map[string]Minutes `json:"deadlines" datastore:"-"`
+
+	SerializedChatFlags []byte              `json:"-"`
+	ChatFlags           map[string]ChatFlag `json:"chat_flags" datastore:"-"`
+}
+
+func (self *Game) process(c appengine.Context) *Game {
+	common.MustUnmarshalJSON(self.SerializedDeadlines, &self.Deadlines)
+	common.MustUnmarshalJSON(self.SerializedChatFlags, &self.ChatFlags)
+	return self
 }
 
 func findFormingGames(c appengine.Context) (result Games) {
@@ -174,7 +201,7 @@ func GetFormingGamesForUser(c appengine.Context, email string) (result Games) {
 
 	for _, game := range preResult {
 		if !memberMap[game.Id.Encode()] {
-			result = append(result, game)
+			result = append(result, game.process(c))
 		}
 	}
 
@@ -186,6 +213,17 @@ func GetFormingGamesForUser(c appengine.Context, email string) (result Games) {
 
 func (self *Game) Save(c appengine.Context) (result *Game, err error) {
 	result = self
+
+	if self.Deadlines == nil {
+		self.Deadlines = make(map[string]Minutes)
+	}
+	self.SerializedDeadlines = common.MustMarshalJSON(self.Deadlines)
+
+	if self.ChatFlags == nil {
+		self.ChatFlags = make(map[string]ChatFlag)
+	}
+	self.SerializedChatFlags = common.MustMarshalJSON(self.ChatFlags)
+
 	if _, ok := common.VariantMap[self.Variant]; !ok {
 		err = fmt.Errorf("Unknown variant: %v", self.Variant)
 		return
@@ -225,7 +263,7 @@ func GetGamesByIds(c appengine.Context, ids []*datastore.Key) (result Games) {
 	result = make(Games, len(ids))
 	for index, value := range values {
 		if existed[index] {
-			result[index] = value.(*Game)
+			result[index] = value.(*Game).process(c)
 		}
 	}
 	return

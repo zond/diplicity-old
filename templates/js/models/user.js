@@ -7,9 +7,11 @@ window.User = Backbone.Model.extend({
 			if (that.loggedIn()) {
 				$('.when-logged-out').css('display', 'none');
 				$('.when-logged-in').css('display', 'block');
+				$('.email-at').text(that.get('email') + '/');
 			} else {
 				$('.when-logged-out').css('display', 'block');
 				$('.when-logged-in').css('display', 'none');
+				$('.email-at').text('');
 			}
 		});
 	},

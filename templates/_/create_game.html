@@ -1,6 +1,8 @@
 <select class="create-game-variant">
 	{{range .Variants}}<option value="{{.Id}}">{{.Translation}}</option>{{end}}
 </select>
+<div class="deadlines">
+</div>
 <select data-role="slider" class="create-game-private">
 	<option value="false">{{.I "Public" }}</option>
 	<option value="true">{{.I "Private" }}</option>
