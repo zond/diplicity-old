@@ -23,7 +23,7 @@ window.JoinGameView = Backbone.View.extend({
 		this.$el.html(this.template({}));
 	  var that = this;
 		this.collection.forEach(function(model) {
-			that.$('div.container').append(new FormingGameView({ model: model }).render().el);
+			that.$el.append(new FormingGameView({ model: model }).render().el);
 		});
 		this.$el.trigger('create');
 		return this;

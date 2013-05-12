@@ -22,6 +22,7 @@ $(window).load(function() {
 	}).render().el);
 
 	$('.join-game').append(new JoinGameView({
+	  el: $('.join-game'),
 	  user: user,
 	  collection: gameMembers,
 	}).render().el);
