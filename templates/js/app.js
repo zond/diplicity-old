@@ -21,7 +21,6 @@ $(window).load(function() {
     el: $('.create-game'),
 	  collection: gameMembers,
 	}).render();
-	$('.create-game').trigger('create');
 
 	new JoinGameView({
 	  el: $('.join-game'),

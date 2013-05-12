@@ -6,6 +6,23 @@ import (
 )
 
 var en = map[string]string{
+	"5 minutes":                "5 minutes",
+	"10 minutes":               "10 minutes",
+	"20 minutes":               "20 minutes",
+	"30 minutes":               "30 minutes",
+	"1 hour":                   "1 hour",
+	"2 hours":                  "2 hours",
+	"4 hours":                  "4 hours",
+	"8 hours":                  "8 hours",
+	"12 hours":                 "12 hours",
+	"24 hours":                 "24 hours",
+	"2 days":                   "2 days",
+	"3 days":                   "3 days",
+	"4 days":                   "4 days",
+	"5 days":                   "5 days",
+	"1 week":                   "1 week",
+	"10 days":                  "10 days",
+	"2 weeks":                  "2 weeks",
 	"Log in to see your games": "Log in to see your games",
 	"Log in to create a game":  "Log in to create a game",
 	"Log in to join a game":    "Log in to join a game",
