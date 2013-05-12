@@ -11,10 +11,11 @@ $(window).load(function() {
 	var gameMembers = new GameMembers();
 	var user = new User();
 
-  $('.games').append(new GameMembersView({ 
+  new GameMembersView({ 
+	  el: $('.games'),
 	  collection: gameMembers,
 		user: user,
-	}).render().el);
+	}).render();
 
 	$('.create-game').append(new CreateGameView({
 	  collection: gameMembers,
