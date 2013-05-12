@@ -1,7 +1,5 @@
 window.CreateGameView = Backbone.View.extend({
 
-  tagName: 'form',
-
   template: _.template($('#create_game_underscore').html()),
 
   events: {

@@ -17,15 +17,16 @@ $(window).load(function() {
 		user: user,
 	}).render();
 
-	$('.create-game').append(new CreateGameView({
+	new CreateGameView({
+    el: $('.create-game'),
 	  collection: gameMembers,
-	}).render().el);
+	}).render();
 
-	$('.join-game').append(new JoinGameView({
+	new JoinGameView({
 	  el: $('.join-game'),
 	  user: user,
 	  collection: gameMembers,
-	}).render().el);
+	}).render();
 
 	user.fetch();
 
