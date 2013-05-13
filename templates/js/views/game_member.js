@@ -11,6 +11,7 @@ window.GameMemberView = Backbone.View.extend({
 	  var that = this;
     this.$el.html(this.template({
 		  model: this.model,
+			owner: that.model.get('owner'),
 		}));
 		_.each(phaseTypes(this.model.get('game').variant), function(type) {
 		  that.$('.phase-types').append(new PhaseTypeView({
@@ -20,6 +21,7 @@ window.GameMemberView = Backbone.View.extend({
 				gameMember: that.model,
 			}).render().el);
 		});
+		this.$('.game-private').val(this.model.get('game').private ? 'true' : 'false');
 		return this;
 	},
 

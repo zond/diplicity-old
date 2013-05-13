@@ -1,5 +1,5 @@
-<div data-role="collapsible">
-	<h3><%= {{.I "phase_types" }}[phaseType] %>, <span class="desc"><%= desc %></span></h3>
+<div data-role="collapsible"<%= owner ? '' : ' class="ui-disabled"' %>>
+	<h3><%= {{.I "phase_types" }}[phaseType] %>: <span class="desc"><%= desc %></span></h3>
 	<select class="deadline"<%= owner ? '' : ' disabled="disabled"' %>>
 		<% for (var i = 0; i < deadlineOptions.length; i++) { %>
 		<%   var opt = deadlineOptions[i]; %>
