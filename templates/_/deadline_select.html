@@ -1,6 +1,0 @@
-<select>
-	<% for (var i = 0; i < deadlineOptions.length; i++) { %>
-	<%   var opt = deadlineOptions[i]; %>
-	<option value="<%= opt.value %>"<%= selected == opt.value ? 'selected="selected"' : '' %>><%= {{.I "phase_types" }}[phaseType] %>: <%= opt.name %></option>
-	<% } %>
-</select>

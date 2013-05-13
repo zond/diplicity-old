@@ -10,17 +10,6 @@ import (
 
 type Minutes int
 
-type ChatFlag int
-
-const (
-	White ChatFlag = 1 << iota
-	Grey
-	Black
-	Group
-	Conference
-	Private
-)
-
 const (
 	game            = "Game"
 	formingGamesKey = "Games{Started:false}"
@@ -169,8 +158,8 @@ type Game struct {
 	SerializedDeadlines []byte             `json:"-"`
 	Deadlines           map[string]Minutes `json:"deadlines" datastore:"-"`
 
-	SerializedChatFlags []byte              `json:"-"`
-	ChatFlags           map[string]ChatFlag `json:"chat_flags" datastore:"-"`
+	SerializedChatFlags []byte                     `json:"-"`
+	ChatFlags           map[string]common.ChatFlag `json:"chat_flags" datastore:"-"`
 }
 
 func (self *Game) process(c appengine.Context) *Game {
@@ -222,7 +211,7 @@ func (self *Game) Save(c appengine.Context, owner string) (result *Game, err err
 	self.SerializedDeadlines = common.MustMarshalJSON(self.Deadlines)
 
 	if self.ChatFlags == nil {
-		self.ChatFlags = make(map[string]ChatFlag)
+		self.ChatFlags = make(map[string]common.ChatFlag)
 	}
 	self.SerializedChatFlags = common.MustMarshalJSON(self.ChatFlags)
 

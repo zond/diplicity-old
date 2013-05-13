@@ -17,6 +17,50 @@ import (
 	"text/template"
 )
 
+type ChatFlag int
+
+const (
+	ChatWhite ChatFlag = 1 << iota
+	ChatGrey
+	ChatBlack
+	ChatPrivate
+	ChatGroup
+	ChatConference
+)
+
+type ChatFlagOption struct {
+	Id          ChatFlag
+	Name        string
+	Translation string
+}
+
+var ChatFlagOptions = []ChatFlagOption{
+	ChatFlagOption{
+		Id:   ChatWhite,
+		Name: "White press",
+	},
+	ChatFlagOption{
+		Id:   ChatGrey,
+		Name: "Grey press",
+	},
+	ChatFlagOption{
+		Id:   ChatBlack,
+		Name: "Black press",
+	},
+	ChatFlagOption{
+		Id:   ChatPrivate,
+		Name: "Private press",
+	},
+	ChatFlagOption{
+		Id:   ChatGroup,
+		Name: "Group press",
+	},
+	ChatFlagOption{
+		Id:   ChatConference,
+		Name: "Conference press",
+	},
+}
+
 var svgTemplates = template.Must(template.New("svgTemplates").ParseGlob("templates/svg/*.svg"))
 
 const (

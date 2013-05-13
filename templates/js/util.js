@@ -155,8 +155,19 @@ function phaseTypes(variant) {
 	return [];
 };
 
+function chatFlagOptions() {
+  var rval = [];
+	{{range .ChatFlagOptions}}rval.push({
+	  id: {{.Id}},
+		name: '{{.Translation}}',
+	});
+	{{end}}
+	return rval;
+};
+
 defaultVariant = 'standard';
 defaultDeadline = 1440;
+defaultChatFlags = {{.ChatFlag "White"}} | {{.ChatFlag "Conference"}} | {{.ChatFlag "Private"}};
 
 deadlineOptions = [
   { value: 5, name: '{{.I "5 minutes" }}' },

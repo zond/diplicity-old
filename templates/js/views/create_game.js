@@ -20,12 +20,15 @@ window.CreateGameView = Backbone.View.extend({
 	initialize: function(options) {
 	  _.bindAll(this, 'render');
 		var deadlines = {};
+		var chatFlags = {};
 		_.each(phaseTypes(defaultVariant), function(type) {
 		  deadlines[type] = defaultDeadline;
+      chatFlags[type] = defaultChatFlags;
 		});
 		var game = {
 		  variant: defaultVariant,
 			deadlines: deadlines,
+			chat_flags: chatFlags,
 		};
 		this.gameMember = new GameMember({
 		  game: game
@@ -44,9 +47,10 @@ window.CreateGameView = Backbone.View.extend({
 		});
 		this.deadlines = {};
 		_.each(phaseTypes(this.$('.create-game-variant').val()), function(type) {
-		  that.$('.deadlines').append(new DeadlineSelectView({
+		  that.$('.phase-types').append(new PhaseTypeView({
 				phaseType: type,
 				game: that.gameMember.get('game'),
+				gameMember: that.gameMember,
 			}).render().el);
 		});
 		this.$el.trigger('create');

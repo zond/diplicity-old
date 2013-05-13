@@ -38,6 +38,16 @@ func (self RequestData) Variants() (result Variants) {
 	return
 }
 
+func (self RequestData) ChatFlagOptions() (result []ChatFlagOption) {
+	for _, option := range ChatFlagOptions {
+		result = append(result, ChatFlagOption{
+			Id:          option.Id,
+			Translation: self.I(option.Name),
+		})
+	}
+	return
+}
+
 func (self RequestData) Authenticated() bool {
 	if self.User == nil {
 		loginUrl, err := user.LoginURL(self.Context, HostURL(self.Request))
@@ -61,6 +71,25 @@ func (self RequestData) I(phrase string, args ...string) string {
 		return fmt.Sprintf(pattern, args)
 	}
 	return pattern
+}
+
+func (self RequestData) ChatFlag(s string) string {
+	var rval ChatFlag
+	switch s {
+	case "White":
+		rval = ChatWhite
+	case "Grey":
+		rval = ChatGrey
+	case "Black":
+		rval = ChatBlack
+	case "Private":
+		rval = ChatPrivate
+	case "Group":
+		rval = ChatGroup
+	case "Conference":
+		rval = ChatConference
+	}
+	return fmt.Sprint(rval)
 }
 
 var debugVersion time.Time

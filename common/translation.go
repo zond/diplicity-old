@@ -6,6 +6,12 @@ import (
 )
 
 var en = map[string]string{
+	"White press":              "White press",
+	"Grey press":               "Grey press",
+	"Black press":              "Black press",
+	"Private press":            "Private press",
+	"Group press":              "Group press",
+	"Conference press":         "Conference press",
 	"5 minutes":                "5 minutes",
 	"10 minutes":               "10 minutes",
 	"20 minutes":               "20 minutes",

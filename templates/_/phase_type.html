@@ -1,0 +1,16 @@
+<div data-role="collapsible">
+	<h3><%= {{.I "phase_types" }}[phaseType] %>, <span class="desc"><%= desc %></span></h3>
+	<select class="deadline">
+		<% for (var i = 0; i < deadlineOptions.length; i++) { %>
+		<%   var opt = deadlineOptions[i]; %>
+		<option value="<%= opt.value %>"<%= selected == opt.value ? 'selected="selected"' : '' %>><%= opt.name %></option>
+		<% } %>
+	</select>
+	<fieldset data-role="controlgroup">
+		<% for (var i = 0; i < chatFlagOptions().length; i++) { %>
+		<%  var opt = chatFlagOptions()[i]; %>
+		<input id="<%= me %>.<%= opt.id %>" class="chat-flag" data-chat-flag="<%= opt.id %>" type="checkbox"<%= (chatFlags & opt.id) != 0 ? ' checked="checked"' : '' %>>
+		<label for="<%= me %>.<%= opt.id %>"><%= opt.name %></label>
+		<% } %>
+	</fieldset>
+</div>
