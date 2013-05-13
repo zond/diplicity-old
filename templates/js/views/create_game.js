@@ -51,6 +51,7 @@ window.CreateGameView = Backbone.View.extend({
 		  that.$('.phase-types').append(new PhaseTypeView({
 				phaseType: type,
 				game: that.gameMember.get('game'),
+				owner: that.gameMember.get('owner'),
 				gameMember: that.gameMember,
 			}).render().el);
 		});

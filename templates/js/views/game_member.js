@@ -13,7 +13,6 @@ window.GameMemberView = Backbone.View.extend({
 		  model: this.model,
 		}));
 		_.each(phaseTypes(this.model.get('game').variant), function(type) {
-		  console.log('rendering', type);
 		  that.$('.phase-types').append(new PhaseTypeView({
 				phaseType: type,
 				owner: that.model.get('owner'),
