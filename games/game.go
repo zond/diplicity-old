@@ -101,7 +101,7 @@ type GameMember struct {
 func (self *GameMember) CreateWithGame(c appengine.Context, email string) (result *GameMember, err error) {
 	result = self
 	err = datastore.RunInTransaction(c, func(c appengine.Context) error {
-		if self.Game, err = self.Game.Save(c); err != nil {
+		if self.Game, err = self.Game.Save(c, email); err != nil {
 			return err
 		}
 		self.GameId = self.Game.Id
@@ -213,7 +213,7 @@ func GetFormingGamesForUser(c appengine.Context, email string) (result GameMembe
 	return
 }
 
-func (self *Game) Save(c appengine.Context) (result *Game, err error) {
+func (self *Game) Save(c appengine.Context, owner string) (result *Game, err error) {
 	result = self
 
 	if self.Deadlines == nil {
@@ -231,7 +231,7 @@ func (self *Game) Save(c appengine.Context) (result *Game, err error) {
 		return
 	}
 	if self.Id == nil {
-		self.Id, err = datastore.Put(c, datastore.NewKey(c, gameKind, "", 0, nil), self)
+		self.Id, err = datastore.Put(c, datastore.NewKey(c, gameKind, "", 0, common.UserRoot(c, owner)), self)
 		common.MemDel(c, formingGamesKey)
 	} else {
 		_, err = datastore.Put(c, self.Id, self)
