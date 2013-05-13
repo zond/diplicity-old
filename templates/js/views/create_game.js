@@ -5,6 +5,12 @@ window.CreateGameView = Backbone.View.extend({
   events: {
 	  "click .create-game-button": "createGame",
 		"change .create-game-variant": "changeVariant",
+		"change .create-game-private": "changePrivate",
+	},
+
+  changePrivate: function(ev) {
+	  this.gameMember.get('game').private = $(ev.target).val() == 'true';
+		this.gameMember.trigger('change');
 	},
 
 	changeVariant: function(ev) {
@@ -26,6 +32,7 @@ window.CreateGameView = Backbone.View.extend({
       chatFlags[type] = defaultChatFlags;
 		});
 		var game = {
+			private: false,
 		  variant: defaultVariant,
 			deadlines: deadlines,
 			chat_flags: chatFlags,
