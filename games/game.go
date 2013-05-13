@@ -34,7 +34,7 @@ func gameMembersByUserKey(k string) string {
 }
 
 func gameByIdKey(k *datastore.Key) string {
-	return fmt.Sprintf("%v{Id:%v}", k)
+	return fmt.Sprintf("%v{Id:%v}", gameKind, k)
 }
 
 func latestPhaseByGameIdKey(k *datastore.Key) string {
