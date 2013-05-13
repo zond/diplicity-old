@@ -188,7 +188,7 @@ func findFormingGames(c appengine.Context) (result Games) {
 	return
 }
 
-func GetFormingGamesForUser(c appengine.Context, email string) (result Games) {
+func GetFormingGamesForUser(c appengine.Context, email string) (result GameMembers) {
 	memberMap := make(map[string]bool)
 	for _, member := range GetGameMembersByUser(c, email) {
 		memberMap[member.GameId.Encode()] = true
@@ -201,12 +201,14 @@ func GetFormingGamesForUser(c appengine.Context, email string) (result Games) {
 
 	for _, game := range preResult {
 		if !memberMap[game.Id.Encode()] {
-			result = append(result, game.process(c))
+			result = append(result, &GameMember{
+				Game: game.process(c),
+			})
 		}
 	}
 
 	if result == nil {
-		result = make(Games, 0)
+		result = make(GameMembers, 0)
 	}
 	return
 }

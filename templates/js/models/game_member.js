@@ -10,7 +10,7 @@ window.GameMember = Backbone.Model.extend({
 		if (this.get('nation') != null) {
 		  var nationInfo = {{.I "nations" }}[this.get('nation')];
 		}
-		return '{0}, {1}'.format(nationInfo, phaseInfo);
+		return '{0}, {1}, {2}'.format(nationInfo, phaseInfo, variantName(this.get('game').variant));
 	},
 });
 

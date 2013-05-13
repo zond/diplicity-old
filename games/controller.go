@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-func GetFormingGames(w http.ResponseWriter, r *http.Request) {
+func GetOpenGames(w http.ResponseWriter, r *http.Request) {
 	data := common.GetRequestData(w, r)
 	if data.Authenticated() {
 		common.SetContentType(w, "application/json; charset=UTF-8")

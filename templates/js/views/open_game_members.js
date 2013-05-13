@@ -1,11 +1,13 @@
-window.GameMembersView = Backbone.View.extend({
+window.OpenGameMembersView = Backbone.View.extend({
 
-  template: _.template($('#game_members_underscore').html()),
+  template: _.template($('#open_game_members_underscore').html()),
 
 	initialize: function(options) {
 	  _.bindAll(this, 'render', 'refetch');
 		this.user = options.user;
 		this.user.bind('change', this.refetch);
+		this.gameMembers = options.gameMembers;
+		this.collection = new GameMembers([], { url: '/games/open' });
 		this.collection.bind("change", this.render);
 		this.collection.bind("reset", this.render);
 		this.collection.bind("add", this.render);

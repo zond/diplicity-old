@@ -48,8 +48,8 @@ func init() {
 	membersRouter.Methods("POST").HandlerFunc(games.CreateGameMemberWithGame)
 
 	// Forming games for the user
-	formingRouter := gamesRouter.PathPrefix("/forming").Subrouter()
-	formingRouter.Methods("GET").HandlerFunc(games.GetFormingGames)
+	formingRouter := gamesRouter.PathPrefix("/open").Subrouter()
+	formingRouter.Methods("GET").HandlerFunc(games.GetOpenGames)
 
 	http.Handle("/", router)
 }

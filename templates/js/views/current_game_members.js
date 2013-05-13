@@ -1,12 +1,11 @@
-window.JoinGameView = Backbone.View.extend({
+window.CurrentGameMembersView = Backbone.View.extend({
 
-  template: _.template($('#join_game_underscore').html()),
+  template: _.template($('#current_game_members_underscore').html()),
 
 	initialize: function(options) {
 	  _.bindAll(this, 'render', 'refetch');
 		this.user = options.user;
 		this.user.bind('change', this.refetch);
-		this.collection = new FormingGames();
 		this.collection.bind("change", this.render);
 		this.collection.bind("reset", this.render);
 		this.collection.bind("add", this.render);
@@ -23,7 +22,7 @@ window.JoinGameView = Backbone.View.extend({
 		this.$el.html(this.template({}));
 	  var that = this;
 		this.collection.forEach(function(model) {
-			that.$el.append(new FormingGameView({ model: model }).render().el);
+			that.$el.append(new GameMemberView({ model: model }).render().el);
 		});
 		this.$el.trigger('create');
 		return this;

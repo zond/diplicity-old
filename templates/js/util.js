@@ -104,9 +104,12 @@ String.prototype.format = function() {
 
 var oldBackboneSync = Backbone.sync;
 Backbone.sync = function(method, model, options) {
+	var urlError = function() {
+		throw new Error('A "url" property or function must be specified');
+	};
 	if (method == 'read') {
 		var urlBefore = options.url || _.result(model, 'url') || urlError(); 
-    var cached = localStorage.getItem(urlBefore);
+		var cached = localStorage.getItem(urlBefore);
 		if (cached != null) {
 		  console.log('Fetched', urlBefore, 'from localStorage');
 		  model.set(JSON.parse(cached));
@@ -122,4 +125,34 @@ Backbone.sync = function(method, model, options) {
 	}
 	oldBackboneSync(method, model, options);
 };
+
+function variants() {
+	var rval = [];
+	{{range .Variants}}rval.push({
+		id: '{{.Id}}',
+		name: '{{.Translation}}',
+	});
+	{{end}}
+	return rval;
+};
+
+function variantName(id) {
+  {{range .Variants}}if (id == '{{.Id}}') {
+	  return '{{.Translation}}';
+  }
+	{{end}}
+	return null;
+};
+
+function phaseTypes(variant) {
+	{{range .Variants}}if (variant == '{{.Id}}') {
+		var rval = [];
+		{{range .PhaseTypes}}rval.push('{{.}}');
+		{{end}}
+		return rval;
+	}
+	{{end}}
+	return [];
+};
+
 

@@ -8,24 +8,24 @@ $(window).load(function() {
 	});
 	panZoom('.map');
 
-	var gameMembers = new GameMembers();
+	var currentGameMembers = new GameMembers([], { url: '/games/member' });
 	var user = new User();
 
-  new GameMembersView({ 
+  new CurrentGameMembersView({ 
 	  el: $('.games'),
-	  collection: gameMembers,
+	  collection: currentGameMembers,
 		user: user,
 	}).render();
 
 	new CreateGameView({
     el: $('.create-game'),
-	  collection: gameMembers,
+	  collection: currentGameMembers,
 	}).render();
 
-	new JoinGameView({
+	new OpenGameMembersView({
 	  el: $('.join-game'),
 	  user: user,
-	  collection: gameMembers,
+	  currentGameMembers: currentGameMembers,
 	}).render();
 
 	user.fetch();
