@@ -8,12 +8,16 @@ handlers:
   static_files: img/favicon.ico
   mime_type: image/png
   upload: favicon\.ico
+  secure: always
 - url: /favicon.ico
   static_files: img/favicon.ico
   mime_type: image/png
   upload: favicon\.ico
+  secure: always
 - url: /img/(.*)
   static_files: img/\1
   upload: img/(.*)
+  secure: always
 - url: /.*
   script: _go_app
+  secure: always

@@ -3,10 +3,9 @@ package common
 import (
 	"appengine"
 	"appengine/user"
+	"bytes"
 	"fmt"
-	"io/ioutil"
 	"net/http"
-	"os"
 	"sort"
 	"time"
 )
@@ -76,14 +75,10 @@ func (self RequestData) Version() string {
 	return appengine.VersionID(self.Context)
 }
 
-func (self RequestData) Inline(p string) string {
-	in, err := os.Open(p)
-	if err != nil {
-		panic(err)
+func (self RequestData) SVG(p string) string {
+	b := new(bytes.Buffer)
+	if err := svgTemplates.ExecuteTemplate(b, p, self); err != nil {
+		panic(fmt.Errorf("While rendering text: %v", err))
 	}
-	b, err := ioutil.ReadAll(in)
-	if err != nil {
-		panic(err)
-	}
-	return string(b)
+	return string(b.Bytes())
 }

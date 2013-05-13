@@ -14,7 +14,10 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"text/template"
 )
+
+var svgTemplates = template.Must(template.New("svgTemplates").ParseGlob("templates/svg/*.svg"))
 
 const (
 	regular = iota
