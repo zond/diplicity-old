@@ -1,0 +1,14 @@
+<div class="when-logged-in">
+	<a rel="external" href="#create-game" data-role="button">{{.I "Create a game" }}</a>
+	<a rel="external" href="#public-games" data-role="button">{{.I "View public games" }}</a>
+	<div data-role="collapsible-set" class="when-logged-in games">
+	</div>
+	<a rel="external" href="/logout" class="when-logged-in" data-role="button">{{.I "Logout" }}</a>
+	
+	
+</div>
+<div class="when-logged-out" data-role="collapsible-set">
+	<a rel="external" href="/login" data-role="button">{{.I "Create a Diplicity account" }}</a>
+	<a rel="external" href="/login" data-role="button">{{.I "Log in to see your games" }}</a>
+	<a rel="external" href="#public-games" data-role="button">{{.I "View public games" }}</a>
+</div>
