@@ -11,7 +11,9 @@ window.PhaseTypeView = Backbone.View.extend({
 
 	changeDeadline: function(ev) {
 		this.game.deadlines[this.phaseType] = parseInt($(ev.target).val()); 
-		this.gameMember.trigger('desc_change');
+		if (this.gameMember != null) {
+			this.gameMember.trigger('desc_change');
+		}
 	},
 
 	changeChatFlag: function(ev) {
@@ -20,7 +22,9 @@ window.PhaseTypeView = Backbone.View.extend({
 		} else {
 			this.game.chat_flags[this.phaseType] = this.game.chat_flags[this.phaseType] & (~parseInt($(ev.target).attr('data-chat-flag')));
 		}
-		this.gameMember.trigger('desc_change');
+		if (this.gameMember != null) {
+			this.gameMember.trigger('desc_change');
+		}
 	},
 
 	initialize: function(options) {
