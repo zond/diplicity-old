@@ -32,6 +32,7 @@ var en = map[string]string{
 	"Log in to see your games": "Log in to see your games",
 	"Log in to create a game":  "Log in to create a game",
 	"Log in to join a game":    "Log in to join a game",
+	"Create a game":			"Create a game",
 	"Create a Diplicity account": "Create a Diplicity account",
 	"View public games":		"View public games",
 	"Private":                  "Private",

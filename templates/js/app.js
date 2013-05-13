@@ -14,6 +14,7 @@ $(window).load(function() {
   new HomePageView({
 	el: $('.home-page'),
 		user:user,
+		collection: currentGameMembers,
 	}).render();
   
   new CurrentGameMembersView({ 
