@@ -12,7 +12,7 @@ window.PhaseTypeView = Backbone.View.extend({
 	changeDeadline: function(ev) {
 		this.game.deadlines[this.phaseType] = parseInt($(ev.target).val()); 
 		if (this.gameMember != null) {
-			this.gameMember.trigger('desc_change');
+			this.gameMember.trigger('change');
 		}
 	},
 
@@ -23,7 +23,7 @@ window.PhaseTypeView = Backbone.View.extend({
 			this.game.chat_flags[this.phaseType] = this.game.chat_flags[this.phaseType] & (~parseInt($(ev.target).attr('data-chat-flag')));
 		}
 		if (this.gameMember != null) {
-			this.gameMember.trigger('desc_change');
+			this.gameMember.trigger('change');
 		}
 	},
 
@@ -35,7 +35,7 @@ window.PhaseTypeView = Backbone.View.extend({
 		this.gameMember = options.gameMember;
 		if (this.gameMember != null) {
 			var that = this;
-			this.gameMember.bind('desc_change', function() {
+			this.gameMember.bind('change', function() {
 				that.$('.desc').text(that.getDesc());
 			});
 		}

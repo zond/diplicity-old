@@ -8,7 +8,6 @@ window.OpenGameMembersView = Backbone.View.extend({
 		this.user.bind('change', this.refetch);
 		this.gameMembers = options.gameMembers;
 		this.collection = new GameMembers([], { url: '/games/open' });
-		this.collection.bind("change", this.render);
 		this.collection.bind("reset", this.render);
 		this.collection.bind("add", this.render);
 		this.collection.bind("remove", this.render);

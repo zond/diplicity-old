@@ -4,7 +4,6 @@ window.GameMemberView = Backbone.View.extend({
 
 	initialize: function() {
 	  _.bindAll(this, 'render');
-		this.model.bind('change', this.render);
 	},
 
   render: function() {
@@ -22,6 +21,7 @@ window.GameMemberView = Backbone.View.extend({
 			}).render().el);
 		});
 		this.$('.game-private').val(this.model.get('game').private ? 'true' : 'false');
+		this.$el.trigger('create');
 		return this;
 	},
 
