@@ -31,6 +31,7 @@ window.CreateGameView = Backbone.View.extend({
 			chat_flags: chatFlags,
 		};
 		this.gameMember = new GameMember({
+		  owner: true,
 		  game: game
 		});
 	},

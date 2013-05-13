@@ -83,6 +83,7 @@ type GameMember struct {
 	GameId *datastore.Key `json:"game_id"`
 	Nation dip.Nation     `json:"nation,omitempty"`
 
+	Owner bool   `json:"owner" datastore:"-"`
 	Game  *Game  `json:"game,omitempty" datastore:"-"`
 	Phase *Phase `json:"phase,omitempty" datastore:"-"`
 }
@@ -135,6 +136,9 @@ func GetGameMembersByUser(c appengine.Context, email string) (result GameMembers
 	for index, game := range GetGamesByIds(c, gameIds) {
 		gameCopy := game
 		result[index].Game = gameCopy
+		if game.Id.Parent().StringID() == email {
+			result[index].Owner = true
+		}
 	}
 	for index, phase := range GetLatestPhasesByGameIds(c, gameIds) {
 		phaseCopy := phase
@@ -190,8 +194,10 @@ func GetFormingGamesForUser(c appengine.Context, email string) (result GameMembe
 
 	for _, game := range preResult {
 		if !memberMap[game.Id.Encode()] {
+			owner := game.Id.Parent().StringID() == email
 			result = append(result, &GameMember{
-				Game: game.process(c),
+				Game:  game.process(c),
+				Owner: owner,
 			})
 		}
 	}

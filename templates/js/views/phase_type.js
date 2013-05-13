@@ -27,6 +27,7 @@ window.PhaseTypeView = Backbone.View.extend({
 	  _.bindAll(this, 'render');
 		this.phaseType = options.phaseType;
 		this.game = options.game;
+		this.owner = options.owner;
 		this.gameMember = options.gameMember;
 		if (this.gameMember != null) {
 			var that = this;
@@ -55,6 +56,7 @@ window.PhaseTypeView = Backbone.View.extend({
 
   render: function() {
 		this.$el.html(this.template({
+		  owner: this.owner,
 		  me: this.me,
 		  phaseType: this.phaseType,
 			selected: this.game.deadlines[this.phaseType],
