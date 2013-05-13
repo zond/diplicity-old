@@ -8,9 +8,16 @@ window.GameMemberView = Backbone.View.extend({
 	},
 
   render: function() {
+	  var that = this;
     this.$el.html(this.template({
 		  model: this.model,
 		}));
+		_.each(phaseTypes(this.model.get('game').variant), function(type) {
+		  that.$('.deadlines').append(new DeadlineSelectView({
+				phaseType: type,
+				game: that.model.get('game'),
+			}).render().el);
+		});
 		return this;
 	},
 

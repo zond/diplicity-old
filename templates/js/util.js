@@ -155,4 +155,26 @@ function phaseTypes(variant) {
 	return [];
 };
 
+defaultVariant = 'standard';
+defaultDeadline = 1440;
+
+deadlineOptions = [
+  { value: 5, name: '{{.I "5 minutes" }}' },
+  { value: 10, name: '{{.I "10 minutes" }}' },
+  { value: 20, name: '{{.I "20 minutes" }}' },
+  { value: 30, name: '{{.I "30 minutes" }}' },
+  { value: 60, name: '{{.I "1 hour" }}' },
+  { value: 120, name: '{{.I "2 hours" }}' },
+  { value: 240, name: '{{.I "4 hours" }}' },
+  { value: 480, name: '{{.I "8 hours" }}' },
+  { value: 720, name: '{{.I "12 hours" }}' },
+  { value: 1440, name: '{{.I "24 hours" }}' },
+  { value: 2880, name: '{{.I "2 days" }}' },
+  { value: 4320, name: '{{.I "3 days" }}' },
+  { value: 5760, name: '{{.I "4 days" }}' },
+  { value: 7200, name: '{{.I "5 days" }}' },
+  { value: 10080, name: '{{.I "1 week" }}' },
+  { value: 14400, name: '{{.I "10 days" }}' },
+  { value: 20160, name: '{{.I "2 weeks" }}' },
+];
 
