@@ -11,6 +11,12 @@ $(window).load(function() {
 	var currentGameMembers = new GameMembers([], { url: '/games/member' });
 	var user = new User();
 
+  new HomePageView({
+	el: $('.home-page'),
+		user: user,
+		collection: currentGameMembers,
+	}).render();
+  
   new CurrentGameMembersView({ 
 	  el: $('.games'),
 	  collection: currentGameMembers,
@@ -27,8 +33,6 @@ $(window).load(function() {
 	  user: user,
 	  currentGameMembers: currentGameMembers,
 	}).render();
-
 	user.fetch();
-
 });
 
