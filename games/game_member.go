@@ -8,6 +8,18 @@ import (
 	dip "github.com/zond/godip/common"
 )
 
+func gameMembersByUserKey(k string) string {
+	return fmt.Sprintf("%v{User:%v}", gameMemberKind, k)
+}
+
+func gameMemberByIdKey(k *datastore.Key) string {
+	return fmt.Sprintf("%v{Id:%v}", gameMemberKind, k)
+}
+
+func gameMembersByGameKey(k *datastore.Key) string {
+	return fmt.Sprintf("%v{GameId:%v}", gameMemberKind, k)
+}
+
 type GameMembers []*GameMember
 
 type GameMember struct {
@@ -42,7 +54,8 @@ func (self *GameMember) ValidatedDelete(c appengine.Context, email string) {
 		if self.Email != email {
 			return fmt.Errorf("%+v is not %v", self, email)
 		}
-		if game := GetGamesByIds(c, []*datastore.Key{self.GameId})[0]; game.Started {
+		var game *Game
+		if game = GetGamesByIds(c, []*datastore.Key{self.GameId})[0]; game.Started {
 			return fmt.Errorf("%+v has already started", game)
 		}
 		if err := datastore.Delete(c, self.IdByGame(c)); err != nil {
@@ -51,8 +64,14 @@ func (self *GameMember) ValidatedDelete(c appengine.Context, email string) {
 		if err := datastore.Delete(c, self.IdByEmail(c)); err != nil {
 			return err
 		}
-		common.MemDel(c, gameMembersByUserKey(email), gameMembersByGameKey(self.GameId), gameMemberByIdKey(self.IdByEmail(c)), gameMemberByIdKey(self.IdByGame(c)))
-		// remove game if this was the only member...
+
+		if len(game.GetMembers(c)) == 0 {
+			if err := game.Delete(c); err != nil {
+				return
+			}
+		}
+
+		common.MemDel(c, gameMembersByUserKey(email), gameMembersByGameKey(self.GameId), gameMemberByIdKey(self.IdByGame(c)))
 
 		return nil
 	}, &datastore.TransactionOptions{XG: true}); err != nil {
@@ -86,13 +105,23 @@ func (self *GameMember) Save(c appengine.Context, email string) (result *GameMem
 		return
 	}
 
-	common.MemDel(c, gameMembersByUserKey(email), gameMembersByGameKey(self.GameId), gameMemberByIdKey(self.IdByEmail(c)), gameMemberByIdKey(self.IdByGame(c)))
+	common.MemDel(c, gameMembersByUserKey(email), gameMembersByGameKey(self.GameId), gameMemberByIdKey(self.IdByGame(c)))
 	return
 }
 
 func findGameMembersByGameId(c appengine.Context, gameId *datastore.Key) (result GameMembers) {
 	_, err := datastore.NewQuery(gameMemberKind).Ancestor(gameId).GetAll(c, &result)
 	common.AssertOkError(err)
+	return
+}
+
+func (self *Game) GetMembers(c appengine.Context) (result GameMembers) {
+	common.Memoize(c, gameMembersByGameKey(self.Id), &result, func() interface{} {
+		return findGameMembersByGameId(c, self.Id)
+	})
+	if result == nil {
+		result = make(GameMembers, 0)
+	}
 	return
 }
 

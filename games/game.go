@@ -7,6 +7,14 @@ import (
 	"fmt"
 )
 
+func gameByIdKey(k *datastore.Key) string {
+	return fmt.Sprintf("%v{Id:%v}", gameKind, k)
+}
+
+const (
+	formingGamesKey = "Games{Started:false}"
+)
+
 type Games []*Game
 
 type Game struct {
@@ -47,8 +55,20 @@ func findFormingGames(c appengine.Context) (result Games) {
 	return
 }
 
+func (self *Game) Delete(c appengine.Context) (err error) {
+	if err = datastore.Delete(c, self.Id); err != nil {
+		return
+	}
+	if !self.Started {
+		common.MemDel(c, formingGamesKey)
+	}
+	common.MemDel(c, gameByIdKey(self.Id))
+}
+
 func (self *Game) Save(c appengine.Context, owner string) (result *Game, err error) {
 	result = self
+
+	oldGames := GetGamesByIds(c, []*datastore.Key{self.Id})
 
 	if self.Deadlines == nil {
 		self.Deadlines = make(map[string]Minutes)
@@ -66,9 +86,12 @@ func (self *Game) Save(c appengine.Context, owner string) (result *Game, err err
 	}
 	if self.Id == nil {
 		self.Id, err = datastore.Put(c, datastore.NewKey(c, gameKind, "", 0, common.UserRoot(c, owner)), self)
-		common.MemDel(c, formingGamesKey)
 	} else {
 		_, err = datastore.Put(c, self.Id, self)
+	}
+
+	if len(oldGames) == 0 || oldGames[0].Started != self.Started {
+		common.MemDel(c, formingGamesKey)
 	}
 	common.MemDel(c, gameByIdKey(self.Id))
 	return

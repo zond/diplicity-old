@@ -7,6 +7,10 @@ import (
 	dip "github.com/zond/godip/common"
 )
 
+func latestPhaseByGameIdKey(k *datastore.Key) string {
+	return fmt.Sprintf("%v{Game:%v,Latest}", phaseKind, k)
+}
+
 type Phases []*Phase
 
 type Phase struct {
