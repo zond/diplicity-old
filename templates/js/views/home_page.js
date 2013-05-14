@@ -4,10 +4,21 @@ window.HomePageView = Backbone.View.extend({
 
 
 	initialize: function(options) {
+	this.user=options.user;
+	this.currentGameMembers=options.currentGameMembers;
 	},
 
   render: function() {
-		this.$el.html(this.template({}));
+  
+		this.$el.html(this.template({
+			user:this.user,
+			
+		}));
+		new CurrentGameMembersView({ 
+			el: $('.homePageGames'),
+			collection: this.collection,
+			user: this.user,
+		}).render();
 		this.$el.trigger('create');
 		this.delegateEvents();
 		return this;

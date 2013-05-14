@@ -1,12 +1,19 @@
 <div class="when-logged-in">
-
+	<div class="jqmText">
+		<h2>{{.I "Diplicity Welcome" }}</h2>
+	</div>
 	<a href="#create-game" data-role="button">{{.I "Create a game" }}</a>
 	<a href="#public-games" data-role="button">{{.I "View public games" }}</a>
-	<div data-role="collapsible-set" class="when-logged-in games">
+	<div data-role="collapsible-set" class="homePageGames">
 	</div>
-	<a rel="external" href="/logout" class="when-logged-in" data-role="button">{{.I "Logout" }}</a>
+	<a href="#about-dip" data-role="button">{{.I "Learn how to play" }}</a>
+	<a rel="external" href="/logout" data-role="button">{{.I "Logout" }}</a>
 </div>
 <div class="when-logged-out" data-role="collapsible-set">
+	<div class="jqmtext">
+		<h2>{{.I "Diplicity Welcome" }}</h2>
+	</div> 
+	<a href="#about-dip" data-role="button">{{.I "Learn how to play" }}</a>
 	<a rel="external" href="/login" data-role="button">{{.I "Create a Diplicity account" }}</a>
 	<a rel="external" href="/login" data-role="button">{{.I "Log in to see your games" }}</a>
 	<a href="#public-games" data-role="button">{{.I "View public games" }}</a>

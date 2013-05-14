@@ -10,6 +10,9 @@
 	left: 0;
 	top: 0;
 }
+.jqmText{
+	text-align: center;
+}
 
 .when-logged-in {
 	display: none;
