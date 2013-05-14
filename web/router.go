@@ -47,6 +47,7 @@ func init() {
 
 	memberRouter := membersRouter.PathPrefix("/{member_id}").Subrouter()
 	memberRouter.Methods("PUT").HandlerFunc(games.UpdateGameMemberWithGame)
+	memberRouter.Methods("DELETE").HandlerFunc(games.DeleteGameMember)
 
 	membersRouter.Methods("GET").HandlerFunc(games.GetGameMembers)
 	membersRouter.Methods("POST").HandlerFunc(games.CreateGameMemberWithGame)
