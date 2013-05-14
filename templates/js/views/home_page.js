@@ -15,7 +15,7 @@ window.HomePageView = Backbone.View.extend({
 			
 		}));
 		new CurrentGameMembersView({ 
-			el: $('.homePageGames'),
+			el: this.$('.homePageGames'),
 			collection: this.collection,
 			user: this.user,
 		}).render();
