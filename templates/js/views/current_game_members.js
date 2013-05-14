@@ -9,6 +9,14 @@ window.CurrentGameMembersView = Backbone.View.extend({
 		this.collection.bind("reset", this.render);
 		this.collection.bind("add", this.render);
 		this.collection.bind("remove", this.render);
+		this.children = [];
+	},
+
+	clean: function() {
+	  _.each(this.children, function(child) {
+		  child.onClose();
+		});
+		this.children = [];
 	},
 
 	refetch: function() {
@@ -18,13 +26,17 @@ window.CurrentGameMembersView = Backbone.View.extend({
 	},
 
   render: function() {
-		this.$el.html(this.template({}));
 	  var that = this;
-		this.collection.forEach(function(model) {
-			that.$el.append(new GameMemberView({ model: model }).render().el);
+		that.clean();
+		that.$el.html(that.template({}));
+		that.collection.forEach(function(model) {
+			that.$el.append(new GameMemberView({ 
+				model: model,
+				parent: that,
+			}).render().el);
 		});
-		this.$el.trigger('create');
-		return this;
+		that.$el.trigger('create');
+		return that;
 	},
 
 });

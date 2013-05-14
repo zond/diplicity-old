@@ -44,6 +44,10 @@ func init() {
 
 	// Games of which the user is a member
 	membersRouter := gamesRouter.PathPrefix("/member").Subrouter()
+
+	memberRouter := membersRouter.PathPrefix("/{member_id}").Subrouter()
+	memberRouter.Methods("PUT").HandlerFunc(games.UpdateGameMemberWithGame)
+
 	membersRouter.Methods("GET").HandlerFunc(games.GetGameMembers)
 	membersRouter.Methods("POST").HandlerFunc(games.CreateGameMemberWithGame)
 

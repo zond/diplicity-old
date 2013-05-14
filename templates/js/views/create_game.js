@@ -23,6 +23,13 @@ window.CreateGameView = Backbone.View.extend({
 		$.mobile.changePage('#home');
 	},
 
+	clean: function() {
+	  _.each(this.children, function(child) {
+		  child.onClose();
+		});
+		this.children = [];
+	},
+
 	initialize: function(options) {
 	  _.bindAll(this, 'render');
 		var deadlines = {};
@@ -41,11 +48,13 @@ window.CreateGameView = Backbone.View.extend({
 		  owner: true,
 		  game: game
 		});
+		this.children = [];
 	},
 
   render: function() {
 		var that = this;
-		this.$el.html(this.template({}));
+		that.clean();
+		that.$el.html(that.template({}));
 		_.each(variants(), function(variant) {
 		  if (variant.id == that.gameMember.get('game').variant) {
 				that.$('select.create-game-variant').append('<option value="{0}" selected="selected">{{.I "Variant"}}: {1}</option>'.format(variant.id, variant.name));
@@ -53,18 +62,19 @@ window.CreateGameView = Backbone.View.extend({
 				that.$('select.create-game-variant').append('<option value="{0}">{{.I "Variant"}}: {1}</option>'.format(variant.id, variant.name));
 			}
 		});
-		this.deadlines = {};
-		_.each(phaseTypes(this.$('.create-game-variant').val()), function(type) {
+		that.deadlines = {};
+		_.each(phaseTypes(that.$('.create-game-variant').val()), function(type) {
 		  that.$('.phase-types').append(new PhaseTypeView({
+				parent: that,
 				phaseType: type,
 				game: that.gameMember.get('game'),
 				owner: that.gameMember.get('owner'),
 				gameMember: that.gameMember,
 			}).render().el);
 		});
-		this.$el.trigger('create');
-		this.delegateEvents();
-		return this;
+		that.$el.trigger('create');
+		that.delegateEvents();
+		return that;
 	},
 
 });

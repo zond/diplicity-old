@@ -22,6 +22,10 @@ func gameMembersByUserKey(k string) string {
 	return fmt.Sprintf("%v{User:%v}", gameMemberKind, k)
 }
 
+func gameMemberByIdKey(k *datastore.Key) string {
+	return fmt.Sprintf("%v{Id:%v}", gameMemberKind, k)
+}
+
 func gameByIdKey(k *datastore.Key) string {
 	return fmt.Sprintf("%v{Id:%v}", gameKind, k)
 }
@@ -88,7 +92,12 @@ type GameMember struct {
 	Phase *Phase `json:"phase,omitempty" datastore:"-"`
 }
 
-func (self *GameMember) CreateWithGame(c appengine.Context, email string) (result *GameMember, err error) {
+func (self *GameMember) CopyFrom(o *GameMember) *GameMember {
+	self.Game.CopyFrom(o.Game)
+	return self
+}
+
+func (self *GameMember) SaveWithGame(c appengine.Context, email string) (result *GameMember, err error) {
 	result = self
 	err = datastore.RunInTransaction(c, func(c appengine.Context) error {
 		if self.Game, err = self.Game.Save(c, email); err != nil {
@@ -150,37 +159,6 @@ func GetGameMembersByUser(c appengine.Context, email string) (result GameMembers
 	return
 }
 
-type Games []*Game
-
-type Game struct {
-	Id      *datastore.Key `json:"id" datastore:"-"`
-	Started bool           `json:"started"`
-	Variant string         `json:"variant"`
-	EndYear int            `json:"end_year"`
-	Private bool           `json:"private"`
-
-	SerializedDeadlines []byte             `json:"-"`
-	Deadlines           map[string]Minutes `json:"deadlines" datastore:"-"`
-
-	SerializedChatFlags []byte                     `json:"-"`
-	ChatFlags           map[string]common.ChatFlag `json:"chat_flags" datastore:"-"`
-}
-
-func (self *Game) process(c appengine.Context) *Game {
-	common.MustUnmarshalJSON(self.SerializedDeadlines, &self.Deadlines)
-	common.MustUnmarshalJSON(self.SerializedChatFlags, &self.ChatFlags)
-	return self
-}
-
-func findFormingGames(c appengine.Context) (result Games) {
-	ids, err := datastore.NewQuery(gameKind).Filter("Started=", false).GetAll(c, &result)
-	common.AssertOkError(err)
-	for index, id := range ids {
-		result[index].Id = id
-	}
-	return
-}
-
 func GetFormingGamesForUser(c appengine.Context, email string) (result GameMembers) {
 	memberMap := make(map[string]bool)
 	for _, member := range GetGameMembersByUser(c, email) {
@@ -204,6 +182,66 @@ func GetFormingGamesForUser(c appengine.Context, email string) (result GameMembe
 
 	if result == nil {
 		result = make(GameMembers, 0)
+	}
+	return
+}
+
+func findGameMemberById(c appengine.Context, key *datastore.Key) *GameMember {
+	var result GameMember
+	err := datastore.Get(c, key, &result)
+	common.AssertOkError(err)
+	result.Id = key
+	return &result
+}
+
+func GetGameMemberById(c appengine.Context, key *datastore.Key) *GameMember {
+	var result GameMember
+	if common.Memoize(c, gameMemberByIdKey(key), &result, func() interface{} {
+		return findGameMemberById(c, key)
+	}) {
+		result.Game = GetGamesByIds(c, []*datastore.Key{result.GameId})[0]
+		result.Phase = GetLatestPhasesByGameIds(c, []*datastore.Key{result.GameId})[0]
+		return &result
+	}
+	return nil
+}
+
+type Games []*Game
+
+type Game struct {
+	Id      *datastore.Key `json:"id" datastore:"-"`
+	Started bool           `json:"started"`
+	Variant string         `json:"variant"`
+	EndYear int            `json:"end_year"`
+	Private bool           `json:"private"`
+
+	SerializedDeadlines []byte             `json:"-"`
+	Deadlines           map[string]Minutes `json:"deadlines" datastore:"-"`
+
+	SerializedChatFlags []byte                     `json:"-"`
+	ChatFlags           map[string]common.ChatFlag `json:"chat_flags" datastore:"-"`
+}
+
+func (self *Game) CopyFrom(o *Game) *Game {
+	self.Variant = o.Variant
+	self.EndYear = o.EndYear
+	self.Private = o.Private
+	self.Deadlines = o.Deadlines
+	self.ChatFlags = o.ChatFlags
+	return self
+}
+
+func (self *Game) process(c appengine.Context) *Game {
+	common.MustUnmarshalJSON(self.SerializedDeadlines, &self.Deadlines)
+	common.MustUnmarshalJSON(self.SerializedChatFlags, &self.ChatFlags)
+	return self
+}
+
+func findFormingGames(c appengine.Context) (result Games) {
+	ids, err := datastore.NewQuery(gameKind).Filter("Started=", false).GetAll(c, &result)
+	common.AssertOkError(err)
+	for index, id := range ids {
+		result[index].Id = id
 	}
 	return
 }

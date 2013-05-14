@@ -9,53 +9,58 @@ window.PhaseTypeView = Backbone.View.extend({
 		"change .chat-flag": "changeChatFlag",
 	},
 
-	changeDeadline: function(ev) {
-		this.game.deadlines[this.phaseType] = parseInt($(ev.target).val()); 
-		if (this.gameMember != null) {
-			this.gameMember.trigger('change');
-		}
-	},
-
-	changeChatFlag: function(ev) {
-	  if ($(ev.target).is(":checked")) {
-			this.game.chat_flags[this.phaseType] |= parseInt($(ev.target).attr('data-chat-flag'));
-		} else {
-			this.game.chat_flags[this.phaseType] = this.game.chat_flags[this.phaseType] & (~parseInt($(ev.target).attr('data-chat-flag')));
-		}
-		if (this.gameMember != null) {
-			this.gameMember.trigger('change');
-		}
-	},
-
 	initialize: function(options) {
-	  _.bindAll(this, 'render');
+	  _.bindAll(this, 'render', 'update', 'onClose');
 		this.phaseType = options.phaseType;
-		this.game = options.game;
 		this.owner = options.owner;
 		this.gameMember = options.gameMember;
-		if (this.gameMember != null) {
-			var that = this;
-			this.gameMember.bind('change', function() {
-				that.$('.desc').text(that.getDesc());
-			});
-		}
+		this.gameMember.bind('change', this.update);
+		options.parent.children.push(this);
 	},
 
-	getDesc: function() {
+	onClose: function() {
+	  this.gameMember.unbind('change', this.update);
+	},
+
+	changeDeadline: function(ev) {
+		this.gameMember.get('game').deadlines[this.phaseType] = parseInt($(ev.target).val()); 
+		this.gameMember.trigger('change');
+		this.gameMember.trigger('saveme');
+	},
+
+  update: function() {
+	  var that = this;
 		var desc = [];
 		for (var i = 0; i < deadlineOptions.length; i++) { 
 		  var opt = deadlineOptions[i];
-		  if (opt.value == this.game.deadlines[this.phaseType]) {
+		  if (opt.value == that.gameMember.get('game').deadlines[that.phaseType]) {
 			  desc.push(opt.name);
+				that.$('.deadline').val('' + opt.value);
 			}
 		} 
 		for (var i = 0; i < chatFlagOptions().length; i++) {
 			var opt = chatFlagOptions()[i];
-			if ((opt.id & this.game.chat_flags[this.phaseType]) != 0) {
+			if ((opt.id & that.gameMember.get('game').chat_flags[that.phaseType]) != 0) {
 			  desc.push(opt.name);
+				that.$('input[type=checkbox][data-chat-flag=' + opt.id + ']').attr('checked', 'checked');
+			} else {
+				that.$('input[type=checkbox][data-chat-flag=' + opt.id + ']').removeAttr('checked');
 			}
+			that.$('input[type=checkbox][data-chat-flag=' + opt.id + ']').checkboxradio().checkboxradio('refresh');
 		}
-		return desc.join(", ");
+		that.$('.desc').text(desc.join(", "));
+		that.$('select.deadline').val(that.gameMember.get('game').deadlines[that.phaseType]);
+		that.$('select.deadline').selectmenu().selectmenu('refresh');
+	},
+
+	changeChatFlag: function(ev) {
+	  if ($(ev.target).is(":checked")) {
+			this.gameMember.get('game').chat_flags[this.phaseType] |= parseInt($(ev.target).attr('data-chat-flag'));
+		} else {
+			this.gameMember.get('game').chat_flags[this.phaseType] = this.gameMember.get('game').chat_flags[this.phaseType] & (~parseInt($(ev.target).attr('data-chat-flag')));
+		}
+		this.gameMember.trigger('change');
+		this.gameMember.trigger('saveme');
 	},
 
   render: function() {
@@ -63,11 +68,9 @@ window.PhaseTypeView = Backbone.View.extend({
 		  owner: this.owner,
 		  me: this.me,
 		  phaseType: this.phaseType,
-			selected: this.game.deadlines[this.phaseType],
-			desc: this.getDesc(),
-			chatFlags: this.game.chat_flags[this.phaseType],
-			deadlineOptions: deadlineOptions,
 		}));
+		this.update();
+		this.$el.trigger('create');
 		return this;
 	},
 
