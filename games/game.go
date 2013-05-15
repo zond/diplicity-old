@@ -63,6 +63,7 @@ func (self *Game) Delete(c appengine.Context) (err error) {
 		common.MemDel(c, formingGamesKey)
 	}
 	common.MemDel(c, gameByIdKey(self.Id))
+	return
 }
 
 func (self *Game) Save(c appengine.Context, owner string) (result *Game, err error) {

@@ -67,7 +67,7 @@ func (self *GameMember) ValidatedDelete(c appengine.Context, email string) {
 
 		if len(game.GetMembers(c)) == 0 {
 			if err := game.Delete(c); err != nil {
-				return
+				return err
 			}
 		}
 
