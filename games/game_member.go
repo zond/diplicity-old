@@ -65,13 +65,20 @@ func (self *GameMember) ValidatedDelete(c appengine.Context, email string) {
 			return err
 		}
 
-		if len(game.GetMembers(c)) == 0 {
+		common.MemDel(c, gameMembersByUserKey(email), gameMembersByGameKey(self.GameId), gameMemberByIdKey(self.IdByGame(c)))
+
+		otherMembers := false
+		for _, memb := range game.GetMembers(c) {
+			if memb.Email != self.Email {
+				otherMembers = true
+				break
+			}
+		}
+		if !otherMembers {
 			if err := game.Delete(c); err != nil {
 				return err
 			}
 		}
-
-		common.MemDel(c, gameMembersByUserKey(email), gameMembersByGameKey(self.GameId), gameMemberByIdKey(self.IdByGame(c)))
 
 		return nil
 	}, &datastore.TransactionOptions{XG: true}); err != nil {

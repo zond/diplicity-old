@@ -1,4 +1,6 @@
 
+window.session = {};
+
 $(window).load(function() {
 
 	$(document).ajaxError(function(event, jqXHR, ajaxSettings, thrownError) {
@@ -10,6 +12,8 @@ $(window).load(function() {
 
 	var currentGameMembers = new GameMembers([], { url: '/games/member' });
 	var user = new User();
+
+	window.session.user = user;
 
   new HomePageView({
 	el: $('.home-page'),

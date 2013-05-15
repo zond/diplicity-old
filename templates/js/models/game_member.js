@@ -1,5 +1,9 @@
 window.GameMember = Backbone.Model.extend({
 
+  is_member: function() {
+		return window.session.user.get('email') != '' && this.get('email') == window.session.user.get('email');
+	},
+
 	describe: function() {
 		var phase = this.get('phase');
 		var phaseInfo = '{{.I "forming"}}';

@@ -6,4 +6,7 @@
 		<option value="false">{{.I "Public" }}</option>
 		<option value="true">{{.I "Private" }}</option>
 	</select>
+	<% if (model.is_member()) { %>
+	<a href="#" class="leave-game" data-role="button">{{.I "Leave" }}</a>
+	<% } %>
 </div>

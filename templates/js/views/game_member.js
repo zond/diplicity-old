@@ -4,6 +4,7 @@ window.GameMemberView = Backbone.View.extend({
 
   events: {
 		"change .game-private": "changePrivate",
+		"click .leave-game": "leaveGame",
 	},
 
 	initialize: function(options) {
@@ -13,6 +14,10 @@ window.GameMemberView = Backbone.View.extend({
 		options.parent.children.push(this);
 		this.createdAt = new Date().getTime();
 		this.children = [];
+	},
+
+	leaveGame: function(ev) {
+	  this.model.destroy();
 	},
 
   changePrivate: function(ev) {

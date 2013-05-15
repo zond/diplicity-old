@@ -69,7 +69,10 @@ func (self *Game) Delete(c appengine.Context) (err error) {
 func (self *Game) Save(c appengine.Context, owner string) (result *Game, err error) {
 	result = self
 
-	oldGames := GetGamesByIds(c, []*datastore.Key{self.Id})
+	var oldGames Games
+	if self.Id != nil {
+		oldGames = GetGamesByIds(c, []*datastore.Key{self.Id})
+	}
 
 	if self.Deadlines == nil {
 		self.Deadlines = make(map[string]Minutes)
