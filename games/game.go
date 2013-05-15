@@ -12,7 +12,7 @@ func gameByIdKey(k *datastore.Key) string {
 }
 
 const (
-	formingGamesKey = "Games{Started:false}"
+	openGamesKey = "Games{Closed:false}"
 )
 
 type Games []*Game
@@ -20,11 +20,10 @@ type Games []*Game
 type Game struct {
 	Id      *datastore.Key `json:"id" datastore:"-"`
 	Started bool           `json:"started"`
+	Closed  bool           `json:"closed"`
 	Variant string         `json:"variant"`
 	EndYear int            `json:"end_year"`
 	Private bool           `json:"private"`
-
-	Open bool `json:"open" datastore:"-"`
 
 	SerializedDeadlines []byte             `json:"-"`
 	Deadlines           map[string]Minutes `json:"deadlines" datastore:"-"`
@@ -45,15 +44,24 @@ func (self *Game) CopyFrom(o *Game) *Game {
 func (self *Game) process(c appengine.Context) *Game {
 	common.MustUnmarshalJSON(self.SerializedDeadlines, &self.Deadlines)
 	common.MustUnmarshalJSON(self.SerializedChatFlags, &self.ChatFlags)
-	self.Open = len(self.GetMembers(c)) < len(common.VariantMap[self.Variant].Nations)
 	return self
 }
 
-func findFormingGames(c appengine.Context) (result Games) {
-	ids, err := datastore.NewQuery(gameKind).Filter("Started=", false).GetAll(c, &result)
+func findOpenGames(c appengine.Context) (result Games) {
+	ids, err := datastore.NewQuery(gameKind).Filter("Closed=", false).GetAll(c, &result)
 	common.AssertOkError(err)
 	for index, id := range ids {
 		result[index].Id = id
+	}
+	return
+}
+
+func GetOpenGames(c appengine.Context) (result Games) {
+	common.Memoize(c, openGamesKey, &result, func() interface{} {
+		return findOpenGames(c)
+	})
+	if result == nil {
+		result = make(Games, 0)
 	}
 	return
 }
@@ -62,8 +70,8 @@ func (self *Game) Delete(c appengine.Context) (err error) {
 	if err = datastore.Delete(c, self.Id); err != nil {
 		return
 	}
-	if !self.Started {
-		common.MemDel(c, formingGamesKey)
+	if !self.Closed {
+		common.MemDel(c, openGamesKey)
 	}
 	common.MemDel(c, gameByIdKey(self.Id))
 	return
@@ -97,8 +105,8 @@ func (self *Game) Save(c appengine.Context, owner string) (result *Game, err err
 		_, err = datastore.Put(c, self.Id, self)
 	}
 
-	if oldGame == nil || oldGame.Started != self.Started {
-		common.MemDel(c, formingGamesKey)
+	if oldGame == nil || oldGame.Closed != self.Closed {
+		common.MemDel(c, openGamesKey)
 	}
 	common.MemDel(c, gameByIdKey(self.Id))
 	return

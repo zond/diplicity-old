@@ -162,19 +162,13 @@ func GetGameMembersByUser(c appengine.Context, email string) (result GameMembers
 	return
 }
 
-func GetFormingGamesForUser(c appengine.Context, email string) (result GameMembers) {
+func GetOpenGamesForUser(c appengine.Context, email string) (result GameMembers) {
 	memberMap := make(map[string]bool)
 	for _, member := range GetGameMembersByUser(c, email) {
 		memberMap[member.GameId.Encode()] = true
 	}
 
-	var preResult Games
-	common.Memoize(c, formingGamesKey, &preResult, func() interface{} {
-		return findFormingGames(c)
-	})
-	c.Infof("forming %v", preResult)
-
-	for _, game := range preResult {
+	for _, game := range GetOpenGames(c) {
 		if !memberMap[game.Id.Encode()] {
 			owner := game.Id.Parent().StringID() == email
 			result = append(result, &GameMember{

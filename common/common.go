@@ -232,7 +232,7 @@ type jsonUser struct {
 	Email string `json:"email"`
 }
 
-func GetUser(w http.ResponseWriter, r *http.Request) {
+func FetchUser(w http.ResponseWriter, r *http.Request) {
 	data := GetRequestData(w, r)
 	SetContentType(w, "application/json; charset=UTF-8")
 	if data.User == nil {

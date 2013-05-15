@@ -8,15 +8,15 @@ import (
 	"net/http"
 )
 
-func GetOpenGames(w http.ResponseWriter, r *http.Request) {
+func FetchOpenGames(w http.ResponseWriter, r *http.Request) {
 	data := common.GetRequestData(w, r)
 	if data.Authenticated() {
 		common.SetContentType(w, "application/json; charset=UTF-8")
-		common.MustEncodeJSON(w, GetFormingGamesForUser(data.Context, data.User.Email))
+		common.MustEncodeJSON(w, GetOpenGamesForUser(data.Context, data.User.Email))
 	}
 }
 
-func GetGameMembers(w http.ResponseWriter, r *http.Request) {
+func FetchGameMembers(w http.ResponseWriter, r *http.Request) {
 	data := common.GetRequestData(w, r)
 	if data.Authenticated() {
 		common.SetContentType(w, "application/json; charset=UTF-8")

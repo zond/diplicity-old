@@ -37,7 +37,7 @@ func init() {
 	*/
 
 	// Logged in user
-	router.Path("/user").MatcherFunc(wantsJSON).Methods("GET").HandlerFunc(common.GetUser)
+	router.Path("/user").MatcherFunc(wantsJSON).Methods("GET").HandlerFunc(common.FetchUser)
 
 	// Games
 	gamesRouter := router.PathPrefix("/games").MatcherFunc(wantsJSON).Subrouter()
@@ -49,12 +49,12 @@ func init() {
 	memberRouter.Methods("PUT").HandlerFunc(games.UpdateGameMemberWithGame)
 	memberRouter.Methods("DELETE").HandlerFunc(games.DeleteGameMember)
 
-	membersRouter.Methods("GET").HandlerFunc(games.GetGameMembers)
+	membersRouter.Methods("GET").HandlerFunc(games.FetchGameMembers)
 	membersRouter.Methods("POST").HandlerFunc(games.CreateGameMemberWithGame)
 
 	// Forming games for the user
 	formingRouter := gamesRouter.PathPrefix("/open").Subrouter()
-	formingRouter.Methods("GET").HandlerFunc(games.GetOpenGames)
+	formingRouter.Methods("GET").HandlerFunc(games.FetchOpenGames)
 
 	http.Handle("/", router)
 }
