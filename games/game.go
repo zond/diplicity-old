@@ -24,6 +24,8 @@ type Game struct {
 	EndYear int            `json:"end_year"`
 	Private bool           `json:"private"`
 
+	Open bool `json:"open" datastore:"-"`
+
 	SerializedDeadlines []byte             `json:"-"`
 	Deadlines           map[string]Minutes `json:"deadlines" datastore:"-"`
 
@@ -43,6 +45,7 @@ func (self *Game) CopyFrom(o *Game) *Game {
 func (self *Game) process(c appengine.Context) *Game {
 	common.MustUnmarshalJSON(self.SerializedDeadlines, &self.Deadlines)
 	common.MustUnmarshalJSON(self.SerializedChatFlags, &self.ChatFlags)
+	self.Open = len(self.GetMembers(c)) < len(common.VariantMap[self.Variant].Nations)
 	return self
 }
 
@@ -69,9 +72,9 @@ func (self *Game) Delete(c appengine.Context) (err error) {
 func (self *Game) Save(c appengine.Context, owner string) (result *Game, err error) {
 	result = self
 
-	var oldGames Games
+	var oldGame *Game
 	if self.Id != nil {
-		oldGames = GetGamesByIds(c, []*datastore.Key{self.Id})
+		oldGame = GetGameById(c, self.Id)
 	}
 
 	if self.Deadlines == nil {
@@ -94,7 +97,7 @@ func (self *Game) Save(c appengine.Context, owner string) (result *Game, err err
 		_, err = datastore.Put(c, self.Id, self)
 	}
 
-	if len(oldGames) == 0 || oldGames[0].Started != self.Started {
+	if oldGame == nil || oldGame.Started != self.Started {
 		common.MemDel(c, formingGamesKey)
 	}
 	common.MemDel(c, gameByIdKey(self.Id))
@@ -107,6 +110,10 @@ func findGameById(c appengine.Context, id *datastore.Key) *Game {
 	common.AssertOkError(err)
 	result.Id = id
 	return &result
+}
+
+func GetGameById(c appengine.Context, id *datastore.Key) *Game {
+	return GetGamesByIds(c, []*datastore.Key{id})[0]
 }
 
 func GetGamesByIds(c appengine.Context, ids []*datastore.Key) (result Games) {
