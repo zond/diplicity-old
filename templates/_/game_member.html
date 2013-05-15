@@ -8,5 +8,7 @@
 	</select>
 	<% if (model.is_member()) { %>
 	<a href="#" class="leave-game" data-role="button">{{.I "Leave" }}</a>
+	<% } else if (!model.get('closed')) { %>
+	<a href="#" class="join-game" data-role="button">{{.I "Join" }}</a>
 	<% } %>
 </div>
