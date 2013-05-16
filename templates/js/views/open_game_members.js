@@ -6,7 +6,7 @@ window.OpenGameMembersView = Backbone.View.extend({
 	  _.bindAll(this, 'render', 'refetch');
 		this.user = options.user;
 		this.user.bind('change', this.refetch);
-		this.gameMembers = options.gameMembers;
+		this.currentGameMembers = options.currentGameMembers;
 		this.collection = new GameMembers([], { url: '/games/open' });
 		this.collection.bind("reset", this.render);
 		this.collection.bind("add", this.render);
@@ -34,6 +34,11 @@ window.OpenGameMembersView = Backbone.View.extend({
 		that.collection.forEach(function(model) {
 			that.$el.append(new GameMemberView({ 
 				model: model,
+				onJoin: function() {
+				  that.collection.remove(model);
+					that.currentGameMembers.add(model);
+					$.mobile.changePage('#home');
+				},
 				parent: that,
 			}).render().el);
 		});

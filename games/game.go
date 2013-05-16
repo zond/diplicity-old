@@ -77,7 +77,7 @@ func (self *Game) Delete(c appengine.Context) (err error) {
 	return
 }
 
-func (self *Game) Save(c appengine.Context, owner string) (result *Game, err error) {
+func (self *Game) save(c appengine.Context, owner string) (result *Game, err error) {
 	result = self
 
 	var oldGame *Game
@@ -115,6 +115,9 @@ func (self *Game) Save(c appengine.Context, owner string) (result *Game, err err
 func findGameById(c appengine.Context, id *datastore.Key) *Game {
 	var result Game
 	err := datastore.Get(c, id, &result)
+	if err == datastore.ErrNoSuchEntity {
+		return nil
+	}
 	common.AssertOkError(err)
 	result.Id = id
 	return &result

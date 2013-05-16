@@ -5,6 +5,7 @@ window.GameMemberView = Backbone.View.extend({
   events: {
 		"change .game-private": "changePrivate",
 		"click .leave-game": "leaveGame",
+		"click .join-game": "joinGame",
 	},
 
 	initialize: function(options) {
@@ -14,10 +15,22 @@ window.GameMemberView = Backbone.View.extend({
 		options.parent.children.push(this);
 		this.createdAt = new Date().getTime();
 		this.children = [];
+		this.onJoin = options.onJoin;
 	},
 
 	leaveGame: function(ev) {
 	  this.model.destroy();
+	},
+
+	joinGame: function(ev) {
+	  var that = this;
+	  that.model.save(null, {
+    	success: function() {
+				if (that.onJoin != null) {
+					that.onJoin();
+				}
+			},
+		});
 	},
 
   changePrivate: function(ev) {

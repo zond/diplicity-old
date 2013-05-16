@@ -33,6 +33,15 @@ type GameMember struct {
 	Phase *Phase `json:"phase,omitempty" datastore:"-"`
 }
 
+func (self *GameMember) IdByGame(c appengine.Context) *datastore.Key {
+	return datastore.NewKey(c, gameMemberKind, self.Email, 0, self.GameId)
+}
+
+func (self *GameMember) IdByEmail(c appengine.Context) *datastore.Key {
+	rval := datastore.NewKey(c, gameMemberKind, self.GameId.Encode(), 0, common.UserRoot(c, self.Email))
+	return rval
+}
+
 func (self *GameMember) CopyFrom(o *GameMember) *GameMember {
 	self.Game.CopyFrom(o.Game)
 	return self
@@ -48,11 +57,14 @@ func (self *GameMember) ValidatedDelete(c appengine.Context, email string) {
 		if game = GetGameById(c, self.GameId); game.Started {
 			return fmt.Errorf("%+v has already started", game)
 		}
-		if err := datastore.Delete(c, self.Id); err != nil {
+		if err := datastore.Delete(c, self.IdByGame(c)); err != nil {
+			return err
+		}
+		if err := datastore.Delete(c, self.IdByEmail(c)); err != nil {
 			return err
 		}
 
-		common.MemDel(c, gameMembersByUserKey(email), gameMembersByGameKey(self.GameId), gameMemberByIdKey(self.Id))
+		common.MemDel(c, gameMembersByUserKey(email), gameMembersByGameKey(self.GameId), gameMemberByIdKey(self.IdByEmail(c)))
 
 		otherMembers := false
 		for _, memb := range game.GetMembers(c) {
@@ -76,32 +88,47 @@ func (self *GameMember) ValidatedDelete(c appengine.Context, email string) {
 func (self *GameMember) SaveWithGame(c appengine.Context, email string) (result *GameMember, err error) {
 	result = self
 	err = datastore.RunInTransaction(c, func(c appengine.Context) error {
-		if self.Game, err = self.Game.Save(c, email); err != nil {
+		if self.Game, err = self.Game.save(c, email); err != nil {
 			return err
 		}
-		otherMembers := 0
-		for _, memb := range self.Game.GetMembers(c) {
-			if memb.Email != self.Email {
-				otherMembers++
-			}
-		}
-		if otherMembers+1 > len(common.VariantMap[self.Game.Variant].Nations) {
-			return fmt.Errorf("%+v would get too many members", game)
-		}
 		self.GameId = self.Game.Id
-		_, err = self.Save(c, email)
+		_, err = self.save(c, email)
 		return err
 	}, &datastore.TransactionOptions{XG: true})
 	return
 }
 
-func (self *GameMember) Save(c appengine.Context, email string) (result *GameMember, err error) {
+func (self *GameMember) SaveWithoutGame(c appengine.Context, email string) (result *GameMember, err error) {
 	result = self
+	err = datastore.RunInTransaction(c, func(c appengine.Context) error {
+		_, err = self.save(c, email)
+		return err
+	}, &datastore.TransactionOptions{XG: true})
+	return
+}
+
+func (self *GameMember) save(c appengine.Context, email string) (result *GameMember, err error) {
+	result = self
+
+	otherMembers := 0
+	for _, memb := range self.Game.GetMembers(c) {
+		if memb.Email != self.Email {
+			otherMembers++
+		}
+	}
+	if otherMembers+1 > len(common.VariantMap[self.Game.Variant].Nations) {
+		err = fmt.Errorf("%+v would get too many members", game)
+		return
+	}
+
 	if self.GameId == nil {
 		err = fmt.Errorf("%+v is missing GameId", self)
 		return
 	}
-	if self.Id, err = datastore.Put(c, datastore.NewKey(c, gameMemberKind, self.Email, 0, self.GameId), self); err != nil {
+	if _, err = datastore.Put(c, self.IdByEmail(c), self); err != nil {
+		return
+	}
+	if _, err = datastore.Put(c, self.IdByGame(c), self); err != nil {
 		return
 	}
 
@@ -110,10 +137,10 @@ func (self *GameMember) Save(c appengine.Context, email string) (result *GameMem
 }
 
 func findGameMembersByGameId(c appengine.Context, gameId *datastore.Key) (result GameMembers) {
-	ids, err := datastore.NewQuery(gameMemberKind).Ancestor(gameId).GetAll(c, &result)
+	_, err := datastore.NewQuery(gameMemberKind).Ancestor(gameId).GetAll(c, &result)
 	common.AssertOkError(err)
-	for index, id := range ids {
-		result[index].Id = id
+	for index, _ := range result {
+		result[index].Id = result[index].IdByEmail(c)
 	}
 	return
 }
@@ -129,10 +156,14 @@ func (self *Game) GetMembers(c appengine.Context) (result GameMembers) {
 }
 
 func findGameMembersByUser(c appengine.Context, email string) (result GameMembers) {
-	ids, err := datastore.NewQuery(gameMemberKind).Ancestor(common.UserRoot(c, email)).GetAll(c, &result)
+	ids, err := datastore.NewQuery(gameMemberKind).Ancestor(common.UserRoot(c, email)).Filter("Email=", email).GetAll(c, &result)
 	common.AssertOkError(err)
+	seen := make(map[string]bool)
 	for index, id := range ids {
-		result[index].Id = id
+		if !seen[id.Encode()] {
+			seen[id.Encode()] = true
+			result[index].Id = result[index].IdByEmail(c)
+		}
 	}
 	return
 }
@@ -172,8 +203,9 @@ func GetOpenGamesForUser(c appengine.Context, email string) (result GameMembers)
 		if !memberMap[game.Id.Encode()] {
 			owner := game.Id.Parent().StringID() == email
 			result = append(result, &GameMember{
-				Game:  game.process(c),
-				Owner: owner,
+				GameId: game.Id,
+				Game:   game.process(c),
+				Owner:  owner,
 			})
 		}
 	}
@@ -187,8 +219,11 @@ func GetOpenGamesForUser(c appengine.Context, email string) (result GameMembers)
 func findGameMemberById(c appengine.Context, key *datastore.Key) *GameMember {
 	var result GameMember
 	err := datastore.Get(c, key, &result)
+	if err == datastore.ErrNoSuchEntity {
+		return nil
+	}
 	common.AssertOkError(err)
-	result.Id = key
+	result.Id = result.IdByEmail(c)
 	return &result
 }
 

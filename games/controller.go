@@ -100,3 +100,20 @@ func CreateGameMemberWithGame(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 }
+
+func JoinGame(w http.ResponseWriter, r *http.Request) {
+	data := common.GetRequestData(w, r)
+	if data.Authenticated() {
+		var member GameMember
+		common.MustDecodeJSON(r.Body, &member)
+		member.Email = data.User.Email
+		common.SetContentType(w, "application/json; charset=UTF-8")
+		if _, err := (&member).SaveWithoutGame(data.Context, data.User.Email); err != nil {
+			data.Response.WriteHeader(500)
+			data.Context.Infof("%v", err)
+			common.MustEncodeJSON(w, err)
+		} else {
+			common.MustEncodeJSON(w, member)
+		}
+	}
+}
