@@ -16,6 +16,11 @@ window.GameMemberView = BaseView.extend({
 		this.onJoin = options.onJoin;
 	},
 
+	onClose: function() {
+	  this.model.unbind('saveme', this.save);
+		this.model.unbind('change', this.updatePrivate);
+	},
+
 	leaveGame: function(ev) {
 	  ev.preventDefault();
 	  this.model.destroy();
@@ -50,7 +55,6 @@ window.GameMemberView = BaseView.extend({
 
   render: function() {
 	  var that = this;
-	  that.clean();
     that.$el.html(that.template({
 		  model: that.model,
 			owner: that.model.get('owner'),

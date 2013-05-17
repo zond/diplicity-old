@@ -17,6 +17,10 @@ window.PhaseTypeView = BaseView.extend({
 		this.gameMember.bind('change', this.update);
 	},
 
+	onClose: function() {
+		this.gameMember.unbind('change', this.update);
+	},
+
 	changeDeadline: function(ev) {
 		this.gameMember.get('game').deadlines[this.phaseType] = parseInt($(ev.target).val()); 
 		this.gameMember.trigger('change');

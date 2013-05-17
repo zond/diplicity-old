@@ -2,7 +2,6 @@ window.HomeView = BaseView.extend({
 
 	template: _.template($('#home_underscore').html()),
 
-
 	initialize: function(options) {
 		this.user = options.user;
 		this.currentGameMembers = options.currentGameMembers;

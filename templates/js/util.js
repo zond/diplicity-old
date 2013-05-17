@@ -215,8 +215,8 @@ window.BaseView = Backbone.View.extend({
 	},
 
 	doRender: function() {
-	  if (this.views[this.el] != null) {
-		  this.views[this.el].onClose();
+	  if (this.views[this.cid] != null && this.views[this.cid].cid != this.cid) {
+		  this.views[this.cid].clean();
 		}
 		if (this.chain.length > 0) {
 		  this.chain[this.chain.length - 1].addChild(this);
@@ -231,7 +231,7 @@ window.BaseView = Backbone.View.extend({
 			});
 		});	
 		loginSync();
-		this.views[this.el] = this;
+		this.views[this.cid] = this;
 		if (this.$el.attr('data-role') == 'page') {
 			this.$el.trigger('pagecreate');
 		} else {
@@ -240,15 +240,15 @@ window.BaseView = Backbone.View.extend({
 		return this;
 	},
 
-	onClose: function() {
-	  this.clean();
-	},
-
 	clean: function() {
+	  if (typeof(this.onClose) == 'function') {
+		  this.onClose();
+		}
 	  _.each(this.children, function(child) {
-		  child.onClose();
+		  child.clean();
 		});
 		this.children = [];
+		delete(this.views, this.cid);
 	},
 
 });

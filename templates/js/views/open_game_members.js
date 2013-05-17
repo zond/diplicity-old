@@ -14,6 +14,13 @@ window.OpenGameMembersView = BaseView.extend({
 		this.refetch();
 	},
 
+	onClose: function() {
+		this.user.unbind('change', this.refetch);
+		this.collection.unbind("reset", this.doRender);
+		this.collection.unbind("add", this.doRender);
+		this.collection.unbind("remove", this.doRender);
+	},
+
 	refetch: function() {
 		if (this.user.loggedIn()) {
 		  this.collection.fetch();
@@ -22,7 +29,6 @@ window.OpenGameMembersView = BaseView.extend({
 
   render: function() {
 	  var that = this;
-	  that.clean();
 		that.$el.html(that.template({}));
 		that.collection.forEach(function(model) {
 			that.$el.append(new GameMemberView({ 

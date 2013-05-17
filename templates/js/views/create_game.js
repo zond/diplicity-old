@@ -46,7 +46,6 @@ window.CreateGameView = BaseView.extend({
 
   render: function() {
 		var that = this;
-		that.clean();
 		that.$el.html(that.template({}));
 		_.each(variants(), function(variant) {
 		  if (variant.id == that.gameMember.get('game').variant) {
