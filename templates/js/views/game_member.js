@@ -1,4 +1,4 @@
-window.GameMemberView = Backbone.View.extend({
+window.GameMemberView = BaseView.extend({
 
   template: _.template($('#game_member_underscore').html()),
 
@@ -9,20 +9,20 @@ window.GameMemberView = Backbone.View.extend({
 	},
 
 	initialize: function(options) {
-	  _.bindAll(this, 'render', 'save', 'onClose', 'updatePrivate');
+	  _.bindAll(this, 'doRender', 'save', 'updatePrivate');
 		this.model.bind('saveme', this.save);
 		this.model.bind('change', this.updatePrivate);
-		options.parent.children.push(this);
 		this.createdAt = new Date().getTime();
-		this.children = [];
 		this.onJoin = options.onJoin;
 	},
 
 	leaveGame: function(ev) {
+	  ev.preventDefault();
 	  this.model.destroy();
 	},
 
 	joinGame: function(ev) {
+	  ev.preventDefault();
 	  var that = this;
 	  that.model.save(null, {
     	success: function() {
@@ -39,19 +39,8 @@ window.GameMemberView = Backbone.View.extend({
 		this.model.trigger('saveme');
 	},
 
-	onClose: function() {
-	  this.model.unbind('saveme', this.save);
-	},
-
   save: function() {
 	  this.model.save();
-	},
-
-	clean: function() {
-	  _.each(this.children, function(child) {
-		  child.onClose();
-		});
-		this.children = [];
 	},
 
 	updatePrivate: function() {
@@ -72,8 +61,7 @@ window.GameMemberView = Backbone.View.extend({
 				owner: that.model.get('owner'),
 				game: that.model.get('game'),
 				gameMember: that.model,
-				parent: that,
-			}).render().el);
+			}).doRender().el);
 		});
 		that.updatePrivate();
 		that.$el.trigger('create');

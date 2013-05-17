@@ -189,3 +189,68 @@ deadlineOptions = [
   { value: 20160, name: '{{.I "2 weeks" }}' },
 ];
 
+function loginSync() {
+	if (window.session.user.loggedIn()) {
+		$('.when-logged-out').css('display', 'none');
+		$('.when-logged-in').css('display', 'block');
+		$('.email-at').text(window.session.user.get('email') + '/');
+	} else {
+		$('.when-logged-out').css('display', 'block');
+		$('.when-logged-in').css('display', 'none');
+		$('.email-at').text('');
+	}
+};
+
+window.BaseView = Backbone.View.extend({
+
+  views: {},
+
+	chain: [],
+
+  addChild: function(child) {
+	  if (this.children == null) {
+		  this.children = [];
+		}
+		this.children.push(child);
+	},
+
+	doRender: function() {
+	  if (this.views[this.el] != null) {
+		  this.views[this.el].onClose();
+		}
+		if (this.chain.length > 0) {
+		  this.chain[this.chain.length - 1].addChild(this);
+		}
+		this.chain.push(this);
+    this.render();
+		this.chain.pop();
+		this.$('a.navigate').each(function(ind, el) {
+			$(el).bind('click', function(ev) {
+				ev.preventDefault();
+				window.session.router.navigate($(el).attr('href'), { trigger: true });
+			});
+		});	
+		loginSync();
+		this.views[this.el] = this;
+		if (this.$el.attr('data-role') == 'page') {
+			this.$el.trigger('pagecreate');
+		} else {
+			this.$el.trigger('create');
+		}
+		return this;
+	},
+
+	onClose: function() {
+	  this.clean();
+	},
+
+	clean: function() {
+	  _.each(this.children, function(child) {
+		  child.onClose();
+		});
+		this.children = [];
+	},
+
+});
+
+

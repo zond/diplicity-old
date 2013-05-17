@@ -1,11 +1,11 @@
-window.CreateGameView = Backbone.View.extend({
+window.CreateGameView = BaseView.extend({
 
   template: _.template($('#create_game_underscore').html()),
 
   events: {
-	  "click .create-game-button": "createGame",
-		"change .create-game-variant": "changeVariant",
-		"change .create-game-private": "changePrivate",
+	  "click a.create-game-button": "createGame",
+		"change select.create-game-variant": "changeVariant",
+		"change select.create-game-private": "changePrivate",
 	},
 
   changePrivate: function(ev) {
@@ -19,19 +19,13 @@ window.CreateGameView = Backbone.View.extend({
 	},
 
 	createGame: function(ev) {
+	  ev.preventDefault();
 	  this.collection.create(this.gameMember.attributes);
-		$.mobile.changePage('#home');
-	},
-
-	clean: function() {
-	  _.each(this.children, function(child) {
-		  child.onClose();
-		});
-		this.children = [];
+		window.session.router.navigate('', { trigger: true });
 	},
 
 	initialize: function(options) {
-	  _.bindAll(this, 'render');
+	  _.bindAll(this, 'doRender');
 		var deadlines = {};
 		var chatFlags = {};
 		_.each(phaseTypes(defaultVariant), function(type) {
@@ -48,7 +42,6 @@ window.CreateGameView = Backbone.View.extend({
 		  owner: true,
 		  game: game
 		});
-		this.children = [];
 	},
 
   render: function() {
@@ -65,15 +58,12 @@ window.CreateGameView = Backbone.View.extend({
 		that.deadlines = {};
 		_.each(phaseTypes(that.$('.create-game-variant').val()), function(type) {
 		  that.$('.phase-types').append(new PhaseTypeView({
-				parent: that,
 				phaseType: type,
 				game: that.gameMember.get('game'),
 				owner: that.gameMember.get('owner'),
 				gameMember: that.gameMember,
-			}).render().el);
+			}).doRender().el);
 		});
-		that.$el.trigger('create');
-		that.delegateEvents();
 		return that;
 	},
 

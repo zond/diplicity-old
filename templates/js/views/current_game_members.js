@@ -1,22 +1,14 @@
-window.CurrentGameMembersView = Backbone.View.extend({
+window.CurrentGameMembersView = BaseView.extend({
 
   template: _.template($('#current_game_members_underscore').html()),
 
 	initialize: function(options) {
-	  _.bindAll(this, 'render', 'refetch');
+	  _.bindAll(this, 'doRender', 'refetch');
 		this.user = options.user;
 		this.user.bind('change', this.refetch);
-		this.collection.bind("reset", this.render);
-		this.collection.bind("add", this.render);
-		this.collection.bind("remove", this.render);
-		this.children = [];
-	},
-
-	clean: function() {
-	  _.each(this.children, function(child) {
-		  child.onClose();
-		});
-		this.children = [];
+		this.collection.bind("reset", this.doRender);
+		this.collection.bind("add", this.doRender);
+		this.collection.bind("remove", this.doRender);
 	},
 
 	refetch: function() {
@@ -26,16 +18,15 @@ window.CurrentGameMembersView = Backbone.View.extend({
 	},
 
   render: function() {
+	  console.log('re-rendering current game members');
 	  var that = this;
 		that.clean();
 		that.$el.html(that.template({}));
 		that.collection.forEach(function(model) {
 			that.$el.append(new GameMemberView({ 
 				model: model,
-				parent: that,
-			}).render().el);
+			}).doRender().el);
 		});
-		that.$el.trigger('create');
 		return that;
 	},
 

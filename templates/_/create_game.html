@@ -1,10 +1,29 @@
-<select class="create-game-variant">
-</select>
-<div data-role="collapsible-set" class="phase-types">
+<div data-role="header" data-position="fixed">
+	<a data-icon="home" href="" class="navigate">{{.I "Home" }}</a>
+	<h1><span class="email-at"></span>{{.I "Diplicity" }}</h1>
+	<a data-icon="gear" href="#menu">{{.I "Menu" }}</a>
 </div>
-<select data-role="slider" class="create-game-private">
-	<option value="false">{{.I "Public" }}</option>
-	<option value="true">{{.I "Private" }}</option>
-</select>
-<a href="#" class="create-game-button" data-role="button" data-icon="plus">{{.I "Create" }}</a>
-
+<div data-role="content">
+	<a href="/login" class="when-logged-out" data-role="button">{{.I "Log in to create a game" }}</a>
+	<form class="when-logged-in create-game">
+		<select class="create-game-variant">
+		</select>
+		<div data-role="collapsible-set" class="phase-types">
+		</div>
+		<select data-role="slider" class="create-game-private">
+			<option value="false">{{.I "Public" }}</option>
+			<option value="true">{{.I "Private" }}</option>
+		</select>
+		<a href="#" class="create-game-button" data-role="button" data-icon="plus">{{.I "Create" }}</a>
+	</form>
+</div>
+<div data-role="footer" data-position="fixed">
+	<div data-role="navbar">
+		<ul>
+			<li><a href="/" class="navigate">{{.I "Games" }}</a></li>
+			<li><a href="/open" class="navigate">{{.I "Join" }}</a></li>
+			<li><a class="ui-btn-active ui-state-persist" href="/create" class="navigate">{{.I "Create" }}</a></li>
+			<li><a href="/history" class="navigate">{{.I "History" }}</a></li>
+		</ul>
+	</div>
+</div>

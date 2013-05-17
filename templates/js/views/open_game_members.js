@@ -1,30 +1,23 @@
-window.OpenGameMembersView = Backbone.View.extend({
+window.OpenGameMembersView = BaseView.extend({
 
   template: _.template($('#open_game_members_underscore').html()),
 
 	initialize: function(options) {
-	  _.bindAll(this, 'render', 'refetch');
+	  _.bindAll(this, 'doRender', 'refetch');
 		this.user = options.user;
 		this.user.bind('change', this.refetch);
 		this.currentGameMembers = options.currentGameMembers;
 		this.collection = new GameMembers([], { url: '/games/open' });
-		this.collection.bind("reset", this.render);
-		this.collection.bind("add", this.render);
-		this.collection.bind("remove", this.render);
-		this.children = [];
+		this.collection.bind("reset", this.doRender);
+		this.collection.bind("add", this.doRender);
+		this.collection.bind("remove", this.doRender);
+		this.refetch();
 	},
 
 	refetch: function() {
 		if (this.user.loggedIn()) {
 		  this.collection.fetch();
 		}
-	},
-
-	clean: function() {
-	  _.each(this.children, function(child) {
-		  child.onClose();
-		});
-		this.children = [];
 	},
 
   render: function() {
@@ -37,12 +30,11 @@ window.OpenGameMembersView = Backbone.View.extend({
 				onJoin: function() {
 				  that.collection.remove(model);
 					that.currentGameMembers.add(model);
-					$.mobile.changePage('#home');
+					window.session.router.navigate('', { trigger: true });
 				},
-				parent: that,
-			}).render().el);
+			}).doRender().el);
 		});
-		that.$el.trigger('create');
+		that.$el.trigger('pagecreate');
 		return that;
 	},
 

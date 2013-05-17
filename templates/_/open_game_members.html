@@ -1,0 +1,21 @@
+<div data-role="header" data-position="fixed">
+	<a data-icon="home" href="" class="navigate">{{.I "Home" }}</a>
+	<h1><span class="email-at"></span>{{.I "Diplicity" }}</h1>
+	<a data-icon="gear" href="/menu" class="navigate">{{.I "Menu" }}</a>
+</div>
+<div data-role="content">
+	<a href="/login" class="when-logged-out" data-role="button">{{.I "Log in to join a game" }}</a>
+	<div data-role="collapsible-set" class="when-logged-in join-game">
+	</div>
+</div>
+<div data-role="footer" data-position="fixed">
+	<div data-role="navbar">
+		<ul>
+			<li><a href="" class="navigate">{{.I "Games" }}</a></li>
+			<li><a class="ui-btn-active ui-state-persist" href="/open" class="navigate">{{.I "Join" }}</a></li>
+			<li><a href="/create" class="navigate">{{.I "Create" }}</a></li>
+			<li><a href="/history" class="navigate">{{.I "History" }}</a></li>
+		</ul>
+	</div>
+</div>
+

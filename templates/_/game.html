@@ -1,0 +1,23 @@
+<div data-role="header" data-position="fixed">
+	<a data-icon="home" href="" class="navigate">{{.I "Home" }}</a>
+	<h1><span class="email-at"></span>{{.I "Diplicity" }}</h1>
+	<a data-icon="gear" href="/menu" class="navigate">{{.I "Menu" }}</a>
+</div>
+<div data-role="content">
+	<div class="map-container">
+		<div class="map">
+			{{.SVG "standard.svg"}}
+		</div>
+	</div>
+</div>
+<div data-role="footer" data-position="fixed">
+	<div data-role="navbar">
+		<ul>
+			<li><a class="ui-btn-active ui-state-persist" href="/game" class="navigate">{{.I "Map" }}</a></li>
+			<li><a href="/chat" class="navigate">{{.I "Chat" }}</a></li>
+			<li><a href="/orders" class="navigate">{{.I "Orders" }}</a></li>
+			<li><a href="/results" class="navigate">{{.I "Results" }}</a></li>
+		</ul>
+	</div>
+</div>
+

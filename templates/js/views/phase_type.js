@@ -1,25 +1,20 @@
-window.PhaseTypeView = Backbone.View.extend({
+window.PhaseTypeView = BaseView.extend({
 
   template: _.template($('#phase_type_underscore').html()),
 
   me: new Date().getTime(),
 
 	events: {
-		"change .deadline": "changeDeadline",
-		"change .chat-flag": "changeChatFlag",
+		"change select.deadline": "changeDeadline",
+		"change input.chat-flag": "changeChatFlag",
 	},
 
 	initialize: function(options) {
-	  _.bindAll(this, 'render', 'update', 'onClose');
+	  _.bindAll(this, 'doRender', 'update');
 		this.phaseType = options.phaseType;
 		this.owner = options.owner;
 		this.gameMember = options.gameMember;
 		this.gameMember.bind('change', this.update);
-		options.parent.children.push(this);
-	},
-
-	onClose: function() {
-	  this.gameMember.unbind('change', this.update);
 	},
 
 	changeDeadline: function(ev) {
@@ -46,11 +41,9 @@ window.PhaseTypeView = Backbone.View.extend({
 			} else {
 				that.$('input[type=checkbox][data-chat-flag=' + opt.id + ']').removeAttr('checked');
 			}
-			that.$('input[type=checkbox][data-chat-flag=' + opt.id + ']').checkboxradio().checkboxradio('refresh');
 		}
 		that.$('.desc').text(desc.join(", "));
 		that.$('select.deadline').val(that.gameMember.get('game').deadlines[that.phaseType]);
-		that.$('select.deadline').selectmenu().selectmenu('refresh');
 	},
 
 	changeChatFlag: function(ev) {
@@ -70,7 +63,6 @@ window.PhaseTypeView = Backbone.View.extend({
 		  phaseType: this.phaseType,
 		}));
 		this.update();
-		this.$el.trigger('create');
 		return this;
 	},
 

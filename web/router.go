@@ -26,11 +26,13 @@ func init() {
 	router.HandleFunc("/css/{ver}/all", allCss)
 	router.HandleFunc("/diplicity.appcache", appCache)
 	router.HandleFunc("/reload", reload)
-	router.HandleFunc("/", index)
 
 	// Login/logout redirects
 	router.Path("/login").Methods("GET").HandlerFunc(common.Login)
 	router.Path("/logout").Methods("GET").HandlerFunc(common.Logout)
+
+	// Everything else HTMLy
+	router.MatcherFunc(wantsHTML).HandlerFunc(index)
 
 	/*
 		JSON endpoints
