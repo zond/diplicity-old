@@ -9,6 +9,7 @@ window.CurrentGameMembersView = BaseView.extend({
 		this.collection.bind("reset", this.doRender);
 		this.collection.bind("add", this.doRender);
 		this.collection.bind("remove", this.doRender);
+		this.refetch();
 	},
 
 	onClose: function() {

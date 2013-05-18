@@ -66,7 +66,6 @@ $(window).load(function() {
 	});
 	user.bind('sync', loginSync);
 	user.fetch();
-	currentGameMembers.fetch();
 
 	router.navigate(Backbone.history.fragment || '');
 

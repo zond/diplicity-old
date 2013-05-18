@@ -217,6 +217,8 @@ window.BaseView = Backbone.View.extend({
 	doRender: function() {
 	  if (this.views[this.cid] != null && this.views[this.cid].cid != this.cid) {
 		  this.views[this.cid].clean();
+		} else {
+		  this.cleanChildren();
 		}
 		if (this.chain.length > 0) {
 		  this.chain[this.chain.length - 1].addChild(this);
@@ -244,11 +246,17 @@ window.BaseView = Backbone.View.extend({
 	  if (typeof(this.onClose) == 'function') {
 		  this.onClose();
 		}
-	  _.each(this.children, function(child) {
-		  child.clean();
-		});
+		this.cleanChildren();
 		this.children = [];
-		delete(this.views, this.cid);
+	},
+
+	cleanChildren: function() {
+	  if (this.children != null) {
+			_.each(this.children, function(child) {
+				child.clean();
+			});
+			delete(this.views, this.cid);
+		}
 	},
 
 });
