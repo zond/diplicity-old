@@ -20,8 +20,11 @@ window.CreateGameView = BaseView.extend({
 
 	createGame: function(ev) {
 	  ev.preventDefault();
-	  this.collection.create(this.gameMember.attributes);
-		window.session.router.navigate('', { trigger: true });
+	  this.collection.create(this.gameMember.attributes, {
+		  success: function() {
+				window.session.router.navigate('', { trigger: true });
+			},
+		});
 	},
 
 	initialize: function(options) {

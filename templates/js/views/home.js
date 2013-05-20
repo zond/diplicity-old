@@ -4,7 +4,6 @@ window.HomeView = BaseView.extend({
 
 	initialize: function(options) {
 		this.user = options.user;
-		this.currentGameMembers = options.currentGameMembers;
 	},
 
 	render: function() {
