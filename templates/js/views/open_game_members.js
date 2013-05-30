@@ -31,14 +31,16 @@ window.OpenGameMembersView = BaseView.extend({
 	  var that = this;
 		that.$el.html(that.template({}));
 		that.collection.forEach(function(model) {
-			that.$el.append(new GameMemberView({ 
+		  var memberView = new GameMemberView({ 
 				model: model,
 				onJoin: function() {
 				  that.collection.remove(model);
 					that.currentGameMembers.add(model);
 					window.session.router.navigate('', { trigger: true });
 				},
-			}).doRender().el);
+			}).doRender();
+			memberView.$el.attr('data-role', 'collapsible');
+			that.$el.append(memberView.el);
 		});
 		that.$el.trigger('pagecreate');
 		return that;
