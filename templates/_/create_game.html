@@ -5,17 +5,8 @@
 </div>
 <div data-role="content">
 	<a href="/login" class="when-logged-out" data-role="button">{{.I "Log in to create a game" }}</a>
-	<form class="when-logged-in create-game">
-		<select class="create-game-variant">
-		</select>
-		<div data-role="collapsible-set" class="phase-types">
-		</div>
-		<select data-role="slider" class="create-game-private">
-			<option value="false">{{.I "Public" }}</option>
-			<option value="true">{{.I "Private" }}</option>
-		</select>
-		<a href="#" class="create-game-button" data-role="button" data-icon="plus">{{.I "Create" }}</a>
-	</form>
+	<div class="when-logged-in create-game">
+	</div>
 </div>
 <div data-role="footer" data-position="fixed">
 	<div data-role="navbar">
