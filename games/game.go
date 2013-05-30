@@ -105,7 +105,7 @@ func (self *Game) save(c appengine.Context, owner string) (result *Game, err err
 		_, err = datastore.Put(c, self.Id, self)
 	}
 
-	if oldGame == nil || oldGame.Closed != self.Closed {
+	if oldGame == nil || oldGame.Closed != self.Closed || !self.Closed {
 		common.MemDel(c, openGamesKey)
 	}
 	common.MemDel(c, gameByIdKey(self.Id))
