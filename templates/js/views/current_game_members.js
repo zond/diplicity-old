@@ -29,9 +29,11 @@ window.CurrentGameMembersView = BaseView.extend({
 	  var that = this;
 		that.$el.html(that.template({}));
 		that.collection.forEach(function(model) {
-			that.$el.append(new GameMemberView({ 
+		  var memberView = new GameMemberView({ 
 				model: model,
-			}).doRender().el);
+			}).doRender();
+			memberView.$el.attr('data-role', 'collapsible');
+			that.$el.append(memberView.el);
 		});
 		return that;
 	},
