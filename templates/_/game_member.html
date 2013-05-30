@@ -1,14 +1,18 @@
-<div data-role="collapsible">
-	<h3><%= model.describe() %></h3>
-	<div data-role="collapsible-set" class="phase-types">
-	</div>
-	<select data-role="slider" class="game-private"<%= owner ? '' : ' disabled="disabled"' %>>
-		<option value="false">{{.I "Public" }}</option>
-		<option value="true">{{.I "Private" }}</option>
-	</select>
-	<% if (model.is_member()) { %>
-	<a href="#" class="leave-game" data-role="button">{{.I "Leave" }}</a>
-	<% } else if (!model.get('closed')) { %>
-	<a href="#" class="join-game" data-role="button">{{.I "Join" }}</a>
-	<% } %>
+<h3><%= model.describe() %></h3>
+<select class="create-game-variant"<%= owner ? '' : ' disabled="disabled"' %>>
+</select>
+<div data-role="collapsible-set" class="phase-types">
 </div>
+<select data-role="slider" class="game-private"<%= owner ? '' : ' disabled="disabled"' %>>
+	<option value="false">{{.I "Public" }}</option>
+	<option value="true">{{.I "Private" }}</option>
+</select>
+<% if (model.get('game').id == null) { %>
+<a href="#" class="create-game-button" data-role="button" data-icon="plus">{{.I "Create" }}</a>
+<% } else { %>
+<%   if (model.is_member()) { %>
+<a href="#" class="leave-game" data-role="button">{{.I "Leave" }}</a>
+<%   } else if (!model.get('closed')) { %>
+<a href="#" class="join-game" data-role="button">{{.I "Join" }}</a>
+<%   } %>
+<% } %>
