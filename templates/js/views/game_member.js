@@ -45,7 +45,9 @@ window.GameMemberView = BaseView.extend({
 	},
 
   save: function() {
-	  this.model.save();
+		if (!this.model.isNew()) {
+			this.model.save();
+		}
 	},
 
 	updatePrivate: function() {
@@ -59,6 +61,13 @@ window.GameMemberView = BaseView.extend({
 		  model: that.model,
 			owner: that.model.get('owner'),
 		}));
+		_.each(variants(), function(variant) {
+		  if (variant.id == that.model.get('game').variant) {
+				that.$('select.create-game-variant').append('<option value="{0}" selected="selected">{{.I "Variant"}}: {1}</option>'.format(variant.id, variant.name));
+			} else {
+				that.$('select.create-game-variant').append('<option value="{0}">{{.I "Variant"}}: {1}</option>'.format(variant.id, variant.name));
+			}
+		});
 		_.each(phaseTypes(that.model.get('game').variant), function(type) {
 			that.$('.phase-types').append(new PhaseTypeView({
 				phaseType: type,
