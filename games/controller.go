@@ -20,7 +20,7 @@ func FetchGameMembers(w http.ResponseWriter, r *http.Request) {
 	data := common.GetRequestData(w, r)
 	if data.Authenticated() {
 		common.SetContentType(w, "application/json; charset=UTF-8")
-		common.MustEncodeJSON(w, GetGameMembersByUser(data.Context, data.User.Email))
+		common.MustEncodeJSON(w, GetGameMembersByUser(data.Context, data.User.Email, true))
 	}
 }
 
@@ -52,7 +52,7 @@ func UpdateGameMemberWithGame(w http.ResponseWriter, r *http.Request) {
 			panic(fmt.Errorf("No GameMember with id %v found", member_id))
 		}
 		// validate that user owns game
-		if current.Game.Id.Parent().StringID() != data.User.Email {
+		if current.Game.Owner != data.User.Email {
 			panic(fmt.Errorf("%+v not owned by %v", current.Game, data.User.Email))
 		}
 		// validate that user is member
@@ -62,7 +62,7 @@ func UpdateGameMemberWithGame(w http.ResponseWriter, r *http.Request) {
 		var upload GameMember
 		common.MustDecodeJSON(r.Body, &upload)
 		// validate that user owns upload
-		if upload.Game.Id.Parent().StringID() != data.User.Email {
+		if upload.Game.Owner != data.User.Email {
 			panic(fmt.Errorf("%+v not owned by %v", upload.Game, data.User.Email))
 		}
 		// validate that user is upload
@@ -90,6 +90,7 @@ func CreateGameMemberWithGame(w http.ResponseWriter, r *http.Request) {
 		var member GameMember
 		common.MustDecodeJSON(r.Body, &member)
 		member.Email = data.User.Email
+		member.Game.Owner = member.Email
 		common.SetContentType(w, "application/json; charset=UTF-8")
 		if _, err := (&member).SaveWithGame(data.Context, data.User.Email); err != nil {
 			data.Response.WriteHeader(500)

@@ -33,10 +33,15 @@ window.OpenGameMembersView = BaseView.extend({
 		that.collection.forEach(function(model) {
 		  var memberView = new GameMemberView({ 
 				model: model,
-				onJoin: function() {
-				  that.collection.remove(model);
-					that.currentGameMembers.add(model);
-					window.session.router.navigate('', { trigger: true });
+				button_text: '{{.I "Join" }}',
+				button_action: function() {
+					model.save(null, {
+						success: function() {
+							that.collection.remove(model);
+							that.currentGameMembers.add(model);
+							window.session.router.navigate('', { trigger: true });
+						},
+					});
 				},
 			}).doRender();
 			memberView.$el.attr('data-role', 'collapsible');

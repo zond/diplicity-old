@@ -60,6 +60,16 @@ func MemDel(c appengine.Context, keys ...string) {
 	memcache.DeleteMulti(c, keys)
 }
 
+func MemPut(c appengine.Context, key string, val interface{}) {
+	if err := memcache.Gob.Set(c, &memcache.Item{
+		Key:    keyify(key),
+		Object: val,
+	}); err != nil {
+		c.Errorf("When trying to save %v(%v) => %#v: %#v", key, keyify(key), val, err)
+		panic(err)
+	}
+}
+
 func Memoize2(c appengine.Context, super, key string, destP interface{}, f func() interface{}) (exists bool) {
 	superH := keyify(super)
 	var seed string
@@ -89,6 +99,10 @@ func reflectCopy(srcValue reflect.Value, source, destP interface{}) {
 	} else {
 		reflect.ValueOf(destP).Elem().Set(reflect.Indirect(srcValue))
 	}
+}
+
+func MemoizeUntil(c appengine.Context, until time.Duration, key string, destP interface{}, f func() interface{}) (exists bool) {
+	return MemoizeMultiUntil(c, until, []string{key}, []interface{}{destP}, []func() interface{}{f})[0]
 }
 
 func Memoize(c appengine.Context, key string, destP interface{}, f func() interface{}) (exists bool) {
@@ -123,6 +137,10 @@ func memGetMulti(c appengine.Context, keys []string, dests []interface{}) (items
 }
 
 func MemoizeMulti(c appengine.Context, keys []string, destPs []interface{}, f []func() interface{}) (exists []bool) {
+	return MemoizeMultiUntil(c, 0, keys, destPs, f)
+}
+
+func MemoizeMultiUntil(c appengine.Context, until time.Duration, keys []string, destPs []interface{}, f []func() interface{}) (exists []bool) {
 	exists = make([]bool, len(keys))
 	keyHashes := make([]string, len(keys))
 	for index, key := range keys {
@@ -155,9 +173,10 @@ func MemoizeMulti(c appengine.Context, keys []string, destPs []interface{}, f []
 				if isNil(resultValue) {
 					nilObj := reflect.Indirect(reflect.ValueOf(destP)).Interface()
 					if err = memcache.Gob.Set(c, &memcache.Item{
-						Key:    keyH,
-						Flags:  nilCache,
-						Object: nilObj,
+						Key:        keyH,
+						Flags:      nilCache,
+						Expiration: until,
+						Object:     nilObj,
 					}); err != nil {
 						c.Errorf("When trying to save %v(%v) => %#v: %#v", key, keyH, nilObj, err)
 						panic(err)
@@ -165,8 +184,9 @@ func MemoizeMulti(c appengine.Context, keys []string, destPs []interface{}, f []
 					exists[index] = false
 				} else {
 					if err = memcache.Gob.Set(c, &memcache.Item{
-						Key:    keyH,
-						Object: result,
+						Key:        keyH,
+						Object:     result,
+						Expiration: until,
 					}); err != nil {
 						c.Errorf("When trying to save %v(%v) => %#v: %#v", key, keyH, result, err)
 						panic(err)

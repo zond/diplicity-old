@@ -31,6 +31,10 @@ window.CurrentGameMembersView = BaseView.extend({
 		that.collection.forEach(function(model) {
 		  var memberView = new GameMemberView({ 
 				model: model,
+				button_text: '{{.I "Leave" }}',
+				button_action: function() {
+					model.destroy();
+				},
 			}).doRender();
 			memberView.$el.attr('data-role', 'collapsible');
 			that.$el.append(memberView.el);

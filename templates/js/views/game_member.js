@@ -4,38 +4,25 @@ window.GameMemberView = BaseView.extend({
 
   events: {
 		"change .game-private": "changePrivate",
-		"click .leave-game": "leaveGame",
-		"click .join-game": "joinGame",
+    "click .game-member-button": "buttonAction",
 	},
 
 	initialize: function(options) {
 	  _.bindAll(this, 'doRender', 'save', 'updatePrivate');
 		this.model.bind('saveme', this.save);
 		this.model.bind('change', this.updatePrivate);
-		this.createdAt = new Date().getTime();
-		this.onJoin = options.onJoin;
+		this.button_text = options.button_text;
+		this.button_action = options.button_action;
+	},
+
+  buttonAction: function(ev) {
+	  ev.preventDefault();
+		this.button_action();
 	},
 
 	onClose: function() {
 	  this.model.unbind('saveme', this.save);
 		this.model.unbind('change', this.updatePrivate);
-	},
-
-	leaveGame: function(ev) {
-	  ev.preventDefault();
-	  this.model.destroy();
-	},
-
-	joinGame: function(ev) {
-	  ev.preventDefault();
-	  var that = this;
-	  that.model.save(null, {
-    	success: function() {
-				if (that.onJoin != null) {
-					that.onJoin();
-				}
-			},
-		});
 	},
 
   changePrivate: function(ev) {
@@ -60,6 +47,7 @@ window.GameMemberView = BaseView.extend({
     that.$el.html(that.template({
 		  model: that.model,
 			owner: that.model.get('owner'),
+			button_text: that.button_text,
 		}));
 		_.each(variants(), function(variant) {
 		  if (variant.id == that.model.get('game').variant) {

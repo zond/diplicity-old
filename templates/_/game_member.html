@@ -7,12 +7,4 @@
 	<option value="false">{{.I "Public" }}</option>
 	<option value="true">{{.I "Private" }}</option>
 </select>
-<% if (model.get('game').id == null) { %>
-<a href="#" class="create-game-button" data-role="button" data-icon="plus">{{.I "Create" }}</a>
-<% } else { %>
-<%   if (model.is_member()) { %>
-<a href="#" class="leave-game" data-role="button">{{.I "Leave" }}</a>
-<%   } else if (!model.get('closed')) { %>
-<a href="#" class="join-game" data-role="button">{{.I "Join" }}</a>
-<%   } %>
-<% } %>
+<a href="#" class="game-member-button" data-role="button"><%= button_text %></a>

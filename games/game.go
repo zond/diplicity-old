@@ -5,6 +5,8 @@ import (
 	"appengine/datastore"
 	"common"
 	"fmt"
+	dip "github.com/zond/godip/common"
+	"math/rand"
 )
 
 func gameByIdKey(k *datastore.Key) string {
@@ -24,6 +26,7 @@ type Game struct {
 	Variant string         `json:"variant"`
 	EndYear int            `json:"end_year"`
 	Private bool           `json:"private"`
+	Owner   string         `json:"owner"`
 
 	SerializedDeadlines []byte             `json:"-"`
 	Deadlines           map[string]Minutes `json:"deadlines" datastore:"-"`
@@ -77,12 +80,36 @@ func (self *Game) Delete(c appengine.Context) (err error) {
 	return
 }
 
+func (self *Game) start(c appengine.Context, members map[string]*GameMember) (err error) {
+	self.Started = true
+	self.Closed = true
+	allNations := common.VariantMap[self.Variant].Nations
+	availableNations := make([]dip.Nation, len(allNations))
+	copy(availableNations, allNations)
+	for _, member := range members {
+		chosenIndex := rand.Int() % len(availableNations)
+		member.Nation = availableNations[chosenIndex]
+		if chosenIndex == 0 {
+			availableNations = availableNations[1:]
+		} else if chosenIndex == len(availableNations)-1 {
+			availableNations = availableNations[:len(availableNations)-1]
+		} else {
+			availableNations = append(availableNations[:chosenIndex], availableNations[chosenIndex+1:]...)
+		}
+		if _, err = member.save(c, member.Email, self.Id); err != nil {
+			return
+		}
+	}
+	_, err = self.save(c, self.Owner)
+	return
+}
+
 func (self *Game) save(c appengine.Context, owner string) (result *Game, err error) {
 	result = self
 
 	var oldGame *Game
 	if self.Id != nil {
-		oldGame = GetGameById(c, self.Id)
+		oldGame = GetGameById(c, self.Id, false)
 	}
 
 	if self.Deadlines == nil {
@@ -100,7 +127,7 @@ func (self *Game) save(c appengine.Context, owner string) (result *Game, err err
 		return
 	}
 	if self.Id == nil {
-		self.Id, err = datastore.Put(c, datastore.NewKey(c, gameKind, "", 0, common.UserRoot(c, owner)), self)
+		self.Id, err = datastore.Put(c, datastore.NewKey(c, gameKind, "", 0, nil), self)
 	} else {
 		_, err = datastore.Put(c, self.Id, self)
 	}
@@ -123,8 +150,11 @@ func findGameById(c appengine.Context, id *datastore.Key) *Game {
 	return &result
 }
 
-func GetGameById(c appengine.Context, id *datastore.Key) *Game {
-	return GetGamesByIds(c, []*datastore.Key{id})[0]
+func GetGameById(c appengine.Context, id *datastore.Key, useCache bool) *Game {
+	if useCache {
+		return GetGamesByIds(c, []*datastore.Key{id})[0]
+	}
+	return findGameById(c, id).process(c)
 }
 
 func GetGamesByIds(c appengine.Context, ids []*datastore.Key) (result Games) {
