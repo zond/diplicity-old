@@ -15,16 +15,27 @@ func latestPhaseByGameIdKey(k *datastore.Key) string {
 type Phases []*Phase
 
 type Phase struct {
-	Id      *datastore.Key `json:"id"`
+	Id      *datastore.Key `json:"id" datastore:"-"`
 	Season  dip.Season     `json:"season"`
 	Year    int            `json:"year"`
 	Type    dip.PhaseType  `json:"type"`
 	Ordinal int            `json:"ordinal"`
 }
 
+func (self *Phase) Save(c appengine.Context, gameId *datastore.Key) *Phase {
+	latest := GetLatestPhasesByGameIds(c, []*datastore.Key{gameId})[0]
+	var err error
+	self.Id, err = datastore.Put(c, datastore.NewKey(c, phaseKind, "", int64(self.Ordinal), gameId), self)
+	common.AssertOkError(err)
+	if latest == nil || latest.Ordinal <= self.Ordinal {
+		common.MemDel(c, latestPhaseByGameIdKey(gameId))
+	}
+	return self
+}
+
 func findLatestPhaseByGameId(c appengine.Context, gameId *datastore.Key) *Phase {
 	var phases []Phase
-	ids, err := datastore.NewQuery(phaseKind).Ancestor(gameId).Order("Ordinal<").Limit(1).GetAll(c, &phases)
+	ids, err := datastore.NewQuery(phaseKind).Ancestor(gameId).Order("-Ordinal").Limit(1).GetAll(c, &phases)
 	common.AssertOkError(err)
 	for index, id := range ids {
 		phases[index].Id = id

@@ -5,6 +5,7 @@ import (
 	"appengine/datastore"
 	"common"
 	"fmt"
+	"github.com/zond/godip/classical"
 	dip "github.com/zond/godip/common"
 	"math/rand"
 )
@@ -100,6 +101,15 @@ func (self *Game) start(c appengine.Context, members map[string]*GameMember) (er
 			return
 		}
 	}
+	s := classical.Start()
+	p := s.Phase()
+	phase := &Phase{
+		Season:  p.Season(),
+		Year:    p.Year(),
+		Type:    p.Type(),
+		Ordinal: 1,
+	}
+	phase.Save(c, self.Id)
 	_, err = self.save(c, self.Owner)
 	return
 }

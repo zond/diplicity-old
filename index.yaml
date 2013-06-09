@@ -13,4 +13,6 @@ indexes:
 - kind: Phase
   ancestor: yes
   properties:
-  - name: Ordinal<
+  - name: Ordinal
+    direction: desc
+
