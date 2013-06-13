@@ -1,8 +1,6 @@
 package common
 
 import (
-	"appengine"
-	"appengine/user"
 	"bytes"
 	"fmt"
 	"net/http"
@@ -13,8 +11,6 @@ import (
 type RequestData struct {
 	Response     http.ResponseWriter
 	Request      *http.Request
-	Context      appengine.Context
-	User         *user.User
 	translations map[string]string
 }
 
@@ -22,10 +18,8 @@ func GetRequestData(w http.ResponseWriter, r *http.Request) (result RequestData)
 	result = RequestData{
 		Response:     w,
 		Request:      r,
-		Context:      appengine.NewContext(r),
 		translations: getTranslations(r),
 	}
-	result.User = user.Current(result.Context)
 	return
 }
 
@@ -49,16 +43,6 @@ func (self RequestData) ChatFlagOptions() (result []ChatFlagOption) {
 }
 
 func (self RequestData) Authenticated() bool {
-	if self.User == nil {
-		loginUrl, err := user.LoginURL(self.Context, HostURL(self.Request))
-		if err != nil {
-			panic(err)
-		}
-		self.Response.Header().Set("Location", loginUrl)
-		self.Response.WriteHeader(401)
-		fmt.Fprintln(self.Response, "Unauthorized")
-		return false
-	}
 	return true
 }
 
@@ -92,16 +76,10 @@ func (self RequestData) ChatFlag(s string) string {
 	return fmt.Sprint(rval)
 }
 
-var debugVersion time.Time
+var version = time.Now()
 
 func (self RequestData) Version() string {
-	if appengine.IsDevAppServer() {
-		if debugVersion.Before(time.Now().Add(-time.Second)) {
-			debugVersion = time.Now()
-		}
-		return fmt.Sprintf("%v.%v", appengine.VersionID(self.Context), debugVersion.UnixNano())
-	}
-	return appengine.VersionID(self.Context)
+	return fmt.Sprintf("%v", version.UnixNano())
 }
 
 func (self RequestData) SVG(p string) string {

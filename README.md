@@ -19,7 +19,6 @@ Next generation Droidippy.
   * Via native web view wrappers with push notification support
 * Full functionality in regular computer browsers
 * Easier operations and hosting
-  * By hosting at Google App Engine
 * Simpler and more maintainable code
   * By rewriting from scratch
   * By using Go instead of Java
@@ -46,20 +45,3 @@ Next generation Droidippy.
 * Frontend UI using jQuery Mobile widgets
 * Frontend framework built using Backbone.js routes, views and models
 
-## Running locally
-
-Check out the code:
-
-```
-git clone git@github.com:zond/diplicity.git
-```
-
-Download [the Google App Engine SDK](https://developers.google.com/appengine/downloads) and unpack it somewhere.
-
-Run the development app server:
-
-```
-[...]/google_appengine/dev_appserver.py .
-```
-
-Browse to http://localhost:8080/
