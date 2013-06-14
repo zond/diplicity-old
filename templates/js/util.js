@@ -107,8 +107,8 @@ Backbone.sync = function(method, model, options) {
 	var urlError = function() {
 		throw new Error('A "url" property or function must be specified');
 	};
+	var urlBefore = options.url || _.result(model, 'url') || urlError(); 
 	if (method == 'read') {
-		var urlBefore = options.url || _.result(model, 'url') || urlError(); 
 		var cached = localStorage.getItem(urlBefore);
 		if (cached != null) {
 		  console.log('Fetched', urlBefore, 'from localStorage');
@@ -123,7 +123,12 @@ Backbone.sync = function(method, model, options) {
 			oldSuccess(obj, stat, xhr);
 		};
 	}
-	oldBackboneSync(method, model, options);
+	if (method == 'read') {
+	  window.session.subscriptions[urlBefore] = model;
+	  window.session.socket.send("GET " + urlBefore);
+	} else {
+	  console.log("got " + method + " for " + urlBefore);
+	}
 };
 
 function variants() {

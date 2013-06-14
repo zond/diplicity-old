@@ -3,71 +3,64 @@ window.session = {};
 
 $(window).load(function() {
 
-	$(document).ajaxError(function(event, jqXHR, ajaxSettings, thrownError) {
-		if (jqXHR.status == 401) {
-			console.log(jqXHR.getResponseHeader("Location"));
-		}
-	});
-	
-	var AppRouter = Backbone.Router.extend({
+  var match = /^.*:\/\/(.*)\//.exec(window.location.href);
+	window.session.subscriptions = {};
+  window.session.socket = new WebSocket("ws://" + match[1] + "/ws");
+	window.session.socket.onmessage = function(ev) {
+	  console.log(ev.data);
+	};
+	window.session.socket.onopen = function(ev) {
 
-		routes: {
-			"": "home",
-			"open": "openGames",
-			"create": "createGame",
-			"menu": "menu",
-			"game": "game",
-		},
+		window.session.user = new User();
 
-		game: function() {
-		  new GameView({
-			  el: $('#main'),
-			}).doRender();
-		},
+		var AppRouter = Backbone.Router.extend({
 
-    home: function() {
-      new HomeView({ 
-				el: $('#main'),
-				user: user,
-				collection: currentGameMembers,
-			}).doRender();
-		},
+			routes: {
+				"": "home",
+				"open": "openGames",
+				"create": "createGame",
+				"menu": "menu",
+				"game": "game",
+			},
 
-    menu: function() {
-		  new MenuView({ el: $('#main') }).doRender();
-		},
+			game: function() {
+				new GameView({
+					el: $('#main'),
+				}).doRender();
+			},
 
-    createGame: function() {
-		  new CreateGameView({ 
-				el: $('#main'),
-				collection: currentGameMembers,
-			}).doRender();
-		},
+			home: function() {
+				new HomeView({ 
+					el: $('#main'),
+				}).doRender();
+			},
 
-		openGames: function() {
-			new OpenGameMembersView({ 
-				el: $('#main'),
-        user: user,
-				currentGameMembers: currentGameMembers,
-			}).doRender();
-		},
-	});
+			menu: function() {
+				new MenuView({ el: $('#main') }).doRender();
+			},
 
-	var currentGameMembers = new GameMembers([], { url: '/games/member' });
-	var user = new User();
-	var router = new AppRouter();
-	
-	window.session.user = user;
-	window.session.currentGameMembers = currentGameMembers;
-	window.session.router = router;
+			createGame: function() {
+				new CreateGameView({ 
+					el: $('#main'),
+				}).doRender();
+			},
 
-	Backbone.history.start({ 
-		pushState: true,
-	});
-	user.bind('sync', loginSync);
-	user.fetch();
+			openGames: function() {
+				new OpenGameMembersView({ 
+					el: $('#main'),
+				}).doRender();
+			},
+		});
 
-	router.navigate(Backbone.history.fragment || '');
+		window.session.router = new AppRouter();
+		Backbone.history.start({ 
+			pushState: true,
+		});
+		window.session.user.bind('sync', loginSync);
+		window.session.user.fetch();
+
+		window.session.router.navigate(Backbone.history.fragment || '');
+	};
 
 });
 
