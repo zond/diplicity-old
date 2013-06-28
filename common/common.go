@@ -126,14 +126,6 @@ func MustParseInt(s string) (result int) {
 	return
 }
 
-func SetContentType(w http.ResponseWriter, typ string) {
-	w.Header().Set("Content-Type", typ)
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE")
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-	w.Header().Set("Access-Control-Allow-Credentials", "true")
-}
-
 func MustMarshalJSON(i interface{}) (result []byte) {
 	var err error
 	result, err = json.Marshal(i)
