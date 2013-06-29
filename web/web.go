@@ -3,15 +3,35 @@ package web
 import (
 	"bytes"
 	"fmt"
-	"github.com/zond/diplicity/common"
+	"github.com/gorilla/sessions"
 	"net/http"
+	"os"
 	"regexp"
 	"strings"
 	"text/template"
 )
 
+const (
+	SessionEmail = "email"
+)
+
+var PortEnv = os.Getenv("DIP_PORT")
+var SecretEnv = os.Getenv("DIP_SECRET")
+
+func init() {
+	if PortEnv == "" && SecretEnv == "" {
+		panic(fmt.Errorf("You must provide a DIP_SECRET if you don't run on a non-80 DIP_PORT. Just to ensure we don't run production mode with default secret..."))
+	}
+	if SecretEnv == "" {
+		SecretEnv = "something very secret"
+	}
+}
+
+var sessionStore = sessions.NewCookieStore([]byte(SecretEnv))
+
 var spaceRegexp = regexp.MustCompile("\\s+")
 
+var svgTemplates = template.Must(template.New("svgTemplates").ParseGlob("templates/svg/*.svg"))
 var htmlTemplates = template.Must(template.New("htmlTemplates").ParseGlob("templates/html/*.html"))
 var textTemplates = template.Must(template.New("textTemplates").ParseGlob("templates/text/*"))
 var jsModelTemplates = template.Must(template.New("jsCollectionTemplates").ParseGlob("templates/js/models/*.js"))
@@ -27,7 +47,7 @@ func renderText(w http.ResponseWriter, r *http.Request, templates *template.Temp
 	}
 }
 
-func render_Templates(data common.RequestData) {
+func render_Templates(data RequestData) {
 	fmt.Fprintln(data.Response, "(function() {")
 	fmt.Fprintln(data.Response, "  var n;")
 	var buf *bytes.Buffer

@@ -1,9 +1,4 @@
-package common
-
-import (
-	"net/http"
-	"strings"
-)
+package translation
 
 var en = map[string]string{
 	"White press":       "White press",
@@ -73,14 +68,7 @@ var languages = map[string]map[string]string{
 	"en": en,
 }
 
-func getLanguage(r *http.Request) string {
-	bestLanguage := MostAccepted(r, "default", "Accept-Language")
-	parts := strings.Split(bestLanguage, "-")
-	return parts[0]
-}
-
-func getTranslations(r *http.Request) (result map[string]string) {
-	language := getLanguage(r)
+func GetTranslations(language string) (result map[string]string) {
 	result, ok := languages[language]
 	if !ok {
 		result = en

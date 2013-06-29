@@ -1,8 +1,11 @@
-package common
+package web
 
 import (
 	"bytes"
 	"fmt"
+	"github.com/gorilla/sessions"
+	"github.com/zond/diplicity/common"
+	"github.com/zond/diplicity/translation"
 	"net/http"
 	"sort"
 	"time"
@@ -11,20 +14,26 @@ import (
 type RequestData struct {
 	Response     http.ResponseWriter
 	Request      *http.Request
-	translations map[string]string
+	Session      *sessions.Session
+	Translations map[string]string
 }
 
 func GetRequestData(w http.ResponseWriter, r *http.Request) (result RequestData) {
 	result = RequestData{
 		Response:     w,
 		Request:      r,
-		translations: getTranslations(r),
+		Translations: translation.GetTranslations(common.GetLanguage(r)),
 	}
+	result.Session, _ = sessionStore.Get(r, "diplicity_session")
 	return
 }
 
-func (self RequestData) Variants() (result Variants) {
-	for _, variant := range VariantMap {
+func (self RequestData) Close() {
+	self.Session.Save(self.Request, self.Response)
+}
+
+func (self RequestData) Variants() (result common.Variants) {
+	for _, variant := range common.VariantMap {
 		variant.Translation = self.I(variant.Name)
 		result = append(result, variant)
 	}
@@ -32,9 +41,9 @@ func (self RequestData) Variants() (result Variants) {
 	return
 }
 
-func (self RequestData) ChatFlagOptions() (result []ChatFlagOption) {
-	for _, option := range ChatFlagOptions {
-		result = append(result, ChatFlagOption{
+func (self RequestData) ChatFlagOptions() (result []common.ChatFlagOption) {
+	for _, option := range common.ChatFlagOptions {
+		result = append(result, common.ChatFlagOption{
 			Id:          option.Id,
 			Translation: self.I(option.Name),
 		})
@@ -47,7 +56,7 @@ func (self RequestData) Authenticated() bool {
 }
 
 func (self RequestData) I(phrase string, args ...string) string {
-	pattern, ok := self.translations[phrase]
+	pattern, ok := self.Translations[phrase]
 	if !ok {
 		panic(fmt.Errorf("Found no translation for %v", phrase))
 	}
@@ -58,20 +67,20 @@ func (self RequestData) I(phrase string, args ...string) string {
 }
 
 func (self RequestData) ChatFlag(s string) string {
-	var rval ChatFlag
+	var rval common.ChatFlag
 	switch s {
 	case "White":
-		rval = ChatWhite
+		rval = common.ChatWhite
 	case "Grey":
-		rval = ChatGrey
+		rval = common.ChatGrey
 	case "Black":
-		rval = ChatBlack
+		rval = common.ChatBlack
 	case "Private":
-		rval = ChatPrivate
+		rval = common.ChatPrivate
 	case "Group":
-		rval = ChatGroup
+		rval = common.ChatGroup
 	case "Conference":
-		rval = ChatConference
+		rval = common.ChatConference
 	}
 	return fmt.Sprint(rval)
 }

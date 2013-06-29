@@ -11,8 +11,13 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"text/template"
 )
+
+func GetLanguage(r *http.Request) string {
+	bestLanguage := MostAccepted(r, "default", "Accept-Language")
+	parts := strings.Split(bestLanguage, "-")
+	return parts[0]
+}
 
 type ChatFlag int
 
@@ -57,8 +62,6 @@ var ChatFlagOptions = []ChatFlagOption{
 		Name: "Conference press",
 	},
 }
-
-var svgTemplates = template.Must(template.New("svgTemplates").ParseGlob("templates/svg/*.svg"))
 
 const (
 	regular = iota
