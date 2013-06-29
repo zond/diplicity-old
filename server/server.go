@@ -7,7 +7,7 @@ import (
 	"github.com/zond/diplicity/common"
 	"github.com/zond/diplicity/game"
 	"github.com/zond/diplicity/web"
-	"github.com/zond/kcwraps/kol"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -22,56 +22,30 @@ func wantsHTML(r *http.Request, m *mux.RouteMatch) bool {
 	return common.MostAccepted(r, "text/html", "Accept") == "text/html"
 }
 
-type messageType string
-
-const (
-	subscribeType   messageType = "subscribe"
-	unsubscribeType messageType = "unsubscribe"
-	createdType     messageType = "created"
-	updatedType     messageType = "updated"
-	deletedType     messageType = "deleted"
-)
-
-type subscribeMessage struct {
-	URI string
-}
-
-type jsonMessage struct {
-	Type      messageType
-	Subscribe *subscribeMessage
-	Object    interface{}
-}
-
 func wsHandler(ws *websocket.Conn) {
-	var message jsonMessage
-	for err := websocket.JSON.Receive(ws, &message); err == nil; err = websocket.JSON.Receive(ws, &message) {
-		switch message.Type {
-		case subscribeType:
-			switch message.Subscribe.URI {
-			case "/games/open":
-				game.SubscribeOpen(ws.LocalAddr().String(), func(g *game.Game, op kol.Operation) {
-					var typ messageType
-					switch op {
-					case kol.Create:
-						typ = createdType
-					case kol.Update:
-						typ = updatedType
-					case kol.Delete:
-						typ = deletedType
-					}
-					if err := websocket.JSON.Send(ws, jsonMessage{
-						Type:   typ,
-						Object: g,
-					}); err != nil {
-						game.UnsubscribeOpen(ws.LocalAddr().String())
-					}
-				})
+	log.Printf("%v connected", ws.RemoteAddr())
+	var message common.JsonMessage
+	var err error
+	for {
+		if err = websocket.JSON.Receive(ws, &message); err == nil {
+			switch message.Type {
+			case common.SubscribeType:
+				switch message.Subscribe.URI {
+				case "/games/open":
+					common.Subscribe(ws, message.Subscribe.URI, game.Open(), new(game.Game))
+				default:
+					log.Printf("Unrecognized URI: %+v", message.Subscribe.URI)
+				}
+			case common.UnsubscribeType:
+				common.Unsubscribe(ws, message.Subscribe.URI)
 			default:
-				fmt.Printf("Unrecognized URI: %+v\n", message)
+				log.Printf("Unrecognized message Type: %+v", message.Type)
 			}
-		case unsubscribeType:
-		default:
-			fmt.Printf("Unrecognized message: %+v\n", message)
+		} else if err == io.EOF {
+			log.Printf("%v disconnected", ws.RemoteAddr())
+			break
+		} else {
+			log.Println(err)
 		}
 	}
 }
@@ -85,6 +59,9 @@ func main() {
 	router.HandleFunc("/css/{ver}/all", web.AllCss)
 	router.HandleFunc("/diplicity.appcache", web.AppCache)
 	router.HandleFunc("/reload", web.Reload)
+
+	// Login/logout
+	router.HandleFunc("/login", web.Login)
 
 	// The websocket
 	router.Path("/ws").Handler(websocket.Handler(wsHandler))

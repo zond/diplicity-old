@@ -21,15 +21,6 @@ type Game struct {
 	ChatFlags map[string]common.ChatFlag
 }
 
-func UnsubscribeOpen(name string) {
-	common.DB.Unsubscribe(name)
-}
-
-func SubscribeOpen(name string, f func(g *Game, op kol.Operation)) {
-	var g Game
-	if err := common.DB.Query().Filter(kol.Equals{"Closed", false}).Subscribe(name, &g, kol.AllOps, func(i interface{}, op kol.Operation) {
-		f(i.(*Game), op)
-	}); err != nil {
-		panic(err)
-	}
+func Open() *kol.Query {
+	return common.DB.Query().Filter(kol.Equals{"Closed", false})
 }

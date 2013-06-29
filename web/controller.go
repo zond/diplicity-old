@@ -1,9 +1,17 @@
 package web
 
 import (
+	"fmt"
 	"github.com/zond/diplicity/common"
 	"net/http"
 )
+
+func Login(w http.ResponseWriter, r *http.Request) {
+	url := common.GetAuthURL(r)
+	w.Header().Set("Location", url.String())
+	w.WriteHeader(302)
+	fmt.Fprintln(w, url.String())
+}
 
 func Reload(w http.ResponseWriter, r *http.Request) {
 	data := common.GetRequestData(w, r)

@@ -125,7 +125,12 @@ Backbone.sync = function(method, model, options) {
 	}
 	if (method == 'read') {
 	  window.session.subscriptions[urlBefore] = model;
-	  window.session.socket.send("GET " + urlBefore);
+	  window.session.socket.send(JSON.stringify({
+		  Type: 'subscribe',
+      Subscribe: {
+			  URI: urlBefore,
+			},
+		}));
 	} else {
 	  console.log("got " + method + " for " + urlBefore);
 	}
