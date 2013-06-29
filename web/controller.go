@@ -3,8 +3,14 @@ package web
 import (
 	"fmt"
 	"github.com/zond/diplicity/common"
+	"log"
 	"net/http"
 )
+
+func Openid(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	log.Printf("%+v", r.Form)
+}
 
 func Login(w http.ResponseWriter, r *http.Request) {
 	url := common.GetAuthURL(r)

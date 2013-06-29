@@ -62,6 +62,7 @@ func main() {
 
 	// Login/logout
 	router.HandleFunc("/login", web.Login)
+	router.HandleFunc("/openid", web.Openid)
 
 	// The websocket
 	router.Path("/ws").Handler(websocket.Handler(wsHandler))
