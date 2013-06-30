@@ -3,9 +3,12 @@
 	<a href="/menu" data-icon="gear" class="navigate ui-btn-right">{{.I "Menu" }}</a>
 </div>
 <div data-role="content">
-	<div data-role="collapsible-set" class="when-logged-in homePageGames">
+	<% if (user.loggedIn()) { %>
+	<div data-role="collapsible-set" class="homePageGames">
 	</div>
-	<a class="when-logged-out" href="/login?return_to={{.Abs "/"}}" data-role="button">{{.I "Log in to see your games" }}</a>
+	<% } else { %>
+	<a href="/login?return_to={{.Abs "/"}}" data-role="button">{{.I "Log in to see your games" }}</a>
+	<% } %>
 </div>
 <div data-role="footer" data-position="fixed">
 	<div data-role="navbar">

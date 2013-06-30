@@ -137,8 +137,23 @@ function wsBackbone(ws) {
 			console.log("got " + method + " for " + urlBefore);
 		}
 	};
+	var oldOnmessage = ws.onmessage;
 	ws.onmessage = function(ev) {
-	  console.log(ev.data);
+	  var mobj = JSON.parse(ev.data);
+		if (mobj.Object.URL != null) {
+			var subscription = subscriptions[mobj.Object.URL];
+			if (subscription != null) {
+				if (mobj.Type == 'Fetch') {
+				  console.log("Fetched", mobj.Object.URL);
+				  subscription.set(mobj.Object.Data);
+				}
+			} else {
+			  console.log("Received", mobj, "for unsubscribed URL", mobj.Object.URL);
+			}
+		}
+		if (oldOnmessage != null) {
+		  oldOnmessage(ev);
+		}
 	};
 };
 
@@ -205,18 +220,6 @@ deadlineOptions = [
 	{ value: 20160, name: '{{.I "2 weeks" }}' },
 ];
 
-function loginSync() {
-	if (window.session.user.loggedIn()) {
-		$('.when-logged-out').css('display', 'none');
-		$('.when-logged-in').css('display', 'block');
-		$('.email-at').text(window.session.user.get('email') + '/');
-	} else {
-		$('.when-logged-out').css('display', 'block');
-		$('.when-logged-in').css('display', 'none');
-		$('.email-at').text('');
-	}
-};
-
 window.BaseView = Backbone.View.extend({
 
 	views: {},
@@ -248,7 +251,6 @@ window.BaseView = Backbone.View.extend({
 				window.session.router.navigate($(el).attr('href'), { trigger: true });
 			});
 		});	
-		loginSync();
 		this.views[this.cid] = this;
 		if (this.$el.attr('data-role') == 'page') {
 			this.$el.trigger('pagecreate');

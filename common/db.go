@@ -9,6 +9,10 @@ import (
 
 var DB *kol.DB
 
+const (
+	fetchType = "Fetch"
+)
+
 func init() {
 	var err error
 	if DB, err = kol.New("diplicity"); err != nil {
@@ -17,13 +21,13 @@ func init() {
 }
 
 func Unsubscribe(ws *websocket.Conn, url string) {
-	DB.Unsubscribe(fmt.Sprintf("%v/%v", ws.RemoteAddr().String(), url))
+	DB.Unsubscribe(fmt.Sprintf("%v/%v", ws.Request().RemoteAddr, url))
 }
 
-func subscriber(ws *websocket.Conn, url string) kol.Subscriber {
-	return func(i interface{}, op kol.Operation) {
+func subscriber(ws *websocket.Conn, url string) (s func(i interface{}, op string)) {
+	return func(i interface{}, op string) {
 		if err := websocket.JSON.Send(ws, JsonMessage{
-			Type: op.String(),
+			Type: op,
 			Object: &ObjectMessage{
 				Data: i,
 				URL:  url,
@@ -36,7 +40,9 @@ func subscriber(ws *websocket.Conn, url string) kol.Subscriber {
 
 func Subscribe(ws *websocket.Conn, url string, obj interface{}) {
 	s := subscriber(ws, url)
-	if err := DB.Subscribe(fmt.Sprintf("%v/%v", ws.RemoteAddr().String(), url), obj, kol.AllOps, s); err != nil {
+	if err := DB.Subscribe(fmt.Sprintf("%v/%v", ws.Request().RemoteAddr, url), obj, kol.AllOps, func(i interface{}, op kol.Operation) {
+		s(i, op.String())
+	}); err != nil {
 		panic(err)
 	}
 	if err := DB.Get(obj); err != nil {
@@ -44,14 +50,14 @@ func Subscribe(ws *websocket.Conn, url string, obj interface{}) {
 			panic(err)
 		}
 	} else {
-		s(obj, kol.Create)
+		s(obj, fetchType)
 	}
 }
 
 func SubscribeQuery(ws *websocket.Conn, url string, q *kol.Query, obj interface{}) {
 	s := subscriber(ws, url)
-	if err := q.Subscribe(fmt.Sprintf("%v/%v", ws.RemoteAddr().String(), url), obj, kol.AllOps, func(i interface{}, op kol.Operation) {
-		s([]interface{}{i}, op)
+	if err := q.Subscribe(fmt.Sprintf("%v/%v", ws.Request().RemoteAddr, url), obj, kol.AllOps, func(i interface{}, op kol.Operation) {
+		s([]interface{}{i}, op.String())
 	}); err != nil {
 		panic(err)
 	}
@@ -59,6 +65,6 @@ func SubscribeQuery(ws *websocket.Conn, url string, q *kol.Query, obj interface{
 	if err := q.All(slice); err != nil {
 		panic(err)
 	} else {
-		s(slice, kol.Create)
+		s(slice, fetchType)
 	}
 }

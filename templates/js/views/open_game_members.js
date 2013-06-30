@@ -3,33 +3,26 @@ window.OpenGameMembersView = BaseView.extend({
   template: _.template($('#open_game_members_underscore').html()),
 
 	initialize: function(options) {
-	  _.bindAll(this, 'doRender', 'refetch');
-		this.user = options.user;
-		this.user.bind('change', this.refetch);
-		this.currentGameMembers = options.currentGameMembers;
+	  _.bindAll(this, 'doRender');
+		window.session.user.bind('change', this.doRender);
 		this.collection = new GameMembers([], { url: '/games/open' });
 		this.collection.bind("reset", this.doRender);
 		this.collection.bind("add", this.doRender);
 		this.collection.bind("remove", this.doRender);
-		this.refetch();
 	},
 
 	onClose: function() {
-		this.user.unbind('change', this.refetch);
+		window.session.user.unbind('change', this.doRender);
 		this.collection.unbind("reset", this.doRender);
 		this.collection.unbind("add", this.doRender);
 		this.collection.unbind("remove", this.doRender);
 	},
 
-	refetch: function() {
-		if (this.user.loggedIn()) {
-		  this.collection.fetch();
-		}
-	},
-
   render: function() {
 	  var that = this;
-		that.$el.html(that.template({}));
+		that.$el.html(that.template({
+		  user: window.session.user,
+		}));
 		that.collection.forEach(function(model) {
 		  var memberView = new GameMemberView({ 
 				model: model,
@@ -38,7 +31,6 @@ window.OpenGameMembersView = BaseView.extend({
 					model.save(null, {
 						success: function() {
 							that.collection.remove(model);
-							that.currentGameMembers.add(model);
 							window.session.router.navigate('', { trigger: true });
 						},
 					});

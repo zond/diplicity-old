@@ -16,7 +16,7 @@ import (
 
 func WS(ws *websocket.Conn) {
 	session, _ := sessionStore.Get(ws.Request(), SessionName)
-	log.Printf("%v/%v connected", ws.RemoteAddr(), session.Values[SessionEmail])
+	log.Printf("%v/%v connected", ws.Request().RemoteAddr, session.Values[SessionEmail])
 	var message common.JsonMessage
 	var err error
 	for {
@@ -37,7 +37,7 @@ func WS(ws *websocket.Conn) {
 				log.Printf("Unrecognized message Type: %+v", message.Type)
 			}
 		} else if err == io.EOF {
-			log.Printf("%v disconnected", ws.RemoteAddr())
+			log.Printf("%v disconnected", ws.Request().RemoteAddr)
 			break
 		} else {
 			log.Println(err)
@@ -51,7 +51,10 @@ func Openid(w http.ResponseWriter, r *http.Request) {
 	redirect, email, ok := openid.VerifyAuth(r)
 	if ok {
 		data.Session.Values[SessionEmail] = email
-		user := &user.User{Id: []byte(email)}
+		user := &user.User{
+			Id:    []byte(email),
+			Email: email,
+		}
 		if err := common.DB.Get(user); err == kol.NotFound {
 			if err = common.DB.Set(user); err != nil {
 				panic(err)

@@ -53,7 +53,6 @@ $(window).load(function() {
 		Backbone.history.start({ 
 			pushState: true,
 		});
-		window.session.user.bind('sync', loginSync);
 		window.session.user.fetch();
 
 		window.session.router.navigate(Backbone.history.fragment || '');
