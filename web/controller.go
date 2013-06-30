@@ -16,7 +16,7 @@ import (
 
 func WS(ws *websocket.Conn) {
 	session, _ := sessionStore.Get(ws.Request(), SessionName)
-	log.Printf("%v/%v connected", ws.Request().RemoteAddr, session.Values[SessionEmail])
+	log.Printf("%v\t%v\t%v <-", ws.Request().URL, ws.Request().RemoteAddr, session.Values[SessionEmail])
 	var message common.JsonMessage
 	var err error
 	for {
@@ -27,7 +27,9 @@ func WS(ws *websocket.Conn) {
 				case "/games/open":
 					common.SubscribeQuery(ws, message.Subscribe.URI, game.Open(), new(game.Game))
 				case "/user":
-					common.Subscribe(ws, message.Subscribe.URI, &user.User{Id: []byte(session.Values[SessionEmail].(string))})
+					if session.Values[SessionEmail] != nil {
+						common.Subscribe(ws, message.Subscribe.URI, &user.User{Id: []byte(session.Values[SessionEmail].(string))})
+					}
 				default:
 					log.Printf("Unrecognized URI: %+v", message.Subscribe.URI)
 				}
@@ -37,7 +39,7 @@ func WS(ws *websocket.Conn) {
 				log.Printf("Unrecognized message Type: %+v", message.Type)
 			}
 		} else if err == io.EOF {
-			log.Printf("%v disconnected", ws.Request().RemoteAddr)
+			log.Printf("%v\t%v\t%v ->", ws.Request().URL, ws.Request().RemoteAddr, session.Values[SessionEmail])
 			break
 		} else {
 			log.Println(err)
@@ -47,7 +49,6 @@ func WS(ws *websocket.Conn) {
 
 func Openid(w http.ResponseWriter, r *http.Request) {
 	data := GetRequestData(w, r)
-	defer data.Close()
 	redirect, email, ok := openid.VerifyAuth(r)
 	if ok {
 		data.Session.Values[SessionEmail] = email
@@ -65,6 +66,23 @@ func Openid(w http.ResponseWriter, r *http.Request) {
 	} else {
 		delete(data.Session.Values, SessionEmail)
 	}
+	data.Close()
+	w.Header().Set("Location", redirect.String())
+	w.WriteHeader(302)
+	fmt.Fprintln(w, redirect.String())
+}
+
+func Logout(w http.ResponseWriter, r *http.Request) {
+	data := GetRequestData(w, r)
+	var redirect *url.URL
+	r.ParseForm()
+	if returnTo := r.Form.Get("return_to"); returnTo == "" {
+		redirect = common.MustParseURL("http://" + r.Host + "/")
+	} else {
+		redirect = common.MustParseURL(returnTo)
+	}
+	delete(data.Session.Values, SessionEmail)
+	data.Close()
 	w.Header().Set("Location", redirect.String())
 	w.WriteHeader(302)
 	fmt.Fprintln(w, redirect.String())
@@ -82,12 +100,6 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Location", url.String())
 	w.WriteHeader(302)
 	fmt.Fprintln(w, url.String())
-}
-
-func Reload(w http.ResponseWriter, r *http.Request) {
-	data := GetRequestData(w, r)
-	w.Header().Set("Content-Type", "text/html; charset=UTF-8")
-	renderText(w, r, htmlTemplates, "reload.html", data)
 }
 
 func Index(w http.ResponseWriter, r *http.Request) {

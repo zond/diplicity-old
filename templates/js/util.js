@@ -220,8 +220,10 @@ deadlineOptions = [
 	{ value: 20160, name: '{{.I "2 weeks" }}' },
 ];
 
-window.BaseView = Backbone.View.extend({
+mainView = null;
 
+window.BaseView = Backbone.View.extend({
+ 
 	views: {},
 
 	chain: [],
@@ -241,6 +243,12 @@ window.BaseView = Backbone.View.extend({
 		}
 		if (this.chain.length > 0) {
 			this.chain[this.chain.length - 1].addChild(this);
+		}
+		if (this.chain.length == 0) {
+		  if (mainView != null) {
+			  mainView.clean();
+			}
+		  mainView = this;			
 		}
 		this.chain.push(this);
 		this.render();

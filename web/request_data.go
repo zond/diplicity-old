@@ -6,6 +6,7 @@ import (
 	"github.com/gorilla/sessions"
 	"github.com/zond/diplicity/common"
 	"github.com/zond/diplicity/translation"
+	"log"
 	"net/http"
 	"net/url"
 	"sort"
@@ -26,6 +27,7 @@ func GetRequestData(w http.ResponseWriter, r *http.Request) (result RequestData)
 		Translations: translation.GetTranslations(common.GetLanguage(r)),
 	}
 	result.Session, _ = sessionStore.Get(r, SessionName)
+	log.Printf("%v\t%v\t%v", r.URL, r.RemoteAddr, result.Session.Values[SessionEmail])
 	return
 }
 

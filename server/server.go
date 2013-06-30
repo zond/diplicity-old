@@ -30,6 +30,7 @@ func main() {
 
 	// Login/logout
 	router.HandleFunc("/login", web.Login)
+	router.HandleFunc("/logout", web.Logout)
 	router.HandleFunc("/openid", web.Openid)
 
 	// The websocket

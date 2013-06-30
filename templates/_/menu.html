@@ -1,9 +1,12 @@
 <div data-role="header" data-position="fixed">
-	<a data-icon="home" href="#home">{{.I "Home" }}</a>
+	<a data-icon="home" class="navigate" href="/">{{.I "Home" }}</a>
 	<h1><span class="email-at"></span>{{.I "Diplicity" }}</h1>
 </div>
 <div data-role="content">
-	<a rel="external" href="/login" class="when-logged-out" data-role="button">{{.I "Login" }}</a>
-	<a rel="external" href="/logout" class="when-logged-in" data-role="button">{{.I "Logout" }}</a>
+	<% if (user.loggedIn()) { %>
+	<a rel="external" href="/logout?return_to={{.Abs "/menu"}}" data-role="button">{{.I "Logout" }}</a>
+	<% } else { %>
+	<a rel="external" href="/login?return_to={{.Abs "/menu"}}" data-role="button">{{.I "Login" }}</a>
+	<% } %>
 </div>
 
