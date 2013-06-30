@@ -7,6 +7,7 @@ import (
 	"github.com/zond/diplicity/common"
 	"github.com/zond/diplicity/translation"
 	"net/http"
+	"net/url"
 	"sort"
 	"time"
 )
@@ -24,7 +25,7 @@ func GetRequestData(w http.ResponseWriter, r *http.Request) (result RequestData)
 		Request:      r,
 		Translations: translation.GetTranslations(common.GetLanguage(r)),
 	}
-	result.Session, _ = sessionStore.Get(r, "diplicity_session")
+	result.Session, _ = sessionStore.Get(r, SessionName)
 	return
 }
 
@@ -53,6 +54,10 @@ func (self RequestData) ChatFlagOptions() (result []common.ChatFlagOption) {
 
 func (self RequestData) Authenticated() bool {
 	return true
+}
+
+func (self RequestData) Abs(path string) string {
+	return url.QueryEscape(common.MustParseURL("http://" + self.Request.Host + path).String())
 }
 
 func (self RequestData) I(phrase string, args ...string) string {

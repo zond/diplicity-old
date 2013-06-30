@@ -13,6 +13,7 @@ import (
 
 const (
 	SessionEmail = "email"
+	SessionName  = "diplicity_session"
 )
 
 var PortEnv = os.Getenv("DIP_PORT")

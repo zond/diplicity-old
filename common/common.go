@@ -8,6 +8,7 @@ import (
 	dip "github.com/zond/godip/common"
 	"io"
 	"net/http"
+	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
@@ -124,6 +125,14 @@ func MustParseInt64(s string) (result int64) {
 func MustParseInt(s string) (result int) {
 	var err error
 	if result, err = strconv.Atoi(s); err != nil {
+		panic(err)
+	}
+	return
+}
+
+func MustParseURL(s string) (result *url.URL) {
+	var err error
+	if result, err = url.Parse(s); err != nil {
 		panic(err)
 	}
 	return

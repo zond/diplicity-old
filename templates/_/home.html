@@ -3,26 +3,9 @@
 	<a href="/menu" data-icon="gear" class="navigate ui-btn-right">{{.I "Menu" }}</a>
 </div>
 <div data-role="content">
-	<div class="when-logged-in">
-		<div class="jqmText">
-			<h2>{{.I "Diplicity Welcome" }}</h2>
-		</div>
-		<a href="/create" class="navigate" data-role="button">{{.I "Create a game" }}</a>
-		<a href="/public" class="navigate" data-role="button">{{.I "View public games" }}</a>
-		<div data-role="collapsible-set" class="homePageGames">
-		</div>
-		<a href="/about" class="navigate" data-role="button">{{.I "Learn how to play" }}</a>
-		<a href="/logout" data-role="button">{{.I "Logout" }}</a>
+	<div data-role="collapsible-set" class="when-logged-in homePageGames">
 	</div>
-	<div class="when-logged-out" data-role="collapsible-set">
-		<div class="jqmtext">
-			<h2>{{.I "Diplicity Welcome" }}</h2>
-		</div> 
-		<a href="/about" class="navigate" data-role="button">{{.I "Learn how to play" }}</a>
-		<a href="https://accounts.google.com/SignUp" target="_new" data-role="button">{{.I "Create a Google account" }}</a>
-		<a href="/login" data-role="button">{{.I "Log in to see your games" }}</a>
-		<a href="/public" class="navigate" data-role="button">{{.I "View public games" }}</a>
-	</div>
+	<a class="when-logged-out" href="/login?return_to={{.Abs "/"}}" data-role="button">{{.I "Log in to see your games" }}</a>
 </div>
 <div data-role="footer" data-position="fixed">
 	<div data-role="navbar">

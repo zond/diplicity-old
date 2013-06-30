@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/xml"
 	"fmt"
+	"github.com/zond/diplicity/common"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -38,10 +39,7 @@ func join(u *url.URL, q url.Values) (result *url.URL) {
 	} else {
 		fmt.Fprintf(buf, "?%v&%v", u.RawQuery, q.Encode())
 	}
-	var err error
-	if result, err = url.Parse(string(buf.Bytes())); err != nil {
-		panic(err)
-	}
+	result = common.MustParseURL(string(buf.Bytes()))
 	return
 }
 
@@ -61,14 +59,12 @@ func getEndpoint() *url.URL {
 		if err = dec.Decode(&x); err != nil {
 			panic(err)
 		}
-		if endpoint, err = url.Parse(x.XRD); err != nil {
-			panic(err)
-		}
+		endpoint = common.MustParseURL(x.XRD)
 	}
 	return endpoint
 }
 
-func VerifyAuth(r *http.Request) (result string, ok bool) {
+func VerifyAuth(r *http.Request) (returnTo *url.URL, result string, ok bool) {
 	endp := getEndpoint()
 	query := endp.Query()
 	r.ParseForm()
@@ -76,6 +72,9 @@ func VerifyAuth(r *http.Request) (result string, ok bool) {
 		for _, value := range values {
 			if key == "openid.ext1.value.email" {
 				result = value
+			}
+			if key == "openid.secondary_return_to" {
+				returnTo = common.MustParseURL(value)
 			}
 			query.Add(key, value)
 		}
@@ -105,12 +104,12 @@ func VerifyAuth(r *http.Request) (result string, ok bool) {
 	return
 }
 
-func GetAuthURL(r *http.Request) (result *url.URL) {
+func GetAuthURL(r *http.Request, returnTo *url.URL) (result *url.URL) {
 	endp := getEndpoint()
 	query := endp.Query()
 	query.Add("openid.mode", "checkid_setup")
 	query.Add("openid.ns", "http://specs.openid.net/auth/2.0")
-	query.Add("openid.return_to", "http://"+r.Host+"/openid")
+	query.Add("openid.return_to", "http://"+r.Host+"/openid?openid.secondary_return_to="+returnTo.String())
 	query.Add("openid.claimed_id", "http://specs.openid.net/auth/2.0/identifier_select")
 	query.Add("openid.identity", "http://specs.openid.net/auth/2.0/identifier_select")
 	query.Add("openid.ns.ax", "http://openid.net/srv/ax/1.0")

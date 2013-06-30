@@ -6,13 +6,16 @@ import (
 	"github.com/zond/diplicity/common"
 	"github.com/zond/diplicity/game"
 	"github.com/zond/diplicity/openid"
+	"github.com/zond/diplicity/user"
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 )
 
 func WS(ws *websocket.Conn) {
-	log.Printf("%v connected", ws.RemoteAddr())
+	session, _ := sessionStore.Get(ws.Request(), SessionName)
+	log.Printf("%v/%v connected", ws.RemoteAddr(), session.Values[SessionEmail])
 	var message common.JsonMessage
 	var err error
 	for {
@@ -21,7 +24,9 @@ func WS(ws *websocket.Conn) {
 			case common.SubscribeType:
 				switch message.Subscribe.URI {
 				case "/games/open":
-					common.Subscribe(ws, message.Subscribe.URI, game.Open(), new(game.Game))
+					common.SubscribeQuery(ws, message.Subscribe.URI, game.Open(), new(game.Game))
+				case "/user":
+					common.Subscribe(ws, message.Subscribe.URI, &user.User{Id: []byte(session.Values[SessionEmail].(string))})
 				default:
 					log.Printf("Unrecognized URI: %+v", message.Subscribe.URI)
 				}
@@ -42,15 +47,26 @@ func WS(ws *websocket.Conn) {
 func Openid(w http.ResponseWriter, r *http.Request) {
 	data := GetRequestData(w, r)
 	defer data.Close()
-	if email, ok := openid.VerifyAuth(r); ok {
+	redirect, email, ok := openid.VerifyAuth(r)
+	if ok {
 		data.Session.Values[SessionEmail] = email
 	} else {
 		delete(data.Session.Values, SessionEmail)
 	}
+	w.Header().Set("Location", redirect.String())
+	w.WriteHeader(302)
+	fmt.Fprintln(w, redirect.String())
 }
 
 func Login(w http.ResponseWriter, r *http.Request) {
-	url := openid.GetAuthURL(r)
+	var redirect *url.URL
+	r.ParseForm()
+	if returnTo := r.Form.Get("return_to"); returnTo == "" {
+		redirect = common.MustParseURL("http://" + r.Host + "/")
+	} else {
+		redirect = common.MustParseURL(returnTo)
+	}
+	url := openid.GetAuthURL(r, redirect)
 	w.Header().Set("Location", url.String())
 	w.WriteHeader(302)
 	fmt.Fprintln(w, url.String())

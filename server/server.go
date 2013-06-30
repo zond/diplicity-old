@@ -27,7 +27,6 @@ func main() {
 	router.HandleFunc("/js/{ver}/all", web.AllJs)
 	router.HandleFunc("/css/{ver}/all", web.AllCss)
 	router.HandleFunc("/diplicity.appcache", web.AppCache)
-	router.HandleFunc("/reload", web.Reload)
 
 	// Login/logout
 	router.HandleFunc("/login", web.Login)
