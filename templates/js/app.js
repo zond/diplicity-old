@@ -4,12 +4,9 @@ window.session = {};
 $(window).load(function() {
 
   var match = /^.*:\/\/(.*)\//.exec(window.location.href);
-	window.session.subscriptions = {};
-  window.session.socket = new WebSocket("ws://" + match[1] + "/ws");
-	window.session.socket.onmessage = function(ev) {
-	  console.log(ev.data);
-	};
-	window.session.socket.onopen = function(ev) {
+  var socket = new WebSocket("ws://" + match[1] + "/ws");
+  wsBackbone(socket);
+	socket.onopen = function(ev) {
 
 		window.session.user = new User();
 

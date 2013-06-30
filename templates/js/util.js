@@ -102,38 +102,44 @@ String.prototype.format = function() {
 	});
 };
 
-var oldBackboneSync = Backbone.sync;
-Backbone.sync = function(method, model, options) {
-	var urlError = function() {
-		throw new Error('A "url" property or function must be specified');
-	};
-	var urlBefore = options.url || _.result(model, 'url') || urlError(); 
-	if (method == 'read') {
-		var cached = localStorage.getItem(urlBefore);
-		if (cached != null) {
-		  console.log('Fetched', urlBefore, 'from localStorage');
-		  model.set(JSON.parse(cached));
-			model.trigger('sync');
-		}
-		var oldSuccess = options.success;
-		options.success = function(obj, stat, xhr) {
-			var urlAfter = options.url || _.result(model, 'url') || urlError();
-			localStorage.setItem(urlAfter, JSON.stringify(obj));
-			console.log('Stored', urlAfter, 'in localStorage');
-			oldSuccess(obj, stat, xhr);
+function wsBackbone(ws) {
+  var subscriptions = {};
+	var oldBackboneSync = Backbone.sync;
+	Backbone.sync = function(method, model, options) {
+		var urlError = function() {
+			throw new Error('A "url" property or function must be specified');
 		};
-	}
-	if (method == 'read') {
-	  window.session.subscriptions[urlBefore] = model;
-	  window.session.socket.send(JSON.stringify({
-		  Type: 'subscribe',
-      Subscribe: {
-			  URI: urlBefore,
-			},
-		}));
-	} else {
-	  console.log("got " + method + " for " + urlBefore);
-	}
+		var urlBefore = options.url || _.result(model, 'url') || urlError(); 
+		if (method == 'read') {
+			var cached = localStorage.getItem(urlBefore);
+			if (cached != null) {
+				console.log('Fetched', urlBefore, 'from localStorage');
+				model.set(JSON.parse(cached));
+				model.trigger('sync');
+			}
+			var oldSuccess = options.success;
+			options.success = function(obj, stat, xhr) {
+				var urlAfter = options.url || _.result(model, 'url') || urlError();
+				localStorage.setItem(urlAfter, JSON.stringify(obj));
+				console.log('Stored', urlAfter, 'in localStorage');
+				oldSuccess(obj, stat, xhr);
+			};
+		}
+		if (method == 'read') {
+			subscriptions[urlBefore] = model;
+			ws.send(JSON.stringify({
+				Type: 'subscribe',
+				Subscribe: {
+					URI: urlBefore,
+				},
+			}));
+		} else {
+			console.log("got " + method + " for " + urlBefore);
+		}
+	};
+	ws.onmessage = function(ev) {
+	  console.log(ev.data);
+	};
 };
 
 function variants() {
@@ -147,9 +153,9 @@ function variants() {
 };
 
 function variantName(id) {
-  {{range .Variants}}if (id == '{{.Id}}') {
-	  return '{{.Translation}}';
-  }
+	{{range .Variants}}if (id == '{{.Id}}') {
+		return '{{.Translation}}';
+	}
 	{{end}}
 	return null;
 };
@@ -166,9 +172,9 @@ function phaseTypes(variant) {
 };
 
 function chatFlagOptions() {
-  var rval = [];
+	var rval = [];
 	{{range .ChatFlagOptions}}rval.push({
-	  id: {{.Id}},
+		id: {{.Id}},
 		name: '{{.Translation}}',
 	});
 	{{end}}
@@ -180,23 +186,23 @@ defaultDeadline = 1440;
 defaultChatFlags = {{.ChatFlag "White"}} | {{.ChatFlag "Conference"}} | {{.ChatFlag "Private"}};
 
 deadlineOptions = [
-  { value: 5, name: '{{.I "5 minutes" }}' },
-  { value: 10, name: '{{.I "10 minutes" }}' },
-  { value: 20, name: '{{.I "20 minutes" }}' },
-  { value: 30, name: '{{.I "30 minutes" }}' },
-  { value: 60, name: '{{.I "1 hour" }}' },
-  { value: 120, name: '{{.I "2 hours" }}' },
-  { value: 240, name: '{{.I "4 hours" }}' },
-  { value: 480, name: '{{.I "8 hours" }}' },
-  { value: 720, name: '{{.I "12 hours" }}' },
-  { value: 1440, name: '{{.I "24 hours" }}' },
-  { value: 2880, name: '{{.I "2 days" }}' },
-  { value: 4320, name: '{{.I "3 days" }}' },
-  { value: 5760, name: '{{.I "4 days" }}' },
-  { value: 7200, name: '{{.I "5 days" }}' },
-  { value: 10080, name: '{{.I "1 week" }}' },
-  { value: 14400, name: '{{.I "10 days" }}' },
-  { value: 20160, name: '{{.I "2 weeks" }}' },
+	{ value: 5, name: '{{.I "5 minutes" }}' },
+	{ value: 10, name: '{{.I "10 minutes" }}' },
+	{ value: 20, name: '{{.I "20 minutes" }}' },
+	{ value: 30, name: '{{.I "30 minutes" }}' },
+	{ value: 60, name: '{{.I "1 hour" }}' },
+	{ value: 120, name: '{{.I "2 hours" }}' },
+	{ value: 240, name: '{{.I "4 hours" }}' },
+	{ value: 480, name: '{{.I "8 hours" }}' },
+	{ value: 720, name: '{{.I "12 hours" }}' },
+	{ value: 1440, name: '{{.I "24 hours" }}' },
+	{ value: 2880, name: '{{.I "2 days" }}' },
+	{ value: 4320, name: '{{.I "3 days" }}' },
+	{ value: 5760, name: '{{.I "4 days" }}' },
+	{ value: 7200, name: '{{.I "5 days" }}' },
+	{ value: 10080, name: '{{.I "1 week" }}' },
+	{ value: 14400, name: '{{.I "10 days" }}' },
+	{ value: 20160, name: '{{.I "2 weeks" }}' },
 ];
 
 function loginSync() {
@@ -213,28 +219,28 @@ function loginSync() {
 
 window.BaseView = Backbone.View.extend({
 
-  views: {},
+	views: {},
 
 	chain: [],
 
-  addChild: function(child) {
-	  if (this.children == null) {
-		  this.children = [];
+	addChild: function(child) {
+		if (this.children == null) {
+			this.children = [];
 		}
 		this.children.push(child);
 	},
 
 	doRender: function() {
-	  if (this.views[this.cid] != null && this.views[this.cid].cid != this.cid) {
-		  this.views[this.cid].clean();
+		if (this.views[this.cid] != null && this.views[this.cid].cid != this.cid) {
+			this.views[this.cid].clean();
 		} else {
-		  this.cleanChildren();
+			this.cleanChildren();
 		}
 		if (this.chain.length > 0) {
-		  this.chain[this.chain.length - 1].addChild(this);
+			this.chain[this.chain.length - 1].addChild(this);
 		}
 		this.chain.push(this);
-    this.render();
+		this.render();
 		this.chain.pop();
 		this.$('a.navigate').each(function(ind, el) {
 			$(el).bind('click', function(ev) {
@@ -253,15 +259,15 @@ window.BaseView = Backbone.View.extend({
 	},
 
 	clean: function() {
-	  if (typeof(this.onClose) == 'function') {
-		  this.onClose();
+		if (typeof(this.onClose) == 'function') {
+			this.onClose();
 		}
 		this.cleanChildren();
 		this.children = [];
 	},
 
 	cleanChildren: function() {
-	  if (this.children != null) {
+		if (this.children != null) {
 			_.each(this.children, function(child) {
 				child.clean();
 			});
