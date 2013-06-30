@@ -23,8 +23,11 @@ func Unsubscribe(ws *websocket.Conn, url string) {
 func subscriber(ws *websocket.Conn, url string) kol.Subscriber {
 	return func(i interface{}, op kol.Operation) {
 		if err := websocket.JSON.Send(ws, JsonMessage{
-			Type:   op.String(),
-			Object: i,
+			Type: op.String(),
+			Object: &ObjectMessage{
+				Data: i,
+				URL:  url,
+			},
 		}); err != nil {
 			Unsubscribe(ws, url)
 		}

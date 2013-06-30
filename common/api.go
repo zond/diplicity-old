@@ -9,8 +9,13 @@ type SubscribeMessage struct {
 	URI string
 }
 
+type ObjectMessage struct {
+	Data interface{}
+	URL  string
+}
+
 type JsonMessage struct {
-	Type      string
-	Subscribe *SubscribeMessage
-	Object    interface{}
+	Type      string            `json:",omitempty"`
+	Subscribe *SubscribeMessage `json:",omitempty"`
+	Object    *ObjectMessage    `json:",omitempty"`
 }
