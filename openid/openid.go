@@ -9,12 +9,75 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 )
 
 const (
-	discovery = "https://www.google.com/accounts/o8/id"
+	discovery    = "https://www.google.com/accounts/o8/id"
+	maxOldNonces = 100000
 )
 
+type oldNonce struct {
+	at    time.Time
+	nonce string
+	next  *oldNonce
+	prev  *oldNonce
+}
+
+type oldNonces struct {
+	nonceMap       map[string]*oldNonce
+	nonceListStart *oldNonce
+	nonceListEnd   *oldNonce
+	max            int
+}
+
+func newOldNonces() *oldNonces {
+	return &oldNonces{
+		nonceMap: make(map[string]*oldNonce),
+		max:      maxOldNonces,
+	}
+}
+
+func (self *oldNonces) String() string {
+	buf := new(bytes.Buffer)
+	fmt.Fprintf(buf, "%v\n", self.nonceMap)
+	for n := self.nonceListStart; n != nil; n = n.next {
+		fmt.Fprintf(buf, "%v@%v =>\n", n.nonce, n.at)
+	}
+	return string(buf.Bytes())
+}
+
+func (self *oldNonces) size() int {
+	return len(self.nonceMap)
+}
+
+func (self *oldNonces) add(s string) bool {
+	if _, found := self.nonceMap[s]; found {
+		return false
+	}
+	n := &oldNonce{
+		at:    time.Now(),
+		nonce: s,
+		next:  self.nonceListStart,
+	}
+	self.nonceListStart = n
+	if n.next != nil {
+		n.next.prev = n
+	}
+	if self.nonceListEnd == nil {
+		self.nonceListEnd = self.nonceListStart
+	}
+	self.nonceMap[s] = self.nonceListStart
+	for len(self.nonceMap) > self.max {
+		last := self.nonceListEnd
+		last.prev.next = nil
+		self.nonceListEnd = last.prev
+		delete(self.nonceMap, last.nonce)
+	}
+	return true
+}
+
+var nonces = newOldNonces()
 var endpoint *url.URL
 
 type xrdDoc struct {
@@ -68,6 +131,7 @@ func VerifyAuth(r *http.Request) (returnTo *url.URL, result string, ok bool) {
 	endp := getEndpoint()
 	query := endp.Query()
 	r.ParseForm()
+	var nonce string
 	for key, values := range r.Form {
 		for _, value := range values {
 			if key == "openid.ext1.value.email" {
@@ -75,6 +139,9 @@ func VerifyAuth(r *http.Request) (returnTo *url.URL, result string, ok bool) {
 			}
 			if key == "openid.secondary_return_to" {
 				returnTo = common.MustParseURL(value)
+			}
+			if key == "openid.response_nonce" {
+				nonce = value
 			}
 			query.Add(key, value)
 		}
@@ -93,7 +160,9 @@ func VerifyAuth(r *http.Request) (returnTo *url.URL, result string, ok bool) {
 		switch kv[0] {
 		case "is_valid":
 			if kv[1] == "true" {
-				ok = true
+				if nonces.add(nonce) {
+					ok = true
+				}
 			}
 		case "ns":
 			if kv[1] != "http://specs.openid.net/auth/2.0" {
