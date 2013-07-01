@@ -105,6 +105,13 @@ String.prototype.format = function() {
 function wsBackbone(ws) {
   var subscriptions = {};
 	var oldBackboneSync = Backbone.sync;
+	Backbone.Collection.prototype.close = function() {
+		var url = _.result(this, 'url') || urlError(); 
+		if (subscriptions[url] != null) {
+			console.log('Unsubscribing from', url);
+			delete(subscriptions[url]);
+		}
+	};
 	Backbone.sync = function(method, model, options) {
 		var urlError = function() {
 			throw new Error('A "url" property or function must be specified');
@@ -126,6 +133,7 @@ function wsBackbone(ws) {
 					URI: urlBefore,
 				},
 			}));
+			console.log('Subscribing to', urlBefore);
 		} else {
 			console.log("got " + method + " for " + urlBefore);
 		}
@@ -240,7 +248,7 @@ window.BaseView = Backbone.View.extend({
 			this.chain[this.chain.length - 1].addChild(this);
 		}
 		if (this.chain.length == 0) {
-		  if (mainView != null) {
+		  if (mainView != null && mainView.cid != this.cid) {
 			  mainView.clean();
 			}
 		  mainView = this;			
@@ -268,6 +276,7 @@ window.BaseView = Backbone.View.extend({
 			this.onClose();
 		}
 		this.cleanChildren();
+		delete(this.views, this.cid);
 		this.children = [];
 	},
 
@@ -276,7 +285,6 @@ window.BaseView = Backbone.View.extend({
 			_.each(this.children, function(child) {
 				child.clean();
 			});
-			delete(this.views, this.cid);
 		}
 	},
 

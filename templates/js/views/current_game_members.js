@@ -5,24 +5,22 @@ window.CurrentGameMembersView = BaseView.extend({
 	initialize: function(options) {
 	  _.bindAll(this, 'doRender');
 		window.session.user.bind('change', this.doRender);
-		this.collection = new GameMembers([], { url: "/games/current" });
-		this.collection.bind("reset", this.doRender);
-		this.collection.bind("add", this.doRender);
-		this.collection.bind("remove", this.doRender);
-		this.collection.fetch();
+		window.session.currentGameMembers.bind("reset", this.doRender);
+		window.session.currentGameMembers.bind("add", this.doRender);
+		window.session.currentGameMembers.bind("remove", this.doRender);
 	},
 
 	onClose: function() {
 		window.session.user.unbind('change', this.doRender);
-	  this.collection.unbind('reset', this.doRender);
-	  this.collection.unbind('add', this.doRender);
-	  this.collection.unbind('remove', this.doRender);
+	  window.session.currentGameMembers.unbind('reset', this.doRender);
+	  window.session.currentGameMembers.unbind('add', this.doRender);
+	  window.session.currentGameMembers.unbind('remove', this.doRender);
 	},
 
   render: function() {
 	  var that = this;
 		that.$el.html(that.template({}));
-		that.collection.forEach(function(model) {
+		window.session.currentGameMembers.forEach(function(model) {
 		  var memberView = new GameMemberView({ 
 				model: model,
 				button_text: '{{.I "Leave" }}',

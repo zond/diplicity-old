@@ -9,6 +9,7 @@ $(window).load(function() {
 	socket.onopen = function(ev) {
 
 		window.session.user = new User();
+		window.session.currentGameMembers = new GameMembers([], { url: "/games/current" });
 
 		var AppRouter = Backbone.Router.extend({
 
@@ -54,6 +55,7 @@ $(window).load(function() {
 			pushState: true,
 		});
 		window.session.user.fetch();
+		window.session.currentGameMembers.fetch();
 
 		window.session.router.navigate(Backbone.history.fragment || '');
 	};
