@@ -27,7 +27,19 @@ func WS(ws *websocket.Conn) {
 				case "/games/open":
 					common.SubscribeQuery(ws, message.Subscribe.URI, game.Open(), new(game.Game))
 				case "/user":
-					if session.Values[SessionEmail] != nil {
+					if session.Values[SessionEmail] == nil {
+						if err = websocket.JSON.Send(ws, common.JsonMessage{
+							Type: common.FetchType,
+							Object: &common.ObjectMessage{
+								Data: &user.User{},
+								URL:  message.Subscribe.URI,
+							},
+						}); err == io.EOF {
+							break
+						} else {
+							log.Println(err)
+						}
+					} else {
 						common.Subscribe(ws, message.Subscribe.URI, &user.User{Id: []byte(session.Values[SessionEmail].(string))})
 					}
 				default:
@@ -39,12 +51,12 @@ func WS(ws *websocket.Conn) {
 				log.Printf("Unrecognized message Type: %+v", message.Type)
 			}
 		} else if err == io.EOF {
-			log.Printf("%v\t%v\t%v ->", ws.Request().URL, ws.Request().RemoteAddr, session.Values[SessionEmail])
 			break
 		} else {
 			log.Println(err)
 		}
 	}
+	log.Printf("%v\t%v\t%v ->", ws.Request().URL, ws.Request().RemoteAddr, session.Values[SessionEmail])
 }
 
 func Openid(w http.ResponseWriter, r *http.Request) {
