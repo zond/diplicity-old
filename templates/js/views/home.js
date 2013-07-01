@@ -17,8 +17,6 @@ window.HomeView = BaseView.extend({
 		}));
 		new CurrentGameMembersView({ 
 			el: this.$('.homePageGames'),
-			collection: this.collection,
-			user: this.user,
 		}).doRender();
 		return this;
 	},

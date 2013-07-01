@@ -117,13 +117,6 @@ function wsBackbone(ws) {
 				model.set(JSON.parse(cached));
 				model.trigger('sync');
 			}
-			var oldSuccess = options.success;
-			options.success = function(obj, stat, xhr) {
-				var urlAfter = options.url || _.result(model, 'url') || urlError();
-				localStorage.setItem(urlAfter, JSON.stringify(obj));
-				console.log('Stored', urlAfter, 'in localStorage');
-				oldSuccess(obj, stat, xhr);
-			};
 		}
 		if (method == 'read') {
 			subscriptions[urlBefore] = model;
@@ -144,8 +137,10 @@ function wsBackbone(ws) {
 			var subscription = subscriptions[mobj.Object.URL];
 			if (subscription != null) {
 				if (mobj.Type == 'Fetch') {
-				  console.log("Fetched", mobj.Object.URL);
 				  subscription.set(mobj.Object.Data);
+					subscription.trigger('sync');
+					localStorage.setItem(mobj.Object.URL, JSON.stringify(mobj.Object.Data));
+					console.log('Stored', mobj.Object.URL, 'in localStorage');
 				}
 			} else {
 			  console.log("Received", mobj, "for unsubscribed URL", mobj.Object.URL);
