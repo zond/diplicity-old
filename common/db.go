@@ -10,7 +10,7 @@ import (
 var DB *kol.DB
 
 const (
-	fetchType = "Fetch"
+	FetchType = "Fetch"
 )
 
 func init() {
@@ -50,7 +50,7 @@ func Subscribe(ws *websocket.Conn, url string, obj interface{}) {
 			panic(err)
 		}
 	} else {
-		s(obj, fetchType)
+		s(obj, FetchType)
 	}
 }
 
@@ -65,6 +65,6 @@ func SubscribeQuery(ws *websocket.Conn, url string, q *kol.Query, obj interface{
 	if err := q.All(slice); err != nil {
 		panic(err)
 	} else {
-		s(slice, fetchType)
+		s(slice, FetchType)
 	}
 }
