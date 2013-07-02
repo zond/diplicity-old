@@ -2,9 +2,6 @@ window.CreateGameView = BaseView.extend({
 
   template: _.template($('#create_game_underscore').html()),
 
-	createGame: function() {
-	},
-
 	initialize: function(options) {
 	  _.bindAll(this, 'doRender');
 		var deadlines = {};

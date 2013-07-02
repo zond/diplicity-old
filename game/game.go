@@ -55,7 +55,7 @@ func SubscribeCurrent(s *db.Subscription, email interface{}) {
 	if email != nil {
 		refinery := func(i interface{}, op string) {
 			members := i.([]*Member)
-			var states []gameMemberState
+			states := []gameMemberState{}
 			for _, member := range members {
 				game := &Game{Id: member.Game}
 				if err := db.DB.Get(game); err != nil {
@@ -90,7 +90,7 @@ func SubscribeOpen(s *db.Subscription, email interface{}) {
 		refinery := func(i interface{}, op string) {
 			var members []Member
 			games := i.([]*Game)
-			var states []gameMemberState
+			states := []gameMemberState{}
 			for _, game := range games {
 				members = nil
 				db.DB.Query().Filter(kol.And{kol.Equals{"User", []byte(email.(string))}, kol.Equals{"Game", game.Id}}).All(&members)
