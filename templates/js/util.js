@@ -242,6 +242,14 @@ window.BaseView = Backbone.View.extend({
  
 	chain: [],
 
+	fetch: function(obj) {
+	  if (this.subscriptions == null) {
+		  this.subscriptions = [];
+		}
+		this.subscriptions.push(obj);
+		obj.fetch();
+	},
+
 	addChild: function(child) {
 		if (this.children == null) {
 			this.children = [];
@@ -293,7 +301,17 @@ window.BaseView = Backbone.View.extend({
 			this.onClose();
 		}
 		this.cleanChildren();
+		this.stopSubscribing();
 		this.stopListening();
+	},
+
+	stopSubscribing: function() {
+		if (this.subscriptions != null) {
+			_.each(this.subscriptions, function(subs) {
+				subs.close();
+			});
+		}
+		this.children = [];
 	},
 
 	cleanChildren: function() {
