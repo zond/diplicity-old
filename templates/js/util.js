@@ -242,8 +242,6 @@ window.BaseView = Backbone.View.extend({
  
 	chain: [],
 
-	mainView: null,
-
 	addChild: function(child) {
 		if (this.children == null) {
 			this.children = [];
@@ -272,11 +270,15 @@ window.BaseView = Backbone.View.extend({
 		this.cleanChildren();
 		if (this.chain.length > 0) {
 			this.chain[this.chain.length - 1].addChild(this);
-		} else {
-		  if (this.mainView != null && this.mainView.cid != this.cid) {
-			  this.mainView.clean();
+		} else if (this.el != null) {
+		  if (this.el.CurrentBaseView != null) {
+			  if (this.el.CurrentBaseView.cid == this.cid) {
+				  this.cleanChildren();
+				} else {
+					this.el.CurrentBaseView.clean();
+				}
 			}
-		  this.mainView = this;			
+			this.el.CurrentBaseView = this;
 		}
 		this.chain.push(this);
 		this.render();
