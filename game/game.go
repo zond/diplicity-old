@@ -21,6 +21,6 @@ type Game struct {
 	ChatFlags map[string]common.ChatFlag
 }
 
-func Open() *kol.Query {
-	return common.DB.Query().Filter(kol.Equals{"Closed", false})
+func SubscribeOpen(s common.WSSubscription) {
+	common.SubscribeQuery(s.Name(), s.Call, common.DB.Query().Filter(kol.Equals{"Closed", false}), new(Game))
 }

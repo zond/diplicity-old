@@ -25,23 +25,9 @@ func WS(ws *websocket.Conn) {
 			case common.SubscribeType:
 				switch message.Subscribe.URI {
 				case "/games/open":
-					common.SubscribeQuery(ws, message.Subscribe.URI, game.Open(), new(game.Game))
+					game.SubscribeOpen(common.NewWSSubscription(ws, message.Subscribe.URI))
 				case "/user":
-					if session.Values[SessionEmail] == nil {
-						if err = websocket.JSON.Send(ws, common.JsonMessage{
-							Type: common.FetchType,
-							Object: &common.ObjectMessage{
-								Data: &user.User{},
-								URL:  message.Subscribe.URI,
-							},
-						}); err == io.EOF {
-							break
-						} else {
-							log.Println(err)
-						}
-					} else {
-						common.Subscribe(ws, message.Subscribe.URI, &user.User{Id: []byte(session.Values[SessionEmail].(string))})
-					}
+					user.SubscribeEmail(common.NewWSSubscription(ws, message.Subscribe.URI), session.Values[SessionEmail])
 				default:
 					log.Printf("Unrecognized URI: %+v", message.Subscribe.URI)
 				}
