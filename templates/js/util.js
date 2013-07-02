@@ -104,14 +104,26 @@ String.prototype.format = function() {
 
 function wsBackbone(ws) {
   var subscriptions = {};
-	var oldBackboneSync = Backbone.sync;
-	Backbone.Collection.prototype.close = function() {
-		var url = _.result(this, 'url') || urlError(); 
+	var closeSubscription = function(that) {
+		var url = _.result(that, 'url') || urlError(); 
 		if (subscriptions[url] != null) {
 			console.log('Unsubscribing from', url);
+			ws.send(JSON.stringify({
+			  Type: 'unsubscribe',
+				Subscribe: {
+				  URI: url,
+				},
+			}));
 			delete(subscriptions[url]);
 		}
 	};
+	Backbone.Collection.prototype.close = function() {
+	  closeSubscription(this);
+	};
+	Backbone.Model.prototype.close = function() {
+	  closeSubscription(this);
+	};
+	var oldBackboneSync = Backbone.sync;
 	Backbone.sync = function(method, model, options) {
 		var urlError = function() {
 			throw new Error('A "url" property or function must be specified');
@@ -120,12 +132,13 @@ function wsBackbone(ws) {
 		if (method == 'read') {
 			var cached = localStorage.getItem(urlBefore);
 			if (cached != null) {
-				console.log('Fetched', urlBefore, 'from localStorage');
+				console.log('Loaded', urlBefore, 'from localStorage');
 				model.set(JSON.parse(cached));
 				model.trigger('sync');
 			}
 		}
 		if (method == 'read') {
+			console.log('Subscribing to', urlBefore);
 			subscriptions[urlBefore] = model;
 			ws.send(JSON.stringify({
 				Type: 'subscribe',
@@ -133,9 +146,8 @@ function wsBackbone(ws) {
 					URI: urlBefore,
 				},
 			}));
-			console.log('Subscribing to', urlBefore);
 		} else {
-			console.log("got " + method + " for " + urlBefore);
+			console.log("Got " + method + " for " + urlBefore);
 		}
 	};
 	var oldOnmessage = ws.onmessage;
@@ -145,10 +157,13 @@ function wsBackbone(ws) {
 			var subscription = subscriptions[mobj.Object.URL];
 			if (subscription != null) {
 				if (mobj.Type == 'Fetch') {
+				  console.log('Got', mobj.Object.URL, 'from websocket');
 				  subscription.set(mobj.Object.Data);
 					subscription.trigger('sync');
-					localStorage.setItem(mobj.Object.URL, JSON.stringify(mobj.Object.Data));
-					console.log('Stored', mobj.Object.URL, 'in localStorage');
+					if (_.result(subscription, 'localStorage')) {
+						localStorage.setItem(mobj.Object.URL, JSON.stringify(mobj.Object.Data));
+						console.log('Stored', mobj.Object.URL, 'in localStorage');
+					}
 				}
 			} else {
 			  console.log("Received", mobj, "for unsubscribed URL", mobj.Object.URL);
