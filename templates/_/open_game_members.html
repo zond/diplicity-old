@@ -8,7 +8,7 @@
 	<div data-role="collapsible-set" class="join-game">
 	</div>
 	<% } else { %>
-	<a href="/login" data-role="button">{{.I "Log in to join a game" }}</a>
+	<a href="/login?return_to={{.Abs "/open"}}" data-role="button">{{.I "Log in to join a game" }}</a>
 	<% } %>
 </div>
 <div data-role="footer" data-position="fixed">

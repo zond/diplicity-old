@@ -13,7 +13,7 @@ $(window).load(function() {
 		var AppRouter = Backbone.Router.extend({
 
 			routes: {
-				"": "home",
+				"": "currentGames",
 				"open": "openGames",
 				"create": "createGame",
 				"menu": "menu",
@@ -26,18 +26,18 @@ $(window).load(function() {
 				}).doRender();
 			},
 
-			home: function() {
-				new HomeView({ 
-					el: $('#main'),
-				}).doRender();
-			},
-
 			menu: function() {
 				new MenuView({ el: $('#main') }).doRender();
 			},
 
 			createGame: function() {
 				new CreateGameView({ 
+					el: $('#main'),
+				}).doRender();
+			},
+
+			currentGames: function() {
+				new CurrentGameMembersView({ 
 					el: $('#main'),
 				}).doRender();
 			},

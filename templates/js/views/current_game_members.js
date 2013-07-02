@@ -14,7 +14,9 @@ window.CurrentGameMembersView = BaseView.extend({
 
   render: function() {
 	  var that = this;
-		that.$el.html(that.template({}));
+		that.$el.html(that.template({
+		  user: window.session.user,
+		}));
 		this.collection.forEach(function(model) {
 		  var memberView = new GameMemberView({ 
 				model: model,

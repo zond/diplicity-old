@@ -4,18 +4,12 @@ window.OpenGameMembersView = BaseView.extend({
 
 	initialize: function(options) {
 	  _.bindAll(this, 'doRender');
-		window.session.user.bind('change', this.doRender);
+		this.listenTo(window.session.user, 'change', this.doRender);
 		this.collection = new GameMembers([], { url: '/games/open' });
-		this.collection.bind("reset", this.doRender);
-		this.collection.bind("add", this.doRender);
-		this.collection.bind("remove", this.doRender);
-	},
-
-	onClose: function() {
-		window.session.user.unbind('change', this.doRender);
-		this.collection.unbind("reset", this.doRender);
-		this.collection.unbind("add", this.doRender);
-		this.collection.unbind("remove", this.doRender);
+		this.listenTo(this.collection, "reset", this.doRender);
+		this.listenTo(this.collection, "add", this.doRender);
+		this.listenTo(this.collection, "remove", this.doRender);
+		this.fetch(this.collection);
 	},
 
   render: function() {

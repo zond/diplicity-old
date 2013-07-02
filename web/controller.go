@@ -4,6 +4,7 @@ import (
 	"code.google.com/p/go.net/websocket"
 	"fmt"
 	"github.com/zond/diplicity/common"
+	"github.com/zond/diplicity/db"
 	"github.com/zond/diplicity/game"
 	"github.com/zond/diplicity/openid"
 	"github.com/zond/diplicity/user"
@@ -17,22 +18,29 @@ import (
 func WS(ws *websocket.Conn) {
 	session, _ := sessionStore.Get(ws.Request(), SessionName)
 	log.Printf("%v\t%v\t%v <-", ws.Request().URL, ws.Request().RemoteAddr, session.Values[SessionEmail])
+
+	pack := db.NewSubscriptionPack(ws)
+	defer pack.UnsubscribeAll()
+
 	var message common.JsonMessage
 	var err error
 	for {
 		if err = websocket.JSON.Receive(ws, &message); err == nil {
 			switch message.Type {
 			case common.SubscribeType:
+				s := pack.NewSubscription(message.Subscribe.URI)
 				switch message.Subscribe.URI {
+				case "/games/current":
+					game.SubscribeCurrent(s, session.Values[SessionEmail])
 				case "/games/open":
-					game.SubscribeOpen(common.NewWSSubscription(ws, message.Subscribe.URI))
+					game.SubscribeOpen(s, session.Values[SessionEmail])
 				case "/user":
-					user.SubscribeEmail(common.NewWSSubscription(ws, message.Subscribe.URI), session.Values[SessionEmail])
+					user.SubscribeEmail(s, session.Values[SessionEmail])
 				default:
 					log.Printf("Unrecognized URI: %+v", message.Subscribe.URI)
 				}
 			case common.UnsubscribeType:
-				common.Unsubscribe(ws, message.Subscribe.URI)
+				pack.Unsubscribe(message.Subscribe.URI)
 			default:
 				log.Printf("Unrecognized message Type: %+v", message.Type)
 			}

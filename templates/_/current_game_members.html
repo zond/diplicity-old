@@ -1,0 +1,22 @@
+<div data-role="header" data-position="fixed">
+	<h1><span class="email-at"></span>{{.I "Diplicity" }}</h1>
+	<a href="/menu" data-icon="gear" class="navigate ui-btn-right">{{.I "Menu" }}</a>
+</div>
+<div data-role="content">
+	<% if (user.loggedIn()) { %>
+	<div data-role="collapsible-set" class="homePageGames">
+	</div>
+	<% } else { %>
+	<a href="/login?return_to={{.Abs "/"}}" data-role="button">{{.I "Log in to see your games" }}</a>
+	<% } %>
+</div>
+<div data-role="footer" data-position="fixed">
+	<div data-role="navbar">
+		<ul>
+			<li><a class="ui-btn-active ui-state-persist" href="/" class="navigate">{{.I "Games" }}</a></li>
+			<li><a href="/open" class="navigate">{{.I "Join" }}</a></li>
+			<li><a href="/create" class="navigate">{{.I "Create" }}</a></li>
+			<li><a href="/history" class="navigate">{{.I "History" }}</a></li>
+		</ul>
+	</div>
+</div>

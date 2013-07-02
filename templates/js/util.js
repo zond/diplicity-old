@@ -117,12 +117,15 @@ function wsBackbone(ws) {
 			delete(subscriptions[url]);
 		}
 	};
+
 	Backbone.Collection.prototype.close = function() {
 	  closeSubscription(this);
 	};
 	Backbone.Model.prototype.close = function() {
 	  closeSubscription(this);
 	};
+	Backbone.Model.prototype.idAttribute = "Id";
+
 	var oldBackboneSync = Backbone.sync;
 	Backbone.sync = function(method, model, options) {
 		var urlError = function() {
