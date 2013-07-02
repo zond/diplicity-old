@@ -4,13 +4,9 @@ window.HomeView = BaseView.extend({
 
 	initialize: function(options) {
 	  _.bindAll(this, 'doRender');
-	  window.session.user.bind('change', this.doRender);
+		this.listenTo(window.session.user, 'change', this.doRender);
 	},
 	
-	onClose: function() {
-		window.session.user.unbind('change', this.doRender);
-	},
-
 	render: function() {
 		this.$el.html(this.template({
 			user: window.session.user,

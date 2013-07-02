@@ -4,17 +4,10 @@ window.CurrentGameMembersView = BaseView.extend({
 
 	initialize: function(options) {
 	  _.bindAll(this, 'doRender');
-		window.session.user.bind('change', this.doRender);
-		window.session.currentGameMembers.bind("reset", this.doRender);
-		window.session.currentGameMembers.bind("add", this.doRender);
-		window.session.currentGameMembers.bind("remove", this.doRender);
-	},
-
-	onClose: function() {
-		window.session.user.unbind('change', this.doRender);
-	  window.session.currentGameMembers.unbind('reset', this.doRender);
-	  window.session.currentGameMembers.unbind('add', this.doRender);
-	  window.session.currentGameMembers.unbind('remove', this.doRender);
+		this.listenTo(window.session.user, 'change', this.doRender);
+		this.listenTo(window.session.currentGameMembers, "reset", this.doRender);
+		this.listenTo(window.session.currentGameMembers, "add", this.doRender);
+		this.listenTo(window.session.currentGameMembers, "remove", this.doRender);
 	},
 
   render: function() {

@@ -223,13 +223,11 @@ deadlineOptions = [
 	{ value: 20160, name: '{{.I "2 weeks" }}' },
 ];
 
-mainView = null;
-
 window.BaseView = Backbone.View.extend({
  
-	views: {},
-
 	chain: [],
+
+	mainView: null,
 
 	addChild: function(child) {
 		if (this.children == null) {
@@ -238,36 +236,38 @@ window.BaseView = Backbone.View.extend({
 		this.children.push(child);
 	},
 
-	doRender: function() {
-		if (this.views[this.cid] != null && this.views[this.cid].cid != this.cid) {
-			this.views[this.cid].clean();
-		} else {
-			this.cleanChildren();
-		}
-		if (this.chain.length > 0) {
-			this.chain[this.chain.length - 1].addChild(this);
-		}
-		if (this.chain.length == 0) {
-		  if (mainView != null && mainView.cid != this.cid) {
-			  mainView.clean();
-			}
-		  mainView = this;			
-		}
-		this.chain.push(this);
-		this.render();
-		this.chain.pop();
+	fixNavigateLinks: function() {
 		this.$('a.navigate').each(function(ind, el) {
 			$(el).bind('click', function(ev) {
 				ev.preventDefault();
 				window.session.router.navigate($(el).attr('href'), { trigger: true });
 			});
 		});	
-		this.views[this.cid] = this;
+	},
+
+	createJQM: function() {
 		if (this.$el.attr('data-role') == 'page') {
 			this.$el.trigger('pagecreate');
 		} else {
 			this.$el.trigger('create');
 		}
+	},
+
+	doRender: function() {
+		this.cleanChildren();
+		if (this.chain.length > 0) {
+			this.chain[this.chain.length - 1].addChild(this);
+		} else {
+		  if (this.mainView != null && this.mainView.cid != this.cid) {
+			  this.mainView.clean();
+			}
+		  this.mainView = this;			
+		}
+		this.chain.push(this);
+		this.render();
+		this.chain.pop();
+		this.fixNavigateLinks();
+		this.createJQM();
 		return this;
 	},
 
@@ -276,8 +276,7 @@ window.BaseView = Backbone.View.extend({
 			this.onClose();
 		}
 		this.cleanChildren();
-		delete(this.views, this.cid);
-		this.children = [];
+		this.stopListening();
 	},
 
 	cleanChildren: function() {
@@ -286,6 +285,7 @@ window.BaseView = Backbone.View.extend({
 				child.clean();
 			});
 		}
+		this.children = [];
 	},
 
 });
