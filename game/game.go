@@ -5,6 +5,7 @@ import (
 	"github.com/zond/diplicity/db"
 	dip "github.com/zond/godip/common"
 	"github.com/zond/kcwraps/kol"
+	"github.com/zond/kcwraps/subs"
 )
 
 type Minutes int
@@ -51,7 +52,7 @@ type gameMemberState struct {
 	*Phase
 }
 
-func SubscribeCurrent(s *db.Subscription, email interface{}) {
+func SubscribeCurrent(s *subs.Subscription, email interface{}) {
 	if email != nil {
 		refinery := func(i interface{}, op string) {
 			members := i.([]*Member)
@@ -81,11 +82,10 @@ func SubscribeCurrent(s *db.Subscription, email interface{}) {
 			s.Call(states, op)
 		}
 		db.SubscribeQuery(s.Name(), refinery, db.DB.Query().Where(kol.Equals{"User", []byte(email.(string))}), new(Member))
-		s.Register()
 	}
 }
 
-func SubscribeOpen(s *db.Subscription, email interface{}) {
+func SubscribeOpen(s *subs.Subscription, email interface{}) {
 	if email != nil {
 		refinery := func(i interface{}, op string) {
 			var members []Member
@@ -113,6 +113,5 @@ func SubscribeOpen(s *db.Subscription, email interface{}) {
 			s.Call(states, op)
 		}
 		db.SubscribeQuery(s.Name(), refinery, db.DB.Query().Where(kol.Equals{"Closed", false}), new(Game))
-		s.Register()
 	}
 }

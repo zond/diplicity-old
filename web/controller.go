@@ -9,6 +9,7 @@ import (
 	"github.com/zond/diplicity/openid"
 	"github.com/zond/diplicity/user"
 	"github.com/zond/kcwraps/kol"
+	"github.com/zond/kcwraps/subs"
 	"io"
 	"log"
 	"net/http"
@@ -19,7 +20,7 @@ func WS(ws *websocket.Conn) {
 	session, _ := sessionStore.Get(ws.Request(), SessionName)
 	log.Printf("%v\t%v\t%v <-", ws.Request().URL, ws.Request().RemoteAddr, session.Values[SessionEmail])
 
-	pack := db.NewSubscriptionPack(ws)
+	pack := subs.New(db.DB, ws)
 	defer pack.UnsubscribeAll()
 
 	var message common.JsonMessage
@@ -28,7 +29,7 @@ func WS(ws *websocket.Conn) {
 		if err = websocket.JSON.Receive(ws, &message); err == nil {
 			switch message.Type {
 			case common.SubscribeType:
-				s := pack.NewSubscription(message.Subscribe.URI)
+				s := pack.New(message.Subscribe.URI)
 				switch message.Subscribe.URI {
 				case "/games/current":
 					game.SubscribeCurrent(s, session.Values[SessionEmail])
