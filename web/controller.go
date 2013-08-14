@@ -62,8 +62,8 @@ func Openid(w http.ResponseWriter, r *http.Request) {
 			Id:    []byte(email),
 			Email: email,
 		}
-		if err := common.DB.Get(user); err == kol.NotFound {
-			if err = common.DB.Set(user); err != nil {
+		if err := db.DB.Get(user); err == kol.NotFound {
+			if err = db.DB.Set(user); err != nil {
 				panic(err)
 			}
 		} else if err != nil {

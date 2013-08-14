@@ -80,7 +80,7 @@ func SubscribeCurrent(s *db.Subscription, email interface{}) {
 			}
 			s.Call(states, op)
 		}
-		db.SubscribeQuery(s.Name(), refinery, common.DB.Query().Filter(kol.Equals{"User", []byte(email.(string))}), new(Member))
+		db.SubscribeQuery(s.Name(), refinery, db.DB.Query().Where(kol.Equals{"User", []byte(email.(string))}), new(Member))
 		s.Register()
 	}
 }
@@ -93,7 +93,7 @@ func SubscribeOpen(s *db.Subscription, email interface{}) {
 			states := []gameMemberState{}
 			for _, game := range games {
 				members = nil
-				db.DB.Query().Filter(kol.And{kol.Equals{"User", []byte(email.(string))}, kol.Equals{"Game", game.Id}}).All(&members)
+				db.DB.Query().Where(kol.And{kol.Equals{"User", []byte(email.(string))}, kol.Equals{"Game", game.Id}}).All(&members)
 				if len(members) == 0 {
 					phase := &Phase{Id: game.Phase}
 					if err := db.DB.Get(phase); err != nil {
@@ -112,7 +112,7 @@ func SubscribeOpen(s *db.Subscription, email interface{}) {
 			}
 			s.Call(states, op)
 		}
-		db.SubscribeQuery(s.Name(), refinery, common.DB.Query().Filter(kol.Equals{"Closed", false}), new(Game))
+		db.SubscribeQuery(s.Name(), refinery, db.DB.Query().Where(kol.Equals{"Closed", false}), new(Game))
 		s.Register()
 	}
 }
