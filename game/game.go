@@ -1,6 +1,7 @@
 package game
 
 import (
+	"fmt"
 	"github.com/zond/diplicity/common"
 	"github.com/zond/diplicity/db"
 	dip "github.com/zond/godip/common"
@@ -22,9 +23,29 @@ type Game struct {
 	EndYear int
 	Private bool `kol:"index"`
 
-	Deadlines map[string]Minutes
+	Deadlines map[dip.PhaseType]Minutes
 
-	ChatFlags map[string]common.ChatFlag
+	ChatFlags map[dip.PhaseType]common.ChatFlag
+}
+
+func Create(m map[string]interface{}, owner interface{}) {
+	g := &Game{
+		Owner:   []byte(owner.(string)),
+		Variant: m["Variant"].(string),
+		EndYear: m["EndYear"].(int),
+		Private: m["Private"].(bool),
+	}
+	fmt.Println("want to create %+v with %+v", g, m)
+}
+
+func (self *Game) Updated(d *kol.DB, old *Game) {
+	members := []Member{}
+	if err := d.Query().Where(kol.Equals{"Game", self.Id}).All(&members); err != nil {
+		panic(err)
+	}
+	for _, member := range members {
+		d.EmitUpdate(&member)
+	}
 }
 
 type Phase struct {
@@ -35,6 +56,14 @@ type Phase struct {
 	Year    int
 	Type    dip.PhaseType
 	Ordinal int
+}
+
+func (self *Phase) Updated(d *kol.DB, old *Phase) {
+	g := Game{Id: self.Game}
+	if err := d.Get(&g); err != nil {
+		panic(err)
+	}
+	d.EmitUpdate(&g)
 }
 
 type Member struct {
@@ -112,6 +141,6 @@ func SubscribeOpen(s *subs.Subscription, email interface{}) {
 			}
 			s.Call(states, op)
 		}
-		db.SubscribeQuery(s.Name(), refinery, db.DB.Query().Where(kol.Equals{"Closed", false}), new(Game))
+		db.SubscribeQuery(s.Name(), refinery, db.DB.Query().Where(kol.And{kol.Equals{"Closed", false}, kol.Equals{"Private", false}}), new(Game))
 	}
 }

@@ -4,9 +4,12 @@
 	<a data-icon="gear" href="#menu">{{.I "Menu" }}</a>
 </div>
 <div data-role="content">
-	<a href="/login" class="when-logged-out" data-role="button">{{.I "Log in to create a game" }}</a>
-	<div class="when-logged-in create-game">
+	<% if (user.loggedIn()) { %>
+	<div class="create-game">
 	</div>
+	<% } else { %>
+	<a href="/login" class="when-logged-out" data-role="button">{{.I "Log in to create a game" }}</a>
+	<% } %>
 </div>
 <div data-role="footer" data-position="fixed">
 	<div data-role="navbar">

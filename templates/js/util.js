@@ -159,6 +159,12 @@ function wsBackbone(ws) {
 					URI: urlBefore,
 				},
 			}));
+		} else if (method == 'create') {
+		  console.log('Creating', urlBefore);
+			ws.send(JSON.stringify({
+			  Type: 'create',
+				Object: model,
+			}));
 		} else {
 			console.log("Got " + method + " for " + urlBefore);
 		}

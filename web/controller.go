@@ -42,6 +42,8 @@ func (self *Web) WS(ws *websocket.Conn) {
 				}
 			case common.UnsubscribeType:
 				pack.Unsubscribe(message.Subscribe.URI)
+			case common.CreateType:
+				game.Create(message.Object, session.Values[SessionEmail])
 			default:
 				log.Printf("Unrecognized message Type: %+v", message.Type)
 			}

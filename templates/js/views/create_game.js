@@ -20,23 +20,28 @@ window.CreateGameView = BaseView.extend({
 		  owner: true,
 		  game: game
 		});
+		this.gameMember.url = '/games';
 	},
 
   render: function() {
 		var that = this;
-		that.$el.html(that.template({}));
-		new GameMemberView({ 
-		  el: that.$('.create-game'),
-			model: that.gameMember,
-			button_text: '{{.I "Create" }}',
-			button_action: function() {
-				that.collection.create(that.gameMember.attributes, {
-					success: function() {
-						window.session.router.navigate('', { trigger: true });
-					},
-				});
-			},
-		}).doRender();
+		that.$el.html(that.template({
+		  user: window.session.user,
+		}));
+		if (window.session.user.loggedIn()) {
+			new GameMemberView({ 
+				el: that.$('.create-game'),
+				model: that.gameMember,
+				button_text: '{{.I "Create" }}',
+				button_action: function() {
+					that.gameMember.save(null, {
+						success: function() {
+							window.session.router.navigate('', { trigger: true });
+						},
+					});
+				},
+			}).doRender();
+		}
 		return that;
 	},
 
