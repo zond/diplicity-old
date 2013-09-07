@@ -16,8 +16,8 @@ import (
 	"net/url"
 )
 
-func WS(ws *websocket.Conn) {
-	session, _ := sessionStore.Get(ws.Request(), SessionName)
+func (self *Web) WS(ws *websocket.Conn) {
+	session, _ := self.sessionStore.Get(ws.Request(), SessionName)
 	log.Printf("%v\t%v\t%v <-", ws.Request().URL, ws.Request().RemoteAddr, session.Values[SessionEmail])
 
 	pack := subs.New(db.DB, ws)
@@ -54,8 +54,8 @@ func WS(ws *websocket.Conn) {
 	log.Printf("%v\t%v\t%v ->", ws.Request().URL, ws.Request().RemoteAddr, session.Values[SessionEmail])
 }
 
-func Openid(w http.ResponseWriter, r *http.Request) {
-	data := GetRequestData(w, r)
+func (self *Web) Openid(w http.ResponseWriter, r *http.Request) {
+	data := self.GetRequestData(w, r)
 	redirect, email, ok := openid.VerifyAuth(r)
 	if ok {
 		data.Session.Values[SessionEmail] = email
@@ -79,8 +79,8 @@ func Openid(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, redirect.String())
 }
 
-func Logout(w http.ResponseWriter, r *http.Request) {
-	data := GetRequestData(w, r)
+func (self *Web) Logout(w http.ResponseWriter, r *http.Request) {
+	data := self.GetRequestData(w, r)
 	var redirect *url.URL
 	r.ParseForm()
 	if returnTo := r.Form.Get("return_to"); returnTo == "" {
@@ -95,7 +95,7 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, redirect.String())
 }
 
-func Login(w http.ResponseWriter, r *http.Request) {
+func (self *Web) Login(w http.ResponseWriter, r *http.Request) {
 	var redirect *url.URL
 	r.ParseForm()
 	if returnTo := r.Form.Get("return_to"); returnTo == "" {
@@ -109,31 +109,31 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, url.String())
 }
 
-func Index(w http.ResponseWriter, r *http.Request) {
-	data := GetRequestData(w, r)
+func (self *Web) Index(w http.ResponseWriter, r *http.Request) {
+	data := self.GetRequestData(w, r)
 	w.Header().Set("Content-Type", "text/html; charset=UTF-8")
-	renderText(w, r, htmlTemplates, "index.html", data)
+	self.renderText(w, r, htmlTemplates, "index.html", data)
 }
 
-func AppCache(w http.ResponseWriter, r *http.Request) {
-	data := GetRequestData(w, r)
+func (self *Web) AppCache(w http.ResponseWriter, r *http.Request) {
+	data := self.GetRequestData(w, r)
 	w.Header().Set("Content-Type", "AddType text/cache-manifest .appcache; charset=UTF-8")
-	renderText(w, r, textTemplates, "diplicity.appcache", data)
+	self.renderText(w, r, textTemplates, "diplicity.appcache", data)
 }
 
-func AllJs(w http.ResponseWriter, r *http.Request) {
-	data := GetRequestData(w, r)
+func (self *Web) AllJs(w http.ResponseWriter, r *http.Request) {
+	data := self.GetRequestData(w, r)
 	w.Header().Set("Cache-Control", "public, max-age=864000")
 	w.Header().Set("Content-Type", "application/javascript; charset=UTF-8")
-	renderText(w, r, jsTemplates, "jquery-2.0.0.min.js", data)
-	renderText(w, r, jsTemplates, "pre_jquery_mobile.js", data)
-	renderText(w, r, jsTemplates, "jquery.mobile-1.3.1.min.js", data)
-	renderText(w, r, jsTemplates, "jquery.hammer.min.js", data)
-	renderText(w, r, jsTemplates, "underscore-min.js", data)
-	renderText(w, r, jsTemplates, "backbone-min.js", data)
-	renderText(w, r, jsTemplates, "util.js", data)
-	renderText(w, r, jsTemplates, "app.js", data)
-	render_Templates(data)
+	self.renderText(w, r, jsTemplates, "jquery-2.0.0.min.js", data)
+	self.renderText(w, r, jsTemplates, "pre_jquery_mobile.js", data)
+	self.renderText(w, r, jsTemplates, "jquery.mobile-1.3.1.min.js", data)
+	self.renderText(w, r, jsTemplates, "jquery.hammer.min.js", data)
+	self.renderText(w, r, jsTemplates, "underscore-min.js", data)
+	self.renderText(w, r, jsTemplates, "backbone-min.js", data)
+	self.renderText(w, r, jsTemplates, "util.js", data)
+	self.renderText(w, r, jsTemplates, "app.js", data)
+	self.render_Templates(data)
 	for _, templ := range jsModelTemplates.Templates() {
 		if err := templ.Execute(w, data); err != nil {
 			panic(err)
@@ -151,10 +151,10 @@ func AllJs(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func AllCss(w http.ResponseWriter, r *http.Request) {
-	data := GetRequestData(w, r)
+func (self *Web) AllCss(w http.ResponseWriter, r *http.Request) {
+	data := self.GetRequestData(w, r)
 	w.Header().Set("Cache-Control", "public, max-age=864000")
 	w.Header().Set("Content-Type", "text/css; charset=UTF-8")
-	renderText(w, r, cssTemplates, "jquery.mobile-1.3.1.min.css", data)
-	renderText(w, r, cssTemplates, "common.css", data)
+	self.renderText(w, r, cssTemplates, "jquery.mobile-1.3.1.min.css", data)
+	self.renderText(w, r, cssTemplates, "common.css", data)
 }

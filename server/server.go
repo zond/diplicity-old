@@ -2,15 +2,19 @@ package main
 
 import (
 	"code.google.com/p/go.net/websocket"
+	"flag"
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/zond/diplicity/common"
 	"github.com/zond/diplicity/web"
 	"log"
 	"net/http"
-	"strconv"
 	"sync/atomic"
 	"time"
+)
+
+const (
+	defaultSecret = "something very secret"
 )
 
 func wantsJSON(r *http.Request, m *mux.RouteMatch) bool {
@@ -69,31 +73,38 @@ func logger(f func(w http.ResponseWriter, r *http.Request)) func(w http.Response
 }
 
 func main() {
+	port := flag.Int("port", 8080, "The port to listen on")
+	secret := flag.String("secret", defaultSecret, "The cookie store secret")
+	env := flag.String("env", "development", "What environment to run")
+
+	flag.Parse()
+
+	if *env != "development" && *secret == defaultSecret {
+		panic("Only development env can run with the default secret")
+	}
+
+	server := web.New(*env, *secret)
+
 	router := mux.NewRouter()
 
 	// Static content
 	router.PathPrefix("/img").Handler(http.FileServer(http.Dir("")))
-	router.HandleFunc("/js/{ver}/all", logger(web.AllJs))
-	router.HandleFunc("/css/{ver}/all", logger(web.AllCss))
-	router.HandleFunc("/diplicity.appcache", logger(web.AppCache))
+	router.HandleFunc("/js/{ver}/all", logger(server.AllJs))
+	router.HandleFunc("/css/{ver}/all", logger(server.AllCss))
+	router.HandleFunc("/diplicity.appcache", logger(server.AppCache))
 
 	// Login/logout
-	router.HandleFunc("/login", logger(web.Login))
-	router.HandleFunc("/logout", logger(web.Logout))
-	router.HandleFunc("/openid", logger(web.Openid))
+	router.HandleFunc("/login", logger(server.Login))
+	router.HandleFunc("/logout", logger(server.Logout))
+	router.HandleFunc("/openid", logger(server.Openid))
 
 	// The websocket
-	router.Path("/ws").Handler(websocket.Handler(web.WS))
+	router.Path("/ws").Handler(websocket.Handler(server.WS))
 
 	// Everything else HTMLy
-	router.MatcherFunc(wantsHTML).HandlerFunc(logger(web.Index))
+	router.MatcherFunc(wantsHTML).HandlerFunc(logger(server.Index))
 
-	var port int
-	var err error
-	if port, err = strconv.Atoi(web.PortEnv); err != nil {
-		port = 80
-	}
-	addr := fmt.Sprintf("0.0.0.0:%v", port)
+	addr := fmt.Sprintf("0.0.0.0:%v", *port)
 
 	log.Printf("Listening to %v", addr)
 	log.Fatal(http.ListenAndServe(addr, router))

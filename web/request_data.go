@@ -17,15 +17,17 @@ type RequestData struct {
 	Request      *http.Request
 	Session      *sessions.Session
 	Translations map[string]string
+	Env          string
 }
 
-func GetRequestData(w http.ResponseWriter, r *http.Request) (result RequestData) {
+func (self *Web) GetRequestData(w http.ResponseWriter, r *http.Request) (result RequestData) {
 	result = RequestData{
 		Response:     w,
 		Request:      r,
+		Env:          self.env,
 		Translations: translation.GetTranslations(common.GetLanguage(r)),
 	}
-	result.Session, _ = sessionStore.Get(r, SessionName)
+	result.Session, _ = self.sessionStore.Get(r, SessionName)
 	return
 }
 
