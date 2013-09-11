@@ -30,7 +30,9 @@ func (self *Web) Subscribe(s *common.Subscription) {
 func (self *Web) SubscribeQuery(s *common.Subscription) {
 	if s != nil {
 		if err := s.Query.Subscribe(s.Name, s.Object, kol.AllOps, func(i interface{}, op kol.Operation) {
-			s.Subscriber([]interface{}{i}, op.String())
+			slice := reflect.MakeSlice(reflect.SliceOf(reflect.TypeOf(s.Object)), 1, 1)
+			slice.Index(0).Set(reflect.ValueOf(i))
+			s.Subscriber(slice.Interface(), op.String())
 		}); err != nil {
 			panic(err)
 		}

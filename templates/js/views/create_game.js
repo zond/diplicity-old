@@ -13,12 +13,13 @@ window.CreateGameView = BaseView.extend({
 		});
 		var game = {
 			Private: false,
+			Owner: btoa(window.session.user.get('Email')),
 		  Variant: defaultVariant,
 			Deadlines: deadlines,
 			ChatFlags: chatFlags,
 		};
 		this.gameMember = new GameMember({
-		  Owner: true,
+		  Email: btoa(window.session.user.get('Email')),
 		  Game: game
 		});
 		this.gameMember.url = '/games';

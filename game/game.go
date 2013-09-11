@@ -1,6 +1,7 @@
 package game
 
 import (
+	"fmt"
 	"github.com/zond/diplicity/common"
 	dip "github.com/zond/godip/common"
 	"github.com/zond/kcwraps/kol"
@@ -26,16 +27,21 @@ type Game struct {
 	ChatFlags map[dip.PhaseType]common.ChatFlag
 }
 
-func Create(d *kol.DB, m map[string]interface{}, owner interface{}) {
+func Create(d *kol.DB, m map[string]interface{}, owner string) {
+	var state gameMemberState
+	common.MustUnmarshalJSON(common.MustMarshalJSON(m), &state)
+
 	game := &Game{
-		Owner:   []byte(owner.(string)),
-		Variant: common.GetString(m, "Variant"),
-		EndYear: common.GetInt(m, "EndYear"),
-		Private: common.GetBool(m, "Private"),
+		Owner:     []byte(owner),
+		Variant:   state.Game.Variant,
+		EndYear:   state.Game.EndYear,
+		Private:   state.Game.Private,
+		Deadlines: state.Game.Deadlines,
+		ChatFlags: state.Game.ChatFlags,
 	}
 
 	member := &Member{
-		User: []byte(owner.(string)),
+		User: []byte(owner),
 	}
 	d.Transact(func(d *kol.DB) error {
 		if err := d.Set(game); err != nil {
@@ -44,6 +50,7 @@ func Create(d *kol.DB, m map[string]interface{}, owner interface{}) {
 		member.Game = game.Id
 		return d.Set(member)
 	})
+	fmt.Printf("created %+v\nfrom%v\n", game, m)
 }
 
 func (self *Game) Updated(d *kol.DB, old *Game) {

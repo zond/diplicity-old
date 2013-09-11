@@ -46,7 +46,7 @@ window.GameMemberView = BaseView.extend({
 	  var that = this;
     that.$el.html(that.template({
 		  model: that.model,
-			owner: that.model.get('Owner'),
+			owner: that.model.is_owner(),
 			button_text: that.button_text,
 		}));
 		_.each(variants(), function(variant) {
@@ -59,7 +59,7 @@ window.GameMemberView = BaseView.extend({
 		_.each(phaseTypes(that.model.get('Game').Variant), function(type) {
 			that.$('.phase-types').append(new PhaseTypeView({
 				phaseType: type,
-				owner: that.model.get('Owner'),
+				owner: that.model.is_owner(),
 				game: that.model.get('Game'),
 				gameMember: that.model,
 			}).doRender().el);
