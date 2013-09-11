@@ -1,7 +1,7 @@
 package user
 
 import (
-	"github.com/zond/diplicity/db"
+	"github.com/zond/diplicity/common"
 	"github.com/zond/kcwraps/subs"
 )
 
@@ -10,10 +10,11 @@ type User struct {
 	Email string
 }
 
-func SubscribeEmail(s *subs.Subscription, email interface{}) {
-	if email == nil {
-		s.Call(&User{}, db.FetchType)
-	} else {
-		db.Subscribe(s.Name(), s.Call, &User{Id: []byte(email.(string))})
+func EmailSubscription(s *subs.Subscription, email string) *common.Subscription {
+	return &common.Subscription{
+		Name:       s.Name(),
+		Subscriber: s.Call,
+		Query:      nil,
+		Object:     &User{Id: []byte(email)},
 	}
 }

@@ -3,7 +3,6 @@ package game
 import (
 	"fmt"
 	"github.com/zond/diplicity/common"
-	"github.com/zond/diplicity/db"
 	dip "github.com/zond/godip/common"
 	"github.com/zond/kcwraps/kol"
 	"github.com/zond/kcwraps/subs"
@@ -29,13 +28,17 @@ type Game struct {
 }
 
 func Create(m map[string]interface{}, owner interface{}) {
-	g := &Game{
+	game := &Game{
 		Owner:   []byte(owner.(string)),
 		Variant: m["Variant"].(string),
 		EndYear: m["EndYear"].(int),
 		Private: m["Private"].(bool),
 	}
-	fmt.Println("want to create %+v with %+v", g, m)
+
+	member := &Member{
+		User: []byte(owner.(string)),
+	}
+	fmt.Println("wanted to create", game, member)
 }
 
 func (self *Game) Updated(d *kol.DB, old *Game) {
@@ -81,19 +84,20 @@ type gameMemberState struct {
 	*Phase
 }
 
-func SubscribeCurrent(s *subs.Subscription, email interface{}) {
-	if email != nil {
-		refinery := func(i interface{}, op string) {
+func CurrentSubscription(db *kol.DB, s *subs.Subscription, email string) *common.Subscription {
+	return &common.Subscription{
+		Name: s.Name(),
+		Subscriber: func(i interface{}, op string) {
 			members := i.([]*Member)
 			states := []gameMemberState{}
 			for _, member := range members {
 				game := &Game{Id: member.Game}
-				if err := db.DB.Get(game); err != nil {
+				if err := db.Get(game); err != nil {
 					panic(err)
 				}
 				if !game.Ended {
 					phase := &Phase{Id: game.Phase}
-					if err := db.DB.Get(phase); err != nil {
+					if err := db.Get(phase); err != nil {
 						if err == kol.NotFound {
 							phase = nil
 						} else {
@@ -109,23 +113,25 @@ func SubscribeCurrent(s *subs.Subscription, email interface{}) {
 				}
 			}
 			s.Call(states, op)
-		}
-		db.SubscribeQuery(s.Name(), refinery, db.DB.Query().Where(kol.Equals{"User", []byte(email.(string))}), new(Member))
+		},
+		Query:  db.Query().Where(kol.Equals{"User", []byte(email)}),
+		Object: new(Member),
 	}
 }
 
-func SubscribeOpen(s *subs.Subscription, email interface{}) {
-	if email != nil {
-		refinery := func(i interface{}, op string) {
+func OpenSubscription(db *kol.DB, s *subs.Subscription, email string) *common.Subscription {
+	return &common.Subscription{
+		Name: s.Name(),
+		Subscriber: func(i interface{}, op string) {
 			var members []Member
 			games := i.([]*Game)
 			states := []gameMemberState{}
 			for _, game := range games {
 				members = nil
-				db.DB.Query().Where(kol.And{kol.Equals{"User", []byte(email.(string))}, kol.Equals{"Game", game.Id}}).All(&members)
+				db.Query().Where(kol.And{kol.Equals{"User", []byte(email)}, kol.Equals{"Game", game.Id}}).All(&members)
 				if len(members) == 0 {
 					phase := &Phase{Id: game.Phase}
-					if err := db.DB.Get(phase); err != nil {
+					if err := db.Get(phase); err != nil {
 						if err == kol.NotFound {
 							phase = nil
 						} else {
@@ -140,7 +146,8 @@ func SubscribeOpen(s *subs.Subscription, email interface{}) {
 				}
 			}
 			s.Call(states, op)
-		}
-		db.SubscribeQuery(s.Name(), refinery, db.DB.Query().Where(kol.And{kol.Equals{"Closed", false}, kol.Equals{"Private", false}}), new(Game))
+		},
+		Query:  db.Query().Where(kol.And{kol.Equals{"Closed", false}, kol.Equals{"Private", false}}),
+		Object: new(Game),
 	}
 }

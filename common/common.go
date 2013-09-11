@@ -6,6 +6,7 @@ import (
 	"fmt"
 	cla "github.com/zond/godip/classical/common"
 	dip "github.com/zond/godip/common"
+	"github.com/zond/kcwraps/kol"
 	"io"
 	"net/http"
 	"net/url"
@@ -13,6 +14,15 @@ import (
 	"strconv"
 	"strings"
 )
+
+type Subscriber func(i interface{}, op string)
+
+type Subscription struct {
+	Name       string
+	Subscriber Subscriber
+	Object     interface{}
+	Query      *kol.Query
+}
 
 func GetLanguage(r *http.Request) string {
 	bestLanguage := MostAccepted(r, "default", "Accept-Language")

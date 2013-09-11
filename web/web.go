@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/gorilla/sessions"
+	"github.com/zond/kcwraps/kol"
 	"net/http"
 	"regexp"
 	"strings"
@@ -17,14 +18,20 @@ const (
 
 type Web struct {
 	sessionStore *sessions.CookieStore
+	db           *kol.DB
 	env          string
 }
 
-func New(env, secret string) *Web {
-	return &Web{
+func New(env, secret string) (result *Web) {
+	result = &Web{
 		env:          env,
 		sessionStore: sessions.NewCookieStore([]byte(secret)),
 	}
+	var err error
+	if result.db, err = kol.New("diplicity"); err != nil {
+		panic(err)
+	}
+	return
 }
 
 var spaceRegexp = regexp.MustCompile("\\s+")

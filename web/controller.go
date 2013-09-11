@@ -4,7 +4,6 @@ import (
 	"code.google.com/p/go.net/websocket"
 	"fmt"
 	"github.com/zond/diplicity/common"
-	"github.com/zond/diplicity/db"
 	"github.com/zond/diplicity/game"
 	"github.com/zond/diplicity/openid"
 	"github.com/zond/diplicity/user"
@@ -20,8 +19,14 @@ func (self *Web) WS(ws *websocket.Conn) {
 	session, _ := self.sessionStore.Get(ws.Request(), SessionName)
 	log.Printf("%v\t%v\t%v <-", ws.Request().URL, ws.Request().RemoteAddr, session.Values[SessionEmail])
 
-	pack := subs.New(db.DB, ws)
+	pack := subs.New(self.db, ws)
 	defer pack.UnsubscribeAll()
+
+	email := ""
+	emailIf, loggedIn := session.Values[SessionEmail]
+	if loggedIn {
+		email = emailIf.(string)
+	}
 
 	var message common.JsonMessage
 	var err error
@@ -32,11 +37,19 @@ func (self *Web) WS(ws *websocket.Conn) {
 				s := pack.New(message.Subscribe.URI)
 				switch message.Subscribe.URI {
 				case "/games/current":
-					game.SubscribeCurrent(s, session.Values[SessionEmail])
+					if loggedIn {
+						self.SubscribeQuery(game.CurrentSubscription(self.db, s, email))
+					}
 				case "/games/open":
-					game.SubscribeOpen(s, session.Values[SessionEmail])
+					if loggedIn {
+						self.SubscribeQuery(game.OpenSubscription(self.db, s, email))
+					}
 				case "/user":
-					user.SubscribeEmail(s, session.Values[SessionEmail])
+					if loggedIn {
+						s.Call(&user.User{}, FetchType)
+					} else {
+						self.Subscribe(user.EmailSubscription(s, email))
+					}
 				default:
 					log.Printf("Unrecognized URI: %+v", message.Subscribe.URI)
 				}
@@ -65,8 +78,8 @@ func (self *Web) Openid(w http.ResponseWriter, r *http.Request) {
 			Id:    []byte(email),
 			Email: email,
 		}
-		if err := db.DB.Get(user); err == kol.NotFound {
-			if err = db.DB.Set(user); err != nil {
+		if err := self.db.Get(user); err == kol.NotFound {
+			if err = self.db.Set(user); err != nil {
 				panic(err)
 			}
 		} else if err != nil {
