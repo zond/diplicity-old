@@ -26,7 +26,7 @@ window.GameMemberView = BaseView.extend({
 	},
 
   changePrivate: function(ev) {
-	  this.model.get('game').private = $(ev.target).val() == 'true';
+	  this.model.get('Game').private = $(ev.target).val() == 'true';
 		this.model.trigger('change');
 		this.model.trigger('saveme');
 	},
@@ -38,7 +38,7 @@ window.GameMemberView = BaseView.extend({
 	},
 
 	updatePrivate: function() {
-		this.$('select.game-private').val(this.model.get('game').private ? 'true' : 'false');
+		this.$('select.game-private').val(this.model.get('Game').private ? 'true' : 'false');
 		this.$('select.game-private').slider().slider('refresh');
 	},
 
@@ -46,21 +46,21 @@ window.GameMemberView = BaseView.extend({
 	  var that = this;
     that.$el.html(that.template({
 		  model: that.model,
-			owner: that.model.get('owner'),
+			owner: that.model.get('Owner'),
 			button_text: that.button_text,
 		}));
 		_.each(variants(), function(variant) {
-		  if (variant.id == that.model.get('game').variant) {
+		  if (variant.id == that.model.get('Game').Variant) {
 				that.$('select.create-game-variant').append('<option value="{0}" selected="selected">{{.I "Variant"}}: {1}</option>'.format(variant.id, variant.name));
 			} else {
 				that.$('select.create-game-variant').append('<option value="{0}">{{.I "Variant"}}: {1}</option>'.format(variant.id, variant.name));
 			}
 		});
-		_.each(phaseTypes(that.model.get('game').variant), function(type) {
+		_.each(phaseTypes(that.model.get('Game').Variant), function(type) {
 			that.$('.phase-types').append(new PhaseTypeView({
 				phaseType: type,
-				owner: that.model.get('owner'),
-				game: that.model.get('game'),
+				owner: that.model.get('Owner'),
+				game: that.model.get('Game'),
 				gameMember: that.model,
 			}).doRender().el);
 		});

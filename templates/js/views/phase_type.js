@@ -22,7 +22,7 @@ window.PhaseTypeView = BaseView.extend({
 	},
 
 	changeDeadline: function(ev) {
-		this.gameMember.get('game').deadlines[this.phaseType] = parseInt($(ev.target).val()); 
+		this.gameMember.get('Game').Deadlines[this.phaseType] = parseInt($(ev.target).val()); 
 		this.gameMember.trigger('change');
 		this.gameMember.trigger('saveme');
 	},
@@ -32,14 +32,14 @@ window.PhaseTypeView = BaseView.extend({
 		var desc = [];
 		for (var i = 0; i < deadlineOptions.length; i++) { 
 		  var opt = deadlineOptions[i];
-		  if (opt.value == that.gameMember.get('game').deadlines[that.phaseType]) {
+		  if (opt.value == that.gameMember.get('Game').Deadlines[that.phaseType]) {
 			  desc.push(opt.name);
 				that.$('.deadline').val('' + opt.value);
 			}
 		} 
 		for (var i = 0; i < chatFlagOptions().length; i++) {
 			var opt = chatFlagOptions()[i];
-			if ((opt.id & that.gameMember.get('game').chat_flags[that.phaseType]) != 0) {
+			if ((opt.id & that.gameMember.get('Game').ChatFlags[that.phaseType]) != 0) {
 			  desc.push(opt.name);
 				that.$('input[type=checkbox][data-chat-flag=' + opt.id + ']').attr('checked', 'checked');
 			} else {
@@ -47,14 +47,14 @@ window.PhaseTypeView = BaseView.extend({
 			}
 		}
 		that.$('.desc').text(desc.join(", "));
-		that.$('select.deadline').val(that.gameMember.get('game').deadlines[that.phaseType]);
+		that.$('select.deadline').val(that.gameMember.get('Game').Deadlines[that.phaseType]);
 	},
 
 	changeChatFlag: function(ev) {
 	  if ($(ev.target).is(":checked")) {
-			this.gameMember.get('game').chat_flags[this.phaseType] |= parseInt($(ev.target).attr('data-chat-flag'));
+			this.gameMember.get('Game').ChatFlags[this.phaseType] |= parseInt($(ev.target).attr('data-chat-flag'));
 		} else {
-			this.gameMember.get('game').chat_flags[this.phaseType] = this.gameMember.get('game').chat_flags[this.phaseType] & (~parseInt($(ev.target).attr('data-chat-flag')));
+			this.gameMember.get('Game').ChatFlags[this.phaseType] = this.gameMember.get('Game').ChatFlags[this.phaseType] & (~parseInt($(ev.target).attr('data-chat-flag')));
 		}
 		this.gameMember.trigger('change');
 		this.gameMember.trigger('saveme');

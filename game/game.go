@@ -1,7 +1,6 @@
 package game
 
 import (
-	"fmt"
 	"github.com/zond/diplicity/common"
 	dip "github.com/zond/godip/common"
 	"github.com/zond/kcwraps/kol"
@@ -27,18 +26,24 @@ type Game struct {
 	ChatFlags map[dip.PhaseType]common.ChatFlag
 }
 
-func Create(m map[string]interface{}, owner interface{}) {
+func Create(d *kol.DB, m map[string]interface{}, owner interface{}) {
 	game := &Game{
 		Owner:   []byte(owner.(string)),
-		Variant: m["Variant"].(string),
-		EndYear: m["EndYear"].(int),
-		Private: m["Private"].(bool),
+		Variant: common.GetString(m, "Variant"),
+		EndYear: common.GetInt(m, "EndYear"),
+		Private: common.GetBool(m, "Private"),
 	}
 
 	member := &Member{
 		User: []byte(owner.(string)),
 	}
-	fmt.Println("wanted to create", game, member)
+	d.Transact(func(d *kol.DB) error {
+		if err := d.Set(game); err != nil {
+			return err
+		}
+		member.Game = game.Id
+		return d.Set(member)
+	})
 }
 
 func (self *Game) Updated(d *kol.DB, old *Game) {
@@ -78,10 +83,9 @@ type Member struct {
 }
 
 type gameMemberState struct {
-	Id []byte
-	*Game
 	*Member
-	*Phase
+	Game  *Game
+	Phase *Phase
 }
 
 func CurrentSubscription(db *kol.DB, s *subs.Subscription, email string) *common.Subscription {
@@ -105,10 +109,9 @@ func CurrentSubscription(db *kol.DB, s *subs.Subscription, email string) *common
 						}
 					}
 					states = append(states, gameMemberState{
-						Id:     game.Id,
+						Member: member,
 						Game:   game,
 						Phase:  phase,
-						Member: member,
 					})
 				}
 			}
@@ -139,7 +142,6 @@ func OpenSubscription(db *kol.DB, s *subs.Subscription, email string) *common.Su
 						}
 					}
 					states = append(states, gameMemberState{
-						Id:    game.Id,
 						Game:  game,
 						Phase: phase,
 					})

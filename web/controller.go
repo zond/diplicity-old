@@ -46,9 +46,9 @@ func (self *Web) WS(ws *websocket.Conn) {
 					}
 				case "/user":
 					if loggedIn {
-						s.Call(&user.User{}, FetchType)
-					} else {
 						self.Subscribe(user.EmailSubscription(s, email))
+					} else {
+						s.Call(&user.User{}, FetchType)
 					}
 				default:
 					log.Printf("Unrecognized URI: %+v", message.Subscribe.URI)
@@ -56,7 +56,9 @@ func (self *Web) WS(ws *websocket.Conn) {
 			case common.UnsubscribeType:
 				pack.Unsubscribe(message.Subscribe.URI)
 			case common.CreateType:
-				game.Create(message.Object, session.Values[SessionEmail])
+				if loggedIn {
+					game.Create(self.db, message.Object, email)
+				}
 			default:
 				log.Printf("Unrecognized message Type: %+v", message.Type)
 			}

@@ -116,6 +116,33 @@ var VariantMap = map[string]Variant{
 
 var prefPattern = regexp.MustCompile("^([^\\s;]+)(;q=([\\d.]+))?$")
 
+func GetString(m map[string]interface{}, key string) string {
+	if x, found := m[key]; found {
+		if s, ok := x.(string); ok {
+			return s
+		}
+	}
+	return ""
+}
+
+func GetBool(m map[string]interface{}, key string) bool {
+	if x, found := m[key]; found {
+		if b, ok := x.(bool); ok {
+			return b
+		}
+	}
+	return false
+}
+
+func GetInt(m map[string]interface{}, key string) int {
+	if x, found := m[key]; found {
+		if i, ok := x.(int); ok {
+			return i
+		}
+	}
+	return 0
+}
+
 func MustParseFloat64(s string) (result float64) {
 	var err error
 	if result, err = strconv.ParseFloat(s, 64); err != nil {

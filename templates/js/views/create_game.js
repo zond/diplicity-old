@@ -4,6 +4,7 @@ window.CreateGameView = BaseView.extend({
 
 	initialize: function(options) {
 	  _.bindAll(this, 'doRender');
+		this.listenTo(window.session.user, 'change', this.doRender);
 		var deadlines = {};
 		var chatFlags = {};
 		_.each(phaseTypes(defaultVariant), function(type) {
@@ -11,14 +12,14 @@ window.CreateGameView = BaseView.extend({
       chatFlags[type] = defaultChatFlags;
 		});
 		var game = {
-			private: false,
-		  variant: defaultVariant,
-			deadlines: deadlines,
-			chat_flags: chatFlags,
+			Private: false,
+		  Variant: defaultVariant,
+			Deadlines: deadlines,
+			ChatFlags: chatFlags,
 		};
 		this.gameMember = new GameMember({
-		  owner: true,
-		  game: game
+		  Owner: true,
+		  Game: game
 		});
 		this.gameMember.url = '/games';
 	},
