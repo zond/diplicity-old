@@ -1,7 +1,6 @@
 package game
 
 import (
-	"fmt"
 	"github.com/zond/diplicity/common"
 	dip "github.com/zond/godip/common"
 	"github.com/zond/kcwraps/kol"
@@ -50,7 +49,6 @@ func Create(d *kol.DB, m map[string]interface{}, owner string) {
 		member.Game = game.Id
 		return d.Set(member)
 	})
-	fmt.Printf("created %+v\nfrom%v\n", game, m)
 }
 
 func (self *Game) Updated(d *kol.DB, old *Game) {

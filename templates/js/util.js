@@ -175,21 +175,19 @@ function wsBackbone(ws) {
 		if (mobj.Object.URL != null) {
 			var subscription = subscriptions[mobj.Object.URL];
 			if (subscription != null) {
-				if (mobj.Type == 'Fetch') {
-				  console.log('Got', mobj.Object.URL, 'from websocket');
-					if (subscription.models == null && !(mobj.Object.Data instanceof Array)) {
-						subscription.set(mobj.Object.Data);
-					} else if (subscription.models != null && mobj.Object.Data instanceof Array) {
-					  subscription.reset(mobj.Object.Data);
-					} else {
-					  console.log('Got', mobj.Object.Data, 'for', subscription);
-						throw new Error('Got ' + mobj.Object.Data + ' for ' + subscription);
-					}
-					subscription.trigger('sync');
-					if (_.result(subscription, 'localStorage')) {
-						localStorage.setItem(mobj.Object.URL, JSON.stringify(mobj.Object.Data));
-						console.log('Stored', mobj.Object.URL, 'in localStorage');
-					}
+				console.log('Got', mobj.Object.URL, 'from websocket');
+				if (subscription.models == null && !(mobj.Object.Data instanceof Array)) {
+					subscription.set(mobj.Object.Data);
+				} else if (subscription.models != null && mobj.Object.Data instanceof Array) {
+					subscription.set(mobj.Object.Data, { remove: false });
+				} else {
+					console.log('Got', mobj.Object.Data, 'for', subscription);
+					throw new Error('Got ' + mobj.Object.Data + ' for ' + subscription);
+				}
+				subscription.trigger('sync');
+				if (_.result(subscription, 'localStorage')) {
+					localStorage.setItem(mobj.Object.URL, JSON.stringify(mobj.Object.Data));
+					console.log('Stored', mobj.Object.URL, 'in localStorage');
 				}
 			} else {
 			  console.log("Received", mobj, "for unsubscribed URL", mobj.Object.URL);
