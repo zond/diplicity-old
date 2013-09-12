@@ -15,10 +15,9 @@ window.GameMember = Backbone.Model.extend({
 			phaseInfo = '{0} {1}, {2}'.format({{.I "seasons"}}[phase.season], phase.year, {{.I "phase_types"}}[phase.type]);
 		}
 		var nationInfo = '{{.I "Undecided" }}';
-		if (this.get('Nation') != '') {
+		if (this.get('Nation') != '' && this.get('Nation') != null) {
 		  var nationInfo = {{.I "nations" }}[this.get('Nation')];
 		}
-		console.log('variant', this.get("Game"))
 		return '{0}, {1}, {2}'.format(nationInfo, phaseInfo, variantName(this.get('Game').Variant));
 	},
 });

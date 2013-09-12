@@ -22,4 +22,5 @@ _testmain.go
 *.exe
 *.swp
 *.kct
+*.kct.wal
 tags
