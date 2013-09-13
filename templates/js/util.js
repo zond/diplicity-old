@@ -238,11 +238,11 @@ function wsBackbone(ws) {
 					logError('Got', mobj.Object.Data, 'for', subscription);
 					throw new Error('Got ' + mobj.Object.Data + ' for ' + subscription);
 				}
-				subscription.trigger('sync');
 				if (_.result(subscription, 'localStorage')) {
-					localStorage.setItem(mobj.Object.URL, JSON.stringify(mobj.Object.Data));
+					localStorage.setItem(mobj.Object.URL, subscription.toJSON());
 					logDebug('Stored', mobj.Object.URL, 'in localStorage');
 				}
+				subscription.trigger('sync');
 			} else {
 			  logError("Received", mobj, "for unsubscribed URL", mobj.Object.URL);
 			}
