@@ -1,13 +1,17 @@
 package game
 
 import (
+	"bytes"
 	"github.com/zond/diplicity/common"
 	dip "github.com/zond/godip/common"
 	"github.com/zond/kcwraps/kol"
 	"github.com/zond/kcwraps/subs"
+	"regexp"
 )
 
 type Minutes int
+
+var URIPattern = regexp.MustCompile("^/games/(.*)$")
 
 type Game struct {
 	Id    []byte
@@ -24,6 +28,23 @@ type Game struct {
 	Deadlines map[dip.PhaseType]Minutes
 
 	ChatFlags map[dip.PhaseType]common.ChatFlag
+}
+
+func Update(d *kol.DB, m map[string]interface{}, updater string) {
+	var state gameMemberState
+	common.MustUnmarshalJSON(common.MustMarshalJSON(m), &state)
+
+	game := &Game{Id: state.Game.Id}
+	if err := d.Get(game); err != nil {
+		panic(err)
+	}
+	if bytes.Compare(game.Owner, []byte(updater)) == 0 {
+		game.Variant, game.EndYear, game.Private, game.Deadlines, game.ChatFlags =
+			state.Game.Variant, state.Game.EndYear, state.Game.Private, state.Game.Deadlines, state.Game.ChatFlags
+		if err := d.Set(game); err != nil {
+			panic(err)
+		}
+	}
 }
 
 func Create(d *kol.DB, m map[string]interface{}, owner string) {
@@ -93,68 +114,62 @@ type gameMemberState struct {
 	Phase *Phase
 }
 
-func CurrentSubscription(db *kol.DB, s *subs.Subscription, email string) *common.Subscription {
-	return &common.Subscription{
-		Name: s.Name(),
-		Subscriber: func(i interface{}, op string) {
-			members := i.([]*Member)
-			states := []gameMemberState{}
-			for _, member := range members {
-				game := &Game{Id: member.Game}
-				if err := db.Get(game); err != nil {
-					panic(err)
-				}
-				if !game.Ended {
-					phase := &Phase{Id: game.Phase}
-					if err := db.Get(phase); err != nil {
-						if err == kol.NotFound {
-							phase = nil
-						} else {
-							panic(err)
-						}
-					}
-					states = append(states, gameMemberState{
-						Member: member,
-						Game:   game,
-						Phase:  phase,
-					})
-				}
+func SubscribeCurrent(s *subs.Subscription, email string) {
+	s.Query = s.DB().Query().Where(kol.Equals{"User", []byte(email)})
+	s.Call = func(i interface{}, op string) {
+		members := i.([]*Member)
+		states := []gameMemberState{}
+		for _, member := range members {
+			game := &Game{Id: member.Game}
+			if err := s.DB().Get(game); err != nil {
+				panic(err)
 			}
-			s.Call(states, op)
-		},
-		Query:  db.Query().Where(kol.Equals{"User", []byte(email)}),
-		Object: new(Member),
+			if !game.Ended {
+				phase := &Phase{Id: game.Phase}
+				if err := s.DB().Get(phase); err != nil {
+					if err == kol.NotFound {
+						phase = nil
+					} else {
+						panic(err)
+					}
+				}
+				states = append(states, gameMemberState{
+					Member: member,
+					Game:   game,
+					Phase:  phase,
+				})
+			}
+		}
+		s.Send(states, op)
 	}
+	s.Subscribe(new(Member))
 }
 
-func OpenSubscription(db *kol.DB, s *subs.Subscription, email string) *common.Subscription {
-	return &common.Subscription{
-		Name: s.Name(),
-		Subscriber: func(i interface{}, op string) {
-			var members []Member
-			games := i.([]*Game)
-			states := []gameMemberState{}
-			for _, game := range games {
-				members = nil
-				db.Query().Where(kol.And{kol.Equals{"User", []byte(email)}, kol.Equals{"Game", game.Id}}).All(&members)
-				if len(members) == 0 {
-					phase := &Phase{Id: game.Phase}
-					if err := db.Get(phase); err != nil {
-						if err == kol.NotFound {
-							phase = nil
-						} else {
-							panic(err)
-						}
+func SubscribeOpen(s *subs.Subscription, email string) {
+	s.Query = s.DB().Query().Where(kol.And{kol.Equals{"Closed", false}, kol.Equals{"Private", false}})
+	s.Call = func(i interface{}, op string) {
+		var members []Member
+		games := i.([]*Game)
+		states := []gameMemberState{}
+		for _, game := range games {
+			members = nil
+			s.DB().Query().Where(kol.And{kol.Equals{"User", []byte(email)}, kol.Equals{"Game", game.Id}}).All(&members)
+			if len(members) == 0 {
+				phase := &Phase{Id: game.Phase}
+				if err := s.DB().Get(phase); err != nil {
+					if err == kol.NotFound {
+						phase = nil
+					} else {
+						panic(err)
 					}
-					states = append(states, gameMemberState{
-						Game:  game,
-						Phase: phase,
-					})
 				}
+				states = append(states, gameMemberState{
+					Game:  game,
+					Phase: phase,
+				})
 			}
-			s.Call(states, op)
-		},
-		Query:  db.Query().Where(kol.And{kol.Equals{"Closed", false}, kol.Equals{"Private", false}}),
-		Object: new(Game),
+		}
+		s.Send(states, op)
 	}
+	s.Subscribe(new(Game))
 }

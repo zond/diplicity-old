@@ -1,11 +1,11 @@
 window.GameMember = Backbone.Model.extend({
 
   is_member: function() {
-		return window.session.user.get('Email') != '' && this.get('Email') == window.session.user.get('Email');
+		return window.session.user.get('User') != '' && this.get('User') == btoa(window.session.user.get('Email'));
 	},
 
 	is_owner: function() {
-		return this.get('Email') == this.get('Game').Owner;
+		return this.get('User') == this.get('Game').Owner;
 	},
 
 	describe: function() {

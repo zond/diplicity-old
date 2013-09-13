@@ -109,7 +109,7 @@ function wsBackbone(ws) {
 		if (subscriptions[url] != null) {
 			console.log('Unsubscribing from', url);
 			ws.send(JSON.stringify({
-			  Type: 'unsubscribe',
+			  Type: 'Unsubscribe',
 				Subscribe: {
 				  URI: url,
 				},
@@ -154,7 +154,7 @@ function wsBackbone(ws) {
 			console.log('Subscribing to', urlBefore);
 			subscriptions[urlBefore] = model;
 			ws.send(JSON.stringify({
-				Type: 'subscribe',
+				Type: 'Subscribe',
 				Subscribe: {
 					URI: urlBefore,
 				},
@@ -162,8 +162,20 @@ function wsBackbone(ws) {
 		} else if (method == 'create') {
 		  console.log('Creating', urlBefore);
 			ws.send(JSON.stringify({
-			  Type: 'create',
-				Object: model,
+			  Type: 'Create',
+				Create: {
+				  URI: urlBefore,
+					Object: model,
+				},
+			}));
+		} else if (method == 'update') {
+      console.log('Updating', urlBefore);
+			ws.send(JSON.stringify({
+			  Type: 'Update',
+				Update: {
+				  URI: urlBefore,
+					Object: model,
+				},
 			}));
 		} else {
 			console.log("Got " + method + " for " + urlBefore);
@@ -187,7 +199,7 @@ function wsBackbone(ws) {
 				subscription.trigger('sync');
 				if (_.result(subscription, 'localStorage')) {
 					localStorage.setItem(mobj.Object.URL, JSON.stringify(mobj.Object.Data));
-					console.log('Stored', mobj.Object.URL, 'in localStorage');
+					console.log('Stored', mobj.Object.URL, 'in localStorage', _.result(subscription, 'localStorage'));
 				}
 			} else {
 			  console.log("Received", mobj, "for unsubscribed URL", mobj.Object.URL);

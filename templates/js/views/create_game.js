@@ -19,7 +19,7 @@ window.CreateGameView = BaseView.extend({
 			ChatFlags: chatFlags,
 		};
 		this.gameMember = new GameMember({
-		  Email: btoa(window.session.user.get('Email')),
+		  User: btoa(window.session.user.get('Email')),
 		  Game: game
 		});
 		this.gameMember.url = '/games';

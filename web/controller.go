@@ -17,16 +17,16 @@ import (
 
 func (self *Web) WS(ws *websocket.Conn) {
 	session, _ := self.sessionStore.Get(ws.Request(), SessionName)
-	log.Printf("%v\t%v\t%v <-", ws.Request().URL, ws.Request().RemoteAddr, session.Values[SessionEmail])
-
-	pack := subs.New(self.db, ws)
-	defer pack.UnsubscribeAll()
-
 	email := ""
 	emailIf, loggedIn := session.Values[SessionEmail]
 	if loggedIn {
 		email = emailIf.(string)
 	}
+
+	log.Printf("%v\t%v\t%v <-", ws.Request().URL, ws.Request().RemoteAddr, session.Values[SessionEmail])
+
+	pack := subs.New(self.db, ws)
+	defer pack.UnsubscribeAll()
 
 	var message common.JsonMessage
 	var err error
@@ -34,30 +34,41 @@ func (self *Web) WS(ws *websocket.Conn) {
 		if err = websocket.JSON.Receive(ws, &message); err == nil {
 			switch message.Type {
 			case common.SubscribeType:
+				log.Printf("%v\t%v\t%v\t%v\t%v", ws.Request().URL, ws.Request().RemoteAddr, emailIf, message.Type, message.Subscribe.URI)
 				s := pack.New(message.Subscribe.URI)
 				switch message.Subscribe.URI {
 				case "/games/current":
 					if loggedIn {
-						self.SubscribeQuery(game.CurrentSubscription(self.db, s, email))
+						game.SubscribeCurrent(s, email)
 					}
 				case "/games/open":
 					if loggedIn {
-						self.SubscribeQuery(game.OpenSubscription(self.db, s, email))
+						game.SubscribeOpen(s, email)
 					}
 				case "/user":
 					if loggedIn {
-						self.Subscribe(user.EmailSubscription(s, email))
+						user.SubscribeEmail(s, email)
 					} else {
-						s.Call(&user.User{}, FetchType)
+						s.Call(&user.User{}, subs.FetchType)
 					}
 				default:
 					log.Printf("Unrecognized URI: %+v", message.Subscribe.URI)
 				}
 			case common.UnsubscribeType:
+				log.Printf("%v\t%v\t%v\t%v\t%v", ws.Request().URL, ws.Request().RemoteAddr, emailIf, message.Type, message.Subscribe.URI)
 				pack.Unsubscribe(message.Subscribe.URI)
 			case common.CreateType:
-				if loggedIn {
-					game.Create(self.db, message.Object, email)
+				switch message.Create.URI {
+				case "/games":
+					if loggedIn {
+						game.Create(self.db, message.Create.Object, email)
+					}
+				}
+			case common.UpdateType:
+				if match := game.URIPattern.FindStringSubmatch(message.Update.URI); match != nil {
+					if loggedIn {
+						game.Update(self.db, message.Update.Object, email)
+					}
 				}
 			default:
 				log.Printf("Unrecognized message Type: %+v", message.Type)
