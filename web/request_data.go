@@ -73,6 +73,10 @@ func (self RequestData) I(phrase string, args ...string) string {
 	return pattern
 }
 
+func (self RequestData) LogLevel() int {
+	return common.LogLevel
+}
+
 func (self RequestData) ChatFlag(s string) string {
 	var rval common.ChatFlag
 	switch s {

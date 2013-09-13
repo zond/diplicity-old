@@ -7,7 +7,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/zond/diplicity/common"
 	"github.com/zond/diplicity/web"
-	"log"
 	"net/http"
 	"sync/atomic"
 	"time"
@@ -39,14 +38,14 @@ func (self *loggingResponseWriter) WriteHeader(i int) {
 
 func (self *loggingResponseWriter) log(err interface{}) {
 	if err == nil {
-		log.Printf("%v\t%v\t%v\t%v", self.request.Method, self.request.URL, self.status, time.Now().Sub(self.start))
+		common.Infof("%v\t%v\t%v\t%v", self.request.Method, self.request.URL, self.status, time.Now().Sub(self.start))
 	} else {
-		log.Printf("%v\t%v\t%v\t%v\t%v", self.request.Method, self.request.URL, self.status, time.Now().Sub(self.start), err)
+		common.Errorf("%v\t%v\t%v\t%v\t%v", self.request.Method, self.request.URL, self.status, time.Now().Sub(self.start), err)
 	}
 }
 
 func (self *loggingResponseWriter) inc() {
-	log.Printf("%v\t%v", self.request.Method, self.request.URL)
+	common.Infof("%v\t%v", self.request.Method, self.request.URL)
 }
 
 func logger(f func(w http.ResponseWriter, r *http.Request)) func(w http.ResponseWriter, r *http.Request) {
@@ -83,6 +82,12 @@ func main() {
 		panic("Only development env can run with the default secret")
 	}
 
+	if *env == "development" {
+		common.LogLevel = 100
+	} else {
+		common.LogLevel = 0
+	}
+
 	server := web.New(*env, *secret)
 
 	router := mux.NewRouter()
@@ -106,7 +111,7 @@ func main() {
 
 	addr := fmt.Sprintf("0.0.0.0:%v", *port)
 
-	log.Printf("Listening to %v", addr)
-	log.Fatal(http.ListenAndServe(addr, router))
+	common.Infof("Listening to %v", addr)
+	common.Fatalf("%v", http.ListenAndServe(addr, router))
 
 }

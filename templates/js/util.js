@@ -1,3 +1,43 @@
+
+var oldConsoleLog = console.log
+console.log = function() {
+	var ary = Array.prototype.slice.call(arguments, 0); 
+	ary.unshift(new Date());
+	oldConsoleLog.apply(this, ary)
+}
+
+var logLevel = {{.LogLevel}};
+
+function logFatal() {
+  if (logLevel >= 0) {
+	  console.log.apply(console, arguments)
+	}
+}
+
+function logError() {
+  if (logLevel >= 1) {
+	  console.log.apply(console, arguments)
+	}
+}
+
+function logInfo() {
+  if (logLevel >= 2) {
+	  console.log.apply(console, arguments)
+	}
+}
+
+function logDebug() {
+  if (logLevel >= 3) {
+	  console.log.apply(console, arguments)
+	}
+}
+
+function logTrace() {
+  if (logLevel >= 4) {
+	  console.log.apply(console, arguments)
+	}
+}
+
 function panZoom(selector) {
 	var MAX_ZOOM = 4;
   $(selector).each(function(ind, el) {
@@ -107,7 +147,7 @@ function wsBackbone(ws) {
 	var closeSubscription = function(that) {
 		var url = _.result(that, 'url') || urlError(); 
 		if (subscriptions[url] != null) {
-			console.log('Unsubscribing from', url);
+			logDebug('Unsubscribing from', url);
 			ws.send(JSON.stringify({
 			  Type: 'Unsubscribe',
 				Subscribe: {
@@ -135,15 +175,16 @@ function wsBackbone(ws) {
 		if (method == 'read') {
 			var cached = localStorage.getItem(urlBefore);
 			if (cached != null) {
-				console.log('Loaded', urlBefore, 'from localStorage');
+				logDebug('Loaded', urlBefore, 'from localStorage');
 				var data = JSON.parse(cached);
+				logTrace('Found', data);
 				if (data != null) {
 					if (model.models == null && !(data instanceof Array)) {
 						model.set(data);
 					} else if (model.models != null && data instanceof Array) {
 						model.reset(data);
 					} else {
-						console.log('Got', data, 'for', model);
+						logError('Got', data, 'for', model);
 						throw new Error('Got ' + data + ' for ' + model);
 					}
 					model.trigger('sync');
@@ -151,7 +192,7 @@ function wsBackbone(ws) {
 			}
 		}
 		if (method == 'read') {
-			console.log('Subscribing to', urlBefore);
+			logDebug('Subscribing to', urlBefore);
 			subscriptions[urlBefore] = model;
 			ws.send(JSON.stringify({
 				Type: 'Subscribe',
@@ -160,7 +201,7 @@ function wsBackbone(ws) {
 				},
 			}));
 		} else if (method == 'create') {
-		  console.log('Creating', urlBefore);
+		  logDebug('Creating', urlBefore);
 			ws.send(JSON.stringify({
 			  Type: 'Create',
 				Create: {
@@ -169,7 +210,7 @@ function wsBackbone(ws) {
 				},
 			}));
 		} else if (method == 'update') {
-      console.log('Updating', urlBefore);
+      logDebug('Updating', urlBefore);
 			ws.send(JSON.stringify({
 			  Type: 'Update',
 				Update: {
@@ -178,7 +219,7 @@ function wsBackbone(ws) {
 				},
 			}));
 		} else {
-			console.log("Got " + method + " for " + urlBefore);
+			logError("Got " + method + " for " + urlBefore);
 		}
 	};
 	var oldOnmessage = ws.onmessage;
@@ -187,22 +228,23 @@ function wsBackbone(ws) {
 		if (mobj.Object.URL != null) {
 			var subscription = subscriptions[mobj.Object.URL];
 			if (subscription != null) {
-				console.log('Got', mobj.Object.URL, 'from websocket');
+				logDebug('Got', mobj.Object.URL, 'from websocket');
+				logTrace(mobj.Object.Data);
 				if (subscription.models == null && !(mobj.Object.Data instanceof Array)) {
 					subscription.set(mobj.Object.Data);
 				} else if (subscription.models != null && mobj.Object.Data instanceof Array) {
-					subscription.set(mobj.Object.Data, { remove: false });
+					subscription.set(mobj.Object.Data, { remove: false, reset: true });
 				} else {
-					console.log('Got', mobj.Object.Data, 'for', subscription);
+					logError('Got', mobj.Object.Data, 'for', subscription);
 					throw new Error('Got ' + mobj.Object.Data + ' for ' + subscription);
 				}
 				subscription.trigger('sync');
 				if (_.result(subscription, 'localStorage')) {
 					localStorage.setItem(mobj.Object.URL, JSON.stringify(mobj.Object.Data));
-					console.log('Stored', mobj.Object.URL, 'in localStorage', _.result(subscription, 'localStorage'));
+					logDebug('Stored', mobj.Object.URL, 'in localStorage');
 				}
 			} else {
-			  console.log("Received", mobj, "for unsubscribed URL", mobj.Object.URL);
+			  logError("Received", mobj, "for unsubscribed URL", mobj.Object.URL);
 			}
 		}
 		if (oldOnmessage != null) {

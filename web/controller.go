@@ -10,7 +10,6 @@ import (
 	"github.com/zond/kcwraps/kol"
 	"github.com/zond/kcwraps/subs"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 )
@@ -23,7 +22,7 @@ func (self *Web) WS(ws *websocket.Conn) {
 		email = emailIf.(string)
 	}
 
-	log.Printf("%v\t%v\t%v <-", ws.Request().URL, ws.Request().RemoteAddr, session.Values[SessionEmail])
+	common.Infof("%v\t%v\t%v <-", ws.Request().URL, ws.Request().RemoteAddr, session.Values[SessionEmail])
 
 	pack := subs.New(self.db, ws)
 	defer pack.UnsubscribeAll()
@@ -34,7 +33,7 @@ func (self *Web) WS(ws *websocket.Conn) {
 		if err = websocket.JSON.Receive(ws, &message); err == nil {
 			switch message.Type {
 			case common.SubscribeType:
-				log.Printf("%v\t%v\t%v\t%v\t%v", ws.Request().URL, ws.Request().RemoteAddr, emailIf, message.Type, message.Subscribe.URI)
+				common.Debugf("%v\t%v\t%v\t%v\t%v", ws.Request().URL, ws.Request().RemoteAddr, emailIf, message.Type, message.Subscribe.URI)
 				s := pack.New(message.Subscribe.URI)
 				switch message.Subscribe.URI {
 				case "/games/current":
@@ -52,12 +51,16 @@ func (self *Web) WS(ws *websocket.Conn) {
 						s.Call(&user.User{}, subs.FetchType)
 					}
 				default:
-					log.Printf("Unrecognized URI: %+v", message.Subscribe.URI)
+					common.Errorf("Unrecognized URI: %+v", message.Subscribe.URI)
 				}
 			case common.UnsubscribeType:
-				log.Printf("%v\t%v\t%v\t%v\t%v", ws.Request().URL, ws.Request().RemoteAddr, emailIf, message.Type, message.Subscribe.URI)
+				common.Debugf("%v\t%v\t%v\t%v\t%v", ws.Request().URL, ws.Request().RemoteAddr, emailIf, message.Type, message.Subscribe.URI)
 				pack.Unsubscribe(message.Subscribe.URI)
 			case common.CreateType:
+				common.Debugf("%v\t%v\t%v\t%v\t%v", ws.Request().URL, ws.Request().RemoteAddr, emailIf, message.Type, message.Create.URI)
+				if common.LogLevel > common.Trace {
+					common.Tracef("%+v", common.Prettify(message.Create.Object))
+				}
 				switch message.Create.URI {
 				case "/games":
 					if loggedIn {
@@ -65,21 +68,25 @@ func (self *Web) WS(ws *websocket.Conn) {
 					}
 				}
 			case common.UpdateType:
+				common.Debugf("%v\t%v\t%v\t%v\t%v", ws.Request().URL, ws.Request().RemoteAddr, emailIf, message.Type, message.Update.URI)
+				if common.LogLevel > common.Trace {
+					common.Tracef("%+v", common.Prettify(message.Update.Object))
+				}
 				if match := game.URIPattern.FindStringSubmatch(message.Update.URI); match != nil {
 					if loggedIn {
 						game.Update(self.db, message.Update.Object, email)
 					}
 				}
 			default:
-				log.Printf("Unrecognized message Type: %+v", message.Type)
+				common.Errorf("Unrecognized message Type: %+v", message.Type)
 			}
 		} else if err == io.EOF {
 			break
 		} else {
-			log.Println(err)
+			common.Errorf("%v", err)
 		}
 	}
-	log.Printf("%v\t%v\t%v ->", ws.Request().URL, ws.Request().RemoteAddr, session.Values[SessionEmail])
+	common.Infof("%v\t%v\t%v ->", ws.Request().URL, ws.Request().RemoteAddr, session.Values[SessionEmail])
 }
 
 func (self *Web) Openid(w http.ResponseWriter, r *http.Request) {

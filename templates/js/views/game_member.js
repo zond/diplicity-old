@@ -26,7 +26,7 @@ window.GameMemberView = BaseView.extend({
 	},
 
   changePrivate: function(ev) {
-	  this.model.get('Game').private = $(ev.target).val() == 'true';
+	  this.model.get('Game').Private = $(ev.target).val() == 'true';
 		this.model.trigger('change');
 		this.model.trigger('saveme');
 	},
@@ -38,7 +38,7 @@ window.GameMemberView = BaseView.extend({
 	},
 
 	updatePrivate: function() {
-		this.$('select.game-private').val(this.model.get('Game').private ? 'true' : 'false');
+		this.$('select.game-private').val(this.model.get('Game').Private ? 'true' : 'false');
 		this.$('select.game-private').slider().slider('refresh');
 	},
 
