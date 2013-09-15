@@ -13,26 +13,26 @@ import (
 )
 
 type RequestData struct {
-	Response     http.ResponseWriter
-	Request      *http.Request
-	Session      *sessions.Session
-	Translations map[string]string
-	Env          string
+	response     http.ResponseWriter
+	request      *http.Request
+	session      *sessions.Session
+	translations map[string]string
+	web          *Web
 }
 
 func (self *Web) GetRequestData(w http.ResponseWriter, r *http.Request) (result RequestData) {
 	result = RequestData{
-		Response:     w,
-		Request:      r,
-		Env:          self.env,
-		Translations: translation.GetTranslations(common.GetLanguage(r)),
+		response:     w,
+		request:      r,
+		web:          self,
+		translations: translation.GetTranslations(common.GetLanguage(r)),
 	}
-	result.Session, _ = self.sessionStore.Get(r, SessionName)
+	result.session, _ = self.sessionStore.Get(r, SessionName)
 	return
 }
 
 func (self RequestData) Close() {
-	self.Session.Save(self.Request, self.Response)
+	self.session.Save(self.request, self.response)
 }
 
 func (self RequestData) Variants() (result common.Variants) {
@@ -59,11 +59,11 @@ func (self RequestData) Authenticated() bool {
 }
 
 func (self RequestData) Abs(path string) string {
-	return url.QueryEscape(common.MustParseURL("http://" + self.Request.Host + path).String())
+	return url.QueryEscape(common.MustParseURL("http://" + self.request.Host + path).String())
 }
 
 func (self RequestData) I(phrase string, args ...string) string {
-	pattern, ok := self.Translations[phrase]
+	pattern, ok := self.translations[phrase]
 	if !ok {
 		panic(fmt.Errorf("Found no translation for %v", phrase))
 	}
@@ -74,7 +74,7 @@ func (self RequestData) I(phrase string, args ...string) string {
 }
 
 func (self RequestData) LogLevel() int {
-	return common.LogLevel
+	return self.web.logLevel
 }
 
 func (self RequestData) ChatFlag(s string) string {
@@ -96,6 +96,10 @@ func (self RequestData) ChatFlag(s string) string {
 	return fmt.Sprint(rval)
 }
 
+func (self RequestData) Appcache() bool {
+	return self.web.appcache
+}
+
 var version = time.Now()
 
 func (self RequestData) Version() string {
@@ -104,7 +108,7 @@ func (self RequestData) Version() string {
 
 func (self RequestData) SVG(p string) string {
 	b := new(bytes.Buffer)
-	if err := svgTemplates.ExecuteTemplate(b, p, self); err != nil {
+	if err := self.web.svgTemplates.ExecuteTemplate(b, p, self); err != nil {
 		panic(fmt.Errorf("While rendering text: %v", err))
 	}
 	return string(b.Bytes())

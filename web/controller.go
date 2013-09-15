@@ -22,7 +22,7 @@ func (self *Web) WS(ws *websocket.Conn) {
 		email = emailIf.(string)
 	}
 
-	common.Infof("%v\t%v\t%v <-", ws.Request().URL, ws.Request().RemoteAddr, session.Values[SessionEmail])
+	self.Infof("%v\t%v\t%v <-", ws.Request().URL, ws.Request().RemoteAddr, session.Values[SessionEmail])
 
 	pack := subs.New(self.db, ws)
 	defer pack.UnsubscribeAll()
@@ -33,7 +33,7 @@ func (self *Web) WS(ws *websocket.Conn) {
 		if err = websocket.JSON.Receive(ws, &message); err == nil {
 			switch message.Type {
 			case common.SubscribeType:
-				common.Debugf("%v\t%v\t%v\t%v\t%v", ws.Request().URL, ws.Request().RemoteAddr, emailIf, message.Type, message.Subscribe.URI)
+				self.Debugf("%v\t%v\t%v\t%v\t%v", ws.Request().URL, ws.Request().RemoteAddr, emailIf, message.Type, message.Subscribe.URI)
 				s := pack.New(message.Subscribe.URI)
 				switch message.Subscribe.URI {
 				case "/games/current":
@@ -51,15 +51,15 @@ func (self *Web) WS(ws *websocket.Conn) {
 						s.Call(&user.User{}, subs.FetchType)
 					}
 				default:
-					common.Errorf("Unrecognized URI: %+v", message.Subscribe.URI)
+					self.Errorf("Unrecognized URI: %+v", message.Subscribe.URI)
 				}
 			case common.UnsubscribeType:
-				common.Debugf("%v\t%v\t%v\t%v\t%v", ws.Request().URL, ws.Request().RemoteAddr, emailIf, message.Type, message.Subscribe.URI)
+				self.Debugf("%v\t%v\t%v\t%v\t%v", ws.Request().URL, ws.Request().RemoteAddr, emailIf, message.Type, message.Subscribe.URI)
 				pack.Unsubscribe(message.Subscribe.URI)
 			case common.CreateType:
-				common.Debugf("%v\t%v\t%v\t%v\t%v", ws.Request().URL, ws.Request().RemoteAddr, emailIf, message.Type, message.Create.URI)
-				if common.LogLevel > common.Trace {
-					common.Tracef("%+v", common.Prettify(message.Create.Object))
+				self.Debugf("%v\t%v\t%v\t%v\t%v", ws.Request().URL, ws.Request().RemoteAddr, emailIf, message.Type, message.Create.URI)
+				if self.logLevel > Trace {
+					self.Tracef("%+v", common.Prettify(message.Create.Object))
 				}
 				switch message.Create.URI {
 				case "/games":
@@ -68,9 +68,9 @@ func (self *Web) WS(ws *websocket.Conn) {
 					}
 				}
 			case common.UpdateType:
-				common.Debugf("%v\t%v\t%v\t%v\t%v", ws.Request().URL, ws.Request().RemoteAddr, emailIf, message.Type, message.Update.URI)
-				if common.LogLevel > common.Trace {
-					common.Tracef("%+v", common.Prettify(message.Update.Object))
+				self.Debugf("%v\t%v\t%v\t%v\t%v", ws.Request().URL, ws.Request().RemoteAddr, emailIf, message.Type, message.Update.URI)
+				if self.logLevel > Trace {
+					self.Tracef("%+v", common.Prettify(message.Update.Object))
 				}
 				if match := game.URIPattern.FindStringSubmatch(message.Update.URI); match != nil {
 					if loggedIn {
@@ -78,22 +78,22 @@ func (self *Web) WS(ws *websocket.Conn) {
 					}
 				}
 			default:
-				common.Errorf("Unrecognized message Type: %+v", message.Type)
+				self.Errorf("Unrecognized message Type: %+v", message.Type)
 			}
 		} else if err == io.EOF {
 			break
 		} else {
-			common.Errorf("%v", err)
+			self.Errorf("%v", err)
 		}
 	}
-	common.Infof("%v\t%v\t%v ->", ws.Request().URL, ws.Request().RemoteAddr, session.Values[SessionEmail])
+	self.Infof("%v\t%v\t%v ->", ws.Request().URL, ws.Request().RemoteAddr, session.Values[SessionEmail])
 }
 
 func (self *Web) Openid(w http.ResponseWriter, r *http.Request) {
 	data := self.GetRequestData(w, r)
 	redirect, email, ok := openid.VerifyAuth(r)
 	if ok {
-		data.Session.Values[SessionEmail] = email
+		data.session.Values[SessionEmail] = email
 		user := &user.User{
 			Id:    []byte(email),
 			Email: email,
@@ -106,7 +106,7 @@ func (self *Web) Openid(w http.ResponseWriter, r *http.Request) {
 			panic(err)
 		}
 	} else {
-		delete(data.Session.Values, SessionEmail)
+		delete(data.session.Values, SessionEmail)
 	}
 	data.Close()
 	w.Header().Set("Location", redirect.String())
@@ -123,7 +123,7 @@ func (self *Web) Logout(w http.ResponseWriter, r *http.Request) {
 	} else {
 		redirect = common.MustParseURL(returnTo)
 	}
-	delete(data.Session.Values, SessionEmail)
+	delete(data.session.Values, SessionEmail)
 	data.Close()
 	w.Header().Set("Location", redirect.String())
 	w.WriteHeader(302)
@@ -147,39 +147,39 @@ func (self *Web) Login(w http.ResponseWriter, r *http.Request) {
 func (self *Web) Index(w http.ResponseWriter, r *http.Request) {
 	data := self.GetRequestData(w, r)
 	w.Header().Set("Content-Type", "text/html; charset=UTF-8")
-	self.renderText(w, r, htmlTemplates, "index.html", data)
+	self.renderText(w, r, self.htmlTemplates, "index.html", data)
 }
 
 func (self *Web) AppCache(w http.ResponseWriter, r *http.Request) {
 	data := self.GetRequestData(w, r)
 	w.Header().Set("Content-Type", "AddType text/cache-manifest .appcache; charset=UTF-8")
-	self.renderText(w, r, textTemplates, "diplicity.appcache", data)
+	self.renderText(w, r, self.textTemplates, "diplicity.appcache", data)
 }
 
 func (self *Web) AllJs(w http.ResponseWriter, r *http.Request) {
 	data := self.GetRequestData(w, r)
 	w.Header().Set("Cache-Control", "public, max-age=864000")
 	w.Header().Set("Content-Type", "application/javascript; charset=UTF-8")
-	self.renderText(w, r, jsTemplates, "jquery-2.0.0.min.js", data)
-	self.renderText(w, r, jsTemplates, "pre_jquery_mobile.js", data)
-	self.renderText(w, r, jsTemplates, "jquery.mobile-1.3.1.min.js", data)
-	self.renderText(w, r, jsTemplates, "jquery.hammer.min.js", data)
-	self.renderText(w, r, jsTemplates, "underscore-min.js", data)
-	self.renderText(w, r, jsTemplates, "backbone-min.js", data)
-	self.renderText(w, r, jsTemplates, "util.js", data)
-	self.renderText(w, r, jsTemplates, "app.js", data)
+	self.renderText(w, r, self.jsTemplates, "jquery-2.0.0.min.js", data)
+	self.renderText(w, r, self.jsTemplates, "pre_jquery_mobile.js", data)
+	self.renderText(w, r, self.jsTemplates, "jquery.mobile-1.3.1.min.js", data)
+	self.renderText(w, r, self.jsTemplates, "jquery.hammer.min.js", data)
+	self.renderText(w, r, self.jsTemplates, "underscore-min.js", data)
+	self.renderText(w, r, self.jsTemplates, "backbone-min.js", data)
+	self.renderText(w, r, self.jsTemplates, "util.js", data)
+	self.renderText(w, r, self.jsTemplates, "app.js", data)
 	self.render_Templates(data)
-	for _, templ := range jsModelTemplates.Templates() {
+	for _, templ := range self.jsModelTemplates.Templates() {
 		if err := templ.Execute(w, data); err != nil {
 			panic(err)
 		}
 	}
-	for _, templ := range jsCollectionTemplates.Templates() {
+	for _, templ := range self.jsCollectionTemplates.Templates() {
 		if err := templ.Execute(w, data); err != nil {
 			panic(err)
 		}
 	}
-	for _, templ := range jsViewTemplates.Templates() {
+	for _, templ := range self.jsViewTemplates.Templates() {
 		if err := templ.Execute(w, data); err != nil {
 			panic(err)
 		}
@@ -190,6 +190,6 @@ func (self *Web) AllCss(w http.ResponseWriter, r *http.Request) {
 	data := self.GetRequestData(w, r)
 	w.Header().Set("Cache-Control", "public, max-age=864000")
 	w.Header().Set("Content-Type", "text/css; charset=UTF-8")
-	self.renderText(w, r, cssTemplates, "jquery.mobile-1.3.1.min.css", data)
-	self.renderText(w, r, cssTemplates, "common.css", data)
+	self.renderText(w, r, self.cssTemplates, "jquery.mobile-1.3.1.min.css", data)
+	self.renderText(w, r, self.cssTemplates, "common.css", data)
 }

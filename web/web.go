@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/gorilla/sessions"
 	"github.com/zond/kcwraps/kol"
+	"log"
 	"net/http"
 	"regexp"
 	"strings"
@@ -16,35 +17,67 @@ const (
 	SessionName  = "diplicity_session"
 )
 
+const (
+	Fatal = iota
+	Error
+	Info
+	Debug
+	Trace
+)
+
+var spaceRegexp = regexp.MustCompile("\\s+")
+
 type Web struct {
-	sessionStore *sessions.CookieStore
-	db           *kol.DB
-	env          string
+	sessionStore          *sessions.CookieStore
+	db                    *kol.DB
+	env                   string
+	logLevel              int
+	appcache              bool
+	svgTemplates          *template.Template
+	htmlTemplates         *template.Template
+	textTemplates         *template.Template
+	jsModelTemplates      *template.Template
+	jsCollectionTemplates *template.Template
+	jsTemplates           *template.Template
+	cssTemplates          *template.Template
+	_Templates            *template.Template
+	jsViewTemplates       *template.Template
 }
 
-func New(env, secret string) (result *Web) {
+func New() (result *Web) {
 	result = &Web{
-		env:          env,
-		sessionStore: sessions.NewCookieStore([]byte(secret)),
-	}
-	var err error
-	if result.db, err = kol.New("diplicity"); err != nil {
-		panic(err)
+		appcache:              true,
+		svgTemplates:          template.Must(template.New("svgTemplates").ParseGlob("templates/svg/*.svg")),
+		htmlTemplates:         template.Must(template.New("htmlTemplates").ParseGlob("templates/html/*.html")),
+		textTemplates:         template.Must(template.New("textTemplates").ParseGlob("templates/text/*")),
+		jsModelTemplates:      template.Must(template.New("jsCollectionTemplates").ParseGlob("templates/js/models/*.js")),
+		jsCollectionTemplates: template.Must(template.New("jsModelTemplates").ParseGlob("templates/js/collections/*.js")),
+		jsTemplates:           template.Must(template.New("jsTemplates").ParseGlob("templates/js/*.js")),
+		cssTemplates:          template.Must(template.New("cssTemplates").ParseGlob("templates/css/*.css")),
+		_Templates:            template.Must(template.New("_Templates").ParseGlob("templates/_/*.html")),
+		jsViewTemplates:       template.Must(template.New("jsViewTemplates").ParseGlob("templates/js/views/*.js")),
+		db:                    kol.Must("diplicity"),
 	}
 	return
 }
 
-var spaceRegexp = regexp.MustCompile("\\s+")
+func (self *Web) SetEnv(env string) *Web {
+	self.env = env
+	if env == "development" {
+		self.logLevel = 100
+	}
+	return self
+}
 
-var svgTemplates = template.Must(template.New("svgTemplates").ParseGlob("templates/svg/*.svg"))
-var htmlTemplates = template.Must(template.New("htmlTemplates").ParseGlob("templates/html/*.html"))
-var textTemplates = template.Must(template.New("textTemplates").ParseGlob("templates/text/*"))
-var jsModelTemplates = template.Must(template.New("jsCollectionTemplates").ParseGlob("templates/js/models/*.js"))
-var jsCollectionTemplates = template.Must(template.New("jsModelTemplates").ParseGlob("templates/js/collections/*.js"))
-var jsTemplates = template.Must(template.New("jsTemplates").ParseGlob("templates/js/*.js"))
-var cssTemplates = template.Must(template.New("cssTemplates").ParseGlob("templates/css/*.css"))
-var _Templates = template.Must(template.New("_Templates").ParseGlob("templates/_/*.html"))
-var jsViewTemplates = template.Must(template.New("jsViewTemplates").ParseGlob("templates/js/views/*.js"))
+func (self *Web) SetSecret(secret string) *Web {
+	self.sessionStore = sessions.NewCookieStore([]byte(secret))
+	return self
+}
+
+func (self *Web) SetAppcache(appcache bool) *Web {
+	self.appcache = appcache
+	return self
+}
 
 func (self *Web) renderText(w http.ResponseWriter, r *http.Request, templates *template.Template, template string, data interface{}) {
 	if err := templates.ExecuteTemplate(w, template, data); err != nil {
@@ -52,23 +85,49 @@ func (self *Web) renderText(w http.ResponseWriter, r *http.Request, templates *t
 	}
 }
 
+func (self *Web) Logf(level int, format string, args ...interface{}) {
+	if level <= self.logLevel {
+		log.Printf(format, args...)
+	}
+}
+
+func (self *Web) Fatalf(format string, args ...interface{}) {
+	self.Logf(Fatal, "\033[1;31mFATAL\t"+format+"\033[0m", args...)
+}
+
+func (self *Web) Errorf(format string, args ...interface{}) {
+	self.Logf(Error, "\033[1;33mERROR\t"+format+"\033[0m", args...)
+}
+
+func (self *Web) Infof(format string, args ...interface{}) {
+	self.Logf(Info, "INFO\t"+format, args...)
+}
+
+func (self *Web) Debugf(format string, args ...interface{}) {
+	self.Logf(Debug, "DEBUG\t"+format, args...)
+}
+
+func (self *Web) Tracef(format string, args ...interface{}) {
+	self.Logf(Trace, "TRACE\t"+format, args...)
+}
+
 func (self *Web) render_Templates(data RequestData) {
-	fmt.Fprintln(data.Response, "(function() {")
-	fmt.Fprintln(data.Response, "  var n;")
+	fmt.Fprintln(data.response, "(function() {")
+	fmt.Fprintln(data.response, "  var n;")
 	var buf *bytes.Buffer
 	var rendered string
-	for _, templ := range _Templates.Templates() {
-		fmt.Fprintf(data.Response, "  n = $('<script type=\"text/template\" id=\"%v_underscore\"></script>');\n", strings.Split(templ.Name(), ".")[0])
-		fmt.Fprintf(data.Response, "  n.text('")
+	for _, templ := range self._Templates.Templates() {
+		fmt.Fprintf(data.response, "  n = $('<script type=\"text/template\" id=\"%v_underscore\"></script>');\n", strings.Split(templ.Name(), ".")[0])
+		fmt.Fprintf(data.response, "  n.text('")
 		buf = new(bytes.Buffer)
 		templ.Execute(buf, data)
 		rendered = string(buf.Bytes())
 		rendered = spaceRegexp.ReplaceAllString(rendered, " ")
 		rendered = strings.Replace(rendered, "\\", "\\\\", -1)
 		rendered = strings.Replace(rendered, "'", "\\'", -1)
-		fmt.Fprint(data.Response, rendered)
-		fmt.Fprintln(data.Response, "');")
-		fmt.Fprintln(data.Response, "  $('head').append(n);")
+		fmt.Fprint(data.response, rendered)
+		fmt.Fprintln(data.response, "');")
+		fmt.Fprintln(data.response, "  $('head').append(n);")
 	}
-	fmt.Fprintln(data.Response, "})();")
+	fmt.Fprintln(data.response, "})();")
 }

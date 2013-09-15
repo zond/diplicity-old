@@ -8,7 +8,6 @@ import (
 	dip "github.com/zond/godip/common"
 	"github.com/zond/kcwraps/kol"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -116,42 +115,6 @@ var VariantMap = map[string]Variant{
 }
 
 var prefPattern = regexp.MustCompile("^([^\\s;]+)(;q=([\\d.]+))?$")
-
-const (
-	Fatal = iota
-	Error
-	Info
-	Debug
-	Trace
-)
-
-var LogLevel int
-
-func Logf(level int, format string, args ...interface{}) {
-	if level <= LogLevel {
-		log.Printf(format, args...)
-	}
-}
-
-func Fatalf(format string, args ...interface{}) {
-	Logf(Fatal, "\033[1;31mFATAL\t"+format+"\033[0m", args...)
-}
-
-func Errorf(format string, args ...interface{}) {
-	Logf(Error, "\033[1;33mERROR\t"+format+"\033[0m", args...)
-}
-
-func Infof(format string, args ...interface{}) {
-	Logf(Info, "INFO\t"+format, args...)
-}
-
-func Debugf(format string, args ...interface{}) {
-	Logf(Debug, "DEBUG\t"+format, args...)
-}
-
-func Tracef(format string, args ...interface{}) {
-	Logf(Trace, "TRACE\t"+format, args...)
-}
 
 func Prettify(obj interface{}) string {
 	b, err := json.MarshalIndent(obj, "", "  ")

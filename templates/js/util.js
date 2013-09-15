@@ -10,31 +10,41 @@ var logLevel = {{.LogLevel}};
 
 function logFatal() {
   if (logLevel >= 0) {
-	  console.log.apply(console, arguments)
+	  var ary = Array.prototype.slice.call(arguments, 0);
+		ary.unshift("FATAL");
+	  console.log.apply(console, ary)
 	}
 }
 
 function logError() {
   if (logLevel >= 1) {
-	  console.log.apply(console, arguments)
+	  var ary = Array.prototype.slice.call(arguments, 0);
+		ary.unshift("ERROR");
+	  console.log.apply(console, ary)
 	}
 }
 
 function logInfo() {
   if (logLevel >= 2) {
-	  console.log.apply(console, arguments)
+	  var ary = Array.prototype.slice.call(arguments, 0);
+		ary.unshift("INFO");
+	  console.log.apply(console, ary)
 	}
 }
 
 function logDebug() {
   if (logLevel >= 3) {
-	  console.log.apply(console, arguments)
+	  var ary = Array.prototype.slice.call(arguments, 0);
+		ary.unshift("DEBUG");
+	  console.log.apply(console, ary)
 	}
 }
 
 function logTrace() {
   if (logLevel >= 4) {
-	  console.log.apply(console, arguments)
+	  var ary = Array.prototype.slice.call(arguments, 0);
+		ary.unshift("TRACE");
+	  console.log.apply(console, ary)
 	}
 }
 
@@ -239,7 +249,7 @@ function wsBackbone(ws) {
 					throw new Error('Got ' + mobj.Object.Data + ' for ' + subscription);
 				}
 				if (_.result(subscription, 'localStorage')) {
-					localStorage.setItem(mobj.Object.URL, subscription.toJSON());
+					localStorage.setItem(mobj.Object.URL, JSON.stringify(subscription.toJSON()));
 					logDebug('Stored', mobj.Object.URL, 'in localStorage');
 				}
 				subscription.trigger('sync');
