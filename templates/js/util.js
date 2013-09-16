@@ -243,7 +243,7 @@ function wsBackbone(ws) {
 				if (subscription.models == null && !(mobj.Object.Data instanceof Array)) {
 					subscription.set(mobj.Object.Data);
 				} else if (subscription.models != null && mobj.Object.Data instanceof Array) {
-					subscription.set(mobj.Object.Data, { remove: false, reset: true });
+					subscription.set(mobj.Object.Data, { remove: mobj.Type == 'Fetch', reset: true });
 				} else {
 					logError('Got', mobj.Object.Data, 'for', subscription);
 					throw new Error('Got ' + mobj.Object.Data + ' for ' + subscription);
