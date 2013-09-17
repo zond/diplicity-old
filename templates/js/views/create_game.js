@@ -13,7 +13,6 @@ window.CreateGameView = BaseView.extend({
 		});
 		var game = {
 			Private: false,
-			Owner: btoa(window.session.user.get('Email')),
 		  Variant: defaultVariant,
 			Deadlines: deadlines,
 			ChatFlags: chatFlags,
@@ -33,6 +32,7 @@ window.CreateGameView = BaseView.extend({
 		if (window.session.user.loggedIn()) {
 			new GameMemberView({ 
 				el: that.$('.create-game'),
+				editable: true,
 				model: that.gameMember,
 				button_text: '{{.I "Create" }}',
 				button_action: function() {

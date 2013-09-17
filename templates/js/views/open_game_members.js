@@ -20,6 +20,7 @@ window.OpenGameMembersView = BaseView.extend({
 		that.collection.forEach(function(model) {
 		  var memberView = new GameMemberView({ 
 				model: model,
+				editable: false,
 				button_text: '{{.I "Join" }}',
 				button_action: function() {
 					model.save(null, {

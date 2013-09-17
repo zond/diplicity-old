@@ -1,7 +1,6 @@
 package game
 
 import (
-	"bytes"
 	"github.com/zond/diplicity/common"
 	dip "github.com/zond/godip/common"
 	"github.com/zond/kcwraps/kol"
@@ -15,7 +14,6 @@ var URIPattern = regexp.MustCompile("^/games/(.*)$")
 
 type Game struct {
 	Id    []byte
-	Owner []byte
 	Phase []byte
 
 	Closed  bool `kol:"index"`
@@ -30,29 +28,11 @@ type Game struct {
 	ChatFlags map[dip.PhaseType]common.ChatFlag
 }
 
-func Update(d *kol.DB, m map[string]interface{}, updater string) {
-	var state gameMemberState
-	common.MustUnmarshalJSON(common.MustMarshalJSON(m), &state)
-
-	game := &Game{Id: state.Game.Id}
-	if err := d.Get(game); err != nil {
-		panic(err)
-	}
-	if bytes.Compare(game.Owner, []byte(updater)) == 0 {
-		game.Variant, game.EndYear, game.Private, game.Deadlines, game.ChatFlags =
-			state.Game.Variant, state.Game.EndYear, state.Game.Private, state.Game.Deadlines, state.Game.ChatFlags
-		if err := d.Set(game); err != nil {
-			panic(err)
-		}
-	}
-}
-
-func Create(d *kol.DB, m map[string]interface{}, owner string) {
+func Create(d *kol.DB, m map[string]interface{}, creator string) {
 	var state gameMemberState
 	common.MustUnmarshalJSON(common.MustMarshalJSON(m), &state)
 
 	game := &Game{
-		Owner:     []byte(owner),
 		Variant:   state.Game.Variant,
 		EndYear:   state.Game.EndYear,
 		Private:   state.Game.Private,
@@ -61,7 +41,7 @@ func Create(d *kol.DB, m map[string]interface{}, owner string) {
 	}
 
 	member := &Member{
-		User: []byte(owner),
+		User: []byte(creator),
 	}
 	d.Transact(func(d *kol.DB) error {
 		if err := d.Set(game); err != nil {

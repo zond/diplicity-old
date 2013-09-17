@@ -13,6 +13,7 @@ window.GameMemberView = BaseView.extend({
 		this.model.bind('change', this.updatePrivate);
 		this.button_text = options.button_text;
 		this.button_action = options.button_action;
+		this.editable = options.editable;
 	},
 
   buttonAction: function(ev) {
@@ -46,7 +47,7 @@ window.GameMemberView = BaseView.extend({
 	  var that = this;
     that.$el.html(that.template({
 		  model: that.model,
-			owner: that.model.is_owner(),
+			editable: that.editable,
 			button_text: that.button_text,
 		}));
 		_.each(variants(), function(variant) {
@@ -59,7 +60,7 @@ window.GameMemberView = BaseView.extend({
 		_.each(phaseTypes(that.model.get('Game').Variant), function(type) {
 			that.$('.phase-types').append(new PhaseTypeView({
 				phaseType: type,
-				owner: that.model.is_owner(),
+				editable: that.editable,
 				game: that.model.get('Game'),
 				gameMember: that.model,
 			}).doRender().el);

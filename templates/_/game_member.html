@@ -1,9 +1,9 @@
 <h3><%= model.describe() %></h3>
-<select class="create-game-variant"<%= owner ? '' : ' disabled="disabled"' %>>
+<select class="create-game-variant"<%= editable ? '' : ' disabled="disabled"' %>>
 </select>
 <div data-role="collapsible-set" class="phase-types">
 </div>
-<select data-role="slider" class="game-private"<%= owner ? '' : ' disabled="disabled"' %>>
+<select data-role="slider" class="game-private"<%= editable ? '' : ' disabled="disabled"' %>>
 	<option value="false">{{.I "Public" }}</option>
 	<option value="true">{{.I "Private" }}</option>
 </select>

@@ -4,10 +4,6 @@ window.GameMember = Backbone.Model.extend({
 		return window.session.user.get('User') != '' && this.get('User') == btoa(window.session.user.get('Email'));
 	},
 
-	is_owner: function() {
-		return this.get('User') == this.get('Game').Owner;
-	},
-
 	describe: function() {
 		var phase = this.get('Phase');
 		var phaseInfo = '{{.I "Forming"}}';

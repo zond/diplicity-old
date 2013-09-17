@@ -1,6 +1,6 @@
-<div data-role="collapsible"<%= owner ? '' : ' class="ui-disabled"' %>>
+<div data-role="collapsible"<%= editable ? '' : ' class="ui-disabled"' %>>
 	<h3><%= {{.I "phase_types" }}[phaseType] %>: <span class="desc"></span></h3>
-	<select class="deadline"<%= owner ? '' : ' disabled="disabled"' %>>
+	<select class="deadline"<%= editable ? '' : ' disabled="disabled"' %>>
 		<% for (var i = 0; i < deadlineOptions.length; i++) { %>
 		<%   var opt = deadlineOptions[i]; %>
 		<option value="<%= opt.value %>"><%= opt.name %></option>
@@ -9,7 +9,7 @@
 	<fieldset data-role="controlgroup">
 		<% for (var i = 0; i < chatFlagOptions().length; i++) { %>
 		<%  var opt = chatFlagOptions()[i]; %>
-		<input id="<%= me %>.<%= opt.id %>"<%= owner ? '' : ' disabled="disabled"' %> class="chat-flag" data-chat-flag="<%= opt.id %>" type="checkbox">
+		<input id="<%= me %>.<%= opt.id %>"<%= editable ? '' : ' disabled="disabled"' %> class="chat-flag" data-chat-flag="<%= opt.id %>" type="checkbox">
 		<label for="<%= me %>.<%= opt.id %>"><%= opt.name %></label>
 		<% } %>
 	</fieldset>

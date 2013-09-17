@@ -20,6 +20,7 @@ window.CurrentGameMembersView = BaseView.extend({
 		this.collection.forEach(function(model) {
 		  var memberView = new GameMemberView({ 
 				model: model,
+				editable: false,
 				button_text: '{{.I "Leave" }}',
 				button_action: function() {
 					model.destroy();

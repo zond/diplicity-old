@@ -12,7 +12,7 @@ window.PhaseTypeView = BaseView.extend({
 	initialize: function(options) {
 	  _.bindAll(this, 'doRender', 'update');
 		this.phaseType = options.phaseType;
-		this.owner = options.owner;
+		this.editable = options.editable;
 		this.gameMember = options.gameMember;
 		this.gameMember.bind('change', this.update);
 	},
@@ -62,7 +62,7 @@ window.PhaseTypeView = BaseView.extend({
 
   render: function() {
 		this.$el.html(this.template({
-		  owner: this.owner,
+		  editable: this.editable,
 		  me: this.me,
 		  phaseType: this.phaseType,
 		}));

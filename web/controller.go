@@ -67,16 +67,6 @@ func (self *Web) WS(ws *websocket.Conn) {
 						game.Create(self.db, message.Create.Object, email)
 					}
 				}
-			case common.UpdateType:
-				self.Debugf("%v\t%v\t%v\t%v\t%v", ws.Request().URL, ws.Request().RemoteAddr, emailIf, message.Type, message.Update.URI)
-				if self.logLevel > Trace {
-					self.Tracef("%+v", common.Prettify(message.Update.Object))
-				}
-				if match := game.URIPattern.FindStringSubmatch(message.Update.URI); match != nil {
-					if loggedIn {
-						game.Update(self.db, message.Update.Object, email)
-					}
-				}
 			default:
 				self.Errorf("Unrecognized message Type: %+v", message.Type)
 			}
