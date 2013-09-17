@@ -38,7 +38,6 @@ window.CreateGameView = BaseView.extend({
 				button_action: function() {
 					that.gameMember.save(null, {
 						success: function() {
-							console.log('save successful');
 							window.session.router.navigate('', { trigger: true });
 						},
 					});
