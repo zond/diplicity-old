@@ -187,23 +187,18 @@ function wsBackbone(ws) {
 			if (cached != null) {
 				logDebug('Loaded', urlBefore, 'from localStorage');
 				var data = JSON.parse(cached);
-				logTrace('Found', data);
-				if (data != null) {
-					if (model.models == null && !(data instanceof Array)) {
-						model.set(data);
-					} else if (model.models != null && data instanceof Array) {
-						model.reset(data);
-					} else {
-						logError('Got', data, 'for', model);
-						throw new Error('Got ' + data + ' for ' + model);
-					}
-					model.trigger('sync');
-				}
+				logTrace(data);
+				var success = options.success;
+				options.success = null;
+				success(data, null, options);
 			}
 		}
 		if (method == 'read') {
 			logDebug('Subscribing to', urlBefore);
-			subscriptions[urlBefore] = model;
+			subscriptions[urlBefore] = {
+			  model: model,
+				options: options,
+			};
 			ws.send(JSON.stringify({
 				Type: 'Subscribe',
 				Subscribe: {
@@ -219,6 +214,11 @@ function wsBackbone(ws) {
 					Object: model,
 				},
 			}));
+			if (options.success) {
+			  var success = options.success;
+				options.success = null;
+			  success(model.toJSON(), null, options);
+			}
 		} else if (method == 'update') {
       logDebug('Updating', urlBefore);
 			ws.send(JSON.stringify({
@@ -228,8 +228,17 @@ function wsBackbone(ws) {
 					Object: model,
 				},
 			}));
+			if (options.success) {
+			  var success = options.success;
+				options.success = null;
+			  success(model.toJSON(), null, options);
+			}
 		} else {
 			logError("Got " + method + " for " + urlBefore);
+			if (options.error) {
+			  options.error(model, "Don't know how to handle " + method, options);
+			}
+			throw new Error("Don't know how to handle " + method);
 		}
 	};
 	var oldOnmessage = ws.onmessage;
@@ -240,19 +249,15 @@ function wsBackbone(ws) {
 			if (subscription != null) {
 				logDebug('Got', mobj.Object.URL, 'from websocket');
 				logTrace(mobj.Object.Data);
-				if (subscription.models == null && !(mobj.Object.Data instanceof Array)) {
-					subscription.set(mobj.Object.Data);
-				} else if (subscription.models != null && mobj.Object.Data instanceof Array) {
-					subscription.set(mobj.Object.Data, { remove: mobj.Type == 'Fetch', reset: true });
+        if (subscription.options != null && subscription.options.success != null) {
+				  subscription.options.success(mobj.Object.Data, null, subscription.options);
 				} else {
-					logError('Got', mobj.Object.Data, 'for', subscription);
-					throw new Error('Got ' + mobj.Object.Data + ' for ' + subscription);
+				  subscription.model.set(mobj.Object.Data, { remove: mobj.Type == 'Fetch', reset: true });
 				}
-				if (_.result(subscription, 'localStorage')) {
-					localStorage.setItem(mobj.Object.URL, JSON.stringify(subscription.toJSON()));
+				if (_.result(subscription.model, 'localStorage')) {
+					localStorage.setItem(mobj.Object.URL, JSON.stringify(subscription.model));
 					logDebug('Stored', mobj.Object.URL, 'in localStorage');
 				}
-				subscription.trigger('sync');
 			} else {
 			  logError("Received", mobj, "for unsubscribed URL", mobj.Object.URL);
 			}
