@@ -50,8 +50,18 @@ func DeleteMember(logger common.Logger, d *kol.DB, memberId, email string) {
 			return fmt.Errorf("Game not found: %v", err)
 		}
 		if !game.Started {
-			//TODO: Delete the game as well if we were the only members.
-			return d.Del(&member)
+			if err := d.Del(&member); err != nil {
+				return err
+			}
+			left := []Member{}
+			if err := d.Query().Where(kol.Equals{"Game", game.Id}).All(&left); err != nil {
+				return err
+			}
+			if len(left) == 0 {
+				if err := d.Del(&game); err != nil {
+					return err
+				}
+			}
 		}
 		return nil
 	}); err != nil {
@@ -125,30 +135,36 @@ type gameMemberState struct {
 	Phase *Phase
 }
 
-func SubscribeCurrent(s *subs.Subscription, email string) {
+func SubscribeCurrent(logger common.Logger, s *subs.Subscription, email string) {
 	s.Query = s.DB().Query().Where(kol.Equals{"User", []byte(email)})
 	s.Call = func(i interface{}, op string) {
 		members := i.([]*Member)
 		states := []gameMemberState{}
 		for _, member := range members {
-			game := &Game{Id: member.Game}
-			if err := s.DB().Get(game); err != nil {
-				panic(err)
-			}
-			if !game.Ended {
-				phase := &Phase{Id: game.Phase}
-				if err := s.DB().Get(phase); err != nil {
-					if err == kol.NotFound {
-						phase = nil
-					} else {
-						panic(err)
-					}
-				}
+			if op == common.DeleteType {
 				states = append(states, gameMemberState{
 					Member: member,
-					Game:   game,
-					Phase:  phase,
 				})
+			} else {
+				game := &Game{Id: member.Game}
+				if err := s.DB().Get(game); err != nil {
+					panic(err)
+				}
+				if !game.Ended {
+					phase := &Phase{Id: game.Phase}
+					if err := s.DB().Get(phase); err != nil {
+						if err == kol.NotFound {
+							phase = nil
+						} else {
+							panic(err)
+						}
+					}
+					states = append(states, gameMemberState{
+						Member: member,
+						Game:   game,
+						Phase:  phase,
+					})
+				}
 			}
 		}
 		s.Send(states, op)

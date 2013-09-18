@@ -41,7 +41,7 @@ func (self *Web) WS(ws *websocket.Conn) {
 				switch message.Object.URI {
 				case "/games/current":
 					if loggedIn {
-						game.SubscribeCurrent(s, email)
+						game.SubscribeCurrent(self, s, email)
 					}
 				case "/games/open":
 					if loggedIn {
