@@ -1,16 +1,16 @@
 package game
 
 import (
+	"encoding/base64"
+	"fmt"
 	"github.com/zond/diplicity/common"
 	dip "github.com/zond/godip/common"
 	"github.com/zond/kcwraps/kol"
 	"github.com/zond/kcwraps/subs"
-	"regexp"
+	"net/url"
 )
 
 type Minutes int
-
-var URIPattern = regexp.MustCompile("^/games/(.*)$")
 
 type Game struct {
 	Id    []byte
@@ -26,6 +26,37 @@ type Game struct {
 	Deadlines map[dip.PhaseType]Minutes
 
 	ChatFlags map[dip.PhaseType]common.ChatFlag
+}
+
+func DeleteMember(logger common.Logger, d *kol.DB, memberId, email string) {
+	if err := d.Transact(func(d *kol.DB) error {
+		urlDecodedId, err := url.QueryUnescape(memberId)
+		if err != nil {
+			return err
+		}
+		base64DecodedId, err := base64.StdEncoding.DecodeString(urlDecodedId)
+		if err != nil {
+			return err
+		}
+		member := Member{Id: base64DecodedId}
+		if err := d.Get(&member); err != nil {
+			return fmt.Errorf("Member not found: %v", err)
+		}
+		if string(member.User) != email {
+			return fmt.Errorf("Not the same user!")
+		}
+		game := Game{Id: member.Game}
+		if err := d.Get(&game); err != nil {
+			return fmt.Errorf("Game not found: %v", err)
+		}
+		if !game.Started {
+			//TODO: Delete the game as well if we were the only members.
+			return d.Del(&member)
+		}
+		return nil
+	}); err != nil {
+		logger.Errorf("Unable to delete member: %v", err)
+	}
 }
 
 func Create(d *kol.DB, m map[string]interface{}, creator string) {

@@ -24,6 +24,14 @@ type Subscription struct {
 	Query      *kol.Query
 }
 
+type Logger interface {
+	Fatalf(format string, params ...interface{})
+	Errorf(format string, params ...interface{})
+	Infof(format string, params ...interface{})
+	Debugf(format string, params ...interface{})
+	Tracef(format string, params ...interface{})
+}
+
 func GetLanguage(r *http.Request) string {
 	bestLanguage := MostAccepted(r, "default", "Accept-Language")
 	parts := strings.Split(bestLanguage, "-")

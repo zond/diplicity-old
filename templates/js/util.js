@@ -242,11 +242,10 @@ function wsBackbone(ws) {
 				},
 			}));
 		} else {
-			logError("Got " + method + " for " + urlBefore);
+			logError("Don't know how to handle " + method);
 			if (options.error) {
 			  options.error(model, "Don't know how to handle " + method, options);
 			}
-			throw new Error("Don't know how to handle " + method);
 		}
 	};
 	var oldOnmessage = ws.onmessage;
@@ -257,10 +256,22 @@ function wsBackbone(ws) {
 			if (subscription != null) {
 				logDebug('Got', mobj.Object.URI, 'from websocket');
 				logTrace(mobj.Object.Data);
-        if (subscription.options != null && subscription.options.success != null) {
-				  subscription.options.success(mobj.Object.Data, null, subscription.options);
+			  if (mobj.Type == 'Delete') {
+				  if (subscription.model.models != null) {
+						_.each(mobj.Object.Data, function(element) {
+						  var model = subscription.model.get(element.Id);
+              subscription.model.remove(model, { silent: true });
+						});
+						subscription.model.trigger('reset');
+					} else {
+						logError("Don't know how to handle Deletes on backbone.Models");
+					}
 				} else {
-				  subscription.model.set(mobj.Object.Data, { remove: mobj.Type == 'Fetch', reset: true });
+					if (subscription.options != null && subscription.options.success != null) {
+						subscription.options.success(mobj.Object.Data, null, subscription.options);
+					} else {
+						subscription.model.set(mobj.Object.Data, { remove: mobj.Type == 'Fetch', reset: true });
+					}
 				}
 				if (_.result(subscription.model, 'localStorage')) {
 					localStorage.setItem(mobj.Object.URI, JSON.stringify(subscription.model));

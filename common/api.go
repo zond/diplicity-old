@@ -5,4 +5,5 @@ const (
 	UnsubscribeType = "Unsubscribe"
 	UpdateType      = "Update"
 	CreateType      = "Create"
+	DeleteType      = "Delete"
 )

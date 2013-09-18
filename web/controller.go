@@ -12,7 +12,10 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"regexp"
 )
+
+var currentGamePattern = regexp.MustCompile("^/games/current/(.*)$")
 
 func (self *Web) WS(ws *websocket.Conn) {
 	session, _ := self.sessionStore.Get(ws.Request(), SessionName)
@@ -31,9 +34,9 @@ func (self *Web) WS(ws *websocket.Conn) {
 	var err error
 	for {
 		if err = websocket.JSON.Receive(ws, &message); err == nil {
+			self.Debugf("%v\t%v\t%v\t%v\t%v", ws.Request().URL, ws.Request().RemoteAddr, emailIf, message.Type, message.Object.URI)
 			switch message.Type {
 			case common.SubscribeType:
-				self.Debugf("%v\t%v\t%v\t%v\t%v", ws.Request().URL, ws.Request().RemoteAddr, emailIf, message.Type, message.Object.URI)
 				s := pack.New(message.Object.URI)
 				switch message.Object.URI {
 				case "/games/current":
@@ -54,10 +57,8 @@ func (self *Web) WS(ws *websocket.Conn) {
 					self.Errorf("Unrecognized URI: %+v", message.Object.URI)
 				}
 			case common.UnsubscribeType:
-				self.Debugf("%v\t%v\t%v\t%v\t%v", ws.Request().URL, ws.Request().RemoteAddr, emailIf, message.Type, message.Object.URI)
 				pack.Unsubscribe(message.Object.URI)
 			case common.CreateType:
-				self.Debugf("%v\t%v\t%v\t%v\t%v", ws.Request().URL, ws.Request().RemoteAddr, emailIf, message.Type, message.Object.URI)
 				if self.logLevel > Trace {
 					self.Tracef("%+v", common.Prettify(message.Object.Data))
 				}
@@ -66,6 +67,14 @@ func (self *Web) WS(ws *websocket.Conn) {
 					if loggedIn {
 						game.Create(self.db, message.Object.Data.(map[string]interface{}), email)
 					}
+				}
+			case common.DeleteType:
+				if match := currentGamePattern.FindStringSubmatch(message.Object.URI); match != nil {
+					if loggedIn {
+						game.DeleteMember(self, self.db, match[1], email)
+					}
+				} else {
+					self.Errorf("Unrecognized URI to delete: %v", message.Object.URI)
 				}
 			default:
 				self.Errorf("Unrecognized message Type: %+v", message.Type)
