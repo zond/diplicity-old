@@ -201,7 +201,7 @@ function wsBackbone(ws) {
 			};
 			ws.send(JSON.stringify({
 				Type: 'Subscribe',
-				Subscribe: {
+				Object: {
 					URI: urlBefore,
 				},
 			}));
@@ -209,9 +209,9 @@ function wsBackbone(ws) {
 		  logDebug('Creating', urlBefore);
 			ws.send(JSON.stringify({
 			  Type: 'Create',
-				Create: {
+				Object: {
 				  URI: urlBefore,
-					Object: model,
+					Data: model,
 				},
 			}));
 			if (options.success) {
@@ -223,9 +223,9 @@ function wsBackbone(ws) {
       logDebug('Updating', urlBefore);
 			ws.send(JSON.stringify({
 			  Type: 'Update',
-				Update: {
+				Object: {
 				  URI: urlBefore,
-					Object: model,
+					Data: model,
 				},
 			}));
 			if (options.success) {
@@ -233,6 +233,14 @@ function wsBackbone(ws) {
 				options.success = null;
 			  success(model.toJSON(), null, options);
 			}
+		} else if (method == 'delete') {
+		  logDebug('Deleting', urlBefore);
+			ws.send(JSON.stringify({
+			  Type: 'Delete',
+				Object: {
+          URI: urlBefore,
+				},
+			}));
 		} else {
 			logError("Got " + method + " for " + urlBefore);
 			if (options.error) {
@@ -244,10 +252,10 @@ function wsBackbone(ws) {
 	var oldOnmessage = ws.onmessage;
 	ws.onmessage = function(ev) {
 	  var mobj = JSON.parse(ev.data);
-		if (mobj.Object.URL != null) {
-			var subscription = subscriptions[mobj.Object.URL];
+		if (mobj.Object.URI != null) {
+			var subscription = subscriptions[mobj.Object.URI];
 			if (subscription != null) {
-				logDebug('Got', mobj.Object.URL, 'from websocket');
+				logDebug('Got', mobj.Object.URI, 'from websocket');
 				logTrace(mobj.Object.Data);
         if (subscription.options != null && subscription.options.success != null) {
 				  subscription.options.success(mobj.Object.Data, null, subscription.options);
@@ -255,11 +263,11 @@ function wsBackbone(ws) {
 				  subscription.model.set(mobj.Object.Data, { remove: mobj.Type == 'Fetch', reset: true });
 				}
 				if (_.result(subscription.model, 'localStorage')) {
-					localStorage.setItem(mobj.Object.URL, JSON.stringify(subscription.model));
-					logDebug('Stored', mobj.Object.URL, 'in localStorage');
+					localStorage.setItem(mobj.Object.URI, JSON.stringify(subscription.model));
+					logDebug('Stored', mobj.Object.URI, 'in localStorage');
 				}
 			} else {
-			  logError("Received", mobj, "for unsubscribed URL", mobj.Object.URL);
+			  logError("Received", mobj, "for unsubscribed URI", mobj.Object.URI);
 			}
 		}
 		if (oldOnmessage != null) {

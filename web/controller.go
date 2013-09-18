@@ -27,15 +27,15 @@ func (self *Web) WS(ws *websocket.Conn) {
 	pack := subs.New(self.db, ws)
 	defer pack.UnsubscribeAll()
 
-	var message common.JsonMessage
+	var message subs.Message
 	var err error
 	for {
 		if err = websocket.JSON.Receive(ws, &message); err == nil {
 			switch message.Type {
 			case common.SubscribeType:
-				self.Debugf("%v\t%v\t%v\t%v\t%v", ws.Request().URL, ws.Request().RemoteAddr, emailIf, message.Type, message.Subscribe.URI)
-				s := pack.New(message.Subscribe.URI)
-				switch message.Subscribe.URI {
+				self.Debugf("%v\t%v\t%v\t%v\t%v", ws.Request().URL, ws.Request().RemoteAddr, emailIf, message.Type, message.Object.URI)
+				s := pack.New(message.Object.URI)
+				switch message.Object.URI {
 				case "/games/current":
 					if loggedIn {
 						game.SubscribeCurrent(s, email)
@@ -51,20 +51,20 @@ func (self *Web) WS(ws *websocket.Conn) {
 						s.Call(&user.User{}, subs.FetchType)
 					}
 				default:
-					self.Errorf("Unrecognized URI: %+v", message.Subscribe.URI)
+					self.Errorf("Unrecognized URI: %+v", message.Object.URI)
 				}
 			case common.UnsubscribeType:
-				self.Debugf("%v\t%v\t%v\t%v\t%v", ws.Request().URL, ws.Request().RemoteAddr, emailIf, message.Type, message.Subscribe.URI)
-				pack.Unsubscribe(message.Subscribe.URI)
+				self.Debugf("%v\t%v\t%v\t%v\t%v", ws.Request().URL, ws.Request().RemoteAddr, emailIf, message.Type, message.Object.URI)
+				pack.Unsubscribe(message.Object.URI)
 			case common.CreateType:
-				self.Debugf("%v\t%v\t%v\t%v\t%v", ws.Request().URL, ws.Request().RemoteAddr, emailIf, message.Type, message.Create.URI)
+				self.Debugf("%v\t%v\t%v\t%v\t%v", ws.Request().URL, ws.Request().RemoteAddr, emailIf, message.Type, message.Object.URI)
 				if self.logLevel > Trace {
-					self.Tracef("%+v", common.Prettify(message.Create.Object))
+					self.Tracef("%+v", common.Prettify(message.Object.Data))
 				}
-				switch message.Create.URI {
+				switch message.Object.URI {
 				case "/games":
 					if loggedIn {
-						game.Create(self.db, message.Create.Object, email)
+						game.Create(self.db, message.Object.Data.(map[string]interface{}), email)
 					}
 				}
 			default:
