@@ -31,9 +31,9 @@ func (self *Web) WS(ws *websocket.Conn) {
 	pack := subs.New(self.db, ws)
 	defer pack.UnsubscribeAll()
 
-	var message subs.Message
 	var err error
 	for {
+		var message subs.Message
 		if err = websocket.JSON.Receive(ws, &message); err == nil {
 			self.Debugf("%v\t%v\t%v\t%v\t%v", ws.Request().URL, ws.Request().RemoteAddr, emailIf, message.Type, message.Object.URI)
 			switch message.Type {

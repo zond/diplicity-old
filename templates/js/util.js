@@ -160,7 +160,7 @@ function wsBackbone(ws) {
 			logDebug('Unsubscribing from', url);
 			ws.send(JSON.stringify({
 			  Type: 'Unsubscribe',
-				Subscribe: {
+				Object: {
 				  URI: url,
 				},
 			}));
