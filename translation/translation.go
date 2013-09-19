@@ -2,6 +2,7 @@ package translation
 
 var en = map[string]string{
 	"White press":       "White press",
+	"Allocation method": "Allocation method",
 	"Grey press":        "Grey press",
 	"Black press":       "Black press",
 	"Private press":     "Private press",
@@ -36,6 +37,8 @@ var en = map[string]string{
 	"Learn how to play":        "Learn how to play",
 	"Private":                  "Private",
 	"Details":                  "Details",
+	"Random":                   "Random",
+	"Preferences":              "Preferences",
 	"View":                     "View",
 	"Settings":                 "Settings",
 	"Public":                   "Public",

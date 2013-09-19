@@ -287,6 +287,16 @@ function wsBackbone(ws) {
 	};
 };
 
+function allocationMethods() {
+	var rval = [];
+	{{range .AllocationMethods}}rval.push({
+		id: '{{.Id}}',
+		name: '{{.Translation}}',
+	});
+	{{end}}
+	return rval;
+}
+
 function variants() {
 	var rval = [];
 	{{range .Variants}}rval.push({
@@ -296,6 +306,14 @@ function variants() {
 	{{end}}
 	return rval;
 };
+
+function allocationMethodName(id) {
+ {{range .AllocationMethods}}if (id == '{{.Id}}') {
+   return '{{.Translation}}';
+ }
+ {{end}}
+ return null;
+}
 
 function variantName(id) {
 	{{range .Variants}}if (id == '{{.Id}}') {
@@ -326,7 +344,8 @@ function chatFlagOptions() {
 	return rval;
 };
 
-defaultVariant = 'standard';
+defaultAllocationMethod = '{{.DefaultAllocationMethod}}';
+defaultVariant = '{{.DefaultVariant}}';
 defaultDeadline = 1440;
 defaultChatFlags = {{.ChatFlag "White"}} | {{.ChatFlag "Conference"}} | {{.ChatFlag "Private"}};
 

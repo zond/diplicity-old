@@ -16,12 +16,13 @@ type Game struct {
 	Id    []byte
 	Phase []byte
 
-	Closed  bool `kol:"index"`
-	Started bool `kol:"index"`
-	Ended   bool `kol:"index"`
-	Variant string
-	EndYear int
-	Private bool `kol:"index"`
+	Closed           bool `kol:"index"`
+	Started          bool `kol:"index"`
+	Ended            bool `kol:"index"`
+	Variant          string
+	AllocationMethod string
+	EndYear          int
+	Private          bool `kol:"index"`
 
 	Deadlines map[dip.PhaseType]Minutes
 
@@ -108,11 +109,12 @@ func Create(c common.Context, j common.JSON, creator string) {
 	j.Overwrite(&state)
 
 	game := &Game{
-		Variant:   state.Game.Variant,
-		EndYear:   state.Game.EndYear,
-		Private:   state.Game.Private,
-		Deadlines: state.Game.Deadlines,
-		ChatFlags: state.Game.ChatFlags,
+		Variant:          state.Game.Variant,
+		EndYear:          state.Game.EndYear,
+		Private:          state.Game.Private,
+		Deadlines:        state.Game.Deadlines,
+		ChatFlags:        state.Game.ChatFlags,
+		AllocationMethod: state.Game.AllocationMethod,
 	}
 
 	member := &Member{

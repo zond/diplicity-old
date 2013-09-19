@@ -20,6 +20,7 @@ window.CreateGameView = BaseView.extend({
 		  Variant: defaultVariant,
 			Deadlines: deadlines,
 			ChatFlags: chatFlags,
+			AllocationMethod: defaultAllocationMethod,
 		});
 		this.gameState.url = '/games';
 	},

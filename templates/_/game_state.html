@@ -1,9 +1,12 @@
 <h3><%= model.describe() %></h3>
 <% if (editable) { %>
-<select class="create-game-variant"<%= editable ? '' : ' disabled="disabled"' %>>
+<select class="create-game-variant">
+</select>
+<select class="create-game-allocation-method">
 </select>
 <% } else { %>
-<h2><%= variantName(model.get('Variant')) %></h2>
+<h2>{{.I "Variant" }}: <%= variantName(model.get('Variant')) %></h2>
+<h2>{{.I "Allocation method" }}: <%= allocationMethodName(model.get('AllocationMethod')) %></h2>
 <% } %>
 <div data-role="collapsible-set" class="phase-types">
 </div>

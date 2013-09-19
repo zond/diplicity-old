@@ -35,6 +35,23 @@ func (self RequestData) Close() {
 	self.session.Save(self.request, self.response)
 }
 
+func (self RequestData) AllocationMethods() (result common.AllocationMethods) {
+	for _, meth := range common.AllocationMethodMap {
+		meth.Translation = self.I(meth.Name)
+		result = append(result, meth)
+	}
+	sort.Sort(result)
+	return
+}
+
+func (self RequestData) DefaultAllocationMethod() string {
+	return common.RandomString
+}
+
+func (self RequestData) DefaultVariant() string {
+	return common.StandardString
+}
+
 func (self RequestData) Variants() (result common.Variants) {
 	for _, variant := range common.VariantMap {
 		variant.Translation = self.I(variant.Name)

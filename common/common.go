@@ -109,8 +109,41 @@ const (
 )
 
 const (
-	standard = "standard"
+	StandardString    = "standard"
+	RandomString      = "random"
+	PreferencesString = "preferences"
 )
+
+type AllocationMethod struct {
+	Id          string
+	Name        string
+	Translation string
+}
+
+type AllocationMethods []AllocationMethod
+
+func (self AllocationMethods) Len() int {
+	return len(self)
+}
+
+func (self AllocationMethods) Less(i, j int) bool {
+	return bytes.Compare([]byte(self[i].Name), []byte(self[j].Name)) < 0
+}
+
+func (self AllocationMethods) Swap(i, j int) {
+	self[i], self[j] = self[j], self[i]
+}
+
+var AllocationMethodMap = map[string]AllocationMethod{
+	RandomString: AllocationMethod{
+		Id:   RandomString,
+		Name: "Random",
+	},
+	PreferencesString: AllocationMethod{
+		Id:   PreferencesString,
+		Name: "Preferences",
+	},
+}
 
 type Variant struct {
 	Id          string
@@ -135,8 +168,8 @@ func (self Variants) Swap(i, j int) {
 }
 
 var VariantMap = map[string]Variant{
-	standard: Variant{
-		Id:         standard,
+	StandardString: Variant{
+		Id:         StandardString,
 		Name:       "Standard",
 		PhaseTypes: cla.PhaseTypes,
 		Nations:    cla.Nations,

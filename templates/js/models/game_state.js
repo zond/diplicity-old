@@ -13,7 +13,7 @@ window.GameState = Backbone.Model.extend({
 			phaseInfo = '{0} {1}, {2}'.format({{.I "seasons"}}[phase.season], phase.year, {{.I "phase_types"}}[phase.type]);
 		}
 		var member = this.get('Member');
-		var nationInfo = '{{.I "Undecided" }}';
+		var nationInfo = allocationMethodName(this.get('AllocationMethod'));
 		if (member != null && member.Nation != null && member.Nation != '') {
 		  var nationInfo = {{.I "nations" }}[member.Nation];
 		}
