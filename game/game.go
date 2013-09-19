@@ -28,9 +28,9 @@ type Game struct {
 	ChatFlags map[dip.PhaseType]common.ChatFlag
 }
 
-func DeleteMember(logger common.Logger, d *kol.DB, memberId, email string) {
-	if err := d.Transact(func(d *kol.DB) error {
-		urlDecodedId, err := url.QueryUnescape(memberId)
+func DeleteMember(c common.Context, gameId, email string) {
+	if err := c.DB().Transact(func(d *kol.DB) error {
+		urlDecodedId, err := url.QueryUnescape(gameId)
 		if err != nil {
 			return err
 		}
@@ -38,16 +38,13 @@ func DeleteMember(logger common.Logger, d *kol.DB, memberId, email string) {
 		if err != nil {
 			return err
 		}
-		member := Member{Id: base64DecodedId}
-		if err := d.Get(&member); err != nil {
-			return fmt.Errorf("Member not found: %v", err)
-		}
-		if string(member.User) != email {
-			return fmt.Errorf("Not the same user!")
-		}
-		game := Game{Id: member.Game}
+		game := Game{Id: base64DecodedId}
 		if err := d.Get(&game); err != nil {
 			return fmt.Errorf("Game not found: %v", err)
+		}
+		member := Member{}
+		if _, err := d.Query().Where(kol.And{kol.Equals{"Game", base64DecodedId}, kol.Equals{"User", []byte(email)}}).First(&member); err != nil {
+			return err
 		}
 		if !game.Started {
 			if err := d.Del(&member); err != nil {
@@ -65,13 +62,50 @@ func DeleteMember(logger common.Logger, d *kol.DB, memberId, email string) {
 		}
 		return nil
 	}); err != nil {
-		logger.Errorf("Unable to delete member: %v", err)
+		c.Errorf("Unable to delete member: %v", err)
 	}
 }
 
-func Create(d *kol.DB, m map[string]interface{}, creator string) {
-	var state gameMemberState
-	common.MustUnmarshalJSON(common.MustMarshalJSON(m), &state)
+func AddMember(c common.Context, gameId, email string) {
+	if err := c.DB().Transact(func(d *kol.DB) error {
+		base64DecodedId, err := base64.StdEncoding.DecodeString(gameId)
+		if err != nil {
+			return err
+		}
+		game := Game{Id: base64DecodedId}
+		if err := d.Get(&game); err != nil {
+			return err
+		}
+		variant, found := common.VariantMap[game.Variant]
+		if !found {
+			return fmt.Errorf("Unknown variant %v", game.Variant)
+		}
+		already := []Member{}
+		if err := d.Query().Where(kol.Equals{"Game", base64DecodedId}).All(&already); err != nil {
+			return err
+		}
+		if len(already) < len(variant.Nations) {
+			member := Member{Game: base64DecodedId, User: []byte(email)}
+			if err := d.Set(&member); err != nil {
+				return err
+			}
+			if len(already) == len(variant.Nations)-1 {
+				game.Started = true
+				game.Closed = true
+				if err := d.Set(&game); err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	}); err != nil {
+		c.Errorf("Unable to add member: %v", err)
+	}
+}
+
+func Create(c common.Context, j common.JSON, creator string) {
+	var state gameState
+	j.Overwrite(&state)
 
 	game := &Game{
 		Variant:   state.Game.Variant,
@@ -84,7 +118,7 @@ func Create(d *kol.DB, m map[string]interface{}, creator string) {
 	member := &Member{
 		User: []byte(creator),
 	}
-	d.Transact(func(d *kol.DB) error {
+	c.DB().Transact(func(d *kol.DB) error {
 		if err := d.Set(game); err != nil {
 			return err
 		}
@@ -129,20 +163,20 @@ type Member struct {
 	Nation dip.Nation
 }
 
-type gameMemberState struct {
-	*Member
-	Game  *Game
-	Phase *Phase
+type gameState struct {
+	*Game
+	Member *Member
+	Phase  *Phase
 }
 
-func SubscribeCurrent(logger common.Logger, s *subs.Subscription, email string) {
+func SubscribeCurrent(c common.Context, s *subs.Subscription, email string) {
 	s.Query = s.DB().Query().Where(kol.Equals{"User", []byte(email)})
 	s.Call = func(i interface{}, op string) {
 		members := i.([]*Member)
-		states := []gameMemberState{}
+		states := []gameState{}
 		for _, member := range members {
 			if op == common.DeleteType {
-				states = append(states, gameMemberState{
+				states = append(states, gameState{
 					Member: member,
 				})
 			} else {
@@ -159,9 +193,9 @@ func SubscribeCurrent(logger common.Logger, s *subs.Subscription, email string) 
 							panic(err)
 						}
 					}
-					states = append(states, gameMemberState{
-						Member: member,
+					states = append(states, gameState{
 						Game:   game,
+						Member: member,
 						Phase:  phase,
 					})
 				}
@@ -172,12 +206,12 @@ func SubscribeCurrent(logger common.Logger, s *subs.Subscription, email string) 
 	s.Subscribe(new(Member))
 }
 
-func SubscribeOpen(s *subs.Subscription, email string) {
+func SubscribeOpen(c common.Context, s *subs.Subscription, email string) {
 	s.Query = s.DB().Query().Where(kol.And{kol.Equals{"Closed", false}, kol.Equals{"Private", false}})
 	s.Call = func(i interface{}, op string) {
 		var members []Member
 		games := i.([]*Game)
-		states := []gameMemberState{}
+		states := []gameState{}
 		for _, game := range games {
 			members = nil
 			s.DB().Query().Where(kol.And{kol.Equals{"User", []byte(email)}, kol.Equals{"Game", game.Id}}).All(&members)
@@ -190,7 +224,7 @@ func SubscribeOpen(s *subs.Subscription, email string) {
 						panic(err)
 					}
 				}
-				states = append(states, gameMemberState{
+				states = append(states, gameState{
 					Game:  game,
 					Phase: phase,
 				})

@@ -1,5 +1,7 @@
 window.User = Backbone.Model.extend({
 
+  idAttribute: "Id",
+
   localStorage: true,
 
 	url: '/user',

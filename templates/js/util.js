@@ -254,7 +254,7 @@ function wsBackbone(ws) {
 		if (mobj.Object.URI != null) {
 			var subscription = subscriptions[mobj.Object.URI];
 			if (subscription != null) {
-				logDebug('Got', mobj.Object.URI, 'from websocket');
+				logDebug('Got', mobj.Type, mobj.Object.URI, 'from websocket');
 				logTrace(mobj.Object.Data);
 			  if (mobj.Type == 'Delete') {
 				  if (subscription.model.models != null) {

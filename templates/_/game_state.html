@@ -3,7 +3,7 @@
 <select class="create-game-variant"<%= editable ? '' : ' disabled="disabled"' %>>
 </select>
 <% } else { %>
-<h2><%= variantName(model.get('Game').Variant) %></h2>
+<h2><%= variantName(model.get('Variant')) %></h2>
 <% } %>
 <div data-role="collapsible-set" class="phase-types">
 </div>
@@ -13,6 +13,6 @@
 	<option value="true">{{.I "Private" }}</option>
 </select>
 <% } else { %>
-<h4><%= model.get('Game').Private ? '{{.I "Private" }}' : '{{.I "Public" }}' %></h4>
+<h4><%= model.get('Private') ? '{{.I "Private" }}' : '{{.I "Public" }}' %></h4>
 <% } %>
 <a href="#" class="game-member-button" data-role="button"><%= button_text %></a>

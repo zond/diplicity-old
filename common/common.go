@@ -32,6 +32,27 @@ type Logger interface {
 	Tracef(format string, params ...interface{})
 }
 
+type Context interface {
+	Logger
+	DB() *kol.DB
+}
+
+type JSON struct {
+	Data interface{}
+}
+
+func (self JSON) Get(key string) JSON {
+	return JSON{self.Data.(map[string]interface{})[key]}
+}
+
+func (self JSON) Overwrite(dest interface{}) {
+	MustUnmarshalJSON(MustMarshalJSON(self.Data), dest)
+}
+
+func (self JSON) GetString(key string) string {
+	return self.Data.(map[string]interface{})[key].(string)
+}
+
 func GetLanguage(r *http.Request) string {
 	bestLanguage := MostAccepted(r, "default", "Accept-Language")
 	parts := strings.Split(bestLanguage, "-")

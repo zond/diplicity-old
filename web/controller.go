@@ -45,11 +45,11 @@ func (self *Web) WS(ws *websocket.Conn) {
 					}
 				case "/games/open":
 					if loggedIn {
-						game.SubscribeOpen(s, email)
+						game.SubscribeOpen(self, s, email)
 					}
 				case "/user":
 					if loggedIn {
-						user.SubscribeEmail(s, email)
+						user.SubscribeEmail(self, s, email)
 					} else {
 						s.Call(&user.User{}, subs.FetchType)
 					}
@@ -65,13 +65,17 @@ func (self *Web) WS(ws *websocket.Conn) {
 				switch message.Object.URI {
 				case "/games":
 					if loggedIn {
-						game.Create(self.db, message.Object.Data.(map[string]interface{}), email)
+						game.Create(self, common.JSON{message.Object.Data}, email)
+					}
+				case "/games/open":
+					if loggedIn {
+						game.AddMember(self, common.JSON{message.Object.Data}.GetString("Id"), email)
 					}
 				}
 			case common.DeleteType:
 				if match := currentGamePattern.FindStringSubmatch(message.Object.URI); match != nil {
 					if loggedIn {
-						game.DeleteMember(self, self.db, match[1], email)
+						game.DeleteMember(self, match[1], email)
 					}
 				} else {
 					self.Errorf("Unrecognized URI to delete: %v", message.Object.URI)

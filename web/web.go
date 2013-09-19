@@ -69,6 +69,10 @@ func (self *Web) SetEnv(env string) *Web {
 	return self
 }
 
+func (self *Web) DB() *kol.DB {
+	return self.db
+}
+
 func (self *Web) SetSecret(secret string) *Web {
 	self.sessionStore = sessions.NewCookieStore([]byte(secret))
 	return self
@@ -96,7 +100,7 @@ func (self *Web) Fatalf(format string, args ...interface{}) {
 }
 
 func (self *Web) Errorf(format string, args ...interface{}) {
-	self.Logf(Error, "\033[1;33mERROR\t"+format+"\033[0m", args...)
+	self.Logf(Error, "\033[31mERROR\t"+format+"\033[0m", args...)
 }
 
 func (self *Web) Infof(format string, args ...interface{}) {
@@ -104,11 +108,11 @@ func (self *Web) Infof(format string, args ...interface{}) {
 }
 
 func (self *Web) Debugf(format string, args ...interface{}) {
-	self.Logf(Debug, "DEBUG\t"+format, args...)
+	self.Logf(Debug, "\033[32mDEBUG\t"+format+"\033[0m", args...)
 }
 
 func (self *Web) Tracef(format string, args ...interface{}) {
-	self.Logf(Trace, "TRACE\t"+format, args...)
+	self.Logf(Trace, "\033[1;32mTRACE\t"+format+"\033[0m", args...)
 }
 
 func (self *Web) render_Templates(data RequestData) {

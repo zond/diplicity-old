@@ -1,11 +1,11 @@
-window.CurrentGameMembersView = BaseView.extend({
+window.CurrentGameStatesView = BaseView.extend({
 
-  template: _.template($('#current_game_members_underscore').html()),
+  template: _.template($('#current_game_states_underscore').html()),
 
 	initialize: function(options) {
 	  _.bindAll(this, 'doRender');
 		this.listenTo(window.session.user, 'change', this.doRender);
-		this.collection = new GameMembers([], { url: '/games/current' });
+		this.collection = new GameStates([], { url: '/games/current' });
 		this.listenTo(this.collection, "reset", this.doRender);
 		this.listenTo(this.collection, "add", this.doRender);
 		this.listenTo(this.collection, "remove", this.doRender);
@@ -18,7 +18,7 @@ window.CurrentGameMembersView = BaseView.extend({
 		  user: window.session.user,
 		}));
 		this.collection.forEach(function(model) {
-		  var memberView = new GameMemberView({ 
+		  var memberView = new GameStateView({ 
 				model: model,
 				editable: false,
 				button_text: '{{.I "Leave" }}',

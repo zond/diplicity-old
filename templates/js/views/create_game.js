@@ -11,17 +11,17 @@ window.CreateGameView = BaseView.extend({
 		  deadlines[type] = defaultDeadline;
       chatFlags[type] = defaultChatFlags;
 		});
-		var game = {
+		var member = {
+		  User: btoa(window.session.user.get('Email')),
+		};
+		this.gameState = new GameState({
+		  Member: member,
 			Private: false,
 		  Variant: defaultVariant,
 			Deadlines: deadlines,
 			ChatFlags: chatFlags,
-		};
-		this.gameMember = new GameMember({
-		  User: btoa(window.session.user.get('Email')),
-		  Game: game
 		});
-		this.gameMember.url = '/games';
+		this.gameState.url = '/games';
 	},
 
   render: function() {
@@ -30,13 +30,13 @@ window.CreateGameView = BaseView.extend({
 		  user: window.session.user,
 		}));
 		if (window.session.user.loggedIn()) {
-			new GameMemberView({ 
+			new GameStateView({ 
 				el: that.$('.create-game'),
 				editable: true,
-				model: that.gameMember,
+				model: that.gameState,
 				button_text: '{{.I "Create" }}',
 				button_action: function() {
-					that.gameMember.save(null, {
+					that.gameState.save(null, {
 						success: function() {
 							window.session.router.navigate('', { trigger: true });
 						},

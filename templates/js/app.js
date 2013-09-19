@@ -37,13 +37,13 @@ $(window).load(function() {
 			},
 
 			currentGames: function() {
-				new CurrentGameMembersView({ 
+				new CurrentGameStatesView({ 
 					el: $('#main'),
 				}).doRender();
 			},
 
 			openGames: function() {
-				new OpenGameMembersView({ 
+				new OpenGameStatesView({ 
 					el: $('#main'),
 				}).doRender();
 			},

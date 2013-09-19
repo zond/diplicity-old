@@ -13,18 +13,18 @@ window.PhaseTypeView = BaseView.extend({
 	  _.bindAll(this, 'doRender', 'update');
 		this.phaseType = options.phaseType;
 		this.editable = options.editable;
-		this.gameMember = options.gameMember;
-		this.gameMember.bind('change', this.update);
+		this.gameState = options.gameState;
+		this.gameState.bind('change', this.update);
 	},
 
 	onClose: function() {
-		this.gameMember.unbind('change', this.update);
+		this.gameState.unbind('change', this.update);
 	},
 
 	changeDeadline: function(ev) {
-		this.gameMember.get('Game').Deadlines[this.phaseType] = parseInt($(ev.target).val()); 
-		this.gameMember.trigger('change');
-		this.gameMember.trigger('saveme');
+		this.gameState.get('Deadlines')[this.phaseType] = parseInt($(ev.target).val()); 
+		this.gameState.trigger('change');
+		this.gameState.trigger('saveme');
 	},
 
   update: function() {
@@ -32,14 +32,14 @@ window.PhaseTypeView = BaseView.extend({
 		var desc = [];
 		for (var i = 0; i < deadlineOptions.length; i++) { 
 		  var opt = deadlineOptions[i];
-		  if (opt.value == that.gameMember.get('Game').Deadlines[that.phaseType]) {
+		  if (opt.value == that.gameState.get('Deadlines')[that.phaseType]) {
 			  desc.push(opt.name);
 				that.$('.deadline').val('' + opt.value);
 			}
 		} 
 		for (var i = 0; i < chatFlagOptions().length; i++) {
 			var opt = chatFlagOptions()[i];
-			if ((opt.id & that.gameMember.get('Game').ChatFlags[that.phaseType]) != 0) {
+			if ((opt.id & that.gameState.get('ChatFlags')[that.phaseType]) != 0) {
 			  desc.push(opt.name);
 				that.$('input[type=checkbox][data-chat-flag=' + opt.id + ']').attr('checked', 'checked');
 			} else {
@@ -47,17 +47,17 @@ window.PhaseTypeView = BaseView.extend({
 			}
 		}
 		that.$('.desc').text(desc.join(", "));
-		that.$('select.deadline').val(that.gameMember.get('Game').Deadlines[that.phaseType]);
+		that.$('select.deadline').val(that.gameState.get('Deadlines')[that.phaseType]);
 	},
 
 	changeChatFlag: function(ev) {
 	  if ($(ev.target).is(":checked")) {
-			this.gameMember.get('Game').ChatFlags[this.phaseType] |= parseInt($(ev.target).attr('data-chat-flag'));
+			this.gameState.get('ChatFlags')[this.phaseType] |= parseInt($(ev.target).attr('data-chat-flag'));
 		} else {
-			this.gameMember.get('Game').ChatFlags[this.phaseType] = this.gameMember.get('Game').ChatFlags[this.phaseType] & (~parseInt($(ev.target).attr('data-chat-flag')));
+			this.gameState.get('ChatFlags')[this.phaseType] = this.gameState.get('ChatFlags')[this.phaseType] & (~parseInt($(ev.target).attr('data-chat-flag')));
 		}
-		this.gameMember.trigger('change');
-		this.gameMember.trigger('saveme');
+		this.gameState.trigger('change');
+		this.gameState.trigger('saveme');
 	},
 
   render: function() {

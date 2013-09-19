@@ -1,11 +1,11 @@
-window.OpenGameMembersView = BaseView.extend({
+window.OpenGameStatesView = BaseView.extend({
 
-  template: _.template($('#open_game_members_underscore').html()),
+  template: _.template($('#open_game_states_underscore').html()),
 
 	initialize: function(options) {
 	  _.bindAll(this, 'doRender');
 		this.listenTo(window.session.user, 'change', this.doRender);
-		this.collection = new GameMembers([], { url: '/games/open' });
+		this.collection = new GameStates([], { url: '/games/open' });
 		this.listenTo(this.collection, "reset", this.doRender);
 		this.listenTo(this.collection, "add", this.doRender);
 		this.listenTo(this.collection, "remove", this.doRender);
@@ -18,11 +18,12 @@ window.OpenGameMembersView = BaseView.extend({
 		  user: window.session.user,
 		}));
 		that.collection.forEach(function(model) {
-		  var memberView = new GameMemberView({ 
+		  var memberView = new GameStateView({ 
 				model: model,
 				editable: false,
 				button_text: '{{.I "Join" }}',
 				button_action: function() {
+				  console.log('going to save',model,'with id',model.id);
 					model.save(null, {
 						success: function() {
 							that.collection.remove(model);
