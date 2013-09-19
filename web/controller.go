@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"strings"
 )
 
 var currentGamePattern = regexp.MustCompile("^/games/current/(.*)$")
@@ -67,10 +68,6 @@ func (self *Web) WS(ws *websocket.Conn) {
 					if loggedIn {
 						game.Create(self, common.JSON{message.Object.Data}, email)
 					}
-				case "/games/open":
-					if loggedIn {
-						game.AddMember(self, common.JSON{message.Object.Data}.GetString("Id"), email)
-					}
 				}
 			case common.DeleteType:
 				if match := currentGamePattern.FindStringSubmatch(message.Object.URI); match != nil {
@@ -79,6 +76,12 @@ func (self *Web) WS(ws *websocket.Conn) {
 					}
 				} else {
 					self.Errorf("Unrecognized URI to delete: %v", message.Object.URI)
+				}
+			case common.UpdateType:
+				if strings.Index(message.Object.URI, "/games/open") == 0 {
+					if loggedIn {
+						game.AddMember(self, common.JSON{message.Object.Data}.GetString("Id"), email)
+					}
 				}
 			default:
 				self.Errorf("Unrecognized message Type: %+v", message.Type)
