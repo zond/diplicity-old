@@ -79,7 +79,6 @@ window.GameStateView = BaseView.extend({
 			}).doRender().el);
 		});
 		that.updatePrivate();
-		that.$el.trigger('create');
 		return that;
 	},
 

@@ -153,6 +153,10 @@ type Variant struct {
 	Nations     []dip.Nation
 }
 
+func (self Variant) JSONNations() string {
+	return string(MustMarshalJSON(self.Nations))
+}
+
 type Variants []Variant
 
 func (self Variants) Len() int {

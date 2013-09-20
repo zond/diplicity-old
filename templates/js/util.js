@@ -323,6 +323,14 @@ function variantName(id) {
 	return null;
 };
 
+function variantNations(id) {
+  {{range .Variants}}if (id == '{{.Id}}') {
+    return {{.JSONNations}};
+	}
+	{{end}}
+	return null;
+}
+
 function phaseTypes(variant) {
 	{{range .Variants}}if (variant == '{{.Id}}') {
 		var rval = [];

@@ -37,11 +37,15 @@ window.CreateGameView = BaseView.extend({
 				model: that.gameState,
 				button_text: '{{.I "Create" }}',
 				button_action: function() {
-					that.gameState.save(null, {
-						success: function() {
-							window.session.router.navigate('', { trigger: true });
-						},
-					});
+				  if (that.gameState.get('AllocationMethod') == 'preferences') {
+            new PreferencesAllocationDialogView({ gameState: that.gameState }).display();
+					} else {
+						that.gameState.save(null, {
+							success: function() {
+								window.session.router.navigate('', { trigger: true });
+							},
+						});
+					}
 				},
 			}).doRender();
 		}
