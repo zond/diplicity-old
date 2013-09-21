@@ -21,8 +21,13 @@ window.PreferencesAllocationDialogView = BaseView.extend({
 	  var that = this;
     that.$el.html(that.template({
 		}));
+		var i = 1;
 		_.each(variantNations(that.gameState.get('Variant')), function(nation) {
-      that.$('.preferences_list').append('<li>' + nation + '</li>');
+      that.$('.preferences_list').append(new PreferredNationView({
+			  ordinal: i,
+			  nation: nation,
+			}).doRender().el);
+			i++;
 		});
 		return that;
 	},
