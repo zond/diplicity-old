@@ -38,12 +38,6 @@ func main() {
 
 	router := mux.NewRouter()
 
-	// Static content
-	router.PathPrefix("/img").Handler(http.FileServer(http.Dir("")))
-	router.HandleFunc("/js/{ver}/all", server.Logger(server.AllJs))
-	router.HandleFunc("/css/{ver}/all", server.Logger(server.AllCss))
-	router.HandleFunc("/diplicity.appcache", server.Logger(server.AppCache))
-
 	// Login/logout
 	router.HandleFunc("/login", server.Logger(server.Login))
 	router.HandleFunc("/logout", server.Logger(server.Logout))
@@ -51,6 +45,12 @@ func main() {
 
 	// The websocket
 	router.Path("/ws").Handler(websocket.Handler(server.WS))
+
+	// Static content
+	router.HandleFunc("/js/{ver}/all", server.Logger(server.AllJs))
+	router.HandleFunc("/css/{ver}/all", server.Logger(server.AllCss))
+	router.HandleFunc("/diplicity.appcache", server.Logger(server.AppCache))
+	server.HandleStatic(router, "static")
 
 	// Everything else HTMLy
 	router.MatcherFunc(wantsHTML).HandlerFunc(server.Logger(server.Index))

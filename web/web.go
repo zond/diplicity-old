@@ -3,10 +3,14 @@ package web
 import (
 	"bytes"
 	"fmt"
+	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/zond/kcwraps/kol"
+	"io"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"text/template"
@@ -134,4 +138,46 @@ func (self *Web) render_Templates(data RequestData) {
 		fmt.Fprintln(data.response, "  $('head').append(n);")
 	}
 	fmt.Fprintln(data.response, "})();")
+}
+
+func (self *Web) HandleStatic(router *mux.Router, dir string) {
+	static, err := os.Open(dir)
+	if err != nil {
+		panic(err)
+	}
+	children, err := static.Readdirnames(-1)
+	if err != nil {
+		panic(err)
+	}
+	for _, fil := range children {
+		cpy := fil
+		router.MatcherFunc(func(r *http.Request, rm *mux.RouteMatch) bool {
+			return strings.HasSuffix(r.URL.Path, cpy)
+		}).HandlerFunc(self.Logger(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Cache-Control", "public, max-age=864000")
+			if strings.HasSuffix(r.URL.Path, ".css") {
+				w.Header().Set("Content-Type", "text/css; charset=UTF-8")
+			} else if strings.HasSuffix(r.URL.Path, ".js") {
+				w.Header().Set("Content-Type", "application/javascript; charset=UTF-8")
+			} else if strings.HasSuffix(r.URL.Path, ".png") {
+				w.Header().Set("Content-Type", "image/png")
+			} else if strings.HasSuffix(r.URL.Path, ".gif") {
+				w.Header().Set("Content-Type", "image/gif")
+			} else {
+				w.Header().Set("Content-Type", "application/octet-stream")
+			}
+			if in, err := os.Open(filepath.Join("static", cpy)); err != nil {
+				self.Errorf("%v", err)
+				w.WriteHeader(500)
+				fmt.Fprintln(w, err)
+			} else {
+				defer in.Close()
+				if _, err := io.Copy(w, in); err != nil {
+					self.Errorf("%v", err)
+					w.WriteHeader(500)
+					fmt.Println(w, err)
+				}
+			}
+		}))
+	}
 }

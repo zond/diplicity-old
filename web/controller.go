@@ -157,45 +157,61 @@ func (self *Web) Index(w http.ResponseWriter, r *http.Request) {
 }
 
 func (self *Web) AppCache(w http.ResponseWriter, r *http.Request) {
-	data := self.GetRequestData(w, r)
-	w.Header().Set("Content-Type", "AddType text/cache-manifest .appcache; charset=UTF-8")
-	self.renderText(w, r, self.textTemplates, "diplicity.appcache", data)
+	if self.appcache {
+		data := self.GetRequestData(w, r)
+		w.Header().Set("Content-Type", "AddType text/cache-manifest .appcache; charset=UTF-8")
+		self.renderText(w, r, self.textTemplates, "diplicity.appcache", data)
+	} else {
+		w.WriteHeader(404)
+	}
 }
 
 func (self *Web) AllJs(w http.ResponseWriter, r *http.Request) {
 	data := self.GetRequestData(w, r)
 	w.Header().Set("Cache-Control", "public, max-age=864000")
 	w.Header().Set("Content-Type", "application/javascript; charset=UTF-8")
-	self.renderText(w, r, self.jsTemplates, "jquery-2.0.0.min.js", data)
+	self.renderText(w, r, self.jsTemplates, "jquery-2.0.3.min.js", data)
+	fmt.Fprintln(w, ";")
 	self.renderText(w, r, self.jsTemplates, "pre_jquery_mobile.js", data)
-	self.renderText(w, r, self.jsTemplates, "jquery.mobile-1.3.1.min.js", data)
+	fmt.Fprintln(w, ";")
+	self.renderText(w, r, self.jsTemplates, "jquery.mobile-1.3.2.min.js", data)
+	fmt.Fprintln(w, ";")
 	self.renderText(w, r, self.jsTemplates, "jquery.hammer.min.js", data)
+	fmt.Fprintln(w, ";")
 	self.renderText(w, r, self.jsTemplates, "underscore-min.js", data)
+	fmt.Fprintln(w, ";")
 	self.renderText(w, r, self.jsTemplates, "backbone-min.js", data)
+	fmt.Fprintln(w, ";")
 	self.renderText(w, r, self.jsTemplates, "util.js", data)
+	fmt.Fprintln(w, ";")
 	self.render_Templates(data)
+	fmt.Fprintln(w, ";")
 	for _, templ := range self.jsModelTemplates.Templates() {
 		if err := templ.Execute(w, data); err != nil {
 			panic(err)
 		}
+		fmt.Fprintln(w, ";")
 	}
 	for _, templ := range self.jsCollectionTemplates.Templates() {
 		if err := templ.Execute(w, data); err != nil {
 			panic(err)
 		}
+		fmt.Fprintln(w, ";")
 	}
 	for _, templ := range self.jsViewTemplates.Templates() {
 		if err := templ.Execute(w, data); err != nil {
 			panic(err)
 		}
+		fmt.Fprintln(w, ";")
 	}
 	self.renderText(w, r, self.jsTemplates, "app.js", data)
+	fmt.Fprintln(w, ";")
 }
 
 func (self *Web) AllCss(w http.ResponseWriter, r *http.Request) {
 	data := self.GetRequestData(w, r)
 	w.Header().Set("Cache-Control", "public, max-age=864000")
 	w.Header().Set("Content-Type", "text/css; charset=UTF-8")
-	self.renderText(w, r, self.cssTemplates, "jquery.mobile-1.3.1.min.css", data)
+	self.renderText(w, r, self.cssTemplates, "jquery.mobile-1.3.2.min.css", data)
 	self.renderText(w, r, self.cssTemplates, "common.css", data)
 }

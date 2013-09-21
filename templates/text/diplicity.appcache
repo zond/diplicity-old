@@ -3,8 +3,11 @@ CACHE:
 /
 /css/{{.Version}}/all
 /js/{{.Version}}/all
-/img/ajax-loader.gif
-/img/DroidSerif-Regular.ttf
-/img/icons-36-white.png
+DroidSerif-Regular.ttf
+/css/{{.Version}}/images/ajax-loader.gif
+/css/{{.Version}}/images/icons-36-white.png
+/css/{{.Version}}/images/icons-36-black.png
+/css/{{.Version}}/images/icons-18-white.png
+/css/{{.Version}}/images/icons-18-black.png
 NETWORK:
 *

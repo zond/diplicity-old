@@ -35,6 +35,10 @@ func (self RequestData) Close() {
 	self.session.Save(self.request, self.response)
 }
 
+func (self RequestData) Appcache() bool {
+	return self.web.appcache
+}
+
 func (self RequestData) AllocationMethods() (result common.AllocationMethods) {
 	for _, meth := range common.AllocationMethodMap {
 		meth.Translation = self.I(meth.Name)
@@ -111,10 +115,6 @@ func (self RequestData) ChatFlag(s string) string {
 		rval = common.ChatConference
 	}
 	return fmt.Sprint(rval)
-}
-
-func (self RequestData) Appcache() bool {
-	return self.web.appcache
 }
 
 var version = time.Now()
