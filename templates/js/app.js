@@ -2,12 +2,10 @@
 window.session = {};
 
 $(window).load(function() {
-
   var match = /^.*:\/\/(.*)\//.exec(window.location.href);
   var socket = new WebSocket("ws://" + match[1] + "/ws");
   wsBackbone(socket);
-	socket.onopen = function(ev) {
-
+	var start = function(ev) {
 		window.session.user = new User();
 
 		var AppRouter = Backbone.Router.extend({
@@ -57,6 +55,7 @@ $(window).load(function() {
 
 		window.session.router.navigate(Backbone.history.fragment || '');
 	};
+	socket.onopen = start;
+	socket.onerror = start;
 
 });
-

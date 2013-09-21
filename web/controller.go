@@ -173,7 +173,6 @@ func (self *Web) AllJs(w http.ResponseWriter, r *http.Request) {
 	self.renderText(w, r, self.jsTemplates, "underscore-min.js", data)
 	self.renderText(w, r, self.jsTemplates, "backbone-min.js", data)
 	self.renderText(w, r, self.jsTemplates, "util.js", data)
-	self.renderText(w, r, self.jsTemplates, "app.js", data)
 	self.render_Templates(data)
 	for _, templ := range self.jsModelTemplates.Templates() {
 		if err := templ.Execute(w, data); err != nil {
@@ -190,6 +189,7 @@ func (self *Web) AllJs(w http.ResponseWriter, r *http.Request) {
 			panic(err)
 		}
 	}
+	self.renderText(w, r, self.jsTemplates, "app.js", data)
 }
 
 func (self *Web) AllCss(w http.ResponseWriter, r *http.Request) {

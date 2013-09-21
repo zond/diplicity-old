@@ -153,15 +153,21 @@ String.prototype.format = function() {
 };
 
 function wsBackbone(ws) {
+	ws.sendIfReady = function(msg) {
+	  if (ws.readyState == 1) {
+		  ws.send(msg);
+		}
+	};
+
   var subscriptions = {};
 	var closeSubscription = function(that) {
 		var url = _.result(that, 'url') || urlError(); 
 		if (subscriptions[url] != null) {
 			logDebug('Unsubscribing from', url);
-			ws.send(JSON.stringify({
-			  Type: 'Unsubscribe',
+			ws.sendIfReady(JSON.stringify({
+				Type: 'Unsubscribe',
 				Object: {
-				  URI: url,
+					URI: url,
 				},
 			}));
 			delete(subscriptions[url]);
@@ -199,7 +205,7 @@ function wsBackbone(ws) {
 			  model: model,
 				options: options,
 			};
-			ws.send(JSON.stringify({
+			ws.sendIfReady(JSON.stringify({
 				Type: 'Subscribe',
 				Object: {
 					URI: urlBefore,
@@ -207,7 +213,7 @@ function wsBackbone(ws) {
 			}));
 		} else if (method == 'create') {
 		  logDebug('Creating', urlBefore);
-			ws.send(JSON.stringify({
+			ws.sendIfReady(JSON.stringify({
 			  Type: 'Create',
 				Object: {
 				  URI: urlBefore,
@@ -221,7 +227,7 @@ function wsBackbone(ws) {
 			}
 		} else if (method == 'update') {
       logDebug('Updating', urlBefore);
-			ws.send(JSON.stringify({
+			ws.sendIfReady(JSON.stringify({
 			  Type: 'Update',
 				Object: {
 				  URI: urlBefore,
@@ -235,7 +241,7 @@ function wsBackbone(ws) {
 			}
 		} else if (method == 'delete') {
 		  logDebug('Deleting', urlBefore);
-			ws.send(JSON.stringify({
+			ws.sendIfReady(JSON.stringify({
 			  Type: 'Delete',
 				Object: {
           URI: urlBefore,

@@ -57,7 +57,7 @@ func main() {
 
 	addr := fmt.Sprintf("0.0.0.0:%v", *port)
 
-	server.Infof("Listening to %v", addr)
+	server.Infof("Listening to %v  (env=%v, appcache=%v)", addr, *env, *appcache)
 	server.Fatalf("%v", http.ListenAndServe(addr, router))
 
 }
