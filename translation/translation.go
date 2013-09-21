@@ -54,7 +54,7 @@ var en = map[string]string{
 	"phase_types":              "{'Movement': 'Movement', 'Retreat': 'Retreat', 'Adjustment': 'Adjustment'}",
 	"England":                  "England",
 	"Variant":                  "Variant",
-	"Standard":                 "Standard",
+	"Classical":                "Classical",
 	"Spring":                   "Spring",
 	"Movement":                 "Movement",
 	"Games":                    "Games",

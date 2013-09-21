@@ -109,7 +109,7 @@ const (
 )
 
 const (
-	StandardString    = "standard"
+	ClassicalString   = "classical"
 	RandomString      = "random"
 	PreferencesString = "preferences"
 )
@@ -172,9 +172,9 @@ func (self Variants) Swap(i, j int) {
 }
 
 var VariantMap = map[string]Variant{
-	StandardString: Variant{
-		Id:         StandardString,
-		Name:       "Standard",
+	ClassicalString: Variant{
+		Id:         ClassicalString,
+		Name:       "Classical",
 		PhaseTypes: cla.PhaseTypes,
 		Nations:    cla.Nations,
 	},

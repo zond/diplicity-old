@@ -53,7 +53,7 @@ func (self RequestData) DefaultAllocationMethod() string {
 }
 
 func (self RequestData) DefaultVariant() string {
-	return common.StandardString
+	return common.ClassicalString
 }
 
 func (self RequestData) Variants() (result common.Variants) {
