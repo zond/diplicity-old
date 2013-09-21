@@ -31,6 +31,13 @@ window.CreateGameView = BaseView.extend({
 		  user: window.session.user,
 		}));
 		if (window.session.user.loggedIn()) {
+		  var save_call = function() {
+				that.gameState.save(null, {
+					success: function() {
+						window.session.router.navigate('', { trigger: true });
+					},
+				});
+			};
 			new GameStateView({ 
 				el: that.$('.create-game'),
 				editable: true,
@@ -38,13 +45,15 @@ window.CreateGameView = BaseView.extend({
 				button_text: '{{.I "Create" }}',
 				button_action: function() {
 				  if (that.gameState.get('AllocationMethod') == 'preferences') {
-            new PreferencesAllocationDialogView({ gameState: that.gameState }).display();
-					} else {
-						that.gameState.save(null, {
-							success: function() {
-								window.session.router.navigate('', { trigger: true });
+            new PreferencesAllocationDialogView({ 
+							gameState: that.gameState,
+							done: function(nations) {
+								that.gameState.get('Member').PreferredNations = nations;
+                save_call();
 							},
-						});
+						}).display();
+					} else {
+					  save_call();
 					}
 				},
 			}).doRender();

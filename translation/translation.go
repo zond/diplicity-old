@@ -4,6 +4,7 @@ var en = map[string]string{
 	"White press":       "White press",
 	"Allocation method": "Allocation method",
 	"Grey press":        "Grey press",
+	"Done":              "Done",
 	"Black press":       "Black press",
 	"Private press":     "Private press",
 	"Group press":       "Group press",

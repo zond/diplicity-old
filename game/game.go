@@ -118,7 +118,8 @@ func Create(c common.Context, j common.JSON, creator string) {
 	}
 
 	member := &Member{
-		User: []byte(creator),
+		User:             []byte(creator),
+		PreferredNations: state.Member.PreferredNations,
 	}
 	c.DB().Transact(func(d *kol.DB) error {
 		if err := d.Set(game); err != nil {
@@ -162,7 +163,8 @@ type Member struct {
 	User []byte `kol:"index"`
 	Game []byte `kol:"index"`
 
-	Nation dip.Nation
+	Nation           dip.Nation
+	PreferredNations []dip.Nation
 }
 
 type gameState struct {
