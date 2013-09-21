@@ -67,13 +67,11 @@ func DeleteMember(c common.Context, gameId, email string) {
 	}
 }
 
-func AddMember(c common.Context, gameId, email string) {
+func AddMember(c common.Context, j common.JSON, email string) {
+	var state gameState
+	j.Overwrite(&state)
 	if err := c.DB().Transact(func(d *kol.DB) error {
-		base64DecodedId, err := base64.StdEncoding.DecodeString(gameId)
-		if err != nil {
-			return err
-		}
-		game := Game{Id: base64DecodedId}
+		game := Game{Id: state.Game.Id}
 		if err := d.Get(&game); err != nil {
 			return err
 		}
@@ -82,11 +80,15 @@ func AddMember(c common.Context, gameId, email string) {
 			return fmt.Errorf("Unknown variant %v", game.Variant)
 		}
 		already := []Member{}
-		if err := d.Query().Where(kol.Equals{"Game", base64DecodedId}).All(&already); err != nil {
+		if err := d.Query().Where(kol.Equals{"Game", state.Game.Id}).All(&already); err != nil {
 			return err
 		}
 		if len(already) < len(variant.Nations) {
-			member := Member{Game: base64DecodedId, User: []byte(email)}
+			member := Member{
+				Game:             state.Game.Id,
+				User:             []byte(email),
+				PreferredNations: state.Member.PreferredNations,
+			}
 			if err := d.Set(&member); err != nil {
 				return err
 			}

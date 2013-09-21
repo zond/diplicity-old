@@ -18,18 +18,32 @@ window.OpenGameStatesView = BaseView.extend({
 		  user: window.session.user,
 		}));
 		that.collection.forEach(function(model) {
+		  var save_call = function() {
+				model.save(null, {
+					success: function() {
+						window.session.router.navigate('', { trigger: true });
+					},
+				});
+			};
 		  var memberView = new GameStateView({ 
 				model: model,
 				editable: false,
 				button_text: '{{.I "Join" }}',
 				button_action: function() {
-				  console.log('going to save',model,'with id',model.id);
-					model.save(null, {
-						success: function() {
-							that.collection.remove(model);
-							window.session.router.navigate('', { trigger: true });
-						},
+				  model.set('Member', {
+						User: btoa(window.session.user.get('Email')),
 					});
+					if (model.get('AllocationMethod') == 'preferences') {
+            new PreferencesAllocationDialogView({ 
+							gameState: model,
+							done: function(nations) {
+								model.get('Member').PreferredNations = nations;
+                save_call();
+							},
+						}).display();
+					} else {
+					  save_call();
+					}
 				},
 			}).doRender();
 			memberView.$el.attr('data-role', 'collapsible');

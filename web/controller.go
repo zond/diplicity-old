@@ -80,7 +80,7 @@ func (self *Web) WS(ws *websocket.Conn) {
 			case common.UpdateType:
 				if strings.Index(message.Object.URI, "/games/open") == 0 {
 					if loggedIn {
-						game.AddMember(self, common.JSON{message.Object.Data}.GetString("Id"), email)
+						game.AddMember(self, common.JSON{message.Object.Data}, email)
 					}
 				}
 			default:
