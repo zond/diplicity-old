@@ -1,17 +1,17 @@
 <div<%= editable ? ' data-role="collapsible"' :'' %>>
-	<h3><%= {{.I "phase_types" }}[phaseType] %>: <span class="desc"></span></h3>
+	<h3><%- {{.I "phase_types" }}[phaseType] %>: <span class="desc"></span></h3>
 	<% if (editable) { %>
 	<select class="deadline"<%= editable ? '' : ' disabled="disabled"' %>>
 		<% for (var i = 0; i < deadlineOptions.length; i++) { %>
 		<%   var opt = deadlineOptions[i]; %>
-		<option value="<%= opt.value %>"><%= opt.name %></option>
+		<option value="<%= opt.value %>"><%- opt.name %></option>
 		<% } %>
 	</select>
 	<fieldset data-role="controlgroup">
 		<% for (var i = 0; i < chatFlagOptions().length; i++) { %>
 		<%  var opt = chatFlagOptions()[i]; %>
-		<input id="<%= me %>.<%= opt.id %>"<%= editable ? '' : ' disabled="disabled"' %> class="chat-flag" data-chat-flag="<%= opt.id %>" type="checkbox">
-		<label for="<%= me %>.<%= opt.id %>"><%= opt.name %></label>
+		<input id="<%- me %>.<%- opt.id %>"<%= editable ? '' : ' disabled="disabled"' %> class="chat-flag" data-chat-flag="<%- opt.id %>" type="checkbox">
+		<label for="<%- me %>.<%- opt.id %>"><%- opt.name %></label>
 		<% } %>
 	</fieldset>
 	<% } %>
