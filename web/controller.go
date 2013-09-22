@@ -19,7 +19,11 @@ import (
 var currentGamePattern = regexp.MustCompile("^/games/current/(.*)$")
 
 func (self *Web) WS(ws *websocket.Conn) {
-	session, _ := self.sessionStore.Get(ws.Request(), SessionName)
+	session, err := self.sessionStore.Get(ws.Request(), SessionName)
+	if err != nil {
+		self.Errorf("%v\t%v\t%v", ws.Request().URL, ws.Request().RemoteAddr, err)
+	}
+
 	email := ""
 	emailIf, loggedIn := session.Values[SessionEmail]
 	if loggedIn {
@@ -31,7 +35,6 @@ func (self *Web) WS(ws *websocket.Conn) {
 	pack := subs.New(self.db, ws)
 	defer pack.UnsubscribeAll()
 
-	var err error
 	for {
 		var message subs.Message
 		if err = websocket.JSON.Receive(ws, &message); err == nil {

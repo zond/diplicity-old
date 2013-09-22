@@ -17,8 +17,9 @@ import (
 )
 
 const (
-	SessionEmail = "email"
-	SessionName  = "diplicity_session"
+	SessionEmail  = "email"
+	SessionName   = "diplicity_session"
+	DefaultSecret = "something very secret"
 )
 
 const (

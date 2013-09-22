@@ -10,10 +10,6 @@ import (
 	"net/http"
 )
 
-const (
-	defaultSecret = "something very secret"
-)
-
 func wantsJSON(r *http.Request, m *mux.RouteMatch) bool {
 	return common.MostAccepted(r, "text/html", "Accept") == "application/json"
 }
@@ -24,13 +20,13 @@ func wantsHTML(r *http.Request, m *mux.RouteMatch) bool {
 
 func main() {
 	port := flag.Int("port", 8080, "The port to listen on")
-	secret := flag.String("secret", defaultSecret, "The cookie store secret")
+	secret := flag.String("secret", web.DefaultSecret, "The cookie store secret")
 	env := flag.String("env", "development", "What environment to run")
 	appcache := flag.Bool("appcache", true, "Whether to enable appcache")
 
 	flag.Parse()
 
-	if *env != "development" && *secret == defaultSecret {
+	if *env != "development" && *secret == web.DefaultSecret {
 		panic("Only development env can run with the default secret")
 	}
 
