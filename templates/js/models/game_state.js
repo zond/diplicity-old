@@ -1,7 +1,5 @@
 window.GameState = Backbone.Model.extend({
 
-  idAttribute: "Id",
-
 	me: function() {
 	  if (window.session.user.get('Email') == null) {
 		  return null;

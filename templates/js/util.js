@@ -152,14 +152,11 @@ String.prototype.format = function() {
 	});
 };
 
-function wsBackbone(ws) {
-	ws.sendIfReady = function(msg) {
-	  if (ws.readyState == 1) {
-		  ws.send(msg);
-		}
-	};
-
-  var subscriptions = {};
+function wsBackbone(url, start) {
+	var ws = null;
+	var started = false;
+  
+	var subscriptions = {};
 	var closeSubscription = function(that) {
 		var url = _.result(that, 'url') || urlError(); 
 		if (subscriptions[url] != null) {
@@ -174,15 +171,85 @@ function wsBackbone(ws) {
 		}
 	};
 
+  var backoff = 500;
+  var setupWs = null;
+  setupWs = function() {
+	  logInfo("Opening socket to", url);
+	  ws = new WebSocket(url); 
+		ws.sendIfReady = function(msg) {
+			if (ws.readyState == 1) {
+				ws.send(msg);
+			} else {
+				logError('Tried to send', msg, 'on', ws, 'in readyState', ws.readyState);
+			}
+		};
+		ws.onclose = function(code, reason, wasClean) {
+			logError('Socket closed, scheduling reopen');
+			backoff *= 2;
+			setTimeout(setupWs, backoff);
+		};
+    ws.onopen = function() {
+		  logInfof("Socket opened");
+		  backoff = 500;
+			if (!started) {
+			  started = true;
+				start();
+			}
+		};
+		ws.onerror = function(err) {
+		  if (backoff < 30000) {
+				backoff *= 2;
+			}
+			setTimeout(setupWs, backoff);
+			if (!started) {
+			  started = true;
+				start();
+			}
+		};
+		ws.onmessage = function(ev) {
+			var mobj = JSON.parse(ev.data);
+			if (mobj.Object.URI != null) {
+				var subscription = subscriptions[mobj.Object.URI];
+				if (subscription != null) {
+					logDebug('Got', mobj.Type, mobj.Object.URI, 'from websocket');
+					logTrace(mobj.Object.Data);
+					if (mobj.Type == 'Delete') {
+						if (subscription.model.models != null) {
+							_.each(mobj.Object.Data, function(element) {
+								var model = subscription.model.get(element.Id);
+								subscription.model.remove(model, { silent: true });
+							});
+							subscription.model.trigger('reset');
+						} else {
+							logError("Don't know how to handle Deletes on backbone.Models");
+						}
+					} else {
+						if (subscription.options != null && subscription.options.success != null) {
+							subscription.options.success(mobj.Object.Data, null, subscription.options);
+						} else {
+							subscription.model.set(mobj.Object.Data, { remove: mobj.Type == 'Fetch', reset: true });
+						}
+					}
+					if (_.result(subscription.model, 'localStorage')) {
+						localStorage.setItem(mobj.Object.URI, JSON.stringify(subscription.model));
+						logDebug('Stored', mobj.Object.URI, 'in localStorage');
+					}
+				} else {
+					logError("Received", mobj, "for unsubscribed URI", mobj.Object.URI);
+				}
+			}
+		};
+	};
+	setupWs();
+
 	Backbone.Collection.prototype.close = function() {
-	  closeSubscription(this);
+		closeSubscription(this);
 	};
 	Backbone.Model.prototype.close = function() {
 	  closeSubscription(this);
 	};
 	Backbone.Model.prototype.idAttribute = "Id";
 
-	var oldBackboneSync = Backbone.sync;
 	Backbone.sync = function(method, model, options) {
 		var urlError = function() {
 			throw new Error('A "url" property or function must be specified');
@@ -252,43 +319,6 @@ function wsBackbone(ws) {
 			if (options.error) {
 			  options.error(model, "Don't know how to handle " + method, options);
 			}
-		}
-	};
-	var oldOnmessage = ws.onmessage;
-	ws.onmessage = function(ev) {
-	  var mobj = JSON.parse(ev.data);
-		if (mobj.Object.URI != null) {
-			var subscription = subscriptions[mobj.Object.URI];
-			if (subscription != null) {
-				logDebug('Got', mobj.Type, mobj.Object.URI, 'from websocket');
-				logTrace(mobj.Object.Data);
-			  if (mobj.Type == 'Delete') {
-				  if (subscription.model.models != null) {
-						_.each(mobj.Object.Data, function(element) {
-						  var model = subscription.model.get(element.Id);
-              subscription.model.remove(model, { silent: true });
-						});
-						subscription.model.trigger('reset');
-					} else {
-						logError("Don't know how to handle Deletes on backbone.Models");
-					}
-				} else {
-					if (subscription.options != null && subscription.options.success != null) {
-						subscription.options.success(mobj.Object.Data, null, subscription.options);
-					} else {
-						subscription.model.set(mobj.Object.Data, { remove: mobj.Type == 'Fetch', reset: true });
-					}
-				}
-				if (_.result(subscription.model, 'localStorage')) {
-					localStorage.setItem(mobj.Object.URI, JSON.stringify(subscription.model));
-					logDebug('Stored', mobj.Object.URI, 'in localStorage');
-				}
-			} else {
-			  logError("Received", mobj, "for unsubscribed URI", mobj.Object.URI);
-			}
-		}
-		if (oldOnmessage != null) {
-		  oldOnmessage(ev);
 		}
 	};
 };

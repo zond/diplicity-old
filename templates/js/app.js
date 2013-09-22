@@ -3,8 +3,7 @@ window.session = {};
 
 $(window).load(function() {
   var match = /^.*:\/\/(.*)\//.exec(window.location.href);
-  var socket = new WebSocket("ws://" + match[1] + "/ws");
-  wsBackbone(socket);
+	var url = "ws://" + match[1] + "/ws";
 	var start = function(ev) {
 		window.session.user = new User();
 
@@ -55,7 +54,6 @@ $(window).load(function() {
 
 		window.session.router.navigate(Backbone.history.fragment || '');
 	};
-	socket.onopen = start;
-	socket.onerror = start;
+  wsBackbone(url, start);
 
 });
