@@ -200,11 +200,13 @@ func (self Members) toStates(c common.Context, g *Game, email string) (result []
 			cpy.UserId = nil
 			cpy.PreferredNations = nil
 		}
-		result[index] = memberState{Member: &cpy}
+		result[index] = memberState{
+			Member: &cpy,
+			User:   &user.User{},
+		}
 		if !g.SecretEmail || !g.SecretNickname {
 			foundUser := user.User{Id: member.UserId}
 			if err := c.DB().Get(&foundUser); err == nil {
-				result[index].User = &foundUser
 				if !g.SecretEmail {
 					result[index].User.Email = foundUser.Email
 					result[index].User.Id = foundUser.Id

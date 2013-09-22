@@ -13,6 +13,7 @@ window.CreateGameView = BaseView.extend({
 		});
 		var member = {
 		  UserId: btoa(window.session.user.get('Email')),
+			User: {},
 		};
 		this.gameState = new GameState({
 		  Members: [member],

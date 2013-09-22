@@ -77,6 +77,12 @@ window.GameStateView = BaseView.extend({
 				gameState: that.model,
 			}).doRender().el);
 		});
+		_.each(that.model.get('Members'), function(member) {
+		  console.log('rendering', member);
+		  that.$('.member-list').append(new GameMemberView({
+			  member: member,
+			}).doRender().el);
+		});
 		return that;
 	},
 

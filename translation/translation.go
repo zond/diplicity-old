@@ -6,6 +6,7 @@ var en = map[string]string{
 	"members":           "members",
 	"Players":           "Players",
 	"players":           "players",
+	"{0}/{1} players":   "{0}/{1} players",
 	"Allocation method": "Allocation method",
 	"Grey press":        "Grey press",
 	"Done":              "Done",
