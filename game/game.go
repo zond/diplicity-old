@@ -115,7 +115,11 @@ func AddMember(c common.Context, j common.JSON, email string) {
 			return err
 		}
 		if len(already) < len(variant.Nations) {
+			id := make([]byte, len(state.Game.Id)+len([]byte(email)))
+			copy(id, state.Game.Id)
+			copy(id[len(state.Game.Id):], []byte(email))
 			member := Member{
+				Id:               id,
 				GameId:           state.Game.Id,
 				UserId:           []byte(email),
 				PreferredNations: state.Members[0].PreferredNations,
@@ -233,17 +237,13 @@ func (self Members) toStates(c common.Context, g *Game, email string) (result []
 			User:   &user.User{},
 		}
 		if !g.SecretEmail || !g.SecretNickname {
-			foundUser := user.User{Id: member.UserId}
-			if err := c.DB().Get(&foundUser); err == nil {
-				if !g.SecretEmail {
-					result[index].User.Email = foundUser.Email
-					result[index].User.Id = foundUser.Id
-				}
-				if !g.SecretNickname {
-					result[index].User.Nickname = foundUser.Nickname
-				}
-			} else if err != kol.NotFound {
-				panic(err)
+			foundUser := user.EnsureUser(c, string(member.UserId))
+			if !g.SecretEmail {
+				result[index].User.Email = foundUser.Email
+				result[index].User.Id = foundUser.Id
+			}
+			if !g.SecretNickname {
+				result[index].User.Nickname = foundUser.Nickname
 			}
 		}
 	}

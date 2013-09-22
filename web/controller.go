@@ -7,7 +7,6 @@ import (
 	"github.com/zond/diplicity/game"
 	"github.com/zond/diplicity/openid"
 	"github.com/zond/diplicity/user"
-	"github.com/zond/kcwraps/kol"
 	"github.com/zond/kcwraps/subs"
 	"io"
 	"net/http"
@@ -103,17 +102,7 @@ func (self *Web) Openid(w http.ResponseWriter, r *http.Request) {
 	redirect, email, ok := openid.VerifyAuth(r)
 	if ok {
 		data.session.Values[SessionEmail] = email
-		user := &user.User{
-			Id:    []byte(email),
-			Email: email,
-		}
-		if err := self.db.Get(user); err == kol.NotFound {
-			if err = self.db.Set(user); err != nil {
-				panic(err)
-			}
-		} else if err != nil {
-			panic(err)
-		}
+		user.EnsureUser(self, email)
 	} else {
 		delete(data.session.Values, SessionEmail)
 	}
