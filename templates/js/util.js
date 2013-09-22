@@ -189,7 +189,7 @@ function wsBackbone(url, start) {
 			setTimeout(setupWs, backoff);
 		};
     ws.onopen = function() {
-		  logInfof("Socket opened");
+		  logInfo("Socket opened");
 		  backoff = 500;
 			if (!started) {
 			  started = true;

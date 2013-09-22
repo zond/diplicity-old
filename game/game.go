@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"github.com/zond/diplicity/common"
 	"github.com/zond/diplicity/user"
+	"github.com/zond/godip/classical"
 	dip "github.com/zond/godip/common"
+	"github.com/zond/godip/state"
 	"github.com/zond/kcwraps/kol"
 	"github.com/zond/kcwraps/subs"
 	"net/url"
@@ -31,6 +33,31 @@ type Game struct {
 	Deadlines map[dip.PhaseType]Minutes
 
 	ChatFlags map[dip.PhaseType]common.ChatFlag
+}
+
+func (self *Game) start(d *kol.DB) error {
+	self.Started = true
+	self.Closed = true
+	if err := d.Set(self); err != nil {
+		return err
+	}
+	var startState *state.State
+	if self.Variant == common.ClassicalString {
+		startState = classical.Start()
+	} else {
+		return fmt.Errorf("Unknown variant %v", self.Variant)
+	}
+	startPhase := startState.Phase()
+	phase := &Phase{
+		GameId:        self.Id,
+		Ordinal:       0,
+		Season:        startPhase.Season(),
+		Year:          startPhase.Year(),
+		Type:          startPhase.Type(),
+		Units:         startState.Units(),
+		SupplyCenters: startState.SupplyCenters(),
+	}
+	return d.Set(phase)
 }
 
 func DeleteMember(c common.Context, gameId, email string) {
@@ -97,9 +124,7 @@ func AddMember(c common.Context, j common.JSON, email string) {
 				return err
 			}
 			if len(already) == len(variant.Nations)-1 {
-				game.Started = true
-				game.Closed = true
-				if err := d.Set(&game); err != nil {
+				if err := game.start(d); err != nil {
 					return err
 				}
 			}
@@ -157,6 +182,9 @@ type Phase struct {
 	Year    int
 	Type    dip.PhaseType
 	Ordinal int
+
+	Units         map[dip.Province]dip.Unit
+	SupplyCenters map[dip.Province]dip.Nation
 }
 
 func (self *Phase) Updated(d *kol.DB, old *Phase) {
