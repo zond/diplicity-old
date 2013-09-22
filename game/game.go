@@ -99,7 +99,7 @@ func DeleteMember(c common.Context, gameId, email string) {
 }
 
 func AddMember(c common.Context, j common.JSON, email string) {
-	var state gameState
+	var state GameState
 	j.Overwrite(&state)
 	if err := c.DB().Transact(func(d *kol.DB) error {
 		game := Game{Id: state.Game.Id}
@@ -136,7 +136,7 @@ func AddMember(c common.Context, j common.JSON, email string) {
 }
 
 func Create(c common.Context, j common.JSON, creator string) {
-	var state gameState
+	var state GameState
 	j.Overwrite(&state)
 
 	game := &Game{
@@ -220,15 +220,15 @@ type Member struct {
 
 type Members []Member
 
-func (self Members) toStates(c common.Context, g *Game, email string) (result []memberState) {
-	result = make([]memberState, len(self))
+func (self Members) toStates(c common.Context, g *Game, email string) (result []MemberState) {
+	result = make([]MemberState, len(self))
 	for index, member := range self {
 		cpy := member
 		if string(cpy.UserId) != email {
 			cpy.UserId = nil
 			cpy.PreferredNations = nil
 		}
-		result[index] = memberState{
+		result[index] = MemberState{
 			Member: &cpy,
 			User:   &user.User{},
 		}
@@ -250,14 +250,14 @@ func (self Members) toStates(c common.Context, g *Game, email string) (result []
 	return
 }
 
-type memberState struct {
+type MemberState struct {
 	*Member
 	User *user.User
 }
 
-type gameState struct {
+type GameState struct {
 	*Game
-	Members []memberState
+	Members []MemberState
 	Phase   *Phase
 }
 
@@ -265,13 +265,13 @@ func SubscribeCurrent(c common.Context, s *subs.Subscription, email string) {
 	s.Query = s.DB().Query().Where(kol.Equals{"UserId", []byte(email)})
 	s.Call = func(i interface{}, op string) {
 		members := i.([]*Member)
-		states := []gameState{}
+		states := []GameState{}
 		phases := Phases{}
 		for _, member := range members {
 			if op == common.DeleteType {
-				states = append(states, gameState{
+				states = append(states, GameState{
 					Game:    &Game{Id: member.GameId},
-					Members: []memberState{memberState{Member: member}},
+					Members: []MemberState{MemberState{Member: member}},
 				})
 			} else {
 				game := &Game{Id: member.GameId}
@@ -294,7 +294,7 @@ func SubscribeCurrent(c common.Context, s *subs.Subscription, email string) {
 					} else {
 						phase = nil
 					}
-					states = append(states, gameState{
+					states = append(states, GameState{
 						Game:    game,
 						Members: gameMembers.toStates(c, game, email),
 						Phase:   phase,
@@ -311,7 +311,7 @@ func SubscribeOpen(c common.Context, s *subs.Subscription, email string) {
 	s.Query = s.DB().Query().Where(kol.And{kol.Equals{"Closed", false}, kol.Equals{"Private", false}})
 	s.Call = func(i interface{}, op string) {
 		games := i.([]*Game)
-		states := []gameState{}
+		states := []GameState{}
 		phases := Phases{}
 		isMember := false
 		for _, game := range games {
@@ -337,7 +337,7 @@ func SubscribeOpen(c common.Context, s *subs.Subscription, email string) {
 				} else {
 					phase = nil
 				}
-				states = append(states, gameState{
+				states = append(states, GameState{
 					Game:    game,
 					Members: members.toStates(c, game, email),
 					Phase:   phase,
