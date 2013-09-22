@@ -2,6 +2,10 @@ package translation
 
 var en = map[string]string{
 	"White press":       "White press",
+	"Members":           "Members",
+	"members":           "members",
+	"Players":           "Players",
+	"players":           "players",
 	"Allocation method": "Allocation method",
 	"Grey press":        "Grey press",
 	"Done":              "Done",

@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"github.com/zond/diplicity/common"
+	"github.com/zond/diplicity/user"
 	dip "github.com/zond/godip/common"
 	"github.com/zond/kcwraps/kol"
 	"github.com/zond/kcwraps/subs"
@@ -189,9 +190,25 @@ type Member struct {
 	PreferredNations []dip.Nation
 }
 
+type Members []Member
+
+func (self Members) toStates() (result []memberState) {
+	result = make([]memberState, len(self))
+	for index, member := range self {
+		cpy := member
+		result[index] = memberState{Member: &cpy}
+	}
+	return
+}
+
+type memberState struct {
+	*Member
+	UserData *user.User
+}
+
 type gameState struct {
 	*Game
-	Members []Member
+	Members []memberState
 	Phase   *Phase
 }
 
@@ -205,14 +222,14 @@ func SubscribeCurrent(c common.Context, s *subs.Subscription, email string) {
 			if op == common.DeleteType {
 				states = append(states, gameState{
 					Game:    &Game{Id: member.Game},
-					Members: []Member{*member},
+					Members: []memberState{memberState{Member: member}},
 				})
 			} else {
 				game := &Game{Id: member.Game}
 				if err := s.DB().Get(game); err != nil {
 					panic(err)
 				}
-				gameMembers := []Member{}
+				gameMembers := Members{}
 				if err := s.DB().Query().Where(kol.Equals{"Game", game.Id}).All(&gameMembers); err != nil {
 					panic(err)
 				}
@@ -230,7 +247,7 @@ func SubscribeCurrent(c common.Context, s *subs.Subscription, email string) {
 					}
 					states = append(states, gameState{
 						Game:    game,
-						Members: gameMembers,
+						Members: gameMembers.toStates(),
 						Phase:   phase,
 					})
 				}
@@ -249,7 +266,7 @@ func SubscribeOpen(c common.Context, s *subs.Subscription, email string) {
 		phases := Phases{}
 		isMember := false
 		for _, game := range games {
-			members := []Member{}
+			members := Members{}
 			if err := s.DB().Query().Where(kol.Equals{"Game", game.Id}).All(&members); err != nil {
 				panic(err)
 			}
@@ -273,7 +290,7 @@ func SubscribeOpen(c common.Context, s *subs.Subscription, email string) {
 				}
 				states = append(states, gameState{
 					Game:    game,
-					Members: members,
+					Members: members.toStates(),
 					Phase:   phase,
 				})
 			}
