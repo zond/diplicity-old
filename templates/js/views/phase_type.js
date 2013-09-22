@@ -14,17 +14,11 @@ window.PhaseTypeView = BaseView.extend({
 		this.phaseType = options.phaseType;
 		this.editable = options.editable;
 		this.gameState = options.gameState;
-		this.gameState.bind('change', this.update);
-	},
-
-	onClose: function() {
-		this.gameState.unbind('change', this.update);
 	},
 
 	changeDeadline: function(ev) {
 		this.gameState.get('Deadlines')[this.phaseType] = parseInt($(ev.target).val()); 
-		this.gameState.trigger('change');
-		this.gameState.trigger('saveme');
+		this.update();
 	},
 
   update: function() {
@@ -56,8 +50,7 @@ window.PhaseTypeView = BaseView.extend({
 		} else {
 			this.gameState.get('ChatFlags')[this.phaseType] = this.gameState.get('ChatFlags')[this.phaseType] & (~parseInt($(ev.target).attr('data-chat-flag')));
 		}
-		this.gameState.trigger('change');
-		this.gameState.trigger('saveme');
+		this.update();
 	},
 
   render: function() {

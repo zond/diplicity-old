@@ -6,8 +6,9 @@ import (
 )
 
 type User struct {
-	Id    []byte
-	Email string
+	Id       []byte
+	Email    string
+	Nickname string
 }
 
 func SubscribeEmail(c common.Context, s *subs.Subscription, email string) {

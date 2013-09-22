@@ -4,14 +4,15 @@ window.GameStateView = BaseView.extend({
 
   events: {
 		"change .game-private": "changePrivate",
+		"change .game-secret-email": "changeSecretEmail",
+		"change .game-secret-nickname": "changeSecretNickname",
+		"change .game-secret-nation": "changeSecretNation",
     "click .game-member-button": "buttonAction",
 		"change select.create-game-allocation-method": "changeAllocationMethod",
 	},
 
 	initialize: function(options) {
-	  _.bindAll(this, 'doRender', 'save', 'updatePrivate');
-		this.model.bind('saveme', this.save);
-		this.model.bind('change', this.updatePrivate);
+	  _.bindAll(this, 'doRender');
 		this.button_text = options.button_text;
 		this.button_action = options.button_action;
 		this.editable = options.editable;
@@ -24,30 +25,22 @@ window.GameStateView = BaseView.extend({
 
 	changeAllocationMethod: function(ev) {
 	  this.model.set('AllocationMethod', $(ev.target).val());
-		this.model.trigger('change');
-		this.model.trigger('saveme');
-	},
-
-	onClose: function() {
-	  this.model.unbind('saveme', this.save);
-		this.model.unbind('change', this.updatePrivate);
 	},
 
   changePrivate: function(ev) {
 	  this.model.set('Private', $(ev.target).val() == 'true');
-		this.model.trigger('change');
-		this.model.trigger('saveme');
 	},
 
-  save: function() {
-		if (!this.model.isNew()) {
-			this.model.save();
-		}
+  changeSecretEmail: function(ev) {
+	  this.model.set('SecretEmail', $(ev.target).val() == 'true');
 	},
 
-	updatePrivate: function() {
-		this.$('select.game-private').val(this.model.get('Private') ? 'true' : 'false');
-		this.$('select.game-private').slider().slider('refresh');
+  changeSecretNickname: function(ev) {
+	  this.model.set('SecretNickname', $(ev.target).val() == 'true');
+	},
+
+  changeSecretNation: function(ev) {
+	  this.model.set('SecretNation', $(ev.target).val() == 'true');
 	},
 
   render: function() {
@@ -78,7 +71,6 @@ window.GameStateView = BaseView.extend({
 				gameState: that.model,
 			}).doRender().el);
 		});
-		that.updatePrivate();
 		return that;
 	},
 

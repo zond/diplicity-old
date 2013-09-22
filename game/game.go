@@ -21,6 +21,9 @@ type Game struct {
 	Ended            bool `kol:"index"`
 	Variant          string
 	AllocationMethod string
+	SecretEmail      bool
+	SecretNickname   bool
+	SecretNation     bool
 	EndYear          int
 	Private          bool `kol:"index"`
 
@@ -114,6 +117,9 @@ func Create(c common.Context, j common.JSON, creator string) {
 		Variant:          state.Game.Variant,
 		EndYear:          state.Game.EndYear,
 		Private:          state.Game.Private,
+		SecretEmail:      state.Game.SecretEmail,
+		SecretNickname:   state.Game.SecretNickname,
+		SecretNation:     state.Game.SecretNation,
 		Deadlines:        state.Game.Deadlines,
 		ChatFlags:        state.Game.ChatFlags,
 		AllocationMethod: state.Game.AllocationMethod,
