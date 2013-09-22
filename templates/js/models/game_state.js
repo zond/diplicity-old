@@ -2,8 +2,13 @@ window.GameState = Backbone.Model.extend({
 
   idAttribute: "Id",
 
-  is_member: function() {
-		return window.session.user.get('User') != '' && this.get('Member') != null && this.get('Member').User == btoa(window.session.user.get('Email'));
+	me: function() {
+	  if (window.session.user.get('Email') == null) {
+		  return null;
+		}
+	  return _.find(this.get('Members'), function(member) {
+		  return member.User == btoa(window.session.user.get('Email'));
+		});
 	},
 
 	describe: function() {

@@ -8,13 +8,13 @@ import (
 	"github.com/zond/kcwraps/kol"
 	"github.com/zond/kcwraps/subs"
 	"net/url"
+	"sort"
 )
 
 type Minutes int
 
 type Game struct {
-	Id    []byte
-	Phase []byte
+	Id []byte
 
 	Closed           bool `kol:"index"`
 	Started          bool `kol:"index"`
@@ -90,7 +90,7 @@ func AddMember(c common.Context, j common.JSON, email string) {
 			member := Member{
 				Game:             state.Game.Id,
 				User:             []byte(email),
-				PreferredNations: state.Member.PreferredNations,
+				PreferredNations: state.Members[0].PreferredNations,
 			}
 			if err := d.Set(&member); err != nil {
 				return err
@@ -127,7 +127,7 @@ func Create(c common.Context, j common.JSON, creator string) {
 
 	member := &Member{
 		User:             []byte(creator),
-		PreferredNations: state.Member.PreferredNations,
+		PreferredNations: state.Members[0].PreferredNations,
 	}
 	c.DB().Transact(func(d *kol.DB) error {
 		if err := d.Set(game); err != nil {
@@ -166,6 +166,20 @@ func (self *Phase) Updated(d *kol.DB, old *Phase) {
 	d.EmitUpdate(&g)
 }
 
+type Phases []Phase
+
+func (self Phases) Len() int {
+	return len(self)
+}
+
+func (self Phases) Less(i, j int) bool {
+	return self[i].Ordinal < self[j].Ordinal
+}
+
+func (self Phases) Swap(i, j int) {
+	self[i], self[j] = self[j], self[i]
+}
+
 type Member struct {
 	Id   []byte
 	User []byte `kol:"index"`
@@ -177,8 +191,8 @@ type Member struct {
 
 type gameState struct {
 	*Game
-	Member *Member
-	Phase  *Phase
+	Members []Member
+	Phase   *Phase
 }
 
 func SubscribeCurrent(c common.Context, s *subs.Subscription, email string) {
@@ -186,29 +200,38 @@ func SubscribeCurrent(c common.Context, s *subs.Subscription, email string) {
 	s.Call = func(i interface{}, op string) {
 		members := i.([]*Member)
 		states := []gameState{}
+		phases := Phases{}
 		for _, member := range members {
 			if op == common.DeleteType {
 				states = append(states, gameState{
-					Member: member,
+					Game:    &Game{Id: member.Game},
+					Members: []Member{*member},
 				})
 			} else {
 				game := &Game{Id: member.Game}
 				if err := s.DB().Get(game); err != nil {
 					panic(err)
 				}
+				gameMembers := []Member{}
+				if err := s.DB().Query().Where(kol.Equals{"Game", game.Id}).All(&gameMembers); err != nil {
+					panic(err)
+				}
 				if !game.Ended {
-					phase := &Phase{Id: game.Phase}
-					if err := s.DB().Get(phase); err != nil {
-						if err == kol.NotFound {
-							phase = nil
-						} else {
-							panic(err)
-						}
+					phases = nil
+					if err := s.DB().Query().Where(kol.Equals{"Game", game.Id}).All(&phases); err != nil {
+						panic(err)
+					}
+					phase := &Phase{}
+					if len(phases) > 0 {
+						sort.Sort(phases)
+						phase = &phases[0]
+					} else {
+						phase = nil
 					}
 					states = append(states, gameState{
-						Game:   game,
-						Member: member,
-						Phase:  phase,
+						Game:    game,
+						Members: gameMembers,
+						Phase:   phase,
 					})
 				}
 			}
@@ -221,24 +244,37 @@ func SubscribeCurrent(c common.Context, s *subs.Subscription, email string) {
 func SubscribeOpen(c common.Context, s *subs.Subscription, email string) {
 	s.Query = s.DB().Query().Where(kol.And{kol.Equals{"Closed", false}, kol.Equals{"Private", false}})
 	s.Call = func(i interface{}, op string) {
-		var members []Member
 		games := i.([]*Game)
 		states := []gameState{}
+		phases := Phases{}
+		isMember := false
 		for _, game := range games {
-			members = nil
-			s.DB().Query().Where(kol.And{kol.Equals{"User", []byte(email)}, kol.Equals{"Game", game.Id}}).All(&members)
-			if len(members) == 0 {
-				phase := &Phase{Id: game.Phase}
-				if err := s.DB().Get(phase); err != nil {
-					if err == kol.NotFound {
-						phase = nil
-					} else {
-						panic(err)
-					}
+			members := []Member{}
+			if err := s.DB().Query().Where(kol.Equals{"Game", game.Id}).All(&members); err != nil {
+				panic(err)
+			}
+			isMember = false
+			for _, m := range members {
+				if string(m.User) == email {
+					isMember = true
+				}
+			}
+			if !isMember {
+				phases = nil
+				if err := s.DB().Query().Where(kol.Equals{"Game", game.Id}).All(&phases); err != nil {
+					panic(err)
+				}
+				phase := &Phase{}
+				if len(phases) > 0 {
+					sort.Sort(phases)
+					phase = &phases[0]
+				} else {
+					phase = nil
 				}
 				states = append(states, gameState{
-					Game:  game,
-					Phase: phase,
+					Game:    game,
+					Members: members,
+					Phase:   phase,
 				})
 			}
 		}

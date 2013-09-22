@@ -30,14 +30,16 @@ window.OpenGameStatesView = BaseView.extend({
 				editable: false,
 				button_text: '{{.I "Join" }}',
 				button_action: function() {
-				  model.set('Member', {
-						User: btoa(window.session.user.get('Email')),
-					});
+				  model.set('Members', [
+						{
+							User: btoa(window.session.user.get('Email')),
+						}
+					]);
 					if (model.get('AllocationMethod') == 'preferences') {
             new PreferencesAllocationDialogView({ 
 							gameState: model,
 							done: function(nations) {
-								model.get('Member').PreferredNations = nations;
+								model.get('Members')[0].PreferredNations = nations;
                 save_call();
 							},
 						}).display();

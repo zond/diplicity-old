@@ -15,7 +15,7 @@ window.CreateGameView = BaseView.extend({
 		  User: btoa(window.session.user.get('Email')),
 		};
 		this.gameState = new GameState({
-		  Member: member,
+		  Members: [member],
 			Private: false,
 		  Variant: defaultVariant,
 			Deadlines: deadlines,
@@ -48,7 +48,7 @@ window.CreateGameView = BaseView.extend({
             new PreferencesAllocationDialogView({ 
 							gameState: that.gameState,
 							done: function(nations) {
-								that.gameState.get('Member').PreferredNations = nations;
+								that.gameState.get('Members')[0].PreferredNations = nations;
                 save_call();
 							},
 						}).display();
