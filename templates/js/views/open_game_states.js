@@ -32,7 +32,7 @@ window.OpenGameStatesView = BaseView.extend({
 				button_action: function() {
 				  model.set('Members', [
 						{
-							User: btoa(window.session.user.get('Email')),
+							UserId: btoa(window.session.user.get('Email')),
 						}
 					]);
 					if (model.get('AllocationMethod') == 'preferences') {

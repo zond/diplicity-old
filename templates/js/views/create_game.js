@@ -12,7 +12,7 @@ window.CreateGameView = BaseView.extend({
       chatFlags[type] = defaultChatFlags;
 		});
 		var member = {
-		  User: btoa(window.session.user.get('Email')),
+		  UserId: btoa(window.session.user.get('Email')),
 		};
 		this.gameState = new GameState({
 		  Members: [member],

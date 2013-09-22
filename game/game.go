@@ -48,7 +48,7 @@ func DeleteMember(c common.Context, gameId, email string) {
 			return fmt.Errorf("Game not found: %v", err)
 		}
 		member := Member{}
-		if _, err := d.Query().Where(kol.And{kol.Equals{"Game", base64DecodedId}, kol.Equals{"User", []byte(email)}}).First(&member); err != nil {
+		if _, err := d.Query().Where(kol.And{kol.Equals{"GameId", base64DecodedId}, kol.Equals{"UserId", []byte(email)}}).First(&member); err != nil {
 			return err
 		}
 		if !game.Started {
@@ -56,7 +56,7 @@ func DeleteMember(c common.Context, gameId, email string) {
 				return err
 			}
 			left := []Member{}
-			if err := d.Query().Where(kol.Equals{"Game", game.Id}).All(&left); err != nil {
+			if err := d.Query().Where(kol.Equals{"GameId", game.Id}).All(&left); err != nil {
 				return err
 			}
 			if len(left) == 0 {
@@ -84,13 +84,13 @@ func AddMember(c common.Context, j common.JSON, email string) {
 			return fmt.Errorf("Unknown variant %v", game.Variant)
 		}
 		already := []Member{}
-		if err := d.Query().Where(kol.Equals{"Game", state.Game.Id}).All(&already); err != nil {
+		if err := d.Query().Where(kol.Equals{"GameId", state.Game.Id}).All(&already); err != nil {
 			return err
 		}
 		if len(already) < len(variant.Nations) {
 			member := Member{
-				Game:             state.Game.Id,
-				User:             []byte(email),
+				GameId:           state.Game.Id,
+				UserId:           []byte(email),
 				PreferredNations: state.Members[0].PreferredNations,
 			}
 			if err := d.Set(&member); err != nil {
@@ -127,21 +127,21 @@ func Create(c common.Context, j common.JSON, creator string) {
 	}
 
 	member := &Member{
-		User:             []byte(creator),
+		UserId:           []byte(creator),
 		PreferredNations: state.Members[0].PreferredNations,
 	}
 	c.DB().Transact(func(d *kol.DB) error {
 		if err := d.Set(game); err != nil {
 			return err
 		}
-		member.Game = game.Id
+		member.GameId = game.Id
 		return d.Set(member)
 	})
 }
 
 func (self *Game) Updated(d *kol.DB, old *Game) {
 	members := []Member{}
-	if err := d.Query().Where(kol.Equals{"Game", self.Id}).All(&members); err != nil {
+	if err := d.Query().Where(kol.Equals{"GameId", self.Id}).All(&members); err != nil {
 		panic(err)
 	}
 	for _, member := range members {
@@ -150,8 +150,8 @@ func (self *Game) Updated(d *kol.DB, old *Game) {
 }
 
 type Phase struct {
-	Id   []byte
-	Game []byte `kol:"index"`
+	Id     []byte
+	GameId []byte `kol:"index"`
 
 	Season  dip.Season
 	Year    int
@@ -160,7 +160,7 @@ type Phase struct {
 }
 
 func (self *Phase) Updated(d *kol.DB, old *Phase) {
-	g := Game{Id: self.Game}
+	g := Game{Id: self.GameId}
 	if err := d.Get(&g); err != nil {
 		panic(err)
 	}
@@ -182,9 +182,9 @@ func (self Phases) Swap(i, j int) {
 }
 
 type Member struct {
-	Id   []byte
-	User []byte `kol:"index"`
-	Game []byte `kol:"index"`
+	Id     []byte
+	UserId []byte `kol:"index"`
+	GameId []byte `kol:"index"`
 
 	Nation           dip.Nation
 	PreferredNations []dip.Nation
@@ -192,18 +192,37 @@ type Member struct {
 
 type Members []Member
 
-func (self Members) toStates() (result []memberState) {
+func (self Members) toStates(c common.Context, g *Game, email string) (result []memberState) {
 	result = make([]memberState, len(self))
 	for index, member := range self {
 		cpy := member
+		if string(cpy.UserId) != email {
+			cpy.UserId = nil
+			cpy.PreferredNations = nil
+		}
 		result[index] = memberState{Member: &cpy}
+		if !g.SecretEmail || !g.SecretNickname {
+			foundUser := user.User{Id: member.UserId}
+			if err := c.DB().Get(&foundUser); err == nil {
+				result[index].User = &foundUser
+				if !g.SecretEmail {
+					result[index].User.Email = foundUser.Email
+					result[index].User.Id = foundUser.Id
+				}
+				if !g.SecretNickname {
+					result[index].User.Nickname = foundUser.Nickname
+				}
+			} else if err != kol.NotFound {
+				panic(err)
+			}
+		}
 	}
 	return
 }
 
 type memberState struct {
 	*Member
-	UserData *user.User
+	User *user.User
 }
 
 type gameState struct {
@@ -213,7 +232,7 @@ type gameState struct {
 }
 
 func SubscribeCurrent(c common.Context, s *subs.Subscription, email string) {
-	s.Query = s.DB().Query().Where(kol.Equals{"User", []byte(email)})
+	s.Query = s.DB().Query().Where(kol.Equals{"UserId", []byte(email)})
 	s.Call = func(i interface{}, op string) {
 		members := i.([]*Member)
 		states := []gameState{}
@@ -221,21 +240,21 @@ func SubscribeCurrent(c common.Context, s *subs.Subscription, email string) {
 		for _, member := range members {
 			if op == common.DeleteType {
 				states = append(states, gameState{
-					Game:    &Game{Id: member.Game},
+					Game:    &Game{Id: member.GameId},
 					Members: []memberState{memberState{Member: member}},
 				})
 			} else {
-				game := &Game{Id: member.Game}
+				game := &Game{Id: member.GameId}
 				if err := s.DB().Get(game); err != nil {
 					panic(err)
 				}
 				gameMembers := Members{}
-				if err := s.DB().Query().Where(kol.Equals{"Game", game.Id}).All(&gameMembers); err != nil {
+				if err := s.DB().Query().Where(kol.Equals{"GameId", game.Id}).All(&gameMembers); err != nil {
 					panic(err)
 				}
 				if !game.Ended {
 					phases = nil
-					if err := s.DB().Query().Where(kol.Equals{"Game", game.Id}).All(&phases); err != nil {
+					if err := s.DB().Query().Where(kol.Equals{"GameId", game.Id}).All(&phases); err != nil {
 						panic(err)
 					}
 					phase := &Phase{}
@@ -247,7 +266,7 @@ func SubscribeCurrent(c common.Context, s *subs.Subscription, email string) {
 					}
 					states = append(states, gameState{
 						Game:    game,
-						Members: gameMembers.toStates(),
+						Members: gameMembers.toStates(c, game, email),
 						Phase:   phase,
 					})
 				}
@@ -267,18 +286,18 @@ func SubscribeOpen(c common.Context, s *subs.Subscription, email string) {
 		isMember := false
 		for _, game := range games {
 			members := Members{}
-			if err := s.DB().Query().Where(kol.Equals{"Game", game.Id}).All(&members); err != nil {
+			if err := s.DB().Query().Where(kol.Equals{"GameId", game.Id}).All(&members); err != nil {
 				panic(err)
 			}
 			isMember = false
 			for _, m := range members {
-				if string(m.User) == email {
+				if string(m.UserId) == email {
 					isMember = true
 				}
 			}
 			if !isMember {
 				phases = nil
-				if err := s.DB().Query().Where(kol.Equals{"Game", game.Id}).All(&phases); err != nil {
+				if err := s.DB().Query().Where(kol.Equals{"GameId", game.Id}).All(&phases); err != nil {
 					panic(err)
 				}
 				phase := &Phase{}
@@ -290,7 +309,7 @@ func SubscribeOpen(c common.Context, s *subs.Subscription, email string) {
 				}
 				states = append(states, gameState{
 					Game:    game,
-					Members: members.toStates(),
+					Members: members.toStates(c, game, email),
 					Phase:   phase,
 				})
 			}

@@ -7,7 +7,7 @@ window.GameState = Backbone.Model.extend({
 		  return null;
 		}
 	  return _.find(this.get('Members'), function(member) {
-		  return member.User == btoa(window.session.user.get('Email'));
+		  return member.UserId == btoa(window.session.user.get('Email'));
 		});
 	},
 
