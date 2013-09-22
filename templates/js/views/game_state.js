@@ -25,10 +25,12 @@ window.GameStateView = BaseView.extend({
 
 	changeAllocationMethod: function(ev) {
 	  this.model.set('AllocationMethod', $(ev.target).val());
+		this.update();
 	},
 
   changePrivate: function(ev) {
 	  this.model.set('Private', $(ev.target).val() == 'true');
+		this.update();
 	},
 
   changeSecretEmail: function(ev) {
@@ -41,6 +43,10 @@ window.GameStateView = BaseView.extend({
 
   changeSecretNation: function(ev) {
 	  this.model.set('SecretNation', $(ev.target).val() == 'true');
+	},
+
+	update: function() {
+	  this.$('.description').text(this.model.describe());
 	},
 
   render: function() {
