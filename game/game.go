@@ -222,6 +222,22 @@ type Member struct {
 	PreferredNations []dip.Nation
 }
 
+func (self *Member) Deleted(d *kol.DB) {
+	g := Game{Id: self.GameId}
+	if err := d.Get(&g); err != nil {
+		panic(err)
+	}
+	d.EmitUpdate(&g)
+}
+
+func (self *Member) Created(d *kol.DB) {
+	g := Game{Id: self.GameId}
+	if err := d.Get(&g); err != nil {
+		panic(err)
+	}
+	d.EmitUpdate(&g)
+}
+
 type Members []Member
 
 func (self Members) toStates(c common.Context, g *Game, email string) (result []MemberState) {

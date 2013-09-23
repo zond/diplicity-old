@@ -33,6 +33,7 @@ window.OpenGameStatesView = BaseView.extend({
 				  model.set('Members', [
 						{
 							UserId: btoa(window.session.user.get('Email')),
+							User: {},
 						}
 					]);
 					if (model.get('AllocationMethod') == 'preferences') {
@@ -48,10 +49,8 @@ window.OpenGameStatesView = BaseView.extend({
 					}
 				},
 			}).doRender();
-			memberView.$el.attr('data-role', 'collapsible');
 			that.$el.append(memberView.el);
 		});
-		that.$el.trigger('pagecreate');
 		return that;
 	},
 

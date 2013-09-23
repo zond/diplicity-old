@@ -16,6 +16,7 @@ window.GameStateView = BaseView.extend({
 		this.button_text = options.button_text;
 		this.button_action = options.button_action;
 		this.editable = options.editable;
+		this.listenTo(this.model, 'change', this.doRender);
 	},
 
   buttonAction: function(ev) {
@@ -82,6 +83,13 @@ window.GameStateView = BaseView.extend({
 			  member: member,
 			}).doRender().el);
 		});
+		if (!that.editable) {
+			that.$el.attr('data-role', 'collapsible');
+		}
+		try {
+			that.$el.collapsibleset("refresh");
+		} catch (e) {
+		}
 		return that;
 	},
 

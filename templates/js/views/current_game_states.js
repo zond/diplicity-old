@@ -26,7 +26,6 @@ window.CurrentGameStatesView = BaseView.extend({
 					model.destroy();
 				},
 			}).doRender();
-			memberView.$el.attr('data-role', 'collapsible');
 			that.$el.append(memberView.el);
 		});
 		return that;
