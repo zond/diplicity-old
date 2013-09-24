@@ -18,15 +18,15 @@ window.CurrentGameStatesView = BaseView.extend({
 		  user: window.session.user,
 		}));
 		this.collection.forEach(function(model) {
-		  var memberView = new GameStateView({ 
+		  that.$('#current_games').append(new GameStateView({ 
 				model: model,
+				parentId: "current_games",
 				editable: false,
 				button_text: '{{.I "Leave" }}',
 				button_action: function() {
 					model.destroy();
 				},
-			}).doRender();
-			that.$el.append(memberView.el);
+			}).doRender().el);
 		});
 		return that;
 	},

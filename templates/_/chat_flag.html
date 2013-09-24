@@ -1,0 +1,2 @@
+<input <%= gameState.get('ChatFlags')[phaseType] != null && (gameState.get('ChatFlags')[phaseType] & opt.id) == opt.id ? 'checked="checked" ' : '' %>class="chat-flag" type="checkbox" id="<%- gameState.get('Id') %>_<%- phaseType %>_<%- opt.id %>">
+<label for="<%- gameState.get('Id') %>_<%- phaseType %>_<%- opt.id %>"><%- opt.name %></label>

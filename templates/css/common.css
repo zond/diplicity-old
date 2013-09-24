@@ -1,5 +1,12 @@
-.game-toggle .ui-slider-switch { 
-	width: 12em;
+.panel-group {
+	margin-bottom: 4px;
+}
+ul.game-players {
+	margin-bottom: 0px;
+}
+body { 
+	padding-top: 65px; 
+	padding-bottom: 65px;
 }
 .map-container {
 	width: 100%;
@@ -12,7 +19,3 @@
 	left: 0;
 	top: 0;
 }
-.jqmText{
-	text-align: center;
-}
-

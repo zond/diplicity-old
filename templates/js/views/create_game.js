@@ -13,7 +13,8 @@ window.CreateGameView = BaseView.extend({
 		});
 		var member = {
 		  UserId: btoa(window.session.user.get('Email')),
-			User: {},
+			User: {
+			},
 		};
 		this.gameState = new GameState({
 		  Members: [member],
@@ -23,11 +24,13 @@ window.CreateGameView = BaseView.extend({
 			ChatFlags: chatFlags,
 			AllocationMethod: defaultAllocationMethod,
 		});
+		console.log(this.gameState);
 		this.gameState.url = '/games';
 	},
 
   render: function() {
 		var that = this;
+		that.gameState.get('Members')[0].User = window.session.user.attributes;
 		that.$el.html(that.template({
 		  user: window.session.user,
 		}));
@@ -39,8 +42,8 @@ window.CreateGameView = BaseView.extend({
 					},
 				});
 			};
-			new GameStateView({ 
-				el: that.$('.create-game'),
+			var state_view = new GameStateView({ 
+				parentId: 'create_game',
 				editable: true,
 				model: that.gameState,
 				button_text: '{{.I "Create" }}',
@@ -58,6 +61,7 @@ window.CreateGameView = BaseView.extend({
 					}
 				},
 			}).doRender();
+			that.$('#create_game').append(state_view.el);
 		}
 		return that;
 	},

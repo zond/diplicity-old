@@ -2,7 +2,12 @@ package translation
 
 var en = map[string]string{
 	"White press":       "White press",
+	"Anonymous":         "Anonymous",
+	"Deadline":          "Deadline",
+	"Yes":               "Yes",
+	"No":                "No",
 	"Members":           "Members",
+	"Toggle navigation": "Toggle navigation",
 	"members":           "members",
 	"Players":           "Players",
 	"players":           "players",
@@ -58,6 +63,7 @@ var en = map[string]string{
 	"Undecided":                "Undecided",
 	"Diplicity":                "Diplicity",
 	"Menu":                     "Menu",
+	"Logout {0}":               "Logout {0}",
 	"Logout":                   "Logout",
 	"Login":                    "Login",
 	"nations":                  "{'Austria': 'Austria', 'England': 'England', 'France': 'France', 'Germany': 'Germany', 'Italy': 'Italy', 'Russia': 'Russia', 'Turkey': 'Turkey'}",

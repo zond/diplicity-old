@@ -1,1 +1,7 @@
-<h3><%- member.User.Nickname == "" ? "" : member.User.Nickname %><%= member.User.Email == "" ? "" : "&lt;" %><%- member.User.Email %><%= member.User.Email == "" ? "" : "&gt;" %></h3>
+<% if (member.User.Nickname == "" && member.User.Email == "") { %>
+"{{.I "Anonymous" }}"
+<% } else if (member.User.Nickname == "" && member.User.Email != "") { %>
+&lt;<%- member.User.Email %>&gt;
+<% } else { %>
+<%- member.User.Nickname %> &lt;<%- member.User.Email %>&gt;
+<% } %>

@@ -413,6 +413,23 @@ deadlineOptions = [
 	{ value: 20160, name: '{{.I "2 weeks" }}' },
 ];
 
+function deadlineName(value) {
+  var found = _.find(deadlineOptions, function(opt) {
+	  return opt.value == value;
+	});
+	if (found != null) {
+	  return found.name;
+	} else {
+	  return '';
+	}
+};
+
+function navigate(to) {
+	window.session.router.navigate(to, { trigger: true });
+	window.session.bottom_navigation.$('li').removeClass('active');
+	window.session.bottom_navigation.$('li[data-href="' + to + '"]').addClass('active');
+}
+
 window.BaseView = Backbone.View.extend({
  
 	chain: [],
@@ -436,17 +453,9 @@ window.BaseView = Backbone.View.extend({
 		this.$('a.navigate').each(function(ind, el) {
 			$(el).bind('click', function(ev) {
 				ev.preventDefault();
-				window.session.router.navigate($(el).attr('href'), { trigger: true });
+				navigate($(el).attr('href'));
 			});
 		});	
-	},
-
-	createJQM: function() {
-		if (this.$el.attr('data-role') == 'page') {
-			this.$el.trigger('pagecreate');
-		} else {
-			this.$el.trigger('create');
-		}
 	},
 
 	doRender: function() {
@@ -467,7 +476,6 @@ window.BaseView = Backbone.View.extend({
 		this.render();
 		this.chain.pop();
 		this.fixNavigateLinks();
-		this.createJQM();
 		return this;
 	},
 

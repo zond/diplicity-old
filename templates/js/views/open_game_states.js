@@ -25,7 +25,7 @@ window.OpenGameStatesView = BaseView.extend({
 					},
 				});
 			};
-		  var memberView = new GameStateView({ 
+		  var stateView = new GameStateView({ 
 				model: model,
 				editable: false,
 				button_text: '{{.I "Join" }}',
@@ -49,7 +49,7 @@ window.OpenGameStatesView = BaseView.extend({
 					}
 				},
 			}).doRender();
-			that.$el.append(memberView.el);
+			that.$el.append(stateView.el);
 		});
 		return that;
 	},

@@ -19,29 +19,31 @@ $(window).load(function() {
 
 			game: function() {
 				new GameView({
-					el: $('#main'),
+					el: $('#content'),
 				}).doRender();
 			},
 
 			menu: function() {
-				new MenuView({ el: $('#main') }).doRender();
+				new MenuView({ 
+					el: $('#content'),
+				}).doRender();
 			},
 
 			createGame: function() {
 				new CreateGameView({ 
-					el: $('#main'),
+					el: $('#content'),
 				}).doRender();
 			},
 
 			currentGames: function() {
 				new CurrentGameStatesView({ 
-					el: $('#main'),
+					el: $('#content'),
 				}).doRender();
 			},
 
 			openGames: function() {
 				new OpenGameStatesView({ 
-					el: $('#main'),
+					el: $('#content'),
 				}).doRender();
 			},
 		});
@@ -52,7 +54,14 @@ $(window).load(function() {
 		});
 		window.session.user.fetch();
 
-		window.session.router.navigate(Backbone.history.fragment || '');
+		new TopNavigationView({
+		  el: $('#top_navigation'),
+		}).doRender();
+		window.session.bottom_navigation = new BottomNavigationView({
+		  el: $('#bottom_navigation'),
+		}).doRender();
+
+    navigate(Backbone.history.fragment || '/');
 	};
   wsBackbone(url, start);
 

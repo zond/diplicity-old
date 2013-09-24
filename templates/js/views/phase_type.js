@@ -2,65 +2,64 @@ window.PhaseTypeView = BaseView.extend({
 
   template: _.template($('#phase_type_underscore').html()),
 
-  me: new Date().getTime(),
+	className: "panel panel-default",
 
 	events: {
-		"change select.deadline": "changeDeadline",
-		"change input.chat-flag": "changeChatFlag",
+		"change .phase-deadlines": "changeDeadline",
+		"hide.bs.collapse .phase": "collapse",
+		"show.bs.collapse .phase": "expand",
 	},
 
 	initialize: function(options) {
-	  _.bindAll(this, 'doRender', 'update');
+	  _.bindAll(this, 'doRender');
+		this.parentId = options.parentId;
+		this.parent = options.parent;
 		this.phaseType = options.phaseType;
 		this.editable = options.editable;
 		this.gameState = options.gameState;
+		this.expanded = false;
+	},
+
+	collapse: function(ev) {
+	  this.expanded = false;
+	},
+
+	expand: function(ev) {
+	  this.expanded = true;
 	},
 
 	changeDeadline: function(ev) {
 		this.gameState.get('Deadlines')[this.phaseType] = parseInt($(ev.target).val()); 
-		this.update();
-	},
-
-  update: function() {
-	  var that = this;
-		var desc = [];
-		for (var i = 0; i < deadlineOptions.length; i++) { 
-		  var opt = deadlineOptions[i];
-		  if (opt.value == that.gameState.get('Deadlines')[that.phaseType]) {
-			  desc.push(opt.name);
-				that.$('.deadline').val('' + opt.value);
-			}
-		} 
-		for (var i = 0; i < chatFlagOptions().length; i++) {
-			var opt = chatFlagOptions()[i];
-			if ((opt.id & that.gameState.get('ChatFlags')[that.phaseType]) != 0) {
-			  desc.push(opt.name);
-				that.$('input[type=checkbox][data-chat-flag=' + opt.id + ']').attr('checked', 'checked');
-			} else {
-				that.$('input[type=checkbox][data-chat-flag=' + opt.id + ']').removeAttr('checked');
-			}
-		}
-		that.$('.desc').text(desc.join(", "));
-		that.$('select.deadline').val(that.gameState.get('Deadlines')[that.phaseType]);
-	},
-
-	changeChatFlag: function(ev) {
-	  if ($(ev.target).is(":checked")) {
-			this.gameState.get('ChatFlags')[this.phaseType] |= parseInt($(ev.target).attr('data-chat-flag'));
-		} else {
-			this.gameState.get('ChatFlags')[this.phaseType] = this.gameState.get('ChatFlags')[this.phaseType] & (~parseInt($(ev.target).attr('data-chat-flag')));
-		}
-		this.update();
+		this.doRender();
+		this.parent.updateDescription();
 	},
 
   render: function() {
-		this.$el.html(this.template({
-		  editable: this.editable,
-		  me: this.me,
-		  phaseType: this.phaseType,
+	  var that = this;
+		that.$el.html(that.template({
+		  editable: that.editable,
+			parentId: that.parentId,
+		  me: that.me,
+			gameState: that.gameState,
+		  phaseType: that.phaseType,
+			expanded: that.expanded,
 		}));
-		this.update();
-		return this;
+		_.each(deadlineOptions, function(opt) {
+		  if (that.gameState.get('Deadlines')[that.phaseType] != null && that.gameState.get('Deadlines')[that.phaseType] == opt.value) {
+				that.$('.phase-deadlines').append('<option value="{0}" selected="selected">{1}</option>'.format(opt.value, opt.name));
+			} else {
+				that.$('.phase-deadlines').append('<option value="{0}">{1}</option>'.format(opt.value, opt.name));
+			}
+		});
+		_.each(chatFlagOptions(), function(opt) {
+			that.$('form').append(new ChatFlagView({
+			  parent: that,
+				gameState: that.gameState,
+				phaseType: that.phaseType,
+				opt: opt,
+			}).doRender().el);
+		});
+		return that;
 	},
 
 });

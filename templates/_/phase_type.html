@@ -1,18 +1,20 @@
-<div<%= editable ? ' data-role="collapsible"' :'' %>>
-	<h3><%- {{.I "phase_types" }}[phaseType] %>: <span class="desc"></span></h3>
-	<% if (editable) { %>
-	<select class="deadline"<%= editable ? '' : ' disabled="disabled"' %>>
-		<% for (var i = 0; i < deadlineOptions.length; i++) { %>
-		<%   var opt = deadlineOptions[i]; %>
-		<option value="<%= opt.value %>"><%- opt.name %></option>
+<div class="panel-heading">
+	<h4 class="panel-title">
+		<a class="accordion-toggle phase-description" data-toggle="collapse" data-parent="#<%- parentId %>" href="#<%- gameState.get('Id') %>_<%- phaseType %>">
+			<span class="glyphicon glyphicon-chevron-down"></span> <%- phaseType %>: <%- gameState.describePhaseType(phaseType) %>
+		</a>
+	</h4>
+</div>
+<div id="<%- gameState.get('Id') %>_<%- phaseType %>" class="phase panel-collapse collapse<%- expanded ? ' in' : '' %>">
+	<div class="panel-body">
+		<% if (editable) { %>
+		<form role="form">
+			<div class="form-group">
+				<label for="<%- gameState.get('Id') %>_<%- phaseType %>_deadline">{{.I "Deadline" }}</label>
+				<select id="<%- gameState.get('Id') %>_<%- phaseType %>_deadline" class="form-control phase-deadlines">
+				</select>	
+			</div>
+		</form>
 		<% } %>
-	</select>
-	<fieldset data-role="controlgroup">
-		<% for (var i = 0; i < chatFlagOptions().length; i++) { %>
-		<%  var opt = chatFlagOptions()[i]; %>
-		<input id="<%- me %>.<%- opt.id %>"<%= editable ? '' : ' disabled="disabled"' %> class="chat-flag" data-chat-flag="<%- opt.id %>" type="checkbox">
-		<label for="<%- me %>.<%- opt.id %>"><%- opt.name %></label>
-		<% } %>
-	</fieldset>
-	<% } %>
+	</div>
 </div>

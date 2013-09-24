@@ -2,13 +2,18 @@ window.GameStateView = BaseView.extend({
 
   template: _.template($('#game_state_underscore').html()),
 
+	className: "panel panel-default",
+
   events: {
-		"change .game-private": "changePrivate",
-		"change .game-secret-email": "changeSecretEmail",
-		"change .game-secret-nickname": "changeSecretNickname",
-		"change .game-secret-nation": "changeSecretNation",
-    "click .game-member-button": "buttonAction",
-		"change select.create-game-allocation-method": "changeAllocationMethod",
+		"click .game-private": "changePrivate",
+		"click .game-secret-email": "changeSecretEmail",
+		"click .game-secret-nickname": "changeSecretNickname",
+		"click .game-secret-nation": "changeSecretNation",
+    "click .game-state-button": "buttonAction",
+		"change .game-allocation-method": "changeAllocationMethod",
+		"change .game-variant": "changeVariant",
+		"hide.bs.collapse .game": "collapse",
+		"show.bs.collapse .game": "expand",
 	},
 
 	initialize: function(options) {
@@ -16,7 +21,17 @@ window.GameStateView = BaseView.extend({
 		this.button_text = options.button_text;
 		this.button_action = options.button_action;
 		this.editable = options.editable;
+		this.expanded = this.editable;
+		this.parentId = options.parentId;
 		this.listenTo(this.model, 'change', this.doRender);
+	},
+
+	collapse: function(ev) {
+	  this.expanded = false;
+	},
+
+	expand: function(ev) {
+	  this.expanded = true;
 	},
 
   buttonAction: function(ev) {
@@ -24,72 +39,84 @@ window.GameStateView = BaseView.extend({
 		this.button_action();
 	},
 
+	changeVariant: function(ev) {
+	  this.model.set('Variant', $(ev.target).val(), { silent: true });
+		this.updateDescription();
+	},
+
 	changeAllocationMethod: function(ev) {
-	  this.model.set('AllocationMethod', $(ev.target).val());
-		this.update();
+	  this.model.set('AllocationMethod', $(ev.target).val(), { silent: true });
+		this.updateDescription();
 	},
 
   changePrivate: function(ev) {
-	  this.model.set('Private', $(ev.target).val() == 'true');
-		this.update();
+	  this.model.set('Private', $(ev.target).val() == 'true', { silent: true });
+		this.updateDescription();
 	},
 
   changeSecretEmail: function(ev) {
-	  this.model.set('SecretEmail', $(ev.target).val() == 'true');
+	  this.model.set('SecretEmail', $(ev.target).val() == 'true', { silent: true });
+		this.updateDescription();
 	},
 
   changeSecretNickname: function(ev) {
-	  this.model.set('SecretNickname', $(ev.target).val() == 'true');
+	  this.model.set('SecretNickname', $(ev.target).val() == 'true', { silent: true });
+		this.updateDescription();
 	},
 
   changeSecretNation: function(ev) {
-	  this.model.set('SecretNation', $(ev.target).val() == 'true');
+	  this.model.set('SecretNation', $(ev.target).val() == 'true', { silent: true });
+		this.updateDescription();
 	},
 
-	update: function() {
-	  this.$('.description').text(this.model.describe());
+	updateDescription: function() {
+    this.$('.game-description').text(this.model.describe());
 	},
 
   render: function() {
 	  var that = this;
+		var classes = [];
+		if (!that.editable) {
+		  classes.push('panel-collapse');
+			classes.push('collapse');
+		}
+		if (that.expanded) {
+		  classes.push('in');
+		}
     that.$el.html(that.template({
+		  classes: classes,
+		  parentId: that.parentId,
 		  model: that.model,
 			editable: that.editable,
 			button_text: that.button_text,
 		}));
 		_.each(variants(), function(variant) {
-		  if (variant.id == that.model.get('Variant')) {
-				that.$('select.create-game-variant').append('<option value="{0}" selected="selected">{{.I "Variant"}}: {1}</option>'.format(variant.id, variant.name));
-			} else {
-				that.$('select.create-game-variant').append('<option value="{0}">{{.I "Variant"}}: {1}</option>'.format(variant.id, variant.name));
-			}
+			that.$('.game-variant').append('<option value="{0}">{1}</option>'.format(variant.id, variant.name));
 		});
+		that.$('.game-variant').val(that.model.get('Variant'));
 		_.each(allocationMethods(), function(meth) {
-		  if (meth.id == that.model.get('AllocationMethod')) {
-				that.$('select.create-game-allocation-method').append('<option value="{0}" selected="selected">{{.I "Allocation method"}}: {1}</option>'.format(meth.id, meth.name));
-			} else {
-				that.$('select.create-game-allocation-method').append('<option value="{0}">{{.I "Allocation method"}}: {1}</option>'.format(meth.id, meth.name));
-			}
+			that.$('.game-allocation-method').append('<option value="{0}">{1}</option>'.format(meth.id, meth.name));
 		});
-		_.each(phaseTypes(that.model.get('Variant')), function(type) {
-			that.$('.phase-types').append(new PhaseTypeView({
-				phaseType: type,
-				editable: that.editable,
-				gameState: that.model,
-			}).doRender().el);
+		that.$('.game-allocation-method').val(that.model.get('AllocationMethod'));
+		_.each(phaseTypes(that.model.get('Variant')), function(phaseType) {
+			if (that.editable) {
+				that.$('.phase-types').append(new PhaseTypeView({
+				  parent: that,
+					phaseType: phaseType,
+					parentId: (that.model.get('Id') || '') + '_phase_types',
+					editable: that.editable,
+					gameState: that.model,
+				}).doRender().el);
+			} else {
+				that.$('.phase-types').prepend('<tr><td>' + phaseType + '</td><td>' + that.model.describePhaseType(phaseType) + '</td></tr>');
+			}
 		});
 		_.each(that.model.get('Members'), function(member) {
-		  that.$('.member-list').append(new GameMemberView({
+		  console.log('member', member);
+		  that.$('.game-players').append(new GameMemberView({
 			  member: member,
 			}).doRender().el);
 		});
-		if (!that.editable) {
-			that.$el.attr('data-role', 'collapsible');
-		}
-		try {
-			that.$el.collapsibleset("refresh");
-		} catch (e) {
-		}
 		return that;
 	},
 

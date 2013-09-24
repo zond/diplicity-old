@@ -164,6 +164,8 @@ func (self *Web) HandleStatic(router *mux.Router, dir string) {
 				w.Header().Set("Content-Type", "image/png")
 			} else if strings.HasSuffix(r.URL.Path, ".gif") {
 				w.Header().Set("Content-Type", "image/gif")
+			} else if strings.HasSuffix(r.URL.Path, ".woff") {
+				w.Header().Set("Content-Type", "application/font-woff")
 			} else {
 				w.Header().Set("Content-Type", "application/octet-stream")
 			}

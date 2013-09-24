@@ -1,51 +1,86 @@
-<h3 class="description"><%- model.describe() %></h3>
-<% if (editable) { %>
-<select class="create-game-variant">
-</select>
-<select class="create-game-allocation-method">
-</select>
-<% } else { %>
-<%   if (!model.get('SecretEmail') || !model.get('SecretNickname')) { %>
-<div data-role="collapsible" class="member-list">
-	<h3><%- '{{.I "{0}/{1} players" }}'.format(model.get('Members').length, variantNations(model.get('Variant')).length ) %></h3>
+<div class="panel-heading">
+	<h4 class="panel-title">
+		<a class="accordion-toggle game-description" data-toggle="collapse" data-parent="#<%- parentId %>" href="#<%- model.get('Id') %>">
+			<%= editable ? '' : '<span class="glyphicon glyphicon-chevron-down"></span> ' %><%- model.describe() %>
+		</a>
+	</h4>
 </div>
-<%   } else { %>
-<h3><%- '{{.I "{0}/{1} players" }}'.format(model.get('Members').length, variantNations(model.get('Variant')).length ) %></h3>
-<%   } %>
-<% } %>
-<h3>{{.I "Variant" }}: <%- variantName(model.get('Variant')) %></h3>
-<h3>{{.I "Allocation method" }}: <%- allocationMethodName(model.get('AllocationMethod')) %><%- (model.me() != null && model.me().PreferredNations != null) ? ': ' + model.me().PreferredNations.join(', ') : '' %></h3>
-<div data-role="collapsible-set" class="phase-types">
+<div id="<%- model.get('Id') %>" class="game <%= classes.join(" ") %>">
+	<div class="panel-body">
+		<div class="panel-group">
+			<div class="panel panel-default">
+				<div class="panel-heading">
+					<h4 class="panel-title">
+						<a class="accordion-toggle" data-toggle="collapse" href="#<%- model.get('Id') %>_players">
+							<span class="glyphicon glyphicon-chevron-down"></span> <%- '{{.I "{0}/{1} players" }}'.format(model.get('Members').length, variantNations(model.get('Variant')).length) %>
+						</a>
+					</h4>
+				</div>
+				<div id="<%- model.get('Id') %>_players" class="panel-collapse collapse">
+					<ul class="list-group game-players">
+					</ul>
+				</div>
+			</div>
+		</div>
+		<% if (editable) { %>
+		<div class="panel-group phase-types" id="<%- model.get('Id') %>_phase_types">
+		</div>
+		<form role="form">
+			<div class="form-group">
+				<label for="<%- model.get('Id') %>_variant">{{.I "Variant" }}</label>
+				<select id="<%- model.get('Id') %>_variant" class="form-control game-variant">
+				</select>	
+			</div>
+			<div class="form-group">
+				<label for="<%- model.get('Id') %>_allocation_method">{{.I "Allocation method" }}</label>
+				<select id="<%- model.get('Id') %>_allocation_method" class="form-control game-allocation-method">
+				</select>	
+			</div>
+			<div class="form-group">
+				<input <%= model.get('Private') ? 'checked="checked" ' : '' %>type="checkbox" id="<%- model.get('Id') %>_private" class="game_private">
+				<label for="<%- model.get('Id') %>_private">{{.I "Private" }}</label>
+			</div>
+			<div class="form-group">
+				<input <%= model.get('SecretEmail') ? 'checked="checked" ' : '' %>type="checkbox" id="<%- model.get('Id') %>_secret_email" class="game_secret_email">
+				<label for="<%- model.get('Id') %>_secret_email">{{.I "Secret email" }}</label>
+			</div>
+			<div class="form-group">
+				<input <%= model.get('SecretNickname') ? 'checked="checked" ' : '' %>type="checkbox" id="<%- model.get('Id') %>_secret_nickname" class="game_secret_nickname">
+				<label for="<%- model.get('Id') %>_secret_nickname">{{.I "Secret nickname" }}</label>
+			</div>
+			<div class="form-group">
+				<input <%= model.get('SecretNation') ? 'checked="checked" ' : '' %>type="checkbox" id="<%- model.get('Id') %>_secret_nation" class="game_secret_nation">
+				<label for="<%- model.get('Id') %>_secret_nation">{{.I "Secret nation" }}</label>
+			</div>
+		</form>
+		<% } else { %>
+		<table class="table table-condensed phase-types">
+			<tr>
+				<td>{{.I "Variant"}}</td>
+				<td><%- variantName(model.get('Variant')) %></td>
+			</tr>
+			<tr>
+				<td>{{.I "Allocation method"}}</td>
+				<td><%- allocationMethodName(model.get('AllocationMethod')) %></td>
+			</tr>
+			<tr>
+				<td>{{.I "Public"}}</td>
+				<td><%- model.get('Private') ? '{{.I "No" }}' : '{{.I "Yes" }}' %></td>
+			</tr>
+			<tr>
+				<td>{{.I "Secret email"}}</td>
+				<td><%- model.get('SecretEmail') ? '{{.I "Yes" }}' : '{{.I "No" }}' %></td>
+			</tr>
+			<tr>
+				<td>{{.I "Secret nickname"}}</td>
+				<td><%- model.get('SecretNickname') ? '{{.I "Yes" }}' : '{{.I "No" }}' %></td>
+			</tr>
+			<tr>
+				<td>{{.I "Secret nation"}}</td>
+				<td><%- model.get('SecretNation') ? '{{.I "Yes" }}' : '{{.I "No" }}' %></td>
+			</tr>
+		</table>
+		<% } %>
+		<button type="button" class="btn btn-primary btn-lg btn-block game-state-button"><%- button_text %></button>
+	</div>
 </div>
-<% if (editable) { %>
-<div class="game-toggle">
-	<select data-role="slider" class="game-private"<%= editable ? '' : ' disabled="disabled"' %>>
-		<option value="false">{{.I "Public game" }}</option>
-		<option value="true">{{.I "Private game" }}</option>
-	</select>
-</div>
-<div class="game-toggle">
-	<select data-role="slider" class="game-secret-email"<%= editable ? '' : ' disabled="disabled"' %>>
-		<option value="false">{{.I "Public email" }}</option>
-		<option value="true">{{.I "Secret email" }}</option>
-	</select>
-</div>
-<div class="game-toggle">
-	<select data-role="slider" class="game-secret-nickname"<%= editable ? '' : ' disabled="disabled"' %>>
-		<option value="false">{{.I "Public nickname" }}</option>
-		<option value="true">{{.I "Secret nickname" }}</option>
-	</select>
-</div>
-<div class="game-toggle">
-	<select data-role="slider" class="game-secret-nation"<%= editable ? '' : ' disabled="disabled"' %>>
-		<option value="false">{{.I "Public nation" }}</option>
-		<option value="true">{{.I "Secret nation" }}</option>
-	</select>
-</div>
-<% } else { %>
-<h3><%- model.get('Private') ? '{{.I "Private game" }}' : '{{.I "Public game" }}' %></h3>
-<h3><%- model.get('SecretEmail') ? '{{.I "Secret email" }}' : '{{.I "Public email" }}' %></h3>
-<h3><%- model.get('SecretNickname') ? '{{.I "Secret nickname" }}' : '{{.I "Public nickname" }}' %></h3>
-<h3><%- model.get('SecretNation') ? '{{.I "Secret nation" }}' : '{{.I "Public nation" }}' %></h3>
-<% } %>
-<a href="#" class="game-member-button" data-role="button"><%- button_text %></a>
