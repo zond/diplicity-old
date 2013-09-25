@@ -427,9 +427,11 @@ function deadlineName(value) {
 function navigate(to) {
   console.log('navigating to', to);
 	window.session.router.navigate(to, { trigger: true });
-	window.session.bottom_navigation.$('li').removeClass('active');
-	window.session.bottom_navigation.$('li[data-href="' + to + '"]').addClass('active');
-	window.session.bottom_navigation.$('li[data-href="/' + to + '"]').addClass('active');
+	window.session.bottom_navigation.$('a').removeClass('btn-primary');
+	window.session.bottom_navigation.$('a[href="' + to + '"]').addClass('btn-primary');
+	window.session.bottom_navigation.$('a[href="/' + to + '"]').addClass('btn-primary');
+	$('body').css({'margin-top': (($('.navbar-fixed-top').height()) + 1 )+'px'});
+	$('body').css({'margin-bottom': (($('.navbar-fixed-bottom').height()) + 1 )+'px'});
 }
 
 window.BaseView = Backbone.View.extend({
