@@ -21,12 +21,13 @@ window.OpenGameStatesView = BaseView.extend({
 		  var save_call = function() {
 				model.save(null, {
 					success: function() {
-						window.session.router.navigate('', { trigger: true });
+						navigate('/');
 					},
 				});
 			};
 		  var stateView = new GameStateView({ 
 				model: model,
+				parentId: 'open_games',
 				editable: false,
 				button_text: '{{.I "Join" }}',
 				button_action: function() {

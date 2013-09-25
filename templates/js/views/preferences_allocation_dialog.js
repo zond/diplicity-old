@@ -23,7 +23,6 @@ window.PreferencesAllocationDialogView = BaseView.extend({
 	},
 
 	clickDone: function() {
-	  console.log('callDone!');
 	  this.doneCalled = true;
 		this.$el.modal('hide');
 	},

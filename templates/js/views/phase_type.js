@@ -21,12 +21,10 @@ window.PhaseTypeView = BaseView.extend({
 	},
 
 	collapse: function(ev) {
-	  console.log('collapsed', this.phaseType);
 	  this.expanded = false;
 	},
 
 	expand: function(ev) {
-	  console.log('expanded', this.phaseType);
 	  this.expanded = true;
 	},
 

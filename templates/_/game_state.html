@@ -1,6 +1,5 @@
 <div class="panel-heading">
 	<h4 class="panel-title">
-		<% console.log(model) %>
 		<a class="accordion-toggle game-description" data-toggle="collapse" data-parent="#<%- parentId %>" href="#game_<%- model.cid %>">
 			<%= editable ? '' : '<span class="glyphicon glyphicon-chevron-down"></span> ' %><%- model.describe() %>
 		</a>

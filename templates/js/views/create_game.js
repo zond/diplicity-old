@@ -28,7 +28,6 @@ window.CreateGameView = BaseView.extend({
 	},
 
   render: function() {
-	  console.log('rendering create');
 		var that = this;
 		that.gameState.get('Members')[0].User = window.session.user.attributes;
 		that.$el.html(that.template({
@@ -38,7 +37,7 @@ window.CreateGameView = BaseView.extend({
 		  var save_call = function() {
 				that.gameState.save(null, {
 					success: function() {
-						window.session.router.navigate('', { trigger: true });
+						navigate('/');
 					},
 				});
 			};
