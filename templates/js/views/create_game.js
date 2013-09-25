@@ -24,11 +24,11 @@ window.CreateGameView = BaseView.extend({
 			ChatFlags: chatFlags,
 			AllocationMethod: defaultAllocationMethod,
 		});
-		console.log(this.gameState);
 		this.gameState.url = '/games';
 	},
 
   render: function() {
+	  console.log('rendering create');
 		var that = this;
 		that.gameState.get('Members')[0].User = window.session.user.attributes;
 		that.$el.html(that.template({

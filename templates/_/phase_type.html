@@ -1,17 +1,17 @@
 <div class="panel-heading">
 	<h4 class="panel-title">
-		<a class="accordion-toggle phase-description" data-toggle="collapse" data-parent="#<%- parentId %>" href="#<%- gameState.get('Id') %>_<%- phaseType %>">
+		<a class="accordion-toggle phase-description" data-toggle="collapse" data-parent="#<%- parentId %>" href="#game_<%- gameState.cid %>_<%- phaseType %>">
 			<span class="glyphicon glyphicon-chevron-down"></span> <%- phaseType %>: <%- gameState.describePhaseType(phaseType) %>
 		</a>
 	</h4>
 </div>
-<div id="<%- gameState.get('Id') %>_<%- phaseType %>" class="phase panel-collapse collapse<%- expanded ? ' in' : '' %>">
+<div id="game_<%- gameState.cid %>_<%- phaseType %>" class="phase panel-collapse collapse<%- expanded ? ' in' : '' %>">
 	<div class="panel-body">
 		<% if (editable) { %>
 		<form role="form">
 			<div class="form-group">
-				<label for="<%- gameState.get('Id') %>_<%- phaseType %>_deadline">{{.I "Deadline" }}</label>
-				<select id="<%- gameState.get('Id') %>_<%- phaseType %>_deadline" class="form-control phase-deadlines">
+				<label for="game_<%- gameState.cid %>_<%- phaseType %>_deadline">{{.I "Deadline" }}</label>
+				<select id="game_<%- gameState.cid %>_<%- phaseType %>_deadline" class="form-control phase-deadlines">
 				</select>	
 			</div>
 		</form>

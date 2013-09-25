@@ -21,17 +21,18 @@ window.PhaseTypeView = BaseView.extend({
 	},
 
 	collapse: function(ev) {
+	  console.log('collapsed', this.phaseType);
 	  this.expanded = false;
 	},
 
 	expand: function(ev) {
+	  console.log('expanded', this.phaseType);
 	  this.expanded = true;
 	},
 
 	changeDeadline: function(ev) {
 		this.gameState.get('Deadlines')[this.phaseType] = parseInt($(ev.target).val()); 
-		this.doRender();
-		this.parent.updateDescription();
+		this.gameState.trigger('change');
 	},
 
   render: function() {

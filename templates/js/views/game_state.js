@@ -23,6 +23,8 @@ window.GameStateView = BaseView.extend({
 		this.editable = options.editable;
 		this.expanded = this.editable;
 		this.parentId = options.parentId;
+		this.phaseTypeViews = {};
+		this.memberViews = {};
 		this.listenTo(this.model, 'change', this.doRender);
 	},
 
@@ -98,25 +100,54 @@ window.GameStateView = BaseView.extend({
 			that.$('.game-allocation-method').append('<option value="{0}">{1}</option>'.format(meth.id, meth.name));
 		});
 		that.$('.game-allocation-method').val(that.model.get('AllocationMethod'));
-		_.each(phaseTypes(that.model.get('Variant')), function(phaseType) {
-			if (that.editable) {
-				that.$('.phase-types').append(new PhaseTypeView({
-				  parent: that,
-					phaseType: phaseType,
-					parentId: (that.model.get('Id') || '') + '_phase_types',
-					editable: that.editable,
-					gameState: that.model,
-				}).doRender().el);
-			} else {
-				that.$('.phase-types').prepend('<tr><td>' + phaseType + '</td><td>' + that.model.describePhaseType(phaseType) + '</td></tr>');
+		if (that.editable) {
+			var newPhaseTypeViews = {};
+			_.each(phaseTypes(that.model.get('Variant')), function(phaseType) {
+				var phaseTypeView = that.phaseTypeViews[phaseType];
+				if (phaseTypeView == null) {
+					phaseTypeView = new PhaseTypeView({
+						parent: that,
+						phaseType: phaseType,
+						parentId: (that.model.get('Id') || '') + '_phase_types',
+						editable: that.editable,
+						gameState: that.model,
+					}).doRender();
+				} else {
+					phaseTypeView.doRender();
+				}
+				that.$('.phase-types').append(phaseTypeView.el);
+				newPhaseTypeViews[phaseType] = phaseTypeView;
+			});
+			for (var phaseType in that.phaseTypes) {
+				if (newPhaseTypeViews[phaseType] == null) {
+				  that.phaseTypes[phaseType].clean(true);
+				}
 			}
-		});
+			that.phaseTypeViews = newPhaseTypeViews;
+		} else {
+			_.each(phaseTypes(that.model.get('Variant')), function(phaseType) {
+				that.$('.phase-types').prepend('<tr><td>' + phaseType + '</td><td>' + that.model.describePhaseType(phaseType) + '</td></tr>');
+			});
+		}
+		var newMemberViews = {};
 		_.each(that.model.get('Members'), function(member) {
-		  console.log('member', member);
-		  that.$('.game-players').append(new GameMemberView({
-			  member: member,
-			}).doRender().el);
+			var memberView = that.memberViews[member.Id];
+			if (memberView == null) {
+				memberView = new GameMemberView({
+					member: member,
+				}).doRender();
+			} else {
+			  memberView.doRender();
+			}
+			that.$('.game-players').append(memberView.el);
+			newMemberViews[member.Id] = memberView;
 		});
+		for (var memberId in that.memberViews) {
+		  if (newMemberViews[memberId] == null) {
+			  that.memberViews[memberId].clean(true);
+			}
+		}
+		that.memberViews = newMemberViews;
 		return that;
 	},
 

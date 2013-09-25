@@ -458,34 +458,53 @@ window.BaseView = Backbone.View.extend({
 		});	
 	},
 
-	doRender: function() {
-		this.cleanChildren();
-		if (this.chain.length > 0) {
-			this.chain[this.chain.length - 1].addChild(this);
-		} else if (this.el != null) {
-		  if (this.el.CurrentBaseView != null) {
-			  if (this.el.CurrentBaseView.cid == this.cid) {
-				  this.cleanChildren();
-				} else {
-					this.el.CurrentBaseView.clean();
-				}
-			}
-			this.el.CurrentBaseView = this;
+	renderWithin: function(f) {
+	  if (this.chain.length > 0 && this.chain[this.chain.length - 1].cid == this.cid) {
+		  f();
+		} else {
+			this.chain.push(this);
+			f();
+			this.chain.pop();
 		}
-		this.chain.push(this);
-		this.render();
-		this.chain.pop();
-		this.fixNavigateLinks();
-		return this;
 	},
 
-	clean: function() {
+	doRender: function() {
+	  var that = this;
+		that.cleanChildren();
+		if (that.chain.length > 0) {
+			that.chain[that.chain.length - 1].addChild(that);
+		} else if (that.el != null) {
+		  if (that.el.CurrentBaseView != null) {
+			  if (that.el.CurrentBaseView.cid == that.cid) {
+				  that.cleanChildren();
+				} else {
+					that.el.CurrentBaseView.clean();
+				}
+			}
+			that.el.CurrentBaseView = that;
+		}
+		that.renderWithin(function() {
+			that.render();
+		});
+		that.fixNavigateLinks();
+		if (that.rendered) {
+		  that.delegateEvents();
+		}
+	  that.rendered = true;
+		return that;
+	},
+
+	clean: function(remove) {
 		if (typeof(this.onClose) == 'function') {
 			this.onClose();
 		}
-		this.cleanChildren();
+		this.cleanChildren(remove);
 		this.stopSubscribing();
-		this.stopListening();
+		if (remove) {
+		  this.remove();
+		} else {
+			this.stopListening();
+		}
 	},
 
 	stopSubscribing: function() {
@@ -497,10 +516,10 @@ window.BaseView = Backbone.View.extend({
 		this.children = [];
 	},
 
-	cleanChildren: function() {
+	cleanChildren: function(remove) {
 		if (this.children != null) {
 			_.each(this.children, function(child) {
-				child.clean();
+				child.clean(remove);
 			});
 		}
 		this.children = [];

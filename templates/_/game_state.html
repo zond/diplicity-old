@@ -1,56 +1,57 @@
 <div class="panel-heading">
 	<h4 class="panel-title">
-		<a class="accordion-toggle game-description" data-toggle="collapse" data-parent="#<%- parentId %>" href="#<%- model.get('Id') %>">
+		<% console.log(model) %>
+		<a class="accordion-toggle game-description" data-toggle="collapse" data-parent="#<%- parentId %>" href="#game_<%- model.cid %>">
 			<%= editable ? '' : '<span class="glyphicon glyphicon-chevron-down"></span> ' %><%- model.describe() %>
 		</a>
 	</h4>
 </div>
-<div id="<%- model.get('Id') %>" class="game <%= classes.join(" ") %>">
+<div id="game_<%- model.cid %>" class="game <%= classes.join(" ") %>">
 	<div class="panel-body">
 		<div class="panel-group">
 			<div class="panel panel-default">
 				<div class="panel-heading">
 					<h4 class="panel-title">
-						<a class="accordion-toggle" data-toggle="collapse" href="#<%- model.get('Id') %>_players">
+						<a class="accordion-toggle" data-toggle="collapse" href="#game_<%- model.cid %>_players">
 							<span class="glyphicon glyphicon-chevron-down"></span> <%- '{{.I "{0}/{1} players" }}'.format(model.get('Members').length, variantNations(model.get('Variant')).length) %>
 						</a>
 					</h4>
 				</div>
-				<div id="<%- model.get('Id') %>_players" class="panel-collapse collapse">
+				<div id="game_<%- model.cid %>_players" class="panel-collapse collapse">
 					<ul class="list-group game-players">
 					</ul>
 				</div>
 			</div>
 		</div>
 		<% if (editable) { %>
-		<div class="panel-group phase-types" id="<%- model.get('Id') %>_phase_types">
+		<div class="panel-group phase-types" id="game_<%- model.cid %>_phase_types">
 		</div>
 		<form role="form">
 			<div class="form-group">
-				<label for="<%- model.get('Id') %>_variant">{{.I "Variant" }}</label>
-				<select id="<%- model.get('Id') %>_variant" class="form-control game-variant">
+				<label for="game_<%- model.cid %>_variant">{{.I "Variant" }}</label>
+				<select id="game_<%- model.cid %>_variant" class="form-control game-variant">
 				</select>	
 			</div>
 			<div class="form-group">
-				<label for="<%- model.get('Id') %>_allocation_method">{{.I "Allocation method" }}</label>
-				<select id="<%- model.get('Id') %>_allocation_method" class="form-control game-allocation-method">
+				<label for="game_<%- model.cid %>_allocation_method">{{.I "Allocation method" }}</label>
+				<select id="game_<%- model.cid %>_allocation_method" class="form-control game-allocation-method">
 				</select>	
 			</div>
 			<div class="form-group">
-				<input <%= model.get('Private') ? 'checked="checked" ' : '' %>type="checkbox" id="<%- model.get('Id') %>_private" class="game_private">
-				<label for="<%- model.get('Id') %>_private">{{.I "Private" }}</label>
+				<input <%= model.get('Private') ? 'checked="checked" ' : '' %>type="checkbox" id="game_<%- model.cid %>_private" class="game_private">
+				<label for="game_<%- model.cid %>_private">{{.I "Private" }}</label>
 			</div>
 			<div class="form-group">
-				<input <%= model.get('SecretEmail') ? 'checked="checked" ' : '' %>type="checkbox" id="<%- model.get('Id') %>_secret_email" class="game_secret_email">
-				<label for="<%- model.get('Id') %>_secret_email">{{.I "Secret email" }}</label>
+				<input <%= model.get('SecretEmail') ? 'checked="checked" ' : '' %>type="checkbox" id="game_<%- model.cid %>_secret_email" class="game_secret_email">
+				<label for="game_<%- model.cid %>_secret_email">{{.I "Secret email" }}</label>
 			</div>
 			<div class="form-group">
-				<input <%= model.get('SecretNickname') ? 'checked="checked" ' : '' %>type="checkbox" id="<%- model.get('Id') %>_secret_nickname" class="game_secret_nickname">
-				<label for="<%- model.get('Id') %>_secret_nickname">{{.I "Secret nickname" }}</label>
+				<input <%= model.get('SecretNickname') ? 'checked="checked" ' : '' %>type="checkbox" id="game_<%- model.cid %>_secret_nickname" class="game_secret_nickname">
+				<label for="game_<%- model.cid %>_secret_nickname">{{.I "Secret nickname" }}</label>
 			</div>
 			<div class="form-group">
-				<input <%= model.get('SecretNation') ? 'checked="checked" ' : '' %>type="checkbox" id="<%- model.get('Id') %>_secret_nation" class="game_secret_nation">
-				<label for="<%- model.get('Id') %>_secret_nation">{{.I "Secret nation" }}</label>
+				<input <%= model.get('SecretNation') ? 'checked="checked" ' : '' %>type="checkbox" id="game_<%- model.cid %>_secret_nation" class="game_secret_nation">
+				<label for="game_<%- model.cid %>_secret_nation">{{.I "Secret nation" }}</label>
 			</div>
 		</form>
 		<% } else { %>
@@ -61,7 +62,7 @@
 			</tr>
 			<tr>
 				<td>{{.I "Allocation method"}}</td>
-				<td><%- allocationMethodName(model.get('AllocationMethod')) %></td>
+				<td><%- allocationMethodName(model.get('AllocationMethod')) %><%- model.me() != null && model.me().PreferredNations != null ? ': ' + model.me().PreferredNations.join(", ") : '' %></td>
 			</tr>
 			<tr>
 				<td>{{.I "Public"}}</td>

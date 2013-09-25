@@ -19,7 +19,7 @@ window.ChatFlagView = BaseView.extend({
 	changeChatFlag: function(ev) {
 	  ev.preventDefault();
 		this.gameState.get('ChatFlags')[this.phaseType] ^= this.opt.id;
-		this.parent.doRender();
+		this.gameState.trigger('change');
 	},
 
   render: function() {

@@ -2,6 +2,10 @@ window.PreferredNationView = BaseView.extend({
 
   template: _.template($('#preferred_nation_underscore').html()),
 
+	tagName: 'li',
+
+	className: 'list-group-item',
+
   events: {
 	  "click .prioritize": "prioritize",
 	},
