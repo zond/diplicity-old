@@ -56,7 +56,17 @@ func (self *Game) allocate(d *kol.DB) error {
 		}
 		return nil
 	case common.PreferencesString:
-		return fmt.Errorf("preferences not yet supported")
+		prefs := make([][]dip.Nation, len(members))
+		for index, member := range members {
+			prefs[index] = member.PreferredNations
+		}
+		for index, nation := range optimizePreferences(prefs) {
+			members[index].Nation = nation
+			if err := d.Set(&members[index]); err != nil {
+				return err
+			}
+		}
+		return nil
 	}
 	return fmt.Errorf("Unknown allocation method %v", self.AllocationMethod)
 }
