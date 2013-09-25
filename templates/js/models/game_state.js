@@ -26,16 +26,16 @@ window.GameState = Backbone.Model.extend({
 
 	describe: function() {
 	  var that = this;
-		var phase = that.get('Phase');
-		var phaseInfo = '{{.I "Forming"}}';
-		if (phase != null) {
-			phaseInfo = '{0} {1}, {2}'.format({{.I "seasons"}}[phase.season], phase.year, {{.I "phase_types"}}[phase.type]);
-		}
-		var member = that.get('Member');
 		var nationInfo = allocationMethodName(that.get('AllocationMethod'));
 		if (member != null && member.Nation != null && member.Nation != '') {
 		  var nationInfo = {{.I "nations" }}[member.Nation];
 		}
+		var phase = that.get('Phase');
+		var phaseInfo = '{{.I "Forming"}}';
+		if (phase != null) {
+			phaseInfo = '{0} {1}, {2}'.format({{.I "seasons"}}[phase.Season], phase.Year, {{.I "phase_types"}}[phase.Type]);
+		}
+		var member = that.get('Member');
 		var info = [nationInfo, phaseInfo, variantName(that.get('Variant'))];
 		var lastDeadline = null;
 		_.each(phaseTypes(that.get('Variant')), function(phaseType) {
