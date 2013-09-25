@@ -13,7 +13,6 @@ window.PhaseTypeView = BaseView.extend({
 	initialize: function(options) {
 	  _.bindAll(this, 'doRender');
 		this.parentId = options.parentId;
-		this.parent = options.parent;
 		this.phaseType = options.phaseType;
 		this.editable = options.editable;
 		this.gameState = options.gameState;
@@ -52,7 +51,6 @@ window.PhaseTypeView = BaseView.extend({
 		});
 		_.each(chatFlagOptions(), function(opt) {
 			that.$('form').append(new ChatFlagView({
-			  parent: that,
 				gameState: that.gameState,
 				phaseType: that.phaseType,
 				opt: opt,

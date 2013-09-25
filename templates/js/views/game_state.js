@@ -108,7 +108,7 @@ window.GameStateView = BaseView.extend({
 					phaseTypeView = new PhaseTypeView({
 						parent: that,
 						phaseType: phaseType,
-						parentId: (that.model.get('Id') || '') + '_phase_types',
+						parentId: 'game_' + that.model.cid + '_phase_types',
 						editable: that.editable,
 						gameState: that.model,
 					}).doRender();
