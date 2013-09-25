@@ -224,10 +224,11 @@ type Member struct {
 
 func (self *Member) Deleted(d *kol.DB) {
 	g := Game{Id: self.GameId}
-	if err := d.Get(&g); err != nil {
+	if err := d.Get(&g); err == nil {
+		d.EmitUpdate(&g)
+	} else if err != kol.NotFound {
 		panic(err)
 	}
-	d.EmitUpdate(&g)
 }
 
 func (self *Member) Created(d *kol.DB) {

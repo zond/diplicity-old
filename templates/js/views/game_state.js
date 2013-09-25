@@ -12,6 +12,8 @@ window.GameStateView = BaseView.extend({
     "click .game-state-button": "buttonAction",
 		"change .game-allocation-method": "changeAllocationMethod",
 		"change .game-variant": "changeVariant",
+		"hide.bs.collapse .players": "collapsePlayers",
+		"show.bs.collapse .players": "expandPlayers",
 		"hide.bs.collapse .game": "collapse",
 		"show.bs.collapse .game": "expand",
 	},
@@ -22,10 +24,19 @@ window.GameStateView = BaseView.extend({
 		this.button_action = options.button_action;
 		this.editable = options.editable;
 		this.expanded = this.editable;
+		this.membersExpanded = false;
 		this.parentId = options.parentId;
 		this.phaseTypeViews = {};
 		this.memberViews = {};
 		this.listenTo(this.model, 'change', this.doRender);
+	},
+
+	collapsePlayers: function(ev) {
+	  this.membersExpanded = false;
+	},
+
+	expandPlayers: function(ev) {
+	  this.membersExpanded = true;
 	},
 
 	collapse: function(ev) {
@@ -88,6 +99,7 @@ window.GameStateView = BaseView.extend({
     that.$el.html(that.template({
 		  classes: classes,
 		  parentId: that.parentId,
+			membersExpanded: that.membersExpanded,
 		  model: that.model,
 			editable: that.editable,
 			button_text: that.button_text,
