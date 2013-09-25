@@ -10,9 +10,15 @@ import (
 	"github.com/zond/godip/state"
 	"github.com/zond/kcwraps/kol"
 	"github.com/zond/kcwraps/subs"
+	"math/rand"
 	"net/url"
 	"sort"
+	"time"
 )
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
 
 type Minutes int
 
@@ -35,10 +41,33 @@ type Game struct {
 	ChatFlags map[dip.PhaseType]common.ChatFlag
 }
 
+func (self *Game) allocate(d *kol.DB) error {
+	members := Members{}
+	if err := d.Query().Where(kol.Equals{"GameId", self.Id}).All(&members); err != nil {
+		return err
+	}
+	switch self.AllocationMethod {
+	case common.RandomString:
+		for memberIndex, nationIndex := range rand.Perm(len(members)) {
+			members[memberIndex].Nation = common.VariantMap[self.Variant].Nations[nationIndex]
+			if err := d.Set(&members[memberIndex]); err != nil {
+				return err
+			}
+		}
+		return nil
+	case common.PreferencesString:
+		return fmt.Errorf("preferences not yet supported")
+	}
+	return fmt.Errorf("Unknown allocation method %v", self.AllocationMethod)
+}
+
 func (self *Game) start(d *kol.DB) error {
 	self.Started = true
 	self.Closed = true
 	if err := d.Set(self); err != nil {
+		return err
+	}
+	if err := self.allocate(d); err != nil {
 		return err
 	}
 	var startState *state.State
