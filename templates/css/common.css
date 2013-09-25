@@ -1,3 +1,8 @@
+.navbar-brand {
+	padding: 0px;
+	font-weight: bold;
+	font-size: x-large;
+}
 .panel-group {
 	margin-bottom: 4px;
 }
