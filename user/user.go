@@ -12,8 +12,8 @@ type User struct {
 	Nickname string
 }
 
-func SubscribeEmail(c common.Context, s *subs.Subscription, email string) {
-	s.Subscribe(&User{Id: []byte(email)})
+func SubscribeEmail(c common.Context, s *subs.Subscription, email string) error {
+	return s.Subscribe(&User{Id: []byte(email)})
 }
 
 func EnsureUser(c common.Context, email string) *User {

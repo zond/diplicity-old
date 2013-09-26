@@ -99,8 +99,8 @@ func (self *Game) start(d *kol.DB) error {
 	return d.Set(phase)
 }
 
-func DeleteMember(c common.Context, gameId, email string) {
-	if err := c.DB().Transact(func(d *kol.DB) error {
+func DeleteMember(c common.Context, gameId, email string) error {
+	return c.DB().Transact(func(d *kol.DB) error {
 		urlDecodedId, err := url.QueryUnescape(gameId)
 		if err != nil {
 			return err
@@ -132,15 +132,13 @@ func DeleteMember(c common.Context, gameId, email string) {
 			}
 		}
 		return nil
-	}); err != nil {
-		c.Errorf("Unable to delete member: %v", err)
-	}
+	})
 }
 
-func AddMember(c common.Context, j common.JSON, email string) {
+func AddMember(c common.Context, j common.JSON, email string) error {
 	var state GameState
 	j.Overwrite(&state)
-	if err := c.DB().Transact(func(d *kol.DB) error {
+	return c.DB().Transact(func(d *kol.DB) error {
 		game := Game{Id: state.Game.Id}
 		if err := d.Get(&game); err != nil {
 			return err
@@ -173,12 +171,10 @@ func AddMember(c common.Context, j common.JSON, email string) {
 			}
 		}
 		return nil
-	}); err != nil {
-		c.Errorf("Unable to add member: %v", err)
-	}
+	})
 }
 
-func Create(c common.Context, j common.JSON, creator string) {
+func Create(c common.Context, j common.JSON, creator string) error {
 	var state GameState
 	j.Overwrite(&state)
 
@@ -198,7 +194,7 @@ func Create(c common.Context, j common.JSON, creator string) {
 		UserId:           []byte(creator),
 		PreferredNations: state.Members[0].PreferredNations,
 	}
-	c.DB().Transact(func(d *kol.DB) error {
+	return c.DB().Transact(func(d *kol.DB) error {
 		if err := d.Set(game); err != nil {
 			return err
 		}
@@ -317,9 +313,9 @@ type GameState struct {
 	Phase   *Phase
 }
 
-func SubscribeCurrent(c common.Context, s *subs.Subscription, email string) {
+func SubscribeCurrent(c common.Context, s *subs.Subscription, email string) error {
 	s.Query = s.DB().Query().Where(kol.Equals{"UserId", []byte(email)})
-	s.Call = func(i interface{}, op string) {
+	s.Call = func(i interface{}, op string) error {
 		members := i.([]*Member)
 		states := []GameState{}
 		phases := Phases{}
@@ -332,16 +328,16 @@ func SubscribeCurrent(c common.Context, s *subs.Subscription, email string) {
 			} else {
 				game := &Game{Id: member.GameId}
 				if err := s.DB().Get(game); err != nil {
-					panic(err)
+					return err
 				}
 				gameMembers := Members{}
 				if err := s.DB().Query().Where(kol.Equals{"GameId", game.Id}).All(&gameMembers); err != nil {
-					panic(err)
+					return err
 				}
 				if !game.Ended {
 					phases = nil
 					if err := s.DB().Query().Where(kol.Equals{"GameId", game.Id}).All(&phases); err != nil {
-						panic(err)
+						return err
 					}
 					phase := &Phase{}
 					if len(phases) > 0 {
@@ -358,14 +354,18 @@ func SubscribeCurrent(c common.Context, s *subs.Subscription, email string) {
 				}
 			}
 		}
-		s.Send(states, op)
+		return s.Send(states, op)
 	}
-	s.Subscribe(new(Member))
+	return s.Subscribe(new(Member))
 }
 
-func SubscribeOpen(c common.Context, s *subs.Subscription, email string) {
+func SubscribeGame(c common.Context, s *subs.Subscription, gameId, email string) error {
+	return nil
+}
+
+func SubscribeOpen(c common.Context, s *subs.Subscription, email string) error {
 	s.Query = s.DB().Query().Where(kol.And{kol.Equals{"Closed", false}, kol.Equals{"Private", false}})
-	s.Call = func(i interface{}, op string) {
+	s.Call = func(i interface{}, op string) error {
 		games := i.([]*Game)
 		states := []GameState{}
 		phases := Phases{}
@@ -373,7 +373,7 @@ func SubscribeOpen(c common.Context, s *subs.Subscription, email string) {
 		for _, game := range games {
 			members := Members{}
 			if err := s.DB().Query().Where(kol.Equals{"GameId", game.Id}).All(&members); err != nil {
-				panic(err)
+				return err
 			}
 			isMember = false
 			for _, m := range members {
@@ -384,7 +384,7 @@ func SubscribeOpen(c common.Context, s *subs.Subscription, email string) {
 			if !isMember {
 				phases = nil
 				if err := s.DB().Query().Where(kol.Equals{"GameId", game.Id}).All(&phases); err != nil {
-					panic(err)
+					return err
 				}
 				phase := &Phase{}
 				if len(phases) > 0 {
@@ -400,7 +400,7 @@ func SubscribeOpen(c common.Context, s *subs.Subscription, email string) {
 				})
 			}
 		}
-		s.Send(states, op)
+		return s.Send(states, op)
 	}
-	s.Subscribe(new(Game))
+	return s.Subscribe(new(Game))
 }

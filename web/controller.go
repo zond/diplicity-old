@@ -16,6 +16,7 @@ import (
 )
 
 var currentGamePattern = regexp.MustCompile("^/games/current/(.*)$")
+var gamePattern = regexp.MustCompile("^/games/(.*)$")
 
 func (self *Web) WS(ws *websocket.Conn) {
 	session, err := self.sessionStore.Get(ws.Request(), SessionName)
@@ -31,7 +32,9 @@ func (self *Web) WS(ws *websocket.Conn) {
 
 	self.Infof("%v\t%v\t%v <-", ws.Request().URL, ws.Request().RemoteAddr, session.Values[SessionEmail])
 
-	pack := subs.New(self.db, ws)
+	pack := subs.New(self.db, ws).OnUnsubscribe(func(s *subs.Subscription, reason interface{}) {
+		self.Errorf("%v\t%v\t%v\t%v\t%v\t[unsubscribing]", ws.Request().URL, ws.Request().RemoteAddr, emailIf, s.Name(), reason)
+	})
 	defer func() {
 		self.Infof("%v\t%v\t%v -> [unsubscribing all]", ws.Request().URL, ws.Request().RemoteAddr, session.Values[SessionEmail])
 		pack.UnsubscribeAll()
@@ -47,20 +50,26 @@ func (self *Web) WS(ws *websocket.Conn) {
 				switch message.Object.URI {
 				case "/games/current":
 					if loggedIn {
-						game.SubscribeCurrent(self, s, email)
+						self.Errlog(game.SubscribeCurrent(self, s, email))
 					}
 				case "/games/open":
 					if loggedIn {
-						game.SubscribeOpen(self, s, email)
+						self.Errlog(game.SubscribeOpen(self, s, email))
 					}
 				case "/user":
 					if loggedIn {
-						user.SubscribeEmail(self, s, email)
+						self.Errlog(user.SubscribeEmail(self, s, email))
 					} else {
 						s.Call(&user.User{}, subs.FetchType)
 					}
 				default:
-					self.Errorf("Unrecognized URI: %+v", message.Object.URI)
+					if match := gamePattern.FindStringSubmatch(message.Object.URI); match != nil {
+						if loggedIn {
+							game.SubscribeGame(self, s, match[1], email)
+						}
+					} else {
+						self.Errorf("Unrecognized URI: %+v", message.Object.URI)
+					}
 				}
 			case common.UnsubscribeType:
 				pack.Unsubscribe(message.Object.URI)

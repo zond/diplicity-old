@@ -1,5 +1,7 @@
 window.GameState = Backbone.Model.extend({
 
+  urlRoot: '/games',
+
 	me: function() {
 	  if (window.session.user.get('Email') == null) {
 		  return null;

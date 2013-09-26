@@ -455,7 +455,6 @@ function deadlineName(value) {
 };
 
 function navigate(to) {
-  console.log('navigating to', to);
 	window.session.router.navigate(to, { trigger: true });
 	window.session.bottom_navigation.$('a').removeClass('btn-primary');
 	window.session.bottom_navigation.$('a[href="' + to + '"]').addClass('btn-primary');

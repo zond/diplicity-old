@@ -100,6 +100,12 @@ func (self *Web) Logf(level int, format string, args ...interface{}) {
 	}
 }
 
+func (self *Web) Errlog(err error) {
+	if err != nil {
+		self.Errorf("%v", err)
+	}
+}
+
 func (self *Web) Fatalf(format string, args ...interface{}) {
 	self.Logf(Fatal, "\033[1;31mFATAL\t"+format+"\033[0m", args...)
 }
@@ -166,6 +172,9 @@ func (self *Web) HandleStatic(router *mux.Router, dir string) {
 				w.Header().Set("Content-Type", "image/gif")
 			} else if strings.HasSuffix(r.URL.Path, ".woff") {
 				w.Header().Set("Content-Type", "application/font-woff")
+			} else if strings.HasSuffix(r.URL.Path, ".ttf") {
+				self.Infof("%v is font/truetype", r.URL)
+				w.Header().Set("Content-Type", "font/truetype")
 			} else {
 				w.Header().Set("Content-Type", "application/octet-stream")
 			}

@@ -2,7 +2,7 @@
 window.session = {};
 
 $(window).load(function() {
-  var match = /^.*:\/\/(.*)\//.exec(window.location.href);
+  var match = /^.*:\/\/([^\/]*)\//.exec(window.location.href);
 	var url = "ws://" + match[1] + "/ws";
 	var start = function(ev) {
 		window.session.user = new User();
@@ -14,11 +14,14 @@ $(window).load(function() {
 				"open": "openGames",
 				"create": "createGame",
 				"menu": "menu",
-				"game": "game",
+				"games/:id": "games",
 			},
 
-			game: function() {
+			games: function(id) {
 				new GameView({
+				  model: new GameState({
+					  id: id,
+					}),
 					el: $('#content'),
 				}).doRender();
 			},

@@ -1,8 +1,16 @@
 #bottom_navigation {
 	min-height: 0px;
 }
+.view-game {
+	padding: 4px;
+	margin: -13px;
+	float: right;
+}
 .view-game span {
-	margin-right: 10px;
+	font-size: x-large;
+	margin-bottom: 9px;
+	margin-left: 5px;
+	margin-right: 15px;
 }
 .navbar-brand {
 	padding: 0px;
@@ -19,6 +27,7 @@ ul.game-players {
 	width: 100%;
 	height: 100%;
 	position: absolute;
+	display: none;
 }
 .map {
 	-webkit-transform: translate3d(0,0,0) scale3d(1,1,1);
