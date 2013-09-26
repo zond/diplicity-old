@@ -284,6 +284,9 @@ func (self Members) toStates(c common.Context, g *Game, email string) (result []
 			cpy.UserId = nil
 			cpy.PreferredNations = nil
 		}
+		if string(cpy.UserId) != email && g.SecretNation {
+			cpy.Nation = ""
+		}
 		result[index] = MemberState{
 			Member: &cpy,
 			User:   &user.User{},
@@ -360,7 +363,48 @@ func SubscribeCurrent(c common.Context, s *subs.Subscription, email string) erro
 }
 
 func SubscribeGame(c common.Context, s *subs.Subscription, gameId, email string) error {
-	return nil
+	urlDecodedId, err := url.QueryUnescape(gameId)
+	if err != nil {
+		return err
+	}
+	base64DecodedId, err := base64.StdEncoding.DecodeString(urlDecodedId)
+	if err != nil {
+		return err
+	}
+	s.Call = func(i interface{}, op string) error {
+		game := i.(*Game)
+		members := Members{}
+		if err := s.DB().Query().Where(kol.Equals{"GameId", game.Id}).All(&members); err != nil {
+			return err
+		}
+		isMember := false
+		for _, m := range members {
+			if string(m.UserId) == email {
+				isMember = true
+				break
+			}
+		}
+		if !game.Private || isMember {
+			phases := Phases{}
+			if err := s.DB().Query().Where(kol.Equals{"GameId", game.Id}).All(&phases); err != nil {
+				return err
+			}
+			phase := &Phase{}
+			if len(phases) > 0 {
+				sort.Sort(phases)
+				phase = &phases[0]
+			} else {
+				phase = nil
+			}
+			return s.Send(GameState{
+				Game:    game,
+				Members: members.toStates(c, game, email),
+				Phase:   phase,
+			}, op)
+		}
+		return nil
+	}
+	return s.Subscribe(&Game{Id: base64DecodedId})
 }
 
 func SubscribeOpen(c common.Context, s *subs.Subscription, email string) error {
@@ -379,6 +423,7 @@ func SubscribeOpen(c common.Context, s *subs.Subscription, email string) error {
 			for _, m := range members {
 				if string(m.UserId) == email {
 					isMember = true
+					break
 				}
 			}
 			if !isMember {

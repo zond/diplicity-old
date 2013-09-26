@@ -4,8 +4,8 @@ window.GameView = BaseView.extend({
 
 	initialize: function(options) {
 	  _.bindAll(this, 'doRender');
-		this.listenTo(this.model, 'change', this.doRender());
-		this.model.fetch();
+		this.listenTo(this.model, 'change', this.doRender);
+		this.fetch(this.model);
 	},
 
   render: function() {

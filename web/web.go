@@ -173,7 +173,6 @@ func (self *Web) HandleStatic(router *mux.Router, dir string) {
 			} else if strings.HasSuffix(r.URL.Path, ".woff") {
 				w.Header().Set("Content-Type", "application/font-woff")
 			} else if strings.HasSuffix(r.URL.Path, ".ttf") {
-				self.Infof("%v is font/truetype", r.URL)
 				w.Header().Set("Content-Type", "font/truetype")
 			} else {
 				w.Header().Set("Content-Type", "application/octet-stream")

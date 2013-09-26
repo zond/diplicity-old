@@ -20,7 +20,7 @@ $(window).load(function() {
 			games: function(id) {
 				new GameView({
 				  model: new GameState({
-					  id: id,
+						Id: id,
 					}),
 					el: $('#content'),
 				}).doRender();

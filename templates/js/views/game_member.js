@@ -2,9 +2,7 @@ window.GameMemberView = BaseView.extend({
 
   template: _.template($('#game_member_underscore').html()),
 
-  className: 'list-group-item',
- 
-	tagName: 'li',
+	tagName: 'tr',
 
 	initialize: function(options) {
 	  _.bindAll(this, 'doRender');

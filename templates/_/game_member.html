@@ -1,3 +1,8 @@
+<% if (member.Nation != "") { %>
+<td><%- member.Nation %></td><td>
+<% } else { %>
+<td colspan="2">
+<% } %>
 <% if (member.User.Nickname == "" && member.User.Email == "") { %>
 "{{.I "Anonymous" }}"
 <% } else if (member.User.Nickname == "" && member.User.Email != "") { %>
@@ -5,3 +10,4 @@
 <% } else { %>
 <%- member.User.Nickname %> &lt;<%- member.User.Email %>&gt;
 <% } %>
+</td>
