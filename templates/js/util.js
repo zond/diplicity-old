@@ -154,7 +154,6 @@ String.prototype.format = function() {
 
 function wsBackbone(url, start) {
 	var ws = null;
-	var started = false;
   
 	var subscriptions = {};
 	var closeSubscription = function(that) {
@@ -173,8 +172,15 @@ function wsBackbone(url, start) {
 
   var backoff = 500;
   var setupWs = null;
+	var state = {
+	  reconnecting: false,
+	  started: false,
+		open: false,
+	};
   setupWs = function() {
-	  logInfo("Opening socket to", url);
+	  state.reconnecting = false;
+
+		logInfo("Opening socket to", url);
 	  ws = new WebSocket(url); 
 		ws.sendIfReady = function(msg) {
 			if (ws.readyState == 1) {
@@ -184,26 +190,50 @@ function wsBackbone(url, start) {
 			}
 		};
 		ws.onclose = function(code, reason, wasClean) {
-			logError('Socket closed, scheduling reopen');
-			backoff *= 2;
-			setTimeout(setupWs, backoff);
+			state.open = false;
+			logError('Socket closed');
+			if (backoff < 30000) {
+				backoff *= 2;
+			}
+		  if (!state.reconnecting) {
+				logError('Scheduling reopen');
+				state.reconnecting = true;
+				setTimeout(setupWs, backoff);
+			}
 		};
     ws.onopen = function() {
+			state.open = true;
 		  logInfo("Socket opened");
 		  backoff = 500;
-			if (!started) {
-			  started = true;
+			if (state.started) {
+				for (var url in subscriptions) {
+					logDebug('Re-subscribing to', url);
+					ws.sendIfReady(JSON.stringify({
+						Type: 'Subscribe',
+						Object: {
+							URI: url,
+						},
+					}));
+				}
+			} else {
+				state.started = true;
 				start();
 			}
 		};
 		ws.onerror = function(err) {
+			state.open = false;
+		  logError('WebSocket error', err);
 		  if (backoff < 30000) {
 				backoff *= 2;
 			}
-			setTimeout(setupWs, backoff);
-			if (!started) {
-			  started = true;
+			if (!state.started) {
+			  state.started = true;
 				start();
+			}
+			if (!state.reconnecting) {
+				logError('Scheduling reopen');
+				state.reconnecting = true;
+				setTimeout(setupWs, backoff);
 			}
 		};
 		ws.onmessage = function(ev) {

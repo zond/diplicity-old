@@ -32,7 +32,10 @@ func (self *Web) WS(ws *websocket.Conn) {
 	self.Infof("%v\t%v\t%v <-", ws.Request().URL, ws.Request().RemoteAddr, session.Values[SessionEmail])
 
 	pack := subs.New(self.db, ws)
-	defer pack.UnsubscribeAll()
+	defer func() {
+		self.Infof("%v\t%v\t%v -> [unsubscribing all]", ws.Request().URL, ws.Request().RemoteAddr, session.Values[SessionEmail])
+		pack.UnsubscribeAll()
+	}()
 
 	for {
 		var message subs.Message
@@ -94,7 +97,6 @@ func (self *Web) WS(ws *websocket.Conn) {
 			self.Errorf("%v", err)
 		}
 	}
-	self.Infof("%v\t%v\t%v ->", ws.Request().URL, ws.Request().RemoteAddr, session.Values[SessionEmail])
 }
 
 func (self *Web) Openid(w http.ResponseWriter, r *http.Request) {
