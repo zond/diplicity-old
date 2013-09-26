@@ -1,4 +1,4 @@
-<div class="panel-heading accordion-toggle" data-toggle="collapse" data-parent="#<%- parentId %>" href="#game_<%- model.cid %>">
+<div class="panel-heading<%- editable ? '' : ' accordion-toggle' %>" <%= editable ? '' : 'data-toggle="collapse" ' %>data-parent="#<%- parentId %>" href="#game_<%- model.cid %>">
 	<h4 class="panel-title">
 		<a class="game-description">
 			<%= editable ? '' : '<span class="glyphicon glyphicon-chevron-down"></span> ' %><%- model.describe() %>
