@@ -1,9 +1,22 @@
 <div class="panel-heading<%- editable ? '' : ' accordion-toggle' %>" <%= editable ? '' : 'data-toggle="collapse" ' %>data-parent="#<%- parentId %>" href="#game_<%- model.cid %>">
-	<h4 class="panel-title">
-		<a class="game-description">
-			<%= editable ? '' : '<span class="glyphicon glyphicon-chevron-down"></span> ' %><%- model.describe() %>
-		</a>
-	</h4>
+	<div class="row">
+		<div class="col-xs-11">
+			<h4 class="panel-title">
+				<a class="game-description">
+					<%= editable ? '' : '<span class="glyphicon glyphicon-chevron-down"></span> ' %><%- model.describe() %>
+				</a>
+			</h4>
+		</div>
+		<% if (!editable) { %>
+		<div class="row-xs-1 pull-right">
+			<h4 class="panel-title">
+				<a class="view-game navigate" href="/game/<%- model.get('Id') %>">
+					<span class="glyphicon glyphicon-eye-open"></span>
+				</a>
+			</h4>
+		</div>
+		<% } %>
+	</div>
 </div>
 <div id="game_<%- model.cid %>" class="game <%= classes.join(" ") %>">
 	<div class="panel-body">
@@ -81,6 +94,8 @@
 			</tr>
 		</table>
 		<% } %>
+		<% if (!model.get('Started')) { %>
 		<button type="button" class="btn btn-primary btn-lg btn-block game-state-button"><%- button_text %></button>
+		<% } %>
 	</div>
 </div>
