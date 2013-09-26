@@ -1,6 +1,6 @@
-<div class="panel-heading">
+<div class="panel-heading accordion-toggle" data-toggle="collapse" data-parent="#<%- parentId %>" href="#game_<%- model.cid %>">
 	<h4 class="panel-title">
-		<a class="accordion-toggle game-description" data-toggle="collapse" data-parent="#<%- parentId %>" href="#game_<%- model.cid %>">
+		<a class="game-description">
 			<%= editable ? '' : '<span class="glyphicon glyphicon-chevron-down"></span> ' %><%- model.describe() %>
 		</a>
 	</h4>
@@ -9,9 +9,9 @@
 	<div class="panel-body">
 		<div class="panel-group">
 			<div class="panel panel-default">
-				<div class="panel-heading">
+				<div class="panel-heading" class="accordion-toggle" data-toggle="collapse" href="#game_<%- model.cid %>_players">
 					<h4 class="panel-title">
-						<a class="accordion-toggle" data-toggle="collapse" href="#game_<%- model.cid %>_players">
+						<a>
 							<span class="glyphicon glyphicon-chevron-down"></span> <%- '{{.I "{0}/{1} players" }}'.format(model.get('Members').length, variantNations(model.get('Variant')).length) %>
 						</a>
 					</h4>
