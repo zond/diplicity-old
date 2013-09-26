@@ -33,6 +33,8 @@ func (self *Web) WS(ws *websocket.Conn) {
 
 	pack := subs.New(self.db, ws).OnUnsubscribe(func(s *subs.Subscription, reason interface{}) {
 		self.Errorf("\t%v\t%v\t%v\t%v\t%v\t[unsubscribing]", ws.Request().URL, ws.Request().RemoteAddr, emailIf, s.Name(), reason)
+	}).Log(func(name string, i interface{}, op string) {
+		self.Debugf("\t%v\t%v\t%v\t%v\t%v ->", ws.Request().URL, ws.Request().RemoteAddr, emailIf, op, name)
 	})
 	defer func() {
 		self.Infof("\t%v\t%v\t%v -> [unsubscribing all]", ws.Request().URL, ws.Request().RemoteAddr, session.Values[SessionEmail])
@@ -42,7 +44,10 @@ func (self *Web) WS(ws *websocket.Conn) {
 	for {
 		var message subs.Message
 		if err = websocket.JSON.Receive(ws, &message); err == nil {
-			self.Debugf("\t%v\t%v\t%v\t%v\t%v", ws.Request().URL, ws.Request().RemoteAddr, emailIf, message.Type, message.Object.URI)
+			self.Debugf("\t%v\t%v\t%v\t%v\t%v <-", ws.Request().URL, ws.Request().RemoteAddr, emailIf, message.Type, message.Object.URI)
+			if self.logLevel > Trace && message.Object.Data != nil {
+				self.Tracef("%+v", common.Prettify(message.Object.Data))
+			}
 			switch message.Type {
 			case common.SubscribeType:
 				s := pack.New(message.Object.URI)
@@ -73,9 +78,6 @@ func (self *Web) WS(ws *websocket.Conn) {
 			case common.UnsubscribeType:
 				pack.Unsubscribe(message.Object.URI)
 			case common.CreateType:
-				if self.logLevel > Trace {
-					self.Tracef("%+v", common.Prettify(message.Object.Data))
-				}
 				switch message.Object.URI {
 				case "/games":
 					if loggedIn {
