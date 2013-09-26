@@ -15,13 +15,12 @@ import (
 	"strings"
 )
 
-var currentGamePattern = regexp.MustCompile("^/games/current/(.*)$")
 var gamePattern = regexp.MustCompile("^/games/(.*)$")
 
 func (self *Web) WS(ws *websocket.Conn) {
 	session, err := self.sessionStore.Get(ws.Request(), SessionName)
 	if err != nil {
-		self.Errorf("%v\t%v\t%v", ws.Request().URL, ws.Request().RemoteAddr, err)
+		self.Errorf("\t%v\t%v\t%v", ws.Request().URL, ws.Request().RemoteAddr, err)
 	}
 
 	email := ""
@@ -30,20 +29,20 @@ func (self *Web) WS(ws *websocket.Conn) {
 		email = emailIf.(string)
 	}
 
-	self.Infof("%v\t%v\t%v <-", ws.Request().URL, ws.Request().RemoteAddr, session.Values[SessionEmail])
+	self.Infof("\t%v\t%v\t%v <-", ws.Request().URL, ws.Request().RemoteAddr, session.Values[SessionEmail])
 
 	pack := subs.New(self.db, ws).OnUnsubscribe(func(s *subs.Subscription, reason interface{}) {
-		self.Errorf("%v\t%v\t%v\t%v\t%v\t[unsubscribing]", ws.Request().URL, ws.Request().RemoteAddr, emailIf, s.Name(), reason)
+		self.Errorf("\t%v\t%v\t%v\t%v\t%v\t[unsubscribing]", ws.Request().URL, ws.Request().RemoteAddr, emailIf, s.Name(), reason)
 	})
 	defer func() {
-		self.Infof("%v\t%v\t%v -> [unsubscribing all]", ws.Request().URL, ws.Request().RemoteAddr, session.Values[SessionEmail])
+		self.Infof("\t%v\t%v\t%v -> [unsubscribing all]", ws.Request().URL, ws.Request().RemoteAddr, session.Values[SessionEmail])
 		pack.UnsubscribeAll()
 	}()
 
 	for {
 		var message subs.Message
 		if err = websocket.JSON.Receive(ws, &message); err == nil {
-			self.Debugf("%v\t%v\t%v\t%v\t%v", ws.Request().URL, ws.Request().RemoteAddr, emailIf, message.Type, message.Object.URI)
+			self.Debugf("\t%v\t%v\t%v\t%v\t%v", ws.Request().URL, ws.Request().RemoteAddr, emailIf, message.Type, message.Object.URI)
 			switch message.Type {
 			case common.SubscribeType:
 				s := pack.New(message.Object.URI)
@@ -84,7 +83,7 @@ func (self *Web) WS(ws *websocket.Conn) {
 					}
 				}
 			case common.DeleteType:
-				if match := currentGamePattern.FindStringSubmatch(message.Object.URI); match != nil {
+				if match := gamePattern.FindStringSubmatch(message.Object.URI); match != nil {
 					if loggedIn {
 						game.DeleteMember(self, match[1], email)
 					}
@@ -92,7 +91,7 @@ func (self *Web) WS(ws *websocket.Conn) {
 					self.Errorf("Unrecognized URI to delete: %v", message.Object.URI)
 				}
 			case common.UpdateType:
-				if strings.Index(message.Object.URI, "/games/open") == 0 {
+				if strings.Index(message.Object.URI, "/games/") == 0 {
 					if loggedIn {
 						game.AddMember(self, common.JSON{message.Object.Data}, email)
 					}
