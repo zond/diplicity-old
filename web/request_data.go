@@ -6,6 +6,7 @@ import (
 	"github.com/gorilla/sessions"
 	"github.com/zond/diplicity/common"
 	"github.com/zond/diplicity/translation"
+	dip "github.com/zond/godip/common"
 	"net/http"
 	"net/url"
 	"sort"
@@ -79,6 +80,17 @@ func (self RequestData) VariantMap() string {
 	for _, variant := range common.Variants {
 		variant.Translation = self.I(variant.Name)
 		result[variant.Id] = variant
+	}
+	return common.Prettify(result)
+}
+
+func (self RequestData) VariantProvincesMap() string {
+	result := map[string][]dip.Province{}
+	for _, variant := range common.Variants {
+		result[variant.Id] = []dip.Province{}
+		for _, prov := range variant.Graph.Provinces() {
+			result[variant.Id] = append(result[variant.Id], prov)
+		}
 	}
 	return common.Prettify(result)
 }

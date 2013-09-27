@@ -32,11 +32,21 @@ window.GameState = Backbone.Model.extend({
 
 	render: function(destSel) {
 	  var that = this;
-	  if (that.get('Phase') != null) {
-			$(destSel).copySVG(that.get('Variant') + 'Map');
-			_.each(that.get('Phase').Units, function(val, key) {
-			  $(destSel + ' svg').addUnit(that.get('Variant') + 'Unit' + val.Type, key, variantColor(that.get('Variant'), val.Nation));
+		var phase = that.get('Phase');
+		var variant = that.get('Variant');
+	  if (phase != null) {
+			$(destSel).copySVG(variant + 'Map');
+			_.each(phase.Units, function(val, key) {
+			  $(destSel + ' svg').addUnit(variant + 'Unit' + val.Type, key, variantColor(variant, val.Nation));
 			});
+			_.each(variantProvincesMap[variant], function(key) {
+				if (phase.SupplyCenters[key] == null) {
+					$(destSel + ' svg').hideProvince(key);
+				} else {
+					$(destSel + ' svg').colorProvince(key, variantColor(variant, phase.SupplyCenters[key]));
+				}
+			});
+			$(destSel + ' svg').find('#provinces')[0].removeAttribute('style');
 		}
 	},
 

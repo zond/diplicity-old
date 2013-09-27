@@ -8,6 +8,10 @@ String.prototype.format = function() {
 	});
 };
 
+function selEscape(sel) {
+  return sel.replace("/", "\\/");
+}
+
 var allocationMethods = {{.AllocationMethods}};
 var allocationMethodMap = {{.AllocationMethodMap}};
 
@@ -17,6 +21,7 @@ function allocationMethodName(id) {
 
 var variantMap = {{.VariantMap}};
 var variants = {{.Variants}};
+var variantProvincesMap = {{.VariantProvincesMap}};
 
 function variantName(id) {
   return variantMap[id].Translation;

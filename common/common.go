@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	cla "github.com/zond/godip/classical/common"
+	"github.com/zond/godip/classical/start"
 	dip "github.com/zond/godip/common"
+	"github.com/zond/godip/graph"
 	"github.com/zond/kcwraps/kol"
 	"io"
 	"net/http"
@@ -161,6 +163,7 @@ type Variant struct {
 	PhaseTypes  []dip.PhaseType
 	Nations     []dip.Nation
 	Colors      map[dip.Nation]string
+	Graph       *graph.Graph
 }
 
 func (self Variant) JSONNations() string {
@@ -195,6 +198,7 @@ var classicalVariant = Variant{
 		cla.Russia:  "#8d5e68",
 		cla.Turkey:  "#ffdb66",
 	},
+	Graph: start.Graph(),
 }
 
 var Variants = VariantSlice{

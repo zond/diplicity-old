@@ -56,6 +56,24 @@ $.fn.copySVG = function(sourceId) {
 	});
 }
 
+$.fn.colorProvince = function(province, color) {
+  this.each(function() {
+	  var path = $(this).find('#' + selEscape(province))[0];
+	  path.removeAttribute('style');
+		path.setAttribute('fill', color);
+		path.setAttribute('fill-opacity', '0.8');
+	});
+}
+
+$.fn.hideProvince = function(province) {
+  this.each(function() {
+	  var path = $(this).find('#' + selEscape(province))[0];
+		path.removeAttribute('style');
+		path.setAttribute('fill', '#ffffff');
+		path.setAttribute('fill-opacity', '0');
+	});
+}
+
 $.fn.addUnit = function(sourceId, province, color, dislodged, build) {
   var shadow = $('#' + sourceId).find('#shadow').first().clone();
 	var hullQuery = $('#' + sourceId + ' svg').find('#hull');
