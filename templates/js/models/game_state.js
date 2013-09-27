@@ -30,6 +30,16 @@ window.GameState = Backbone.Model.extend({
 	  return desc.join(", ");
 	},
 
+	render: function(destSel) {
+	  var that = this;
+	  if (that.get('Phase') != null) {
+			$(destSel).copySVG(that.get('Variant') + 'Map');
+			_.each(that.get('Phase').Units, function(val, key) {
+			  $(destSel + ' svg').addUnit(that.get('Variant') + 'Unit' + val.Type, key, variantColor(that.get('Variant'), val.Nation));
+			});
+		}
+	},
+
 	describe: function() {
 	  var that = this;
 		var nationInfo = allocationMethodName(that.get('AllocationMethod'));

@@ -22,11 +22,7 @@ window.GameView = BaseView.extend({
 			}).doRender();
 			that.$('#current_game').append(state_view.el);
 		}
-		if (this.model.get('Phase') != null) {
-			that.$('.map-container').show();
-		} else {
-			that.$('.map-container').hide();
-		}
+		that.model.render('.map');
 		panZoom('.map');
 		return that;
 	},

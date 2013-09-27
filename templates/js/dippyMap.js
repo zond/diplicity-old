@@ -49,11 +49,18 @@ $.fn.centerOf = function(province) {
 	return new Poi(x,y);
 };
 
-$.fn.addUnit = function(sourceId, province, power, dislodged, build) {
+$.fn.copySVG = function(sourceId) {
+  var source = $('#' + sourceId + ' svg').first().clone();
+  $(this).each(function() {
+	  this.appendChild(source[0]);
+	});
+}
+
+$.fn.addUnit = function(sourceId, province, color, dislodged, build) {
   var shadow = $('#' + sourceId).find('#shadow').first().clone();
-	var hullQuery = $('#' + sourceId).find('#hull');
-	var bodyQuery = $('#' + sourceId).find('#body');
-	var loc = this.centerOf(province);
+	var hullQuery = $('#' + sourceId + ' svg').find('#hull');
+	var bodyQuery = $('#' + sourceId + ' svg').find('#body');
+	var loc = this.centerOf(province.split('/')[0]);
 	var unit = null;
 	var opacity = 1;
 	if (dislodged) {
@@ -71,14 +78,14 @@ $.fn.addUnit = function(sourceId, province, power, dislodged, build) {
 	}
 	shadow.attr("transform", "translate(" + loc.x + ", " + loc.y + ")");
 	unit.attr("transform", "translate(" + loc.x + ", " + loc.y + ")");
-	var color = getUnitColor(power);
 	if (build) {
 	  color = '#000000';
 	}
 	unit.attr("style", "fill:" + color + ";fill-opacity:" + opacity + ";stroke:#000000;stroke-width:1;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none");
   this.each(function() {
-	  this.append(shadow);
-		this.append(unit);
+	  this.appendChild(shadow[0]);
+		this.appendChild(unit[0]);
 	});
 };
+
 

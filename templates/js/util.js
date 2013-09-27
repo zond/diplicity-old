@@ -27,7 +27,7 @@ function variantNations(id) {
 }
 
 function variantColor(variantId, nation) {
-  return variantMap[id].Colors[nation];
+  return variantMap[variantId].Colors[nation];
 }
 
 function phaseTypes(variant) {
