@@ -29,6 +29,7 @@ window.CreateGameView = BaseView.extend({
 
   render: function() {
 		var that = this;
+		navLinks(mainButtons);
 		that.gameState.get('Members')[0].User = window.session.user.attributes;
 		that.$el.html(that.template({
 		  user: window.session.user,

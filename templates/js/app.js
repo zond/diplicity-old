@@ -51,18 +51,19 @@ $(window).load(function() {
 			},
 		});
 
-		window.session.router = new AppRouter();
-		Backbone.history.start({ 
-			pushState: true,
-		});
-		window.session.user.fetch();
-
 		new TopNavigationView({
 		  el: $('#top_navigation'),
 		}).doRender();
 		window.session.bottom_navigation = new BottomNavigationView({
 		  el: $('#bottom_navigation'),
+			buttons: mainButtons,
 		}).doRender();
+
+		window.session.router = new AppRouter();
+		Backbone.history.start({ 
+			pushState: true,
+		});
+		window.session.user.fetch();
 
     navigate(Backbone.history.fragment || '/');
 	};

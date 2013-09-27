@@ -454,6 +454,25 @@ function deadlineName(value) {
 	}
 };
 
+var mainButtons = [
+	{
+	  url: '/',
+		label: '{{.I "Games" }}',
+	},
+	{
+	  url: '/open',
+		label: '{{.I "Join" }}',
+	},
+	{
+	  url: '/create',
+		label: '{{.I "Create" }}',
+	},
+];
+
+function navLinks(buttons) {
+  window.session.bottom_navigation.navLinks(buttons);
+};
+
 function navigate(to) {
 	window.session.router.navigate(to, { trigger: true });
 	window.session.bottom_navigation.$('a').removeClass('btn-primary');

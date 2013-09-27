@@ -1,3 +1,7 @@
+#current_game {
+	position: relative;
+	z-index: 100;
+}
 #bottom_navigation {
 	min-height: 0px;
 }
@@ -34,4 +38,5 @@
 	position: absolute;
 	left: 0;
 	top: 0;
+	z-index: -100;
 }

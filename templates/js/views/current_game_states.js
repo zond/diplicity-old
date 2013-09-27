@@ -14,6 +14,7 @@ window.CurrentGameStatesView = BaseView.extend({
 
   render: function() {
 	  var that = this;
+		navLinks(mainButtons);
 		that.$el.html(that.template({
 		  user: window.session.user,
 		}));

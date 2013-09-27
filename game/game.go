@@ -72,6 +72,9 @@ func (self *Game) allocate(d *kol.DB) error {
 }
 
 func (self *Game) start(d *kol.DB) error {
+	if self.Started {
+		return fmt.Errorf("%+v is already started", self)
+	}
 	self.Started = true
 	self.Closed = true
 	if err := d.Set(self); err != nil {
@@ -113,22 +116,23 @@ func DeleteMember(c common.Context, gameId, email string) error {
 		if err := d.Get(&game); err != nil {
 			return fmt.Errorf("Game not found: %v", err)
 		}
+		if game.Started {
+			return fmt.Errorf("%+v already started", game)
+		}
 		member := Member{}
 		if _, err := d.Query().Where(kol.And{kol.Equals{"GameId", base64DecodedId}, kol.Equals{"UserId", []byte(email)}}).First(&member); err != nil {
 			return err
 		}
-		if !game.Started {
-			if err := d.Del(&member); err != nil {
+		if err := d.Del(&member); err != nil {
+			return err
+		}
+		left := []Member{}
+		if err := d.Query().Where(kol.Equals{"GameId", game.Id}).All(&left); err != nil {
+			return err
+		}
+		if len(left) == 0 {
+			if err := d.Del(&game); err != nil {
 				return err
-			}
-			left := []Member{}
-			if err := d.Query().Where(kol.Equals{"GameId", game.Id}).All(&left); err != nil {
-				return err
-			}
-			if len(left) == 0 {
-				if err := d.Del(&game); err != nil {
-					return err
-				}
 			}
 		}
 		return nil
@@ -141,7 +145,10 @@ func AddMember(c common.Context, j common.JSON, email string) error {
 	return c.DB().Transact(func(d *kol.DB) error {
 		game := Game{Id: state.Game.Id}
 		if err := d.Get(&game); err != nil {
-			return err
+			return fmt.Errorf("Game not found")
+		}
+		if game.Started {
+			return fmt.Errorf("%+v already started")
 		}
 		variant, found := common.VariantMap[game.Variant]
 		if !found {
