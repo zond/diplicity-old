@@ -51,6 +51,9 @@ $(window).load(function() {
 			},
 		});
 
+		window.session.user.fetch();
+		window.session.active_url = null;
+
 		new TopNavigationView({
 		  el: $('#top_navigation'),
 		}).doRender();
@@ -63,7 +66,6 @@ $(window).load(function() {
 		Backbone.history.start({ 
 			pushState: true,
 		});
-		window.session.user.fetch();
 
     navigate(Backbone.history.fragment || '/');
 	};

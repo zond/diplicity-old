@@ -11,6 +11,12 @@ window.BottomNavigationView = BaseView.extend({
 	  this.buttons = b;
 		this.doRender();
 	},
+	
+	update: function() {
+		this.$('a').removeClass('btn-primary');
+		this.$('a[href="' + window.session.active_url + '"]').addClass('btn-primary');
+		this.$('a[href="/' + window.session.active_url + '"]').addClass('btn-primary');
+	},
 
   render: function() {
 	  var that = this;
@@ -19,6 +25,7 @@ window.BottomNavigationView = BaseView.extend({
 		_.each(that.buttons, function(b) {
 		  that.$('.buttons').append('<a href="' + b.url + '" class="btn navigate">' + b.label + '</a>');
 		});
+		that.update();
 		return that;
 	},
 
