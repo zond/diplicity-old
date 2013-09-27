@@ -184,6 +184,8 @@ func (self *Web) AllJs(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, ";")
 	self.renderText(w, r, self.jsTemplates, "bootstrap.min.js", data)
 	fmt.Fprintln(w, ";")
+	self.renderText(w, r, self.jsTemplates, "panzoom.js", data)
+	fmt.Fprintln(w, ";")
 	self.renderText(w, r, self.jsTemplates, "util.js", data)
 	fmt.Fprintln(w, ";")
 	self.render_Templates(data)
