@@ -13,6 +13,7 @@ import (
 	"net/url"
 	"regexp"
 	"strings"
+	"time"
 )
 
 var gamePattern = regexp.MustCompile("^/games/(.*)$")
@@ -33,8 +34,8 @@ func (self *Web) WS(ws *websocket.Conn) {
 
 	pack := subs.New(self.db, ws).OnUnsubscribe(func(s *subs.Subscription, reason interface{}) {
 		self.Errorf("\t%v\t%v\t%v\t%v\t%v\t[unsubscribing]", ws.Request().URL, ws.Request().RemoteAddr, emailIf, s.Name(), reason)
-	}).Log(func(name string, i interface{}, op string) {
-		self.Debugf("\t%v\t%v\t%v\t%v\t%v ->", ws.Request().URL, ws.Request().RemoteAddr, emailIf, op, name)
+	}).Logger(func(name string, i interface{}, op string, dur time.Duration) {
+		self.Debugf("\t%v\t%v\t%v\t%v\t%v\t%v ->", ws.Request().URL, ws.Request().RemoteAddr, emailIf, op, name, dur)
 	})
 	defer func() {
 		self.Infof("\t%v\t%v\t%v -> [unsubscribing all]", ws.Request().URL, ws.Request().RemoteAddr, session.Values[SessionEmail])
