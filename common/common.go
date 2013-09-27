@@ -120,29 +120,38 @@ type AllocationMethod struct {
 	Translation string
 }
 
-type AllocationMethods []AllocationMethod
+type AllocationMethodSlice []AllocationMethod
 
-func (self AllocationMethods) Len() int {
+func (self AllocationMethodSlice) Len() int {
 	return len(self)
 }
 
-func (self AllocationMethods) Less(i, j int) bool {
+func (self AllocationMethodSlice) Less(i, j int) bool {
 	return bytes.Compare([]byte(self[i].Name), []byte(self[j].Name)) < 0
 }
 
-func (self AllocationMethods) Swap(i, j int) {
+func (self AllocationMethodSlice) Swap(i, j int) {
 	self[i], self[j] = self[j], self[i]
 }
 
+var randomAllocationMethod = AllocationMethod{
+	Id:   RandomString,
+	Name: "Random",
+}
+
+var preferencesAllocationMethod = AllocationMethod{
+	Id:   PreferencesString,
+	Name: "Preferences",
+}
+
+var AllocationMethods = AllocationMethodSlice{
+	randomAllocationMethod,
+	preferencesAllocationMethod,
+}
+
 var AllocationMethodMap = map[string]AllocationMethod{
-	RandomString: AllocationMethod{
-		Id:   RandomString,
-		Name: "Random",
-	},
-	PreferencesString: AllocationMethod{
-		Id:   PreferencesString,
-		Name: "Preferences",
-	},
+	RandomString:      randomAllocationMethod,
+	PreferencesString: preferencesAllocationMethod,
 }
 
 type Variant struct {
@@ -151,33 +160,49 @@ type Variant struct {
 	Translation string
 	PhaseTypes  []dip.PhaseType
 	Nations     []dip.Nation
+	Colors      map[dip.Nation]string
 }
 
 func (self Variant) JSONNations() string {
 	return string(MustMarshalJSON(self.Nations))
 }
 
-type Variants []Variant
+type VariantSlice []Variant
 
-func (self Variants) Len() int {
+func (self VariantSlice) Len() int {
 	return len(self)
 }
 
-func (self Variants) Less(i, j int) bool {
+func (self VariantSlice) Less(i, j int) bool {
 	return bytes.Compare([]byte(self[i].Name), []byte(self[j].Name)) < 0
 }
 
-func (self Variants) Swap(i, j int) {
+func (self VariantSlice) Swap(i, j int) {
 	self[i], self[j] = self[j], self[i]
 }
 
-var VariantMap = map[string]Variant{
-	ClassicalString: Variant{
-		Id:         ClassicalString,
-		Name:       "Classical",
-		PhaseTypes: cla.PhaseTypes,
-		Nations:    cla.Nations,
+var classicalVariant = Variant{
+	Id:         ClassicalString,
+	Name:       "Classical",
+	PhaseTypes: cla.PhaseTypes,
+	Nations:    cla.Nations,
+	Colors: map[dip.Nation]string{
+		cla.Austria: "#afe773",
+		cla.England: "#483c6c",
+		cla.France:  "#5693aa",
+		cla.Germany: "#ff8b66",
+		cla.Italy:   "#1b6c61",
+		cla.Russia:  "#8d5e68",
+		cla.Turkey:  "#ffdb66",
 	},
+}
+
+var Variants = VariantSlice{
+	classicalVariant,
+}
+
+var VariantMap = map[string]Variant{
+	ClassicalString: classicalVariant,
 }
 
 var prefPattern = regexp.MustCompile("^([^\\s;]+)(;q=([\\d.]+))?$")

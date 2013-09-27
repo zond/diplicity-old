@@ -39,13 +39,22 @@ func (self RequestData) Appcache() bool {
 	return self.web.appcache
 }
 
-func (self RequestData) AllocationMethods() (result common.AllocationMethods) {
+func (self RequestData) AllocationMethodMap() string {
+	result := map[string]common.AllocationMethod{}
 	for _, meth := range common.AllocationMethodMap {
 		meth.Translation = self.I(meth.Name)
-		result = append(result, meth)
+		result[meth.Id] = meth
+	}
+	return common.Prettify(result)
+}
+
+func (self RequestData) AllocationMethods() string {
+	result := sort.StringSlice{}
+	for _, meth := range common.AllocationMethods {
+		result = append(result, meth.Id)
 	}
 	sort.Sort(result)
-	return
+	return common.Prettify(result)
 }
 
 func (self RequestData) DefaultAllocationMethod() string {
@@ -56,13 +65,22 @@ func (self RequestData) DefaultVariant() string {
 	return common.ClassicalString
 }
 
-func (self RequestData) Variants() (result common.Variants) {
-	for _, variant := range common.VariantMap {
-		variant.Translation = self.I(variant.Name)
-		result = append(result, variant)
+func (self RequestData) Variants() string {
+	result := sort.StringSlice{}
+	for _, variant := range common.Variants {
+		result = append(result, variant.Id)
 	}
 	sort.Sort(result)
-	return
+	return common.Prettify(result)
+}
+
+func (self RequestData) VariantMap() string {
+	result := map[string]common.Variant{}
+	for _, variant := range common.Variants {
+		variant.Translation = self.I(variant.Name)
+		result[variant.Id] = variant
+	}
+	return common.Prettify(result)
 }
 
 func (self RequestData) ChatFlagOptions() (result []common.ChatFlagOption) {

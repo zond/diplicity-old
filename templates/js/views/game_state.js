@@ -20,6 +20,7 @@ window.GameStateView = BaseView.extend({
 
 	initialize: function(options) {
 	  _.bindAll(this, 'doRender');
+		this.play_state = options.play_state;
 		this.button_text = options.button_text;
 		this.button_action = options.button_action;
 		this.editable = options.editable;
@@ -98,18 +99,19 @@ window.GameStateView = BaseView.extend({
 		}
     that.$el.html(that.template({
 		  classes: classes,
+			play_state: that.play_state,
 		  parentId: that.parentId,
 			membersExpanded: that.membersExpanded,
 		  model: that.model,
 			editable: that.editable,
 			button_text: that.button_text,
 		}));
-		_.each(variants(), function(variant) {
-			that.$('.game-variant').append('<option value="{0}">{1}</option>'.format(variant.id, variant.name));
+		_.each(variants, function(variant) {
+			that.$('.game-variant').append('<option value="{0}">{1}</option>'.format(variant, variantMap[variant].Name));
 		});
 		that.$('.game-variant').val(that.model.get('Variant'));
-		_.each(allocationMethods(), function(meth) {
-			that.$('.game-allocation-method').append('<option value="{0}">{1}</option>'.format(meth.id, meth.name));
+		_.each(allocationMethods, function(meth) {
+			that.$('.game-allocation-method').append('<option value="{0}">{1}</option>'.format(meth, allocationMethodMap[meth].Name));
 		});
 		that.$('.game-allocation-method').val(that.model.get('AllocationMethod'));
 		if (that.editable) {

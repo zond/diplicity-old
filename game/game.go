@@ -197,6 +197,14 @@ func Create(c common.Context, j common.JSON, creator string) error {
 		AllocationMethod: state.Game.AllocationMethod,
 	}
 
+	if _, found := common.VariantMap[game.Variant]; !found {
+		return fmt.Errorf("Unknown variant for %+v", game)
+	}
+
+	if _, found := common.AllocationMethodMap[game.AllocationMethod]; !found {
+		return fmt.Errorf("Unknown allocation method for %+v", game)
+	}
+
 	member := &Member{
 		UserId:           []byte(creator),
 		PreferredNations: state.Members[0].PreferredNations,

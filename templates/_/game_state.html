@@ -10,9 +10,15 @@
 		<% if (!editable) { %>
 		<div class="row-xs-1">
 			<h4 class="panel-title">
-				<a class="btn btn-primary btn-sm view-game navigate" href="/games/<%- model.get('Id') %>">
+				<% if (play_state) { %>
+				<a class="btn btn-primary btn-sm view-game navigate" href="/">
+					<span class="glyphicon glyphicon-list"></span>
+				</a>
+				<% } else { %>
+				<a class="btn btn-primary btn-sm view-game navigate" href="/games/<%- encodeURIComponent(model.get('Id')) %>">
 					<span class="glyphicon glyphicon-play"></span>
 				</a>
+				<% } %>
 			</h4>
 		</div>
 		<% } %>

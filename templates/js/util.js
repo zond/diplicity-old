@@ -8,59 +8,30 @@ String.prototype.format = function() {
 	});
 };
 
-function allocationMethods() {
-	var rval = [];
-	{{range .AllocationMethods}}rval.push({
-		id: '{{.Id}}',
-		name: '{{.Translation}}',
-	});
-	{{end}}
-	return rval;
-}
-
-function variants() {
-	var rval = [];
-	{{range .Variants}}rval.push({
-		id: '{{.Id}}',
-		name: '{{.Translation}}',
-	});
-	{{end}}
-	return rval;
-};
+var allocationMethods = {{.AllocationMethods}};
+var allocationMethodMap = {{.AllocationMethodMap}};
 
 function allocationMethodName(id) {
- {{range .AllocationMethods}}if (id == '{{.Id}}') {
-   return '{{.Translation}}';
- }
- {{end}}
- return null;
+  return allocationMethodMap[id].Translation;
 }
 
+var variantMap = {{.VariantMap}};
+var variants = {{.Variants}};
+
 function variantName(id) {
-	{{range .Variants}}if (id == '{{.Id}}') {
-		return '{{.Translation}}';
-	}
-	{{end}}
-	return null;
+  return variantMap[id].Translation;
 };
 
 function variantNations(id) {
-  {{range .Variants}}if (id == '{{.Id}}') {
-    return {{.JSONNations}};
-	}
-	{{end}}
-	return null;
+  return variantMap[id].Nations;
+}
+
+function variantColor(variantId, nation) {
+  return variantMap[id].Colors[nation];
 }
 
 function phaseTypes(variant) {
-	{{range .Variants}}if (variant == '{{.Id}}') {
-		var rval = [];
-		{{range .PhaseTypes}}rval.push('{{.}}');
-		{{end}}
-		return rval;
-	}
-	{{end}}
-	return [];
+  return variantMap[variant].PhaseTypes;
 };
 
 function chatFlagOptions() {

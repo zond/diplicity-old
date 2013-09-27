@@ -16,6 +16,7 @@ window.GameView = BaseView.extend({
 		if (this.model.get('Members') != null) {
 			var state_view = new GameStateView({ 
 				parentId: 'current_game',
+				play_state: true,
 				editable: false,
 				model: that.model,
 			}).doRender();
