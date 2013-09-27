@@ -9,5 +9,6 @@ DroidSerif-Regular.ttf
 /css/{{.Version}}/images/icons-36-black.png
 /css/{{.Version}}/images/icons-18-white.png
 /css/{{.Version}}/images/icons-18-black.png
+/css/fonts/glyphicons-halflings-regular.woff
 NETWORK:
 *
