@@ -25,6 +25,9 @@ function panZoom(selector) {
 		var execute = function() {
 			element.css('-webkit-transform', 'translate3d(' + parseInt(deltaX + dragX) + 'px,' + parseInt(deltaY + dragY) + 'px,0px) scale3d(' + (scale * zoom) + ',' + (scale * zoom) + ',1)');
 		};
+		deltaY = $(window).height() / 2 - element.height() / 2;
+		deltaX = $(window).width() / 2 - element.width() / 2;
+		execute();
 		container.bind('mousewheel', function(e) {
 		  e.preventDefault();
 			var wantedZoom = 1;

@@ -2,6 +2,10 @@ window.GameState = Backbone.Model.extend({
 
   urlRoot: '/games',
 
+	initialize: function() {
+	  this.cleaners = [];
+	},
+
   localStorage: function() {
 	  return this.get('Id') != null;
 	},
@@ -34,6 +38,10 @@ window.GameState = Backbone.Model.extend({
 	  var that = this;
 		var phase = that.get('Phase');
 		var variant = that.get('Variant');
+		_.each(that.cleaners, function(cleaner) {
+		  cleaner();
+		});
+		that.cleaners = [];
 	  if (phase != null) {
 			$(destSel).copySVG(variant + 'Map');
 			_.each(phase.Units, function(val, key) {
@@ -45,6 +53,9 @@ window.GameState = Backbone.Model.extend({
 				} else {
 					$(destSel + ' svg').colorProvince(key, variantColor(variant, phase.SupplyCenters[key]));
 				}
+				that.cleaners.push($(destSel + ' svg').addCopyClickListener(key, function(ev) {
+				  logInfo('click', key);
+				}));
 			});
 			$(destSel + ' svg').find('#provinces')[0].removeAttribute('style');
 		}

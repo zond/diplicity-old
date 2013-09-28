@@ -74,6 +74,35 @@ $.fn.hideProvince = function(province) {
 	});
 }
 
+$.fn.addCopyClickListener = function(sourceId, handler) {
+  var prov = $('#' + selEscape(sourceId)).first();
+  var copy = prov.clone()[0];
+	copy.setAttribute("id", prov.attr('id') + "_click");
+	copy.setAttribute("style", "fill:#000000;fill-opacity:0;stroke:none;");
+	copy.setAttribute("stroke", "none");
+	copy.removeAttribute("transform");
+	var x = 0;
+	var y = 0;
+	var el = prov[0];
+	while (el != null && el.getAttribute != null) {
+		var trans = el.getAttribute("transform");
+		if (trans != null) {
+			var transMatch = /^translate\(([\d.-]+),\s*([\d.-]+)\)$/.exec(trans);
+			x += Number(transMatch[1]);
+			y += Number(transMatch[2]);
+		}
+		el = el.parentNode;
+	}
+	copy.setAttribute("transform", "translate(" + x + "," + y + ")");
+  this.each(function() {
+	  this.appendChild(copy);
+	});
+	copy.addEventListener('click', handler);
+  return function() {
+	  copy.removeEventListener('click');
+	};
+}
+
 $.fn.addUnit = function(sourceId, province, color, dislodged, build) {
   var shadow = $('#' + sourceId).find('#shadow').first().clone();
 	var hullQuery = $('#' + sourceId + ' svg').find('#hull');
