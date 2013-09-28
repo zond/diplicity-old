@@ -21,24 +21,25 @@ window.GameView = BaseView.extend({
 		  cleaner();
 		});
 		that.cleaners = [];
+		var map = dippyMap(that.$('.map'));
 	  if (phase != null) {
-			$('.map').copySVG(variant + 'Map');
+			map.copySVG(variant + 'Map');
 			_.each(phase.Units, function(val, key) {
-			  $('.map svg').addUnit(variant + 'Unit' + val.Type, key, variantColor(variant, val.Nation));
+			  map.addUnit(variant + 'Unit' + val.Type, key, variantColor(variant, val.Nation));
 			});
 			_.each(variantColorizableProvincesMap[variant], function(key) {
 				if (phase.SupplyCenters[key] == null) {
-					$('.map svg').hideProvince(key);
+					map.hideProvince(key);
 				} else {
-					$('.map svg').colorProvince(key, variantColor(variant, phase.SupplyCenters[key]));
+					map.colorProvince(key, variantColor(variant, phase.SupplyCenters[key]));
 				}
 			});
 			_.each(variantClickableProvincesMap[variant], function(key) {
-				that.cleaners.push($('.map' + ' svg').addCopyClickListener(key, function(ev) {
+				that.cleaners.push(map.addClickListener(key, function(ev) {
 				  handler(key);
 				}));
 			});
-			$('.map svg').find('#provinces')[0].removeAttribute('style');
+			map.showProvinces();
 		}
 	},
 

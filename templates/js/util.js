@@ -113,3 +113,39 @@ function navigate(to) {
 	$('body').css({'margin-bottom': (($('.navbar-fixed-bottom').height()) + 1 )+'px'});
 }
 
+function Poi(x, y) {
+	this.x = x;
+	this.y = y;
+	this.add = function(p) {
+		return new Poi(x + p.x, y + p.y);
+	};  
+	this.sub = function(p) {
+		return new Poi(x - p.x, y - p.y);
+	};  
+	this.len = function() {
+		return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+	};
+	this.div = function(f) {
+		return new Poi(x / f, y / f);
+	};
+	this.mul = function(f) {
+		return new Poi(x * f, y * f);
+	};
+	this.orth = function() {
+		return new Poi(-y, x);
+	};
+}
+
+function Vec(p1, p2) {
+	this.p1 = p1;
+	this.p2 = p2;
+	this.len = function() {
+		return p2.sub(p1).len();
+	};
+	this.dir = function() {
+		return p2.sub(p1).div(this.len());
+	};
+	this.orth = function() {
+		return this.dir().orth();
+	};
+}
