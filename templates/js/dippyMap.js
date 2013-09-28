@@ -97,7 +97,18 @@ $.fn.addCopyClickListener = function(sourceId, handler) {
   this.each(function() {
 	  this.appendChild(copy);
 	});
-	copy.addEventListener('click', handler);
+	copy.addEventListener('mousedown', function(ev) {
+	  var pos = $(copy).parent().parent().position();
+		var mouseUpListener = null;
+		mouseUpListener = function() {
+			copy.removeEventListener('mouseup', mouseUpListener);
+			var newPos = $(copy).parent().parent().position();
+			if (Math.sqrt(Math.pow(newPos.top - pos.top, 2), Math.pow(newPos.left - pos.left, 2)) < 5) {
+				handler();
+			}
+		};
+		copy.addEventListener('mouseup', mouseUpListener);
+	});
   return function() {
 	  copy.removeEventListener('click');
 	};

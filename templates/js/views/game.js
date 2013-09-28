@@ -3,9 +3,13 @@ window.GameView = BaseView.extend({
   template: _.template($('#game_underscore').html()),
 
 	initialize: function(options) {
-	  _.bindAll(this, 'doRender');
+	  _.bindAll(this, 'doRender', 'provinceClicked');
 		this.listenTo(this.model, 'change', this.doRender);
 		this.fetch(this.model);
+	},
+
+	provinceClicked: function(prov) {
+	  logInfo('clicked', prov);
 	},
 
   render: function() {
@@ -22,7 +26,7 @@ window.GameView = BaseView.extend({
 			}).doRender();
 			that.$('#current_game').append(state_view.el);
 		}
-		that.model.render('.map');
+		that.model.render('.map', this.provinceClicked);
 		panZoom('.map');
 		return that;
 	},

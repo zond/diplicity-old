@@ -84,12 +84,34 @@ func (self RequestData) VariantMap() string {
 	return common.Prettify(result)
 }
 
-func (self RequestData) VariantProvincesMap() string {
+func (self RequestData) VariantColorizableProvincesMap() string {
 	result := map[string][]dip.Province{}
 	for _, variant := range common.Variants {
+		supers := map[dip.Province]bool{}
+		for _, prov := range variant.Graph.Provinces() {
+			supers[prov.Super()] = true
+		}
+		for prov, _ := range supers {
+			result[variant.Id] = append(result[variant.Id], prov)
+		}
+	}
+	return common.Prettify(result)
+}
+
+func (self RequestData) VariantClickableProvincesMap() string {
+	result := map[string][]dip.Province{}
+	for _, variant := range common.Variants {
+		withSubs := map[dip.Province]bool{}
+		for _, prov := range variant.Graph.Provinces() {
+			if prov.Sub() != "" {
+				withSubs[prov.Super()] = true
+			}
+		}
 		result[variant.Id] = []dip.Province{}
 		for _, prov := range variant.Graph.Provinces() {
-			result[variant.Id] = append(result[variant.Id], prov)
+			if prov.Sub() != "" || !withSubs[prov] {
+				result[variant.Id] = append(result[variant.Id], prov)
+			}
 		}
 	}
 	return common.Prettify(result)
