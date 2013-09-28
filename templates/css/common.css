@@ -1,3 +1,9 @@
+.prioritize {
+	text-align: left;
+}
+.prioritize .glyphicon {
+	margin-left: 6px;
+}
 #current_game {
 	position: relative;
 	z-index: 100;
