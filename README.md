@@ -38,10 +38,9 @@ Next generation Droidippy.
 
 ## Current design
 
-* Hosted at Google App Engine
 * Backend implemented in Go
-* Backend API relatively RESTful JSON/HTTP
+* Backend API 100% real time via WebSockets
 * Frontend single page JavaScript application
-* Frontend UI using jQuery Mobile widgets
+* Frontend UI based on Bootstrap.js version 3
 * Frontend framework built using Backbone.js routes, views and models
 
