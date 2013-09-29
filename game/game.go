@@ -91,14 +91,13 @@ func (self *Game) start(d *kol.DB) error {
 	}
 	startPhase := startState.Phase()
 	phase := &Phase{
-		GameId:        self.Id,
-		Ordinal:       0,
-		Season:        startPhase.Season(),
-		Year:          startPhase.Year(),
-		Type:          startPhase.Type(),
-		Units:         startState.Units(),
-		SupplyCenters: startState.SupplyCenters(),
+		GameId:  self.Id,
+		Ordinal: 0,
+		Season:  startPhase.Season(),
+		Year:    startPhase.Year(),
+		Type:    startPhase.Type(),
 	}
+	phase.Units, phase.SupplyCenters, phase.Dislodgeds, phase.Dislodgers, phase.Bounces = startState.Dump()
 	return d.Set(phase)
 }
 
@@ -239,6 +238,9 @@ type Phase struct {
 
 	Units         map[dip.Province]dip.Unit
 	SupplyCenters map[dip.Province]dip.Nation
+	Dislodgeds    map[dip.Province]dip.Unit
+	Dislodgers    map[dip.Province]dip.Province
+	Bounces       map[dip.Province]map[dip.Province]bool
 }
 
 func (self *Phase) Updated(d *kol.DB, old *Phase) {
