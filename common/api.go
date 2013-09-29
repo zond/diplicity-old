@@ -6,4 +6,5 @@ const (
 	UpdateType      = "Update"
 	CreateType      = "Create"
 	DeleteType      = "Delete"
+	RPCType         = "RPC"
 )

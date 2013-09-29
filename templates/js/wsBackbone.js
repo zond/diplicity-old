@@ -2,6 +2,25 @@ function wsBackbone(url, start) {
 	var ws = null;
   
 	var subscriptions = {};
+	var rpcCalls = {};
+
+	window.wsRPC = function(meth, params, success) {
+	  var id = Math.random().toString(36).substring(2);
+		if (success != null) {
+			rpcCalls[id] = success;
+		}
+    ws.sendIfReady(JSON.stringify({
+		  Type: 'RPC',
+			Object: {
+			  URI: id,
+				Data: {
+				  Meth: meth,
+					Params: params,
+				},
+			},
+		}));
+	};
+
 	var closeSubscription = function(that) {
 		var url = _.result(that, 'url') || urlError(); 
 		if (subscriptions[url] != null) {
@@ -84,35 +103,42 @@ function wsBackbone(url, start) {
 		};
 		ws.onmessage = function(ev) {
 			var mobj = JSON.parse(ev.data);
-			if (mobj.Object.URI != null) {
-				var subscription = subscriptions[mobj.Object.URI];
-				if (subscription != null) {
-					logDebug('Got', mobj.Type, mobj.Object.URI, 'from websocket');
-					logTrace(mobj.Object.Data);
-					if (mobj.Type == 'Delete') {
-						if (subscription.model.models != null) {
-							_.each(mobj.Object.Data, function(element) {
-								var model = subscription.model.get(element.Id);
-								subscription.model.remove(model, { silent: true });
-							});
-							subscription.model.trigger('reset');
+			if (mobj.Type == 'RPC') {
+			  var rpcCall = rpcCalls[mobj.Object.URI];
+				if (rpcCall != null) {
+				  rpcCall(mobj.Object.Data);
+				}
+			} else {
+				if (mobj.Object.URI != null) {
+					var subscription = subscriptions[mobj.Object.URI];
+					if (subscription != null) {
+						logDebug('Got', mobj.Type, mobj.Object.URI, 'from websocket');
+						logTrace(mobj.Object.Data);
+						if (mobj.Type == 'Delete') {
+							if (subscription.model.models != null) {
+								_.each(mobj.Object.Data, function(element) {
+									var model = subscription.model.get(element.Id);
+									subscription.model.remove(model, { silent: true });
+								});
+								subscription.model.trigger('reset');
+							} else {
+								logError("Don't know how to handle Deletes on backbone.Models");
+							}
 						} else {
-							logError("Don't know how to handle Deletes on backbone.Models");
+							if (subscription.options != null && subscription.options.success != null) {
+								subscription.options.success(mobj.Object.Data, null, subscription.options);
+								delete(subscription.options.success);
+							} else {
+								subscription.model.set(mobj.Object.Data, { remove: mobj.Type == 'Fetch', reset: true });
+							}
+						}
+						if (_.result(subscription.model, 'localStorage')) {
+							localStorage.setItem(mobj.Object.URI, JSON.stringify(subscription.model));
+							logDebug('Stored', mobj.Object.URI, 'in localStorage');
 						}
 					} else {
-						if (subscription.options != null && subscription.options.success != null) {
-							subscription.options.success(mobj.Object.Data, null, subscription.options);
-							delete(subscription.options.success);
-						} else {
-							subscription.model.set(mobj.Object.Data, { remove: mobj.Type == 'Fetch', reset: true });
-						}
+						logError("Received", mobj, "for unsubscribed URI", mobj.Object.URI);
 					}
-					if (_.result(subscription.model, 'localStorage')) {
-						localStorage.setItem(mobj.Object.URI, JSON.stringify(subscription.model));
-						logDebug('Stored', mobj.Object.URI, 'in localStorage');
-					}
-				} else {
-					logError("Received", mobj, "for unsubscribed URI", mobj.Object.URI);
 				}
 			}
 		};

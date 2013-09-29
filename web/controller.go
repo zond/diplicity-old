@@ -42,13 +42,11 @@ func (self *Web) WS(ws *websocket.Conn) {
 		pack.UnsubscribeAll()
 	}()
 
+	var start time.Time
 	for {
 		var message subs.Message
 		if err = websocket.JSON.Receive(ws, &message); err == nil {
-			self.Debugf("\t%v\t%v\t%v\t%v\t%v <-", ws.Request().URL, ws.Request().RemoteAddr, emailIf, message.Type, message.Object.URI)
-			if self.logLevel > Trace && message.Object.Data != nil {
-				self.Tracef("%+v", common.Prettify(message.Object.Data))
-			}
+			start = time.Now()
 			switch message.Type {
 			case common.SubscribeType:
 				s := pack.New(message.Object.URI)
@@ -99,8 +97,30 @@ func (self *Web) WS(ws *websocket.Conn) {
 						game.AddMember(self, common.JSON{message.Object.Data}, email)
 					}
 				}
+			case common.RPCType:
+				json := common.JSON{message.Object.Data}
+				if json.GetString("Meth") == "ValidOrders" {
+					if loggedIn {
+						params := json.Get("Params")
+						if options, err := game.ValidOrders(self, params.GetString("GameId"), params.GetString("Province"), email); err == nil {
+							websocket.JSON.Send(ws, subs.Message{
+								Type: common.RPCType,
+								Object: subs.Object{
+									Data: options,
+									URI:  message.Object.URI,
+								},
+							})
+						} else {
+							self.Errorf("While calculating valid orders for %v in %v in %v: %v", email, params.GetString("Province"), params.GetString("GameId"), err)
+						}
+					}
+				}
 			default:
 				self.Errorf("Unrecognized message Type: %+v", message.Type)
+			}
+			self.Debugf("\t%v\t%v\t%v\t%v\t%v\t%v <-", ws.Request().URL, ws.Request().RemoteAddr, emailIf, message.Type, message.Object.URI, time.Now().Sub(start))
+			if self.logLevel > Trace && message.Object.Data != nil {
+				self.Tracef("%+v", common.Prettify(message.Object.Data))
 			}
 		} else if err == io.EOF {
 			break

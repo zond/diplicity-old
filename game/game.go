@@ -6,6 +6,7 @@ import (
 	"github.com/zond/diplicity/common"
 	"github.com/zond/diplicity/user"
 	"github.com/zond/godip/classical"
+	"github.com/zond/godip/classical/orders"
 	dip "github.com/zond/godip/common"
 	"github.com/zond/godip/state"
 	"github.com/zond/kcwraps/kol"
@@ -42,10 +43,7 @@ type Game struct {
 }
 
 func (self *Game) allocate(d *kol.DB) error {
-	members := Members{}
-	if err := d.Query().Where(kol.Equals{"GameId", self.Id}).All(&members); err != nil {
-		return err
-	}
+	members := self.Members(d)
 	switch self.AllocationMethod {
 	case common.RandomString:
 		for memberIndex, nationIndex := range rand.Perm(len(members)) {
@@ -125,10 +123,7 @@ func DeleteMember(c common.Context, gameId, email string) error {
 		if err := d.Del(&member); err != nil {
 			return err
 		}
-		left := []Member{}
-		if err := d.Query().Where(kol.Equals{"GameId", game.Id}).All(&left); err != nil {
-			return err
-		}
+		left := game.Members(d)
 		if len(left) == 0 {
 			if err := d.Del(&game); err != nil {
 				return err
@@ -153,10 +148,7 @@ func AddMember(c common.Context, j common.JSON, email string) error {
 		if !found {
 			return fmt.Errorf("Unknown variant %v", game.Variant)
 		}
-		already := []Member{}
-		if err := d.Query().Where(kol.Equals{"GameId", state.Game.Id}).All(&already); err != nil {
-			return err
-		}
+		already := game.Members(d)
 		if len(already) < len(variant.Nations) {
 			id := make([]byte, len(state.Game.Id)+len([]byte(email)))
 			copy(id, state.Game.Id)
@@ -218,13 +210,32 @@ func Create(c common.Context, j common.JSON, creator string) error {
 }
 
 func (self *Game) Updated(d *kol.DB, old *Game) {
-	members := []Member{}
-	if err := d.Query().Where(kol.Equals{"GameId", self.Id}).All(&members); err != nil {
-		panic(err)
-	}
-	for _, member := range members {
+	for _, member := range self.Members(d) {
 		d.EmitUpdate(&member)
 	}
+}
+
+func (self *Game) LastPhase(d *kol.DB) (result *Phase) {
+	var phases Phases
+	d.Query().Where(kol.Equals{"GameId", self.Id}).All(&phases)
+	if len(phases) > 0 {
+		sort.Sort(phases)
+		result = &phases[0]
+	}
+	return
+}
+
+func (self *Game) Members(d *kol.DB) (result Members) {
+	d.Query().Where(kol.Equals{"GameId", self.Id}).All(&result)
+	return
+}
+
+func (self *Game) Member(d *kol.DB, email string) (result *Member, err error) {
+	var member Member
+	if _, err = d.Query().Where(kol.And{kol.Equals{"GameId", self.Id}, kol.Equals{"UserId", []byte(email)}}).First(&member); err == nil {
+		result = &member
+	}
+	return
 }
 
 type Phase struct {
@@ -338,7 +349,6 @@ func SubscribeCurrent(c common.Context, s *subs.Subscription, email string) erro
 	s.Call = func(i interface{}, op string) error {
 		members := i.([]*Member)
 		states := []GameState{}
-		phases := Phases{}
 		for _, member := range members {
 			if op == common.DeleteType {
 				states = append(states, GameState{
@@ -350,26 +360,11 @@ func SubscribeCurrent(c common.Context, s *subs.Subscription, email string) erro
 				if err := s.DB().Get(game); err != nil {
 					return err
 				}
-				gameMembers := Members{}
-				if err := s.DB().Query().Where(kol.Equals{"GameId", game.Id}).All(&gameMembers); err != nil {
-					return err
-				}
 				if !game.Ended {
-					phases = nil
-					if err := s.DB().Query().Where(kol.Equals{"GameId", game.Id}).All(&phases); err != nil {
-						return err
-					}
-					phase := &Phase{}
-					if len(phases) > 0 {
-						sort.Sort(phases)
-						phase = &phases[0]
-					} else {
-						phase = nil
-					}
 					states = append(states, GameState{
 						Game:    game,
-						Members: gameMembers.toStates(c, game, email),
-						Phase:   phase,
+						Members: game.Members(c.DB()).toStates(c, game, email),
+						Phase:   game.LastPhase(c.DB()),
 					})
 				}
 			}
@@ -390,10 +385,7 @@ func SubscribeGame(c common.Context, s *subs.Subscription, gameId, email string)
 	}
 	s.Call = func(i interface{}, op string) error {
 		game := i.(*Game)
-		members := Members{}
-		if err := s.DB().Query().Where(kol.Equals{"GameId", game.Id}).All(&members); err != nil {
-			return err
-		}
+		members := game.Members(c.DB())
 		isMember := false
 		for _, m := range members {
 			if string(m.UserId) == email {
@@ -402,21 +394,10 @@ func SubscribeGame(c common.Context, s *subs.Subscription, gameId, email string)
 			}
 		}
 		if !game.Private || isMember {
-			phases := Phases{}
-			if err := s.DB().Query().Where(kol.Equals{"GameId", game.Id}).All(&phases); err != nil {
-				return err
-			}
-			phase := &Phase{}
-			if len(phases) > 0 {
-				sort.Sort(phases)
-				phase = &phases[0]
-			} else {
-				phase = nil
-			}
 			return s.Send(GameState{
 				Game:    game,
 				Members: members.toStates(c, game, email),
-				Phase:   phase,
+				Phase:   game.LastPhase(c.DB()),
 			}, op)
 		}
 		return nil
@@ -429,13 +410,9 @@ func SubscribeOpen(c common.Context, s *subs.Subscription, email string) error {
 	s.Call = func(i interface{}, op string) error {
 		games := i.([]*Game)
 		states := []GameState{}
-		phases := Phases{}
 		isMember := false
 		for _, game := range games {
-			members := Members{}
-			if err := s.DB().Query().Where(kol.Equals{"GameId", game.Id}).All(&members); err != nil {
-				return err
-			}
+			members := game.Members(c.DB())
 			isMember = false
 			for _, m := range members {
 				if string(m.UserId) == email {
@@ -444,25 +421,49 @@ func SubscribeOpen(c common.Context, s *subs.Subscription, email string) error {
 				}
 			}
 			if !isMember {
-				phases = nil
-				if err := s.DB().Query().Where(kol.Equals{"GameId", game.Id}).All(&phases); err != nil {
-					return err
-				}
-				phase := &Phase{}
-				if len(phases) > 0 {
-					sort.Sort(phases)
-					phase = &phases[0]
-				} else {
-					phase = nil
-				}
 				states = append(states, GameState{
 					Game:    game,
 					Members: members.toStates(c, game, email),
-					Phase:   phase,
+					Phase:   game.LastPhase(c.DB()),
 				})
 			}
 		}
 		return s.Send(states, op)
 	}
 	return s.Subscribe(new(Game))
+}
+
+func ValidOrders(c common.Context, gameId, province, email string) (result []dip.Option, err error) {
+	var base64DecodedId []byte
+	base64DecodedId, err = base64.StdEncoding.DecodeString(gameId)
+	if err != nil {
+		return
+	}
+	game := Game{Id: base64DecodedId}
+	if err = c.DB().Get(&game); err != nil {
+		return
+	}
+	var member *Member
+	member, err = game.Member(c.DB(), email)
+	if err != nil {
+		return
+	}
+	phase := game.LastPhase(c.DB())
+	if phase == nil {
+		err = fmt.Errorf("No phase for %+v found", game)
+		return
+	}
+	state := classical.Blank(classical.Phase(phase.Year, phase.Season, phase.Type))
+	state.Load(
+		phase.Units,
+		phase.SupplyCenters,
+		phase.Dislodgeds,
+		phase.Dislodgers,
+		phase.Bounces,
+	)
+	nation, options := state.Options(orders.Types(), dip.Province(province))
+	if nation != nil && *nation == member.Nation {
+		result = options
+	}
+	return
 }
