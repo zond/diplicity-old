@@ -102,6 +102,7 @@ function wsBackbone(url, start) {
 					} else {
 						if (subscription.options != null && subscription.options.success != null) {
 							subscription.options.success(mobj.Object.Data, null, subscription.options);
+							delete(subscription.options.success);
 						} else {
 							subscription.model.set(mobj.Object.Data, { remove: mobj.Type == 'Fetch', reset: true });
 						}
