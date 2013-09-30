@@ -14,7 +14,17 @@ window.GameView = BaseView.extend({
 		  GameId: this.model.get('Id'),
 			Province: prov,
 		}, function(result) {
-		  console.log(result);
+		  var opts = [];
+			for (var orderType in result) {
+			  opts.push({
+				  name: orderType,
+				});
+			}
+			if (opts.length > 0) {
+				new OptionsDialogView({ 
+					options: opts,
+				}).display();
+			}
 		});
 	},
 
