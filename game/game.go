@@ -433,7 +433,7 @@ func SubscribeOpen(c common.Context, s *subs.Subscription, email string) error {
 	return s.Subscribe(new(Game))
 }
 
-func ValidOrders(c common.Context, gameId, province, email string) (result []dip.Option, err error) {
+func ValidOrders(c common.Context, gameId, province, email string) (result dip.Options, err error) {
 	var base64DecodedId []byte
 	base64DecodedId, err = base64.StdEncoding.DecodeString(gameId)
 	if err != nil {
@@ -461,8 +461,8 @@ func ValidOrders(c common.Context, gameId, province, email string) (result []dip
 		phase.Dislodgers,
 		phase.Bounces,
 	)
-	nation, options := state.Options(orders.Types(), dip.Province(province))
-	if nation != nil && *nation == member.Nation {
+	nation, options, found := state.Options(orders.Types(), dip.Province(province))
+	if found && nation == member.Nation {
 		result = options
 	}
 	return

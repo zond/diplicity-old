@@ -103,13 +103,15 @@ func (self *Web) WS(ws *websocket.Conn) {
 					if loggedIn {
 						params := json.Get("Params")
 						if options, err := game.ValidOrders(self, params.GetString("GameId"), params.GetString("Province"), email); err == nil {
-							websocket.JSON.Send(ws, subs.Message{
+							if err := websocket.JSON.Send(ws, subs.Message{
 								Type: common.RPCType,
 								Object: subs.Object{
 									Data: options,
 									URI:  message.Object.URI,
 								},
-							})
+							}); err != nil {
+								self.Errorf("%v", err)
+							}
 						} else {
 							self.Errorf("While calculating valid orders for %v in %v in %v: %v", email, params.GetString("Province"), params.GetString("GameId"), err)
 						}
