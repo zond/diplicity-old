@@ -10,7 +10,12 @@ window.GameView = BaseView.extend({
 	},
 
 	provinceClicked: function(prov) {
-	  logInfo('clicked', prov);
+	  window.wsRPC('ValidOrders', {
+		  GameId: this.model.get('Id'),
+			Province: prov,
+		}, function(result) {
+		  console.log(result);
+		});
 	},
 
 	renderMap: function(handler) {
