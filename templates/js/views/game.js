@@ -10,22 +10,45 @@ window.GameView = BaseView.extend({
 	},
 
 	provinceClicked: function(prov) {
+	  var that = this;
 	  window.wsRPC('ValidOrders', {
 		  GameId: this.model.get('Id'),
 			Province: prov,
 		}, function(result) {
-		  var opts = [];
-			for (var orderType in result) {
-			  opts.push({
-				  name: orderType,
-				});
+		  that.decide(result);
+		});
+	},
+
+	decide: function(raw) {
+	  var that = this;
+		var opts = [];
+		var typeMap = {};
+		var types = [];
+		for (var value in raw) {
+			opts.push({
+				name: value,
+				value: value,
+			});
+			if (!typeMap[raw[value].Type]) {
+				types.push(raw[value].Type);
+				typeMap[raw[value].Type] = true;
 			}
-			if (opts.length > 0) {
+		}
+		if (types.length > 1) {
+			logError("Don't know how to decide when having options", raw, "of different types", types);
+		} else if (types.length > 0) {
+			if (types[0] == "OrderType") {
 				new OptionsDialogView({ 
 					options: opts,
+					selected: function(alternative) {
+					  console.log('selected', alternative);
+					  that.decide(raw[alternative].Next);
+					},
 				}).display();
+			} else {
+			  logError("Don't know how to handle options of type", types[0]);
 			}
-		});
+		}
 	},
 
 	renderMap: function(handler) {

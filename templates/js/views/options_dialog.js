@@ -9,18 +9,28 @@ window.OptionsDialogView = BaseView.extend({
 	},
 
 	initialize: function(options) {
-	  _.bindAll(this, 'doRender');
+	  _.bindAll(this, 'doRender', 'hideAndSelect');
 		this.options = options.options;
 		this.title = options.title;
+		this.selected = options.selected;
+		this.selection = null;
 	},
 
 	hide: function() {
 		this.clean(true);
+	  if (this.selection != null) {
+		  this.selected(this.selection);
+		}
 	},
 
 	display: function() {
 		$('body').append(this.doRender().el);
 		this.$el.modal('show');
+	},
+
+  hideAndSelect: function(alternative) {
+	  this.selection = alternative;
+		this.$el.modal('hide');
 	},
 
   render: function() {
@@ -31,6 +41,7 @@ window.OptionsDialogView = BaseView.extend({
 		_.each(that.options, function(opt) {
 		  that.$('.options-list').append(new OptionView({
 			  option: opt,
+				selected: that.hideAndSelect,
 			}).doRender().el);
 		});
 		return that;

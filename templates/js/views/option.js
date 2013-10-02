@@ -6,9 +6,19 @@ window.OptionView = BaseView.extend({
 
 	className: 'list-group-item',
 
+  events: {
+	  "click .btn": "click",
+	},
+
 	initialize: function(options) {
 	  _.bindAll(this, 'doRender');
 		this.option = options.option;
+		this.selected = options.selected;
+	},
+
+  click: function(ev) {
+	  ev.preventDefault();
+		this.selected($(ev.target).attr('data-value'));
 	},
 
   render: function() {
