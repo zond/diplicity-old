@@ -7,28 +7,50 @@ window.GameView = BaseView.extend({
 		this.listenTo(this.model, 'change', this.doRender);
 		this.fetch(this.model);
 		this.cleaners = [];
+		this.decision = null;
+		this.decisionNext = null;
+		this.decisionCleaners = null;
+		this.map = null;
 	},
 
 	provinceClicked: function(prov) {
 	  var that = this;
-	  window.wsRPC('ValidOrders', {
-		  GameId: this.model.get('Id'),
-			Province: prov,
-		}, function(result) {
-		  that.decide(result);
+		if (that.decisionNext != null) {
+		  if (that.decisionNext[prov] != null) {
+				var chosenNext = that.decisionNext[prov].Next;
+				that.decision.push(prov);
+				that.decisionNext = null;
+				that.decide(chosenNext);
+			}
+		} else {
+			window.wsRPC('ValidOrders', {
+				GameId: this.model.get('Id'),
+				Province: prov,
+			}, function(result) {
+				that.decide(result);
+			});
+		}
+	},
+
+	shadeProvinces: function(provs) {
+		var that = this;
+		that.decisionCleaners = [];
+	  _.each(provs, function(prov) {
+		  that.decisionCleaners.push(that.map.blinkProvince(prov));
 		});
 	},
 
 	decide: function(raw) {
 	  var that = this;
+		_.each(that.decisionCleaners, function(cleaner) {
+		  cleaner();
+		});
+		that.decisionCleaners = [];
 		var opts = [];
 		var typeMap = {};
 		var types = [];
 		for (var value in raw) {
-			opts.push({
-				name: value,
-				value: value,
-			});
+			opts.push(value);
 			if (!typeMap[raw[value].Type]) {
 				types.push(raw[value].Type);
 				typeMap[raw[value].Type] = true;
@@ -38,16 +60,33 @@ window.GameView = BaseView.extend({
 			logError("Don't know how to decide when having options", raw, "of different types", types);
 		} else if (types.length > 0) {
 			if (types[0] == "OrderType") {
+			  var dialogOptions = [];
+				_.each(opts, function(opt) {
+				  dialogOptions.push({
+					  name: opt,
+						value: opt,
+					});
+				});
 				new OptionsDialogView({ 
-					options: opts,
+					options: dialogOptions,
 					selected: function(alternative) {
-					  console.log('selected', alternative);
-					  that.decide(raw[alternative].Next);
+					  var ary = [];
+						for (var src in raw[alternative].Next) {
+						  ary.push(src);
+						}						
+					  that.decision = [ary[0]];
+					  that.decide(raw[alternative].Next[ary[0]].Next);
 					},
 				}).display();
+			} else if (types[0] == "Province") {
+			  that.decisionNext = raw;
+			  that.shadeProvinces(opts)
 			} else {
 			  logError("Don't know how to handle options of type", types[0]);
 			}
+		} else {
+	    console.log('decided', that.decision);
+			that.decision = null;
 		}
 	},
 
@@ -55,29 +94,38 @@ window.GameView = BaseView.extend({
 	  var that = this;
 		var phase = that.model.get('Phase');
 		var variant = that.model.get('Variant');
+ 
+		// Clean event listeners for old map, if any
 		_.each(that.cleaners, function(cleaner) {
 		  cleaner();
 		});
+		// Remove old map, if any
+		if (that.map != null) {
+		  that.$('.map').empty();
+		}
+
+		// Initialize new cleaners and map
 		that.cleaners = [];
-		var map = dippyMap(that.$('.map'));
+		that.map = dippyMap(that.$('.map'));
+
 	  if (phase != null) {
-			map.copySVG(variant + 'Map');
+			that.map.copySVG(variant + 'Map');
 			_.each(phase.Units, function(val, key) {
-			  map.addUnit(variant + 'Unit' + val.Type, key, variantColor(variant, val.Nation));
+			  that.map.addUnit(variant + 'Unit' + val.Type, key, variantColor(variant, val.Nation));
 			});
 			_.each(variantColorizableProvincesMap[variant], function(key) {
 				if (phase.SupplyCenters[key] == null) {
-					map.hideProvince(key);
+					that.map.hideProvince(key);
 				} else {
-					map.colorProvince(key, variantColor(variant, phase.SupplyCenters[key]));
+					that.map.colorProvince(key, variantColor(variant, phase.SupplyCenters[key]));
 				}
 			});
 			_.each(variantClickableProvincesMap[variant], function(key) {
-				that.cleaners.push(map.addClickListener(key, function(ev) {
+				that.cleaners.push(that.map.addClickListener(key, function(ev) {
 				  handler(key);
 				}));
 			});
-			map.showProvinces();
+			that.map.showProvinces();
 		}
 	},
 

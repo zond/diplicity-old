@@ -35,6 +35,22 @@ function dippyMap(container) {
 		path.setAttribute('fill', '#ffffff');
 		path.setAttribute('fill-opacity', '0');
 	};
+	that.blinkProvince = function(province) {
+		var prov = $(el).find('#' + selEscape(province)).first()[0];
+		var oldStyle = prov.getAttribute('style');
+		var newStyle = 'fill:#b80000;fill-opacity:0.5;stroke:none;';
+		var interval = window.setInterval(function() {
+		  if (prov.getAttribute("style") == newStyle) {
+				prov.setAttribute("style", oldStyle);
+			} else {
+				prov.setAttribute("style", newStyle);
+			}
+		}, 500);
+		return function() {
+			prov.setAttribute("style", oldStyle);
+		  window.clearInterval(interval);
+		};
+	};
 	that.addClickListener = function(province, handler) {
 		var prov = $(el).find('#' + selEscape(province)).first();
 		var copy = prov.clone()[0];
