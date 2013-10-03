@@ -16,9 +16,16 @@ window.GameView = BaseView.extend({
 	provinceClicked: function(prov) {
 	  var that = this;
 		if (that.decisionNext != null) {
-		  if (that.decisionNext[prov] != null) {
-				var chosenNext = that.decisionNext[prov].Next;
-				that.decision.push(prov);
+		  var actualProv = prov;
+		  if (that.decisionNext[actualProv] == null) {
+			  var match = /(.*)\/(.*)/.exec(prov);
+			  if (match != null && that.decisionNext[match[1]] != null) {
+				  actualProv = match[1];
+				}
+			}
+			if (that.decisionNext[actualProv] != null) {
+				var chosenNext = that.decisionNext[actualProv].Next;
+				that.decision.push(actualProv);
 				that.decisionNext = null;
 				that.decide(chosenNext);
 			}
@@ -27,7 +34,6 @@ window.GameView = BaseView.extend({
 				GameId: this.model.get('Id'),
 				Province: prov,
 			}, function(result) {
-			  that.decision = [prov];
 				that.decide(result);
 			});
 		}
@@ -71,8 +77,12 @@ window.GameView = BaseView.extend({
 				new OptionsDialogView({ 
 					options: dialogOptions,
 					selected: function(alternative) {
-					  that.decision.push(alternative);
-					  that.decide(raw[alternative].Next);
+					  var provs = [];
+						for (var p in raw[alternative].Next) {
+						  provs.push(p);
+						}
+						that.decision = [provs[0], alternative];
+					  that.decide(raw[alternative].Next[provs[0]].Next);
 					},
 				}).display();
 			} else if (types[0] == "Province") {
