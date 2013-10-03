@@ -27,6 +27,7 @@ window.GameView = BaseView.extend({
 				GameId: this.model.get('Id'),
 				Province: prov,
 			}, function(result) {
+			  that.decision = [prov];
 				that.decide(result);
 			});
 		}
@@ -70,12 +71,8 @@ window.GameView = BaseView.extend({
 				new OptionsDialogView({ 
 					options: dialogOptions,
 					selected: function(alternative) {
-					  var ary = [];
-						for (var src in raw[alternative].Next) {
-						  ary.push(src);
-						}						
-					  that.decision = [ary[0]];
-					  that.decide(raw[alternative].Next[ary[0]].Next);
+					  that.decision.push(alternative);
+					  that.decide(raw[alternative].Next);
 					},
 				}).display();
 			} else if (types[0] == "Province") {
