@@ -37,14 +37,16 @@ function dippyMap(container) {
 	};
 	that.blinkProvince = function(province) {
 		var prov = $(el).find('#' + selEscape(province)).first()[0];
+		prov.setAttribute("stroke", 'red');
+		prov.setAttribute("stroke-width", '8');
 		var interval = window.setInterval(function() {
-		  if (prov.getAttribute("stroke") == 'black') {
-				prov.setAttribute("stroke", 'none');
+		  if (prov.getAttribute("stroke") == 'none') {
+				prov.setAttribute("stroke", 'red');
+				prov.setAttribute("stroke-width", '8');
 			} else {
-				prov.setAttribute("stroke", 'black');
-				prov.setAttribute("stroke-width", '4');
+				prov.setAttribute("stroke", 'none');
 			}
-		}, 20);
+		}, 500);
 		return function() {
 			prov.setAttribute("stroke", 'none');
 		  window.clearInterval(interval);
