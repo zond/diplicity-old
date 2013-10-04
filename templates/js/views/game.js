@@ -6,37 +6,19 @@ window.GameView = BaseView.extend({
 	  _.bindAll(this, 'doRender', 'provinceClicked');
 		this.listenTo(this.model, 'change', this.doRender);
 		this.fetch(this.model);
-		this.cleaners = [];
 		this.decision = null;
-		this.decisionNext = null;
 		this.decisionCleaners = null;
 		this.map = null;
 	},
 
 	provinceClicked: function(prov) {
-	  var that = this;
-		if (that.decisionNext != null) {
-		  var actualProv = prov;
-		  if (that.decisionNext[actualProv] == null) {
-			  var match = /(.*)\/(.*)/.exec(prov);
-			  if (match != null && that.decisionNext[match[1]] != null) {
-				  actualProv = match[1];
-				}
-			}
-			if (that.decisionNext[actualProv] != null) {
-				var chosenNext = that.decisionNext[actualProv].Next;
-				that.decision.push(actualProv);
-				that.decisionNext = null;
-				that.decide(chosenNext);
-			}
-		} else {
-			window.wsRPC('ValidOrders', {
-				GameId: this.model.get('Id'),
-				Province: prov,
-			}, function(result) {
-				that.decide(result);
-			});
-		}
+		var that = this;
+		window.wsRPC('ValidOrders', {
+			GameId: that.model.get('Id'),
+			Province: prov,
+		}, function(result) {
+			that.decide(result);
+		});
 	},
 
 	shadeProvinces: function(provs) {
@@ -49,10 +31,7 @@ window.GameView = BaseView.extend({
 
 	decide: function(raw) {
 	  var that = this;
-		_.each(that.decisionCleaners, function(cleaner) {
-		  cleaner();
-		});
-		that.decisionCleaners = [];
+		that.cleanDecision();
 		var opts = [];
 		var typeMap = {};
 		var types = [];
@@ -86,7 +65,12 @@ window.GameView = BaseView.extend({
 					},
 				}).display();
 			} else if (types[0] == "Province") {
-			  that.decisionNext = raw;
+			  _.each(opts, function(prov) {
+					that.decisionCleaners.push(that.map.addClickListener(prov, function(ev) {
+					  that.decision.push(prov);
+						that.decide(raw[prov].Next);
+					}));
+				});
 			  that.shadeProvinces(opts)
 			} else {
 			  logError("Don't know how to handle options of type", types[0]);
@@ -94,7 +78,27 @@ window.GameView = BaseView.extend({
 		} else {
 	    console.log('decided', that.decision);
 			that.decision = null;
+			that.addClickableProvinces();
 		}
+	},
+
+	cleanDecision: function() {
+	  var that = this;
+		_.each(that.decisionCleaners, function(cleaner) {
+			cleaner();
+		});
+		that.decisionCleaners = [];
+	},
+	
+	addClickableProvinces: function() {
+	  var that = this;
+		var variant = that.model.get('Variant');
+		that.cleanDecision();
+		_.each(variantMainProvincesMap[variant], function(prov) {
+			that.decisionCleaners.push(that.map.addClickListener(prov, function(ev) {
+				that.provinceClicked(prov);
+			}));
+		});
 	},
 
 	renderMap: function(handler) {
@@ -102,36 +106,26 @@ window.GameView = BaseView.extend({
 		var phase = that.model.get('Phase');
 		var variant = that.model.get('Variant');
  
-		// Clean event listeners for old map, if any
-		_.each(that.cleaners, function(cleaner) {
-		  cleaner();
-		});
-		// Remove old map, if any
 		if (that.map != null) {
 		  that.$('.map').empty();
 		}
 
-		// Initialize new cleaners and map
-		that.cleaners = [];
 		that.map = dippyMap(that.$('.map'));
 
 	  if (phase != null) {
 			that.map.copySVG(variant + 'Map');
-			_.each(phase.Units, function(val, key) {
-			  that.map.addUnit(variant + 'Unit' + val.Type, key, variantColor(variant, val.Nation));
-			});
-			_.each(variantColorizableProvincesMap[variant], function(key) {
-				if (phase.SupplyCenters[key] == null) {
-					that.map.hideProvince(key);
+			for (var prov in phase.Units) {
+			  var unit = phase.Units[prov];
+			  that.map.addUnit(variant + 'Unit' + unit.Type, prov, variantColor(variant, unit.Nation));
+			}
+			_.each(variantColorizableProvincesMap[variant], function(prov) {
+				if (phase.SupplyCenters[prov] == null) {
+					that.map.hideProvince(prov);
 				} else {
-					that.map.colorProvince(key, variantColor(variant, phase.SupplyCenters[key]));
+					that.map.colorProvince(prov, variantColor(variant, phase.SupplyCenters[prov]));
 				}
 			});
-			_.each(variantClickableProvincesMap[variant], function(key) {
-				that.cleaners.push(that.map.addClickListener(key, function(ev) {
-				  handler(key);
-				}));
-			});
+			that.addClickableProvinces();
 			that.map.showProvinces();
 		}
 	},

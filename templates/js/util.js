@@ -21,7 +21,7 @@ function allocationMethodName(id) {
 
 var variantMap = {{.VariantMap}};
 var variants = {{.Variants}};
-var variantClickableProvincesMap = {{.VariantClickableProvincesMap}};
+var variantMainProvincesMap = {{.VariantMainProvincesMap}};
 var variantColorizableProvincesMap = {{.VariantColorizableProvincesMap}};
 
 function variantName(id) {

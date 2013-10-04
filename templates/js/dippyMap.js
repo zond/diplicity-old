@@ -73,7 +73,7 @@ function dippyMap(container) {
 		}
 		copy.setAttribute("transform", "translate(" + x + "," + y + ")");
 		el.appendChild(copy);
-		copy.addEventListener('mousedown', function(ev) {
+		var mouseDownListener = function(ev) {
 			var pos = $(copy).parent().parent().position();
 			var mouseUpListener = null;
 			mouseUpListener = function() {
@@ -84,9 +84,10 @@ function dippyMap(container) {
 				}
 			};
 			copy.addEventListener('mouseup', mouseUpListener);
-		});
+		};
+		copy.addEventListener('mousedown', mouseDownListener);
 		return function() {
-			copy.removeEventListener('click');
+			copy.removeEventListener('mousedown', mouseDownListener);
 		};
 	};
 	that.addUnit = function(sourceId, province, color, dislodged, build) {
