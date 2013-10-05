@@ -133,7 +133,7 @@ func DeleteMember(c common.Context, gameId, email string) error {
 	})
 }
 
-func AddMember(c common.Context, j common.JSON, email string) error {
+func AddMember(c common.Context, j subs.JSON, email string) error {
 	var state GameState
 	j.Overwrite(&state)
 	return c.DB().Transact(func(d *kol.DB) error {
@@ -172,7 +172,7 @@ func AddMember(c common.Context, j common.JSON, email string) error {
 	})
 }
 
-func Create(c common.Context, j common.JSON, creator string) error {
+func Create(c common.Context, j subs.JSON, creator string) error {
 	var state GameState
 	j.Overwrite(&state)
 
@@ -433,7 +433,7 @@ func SubscribeOpen(c common.Context, s *subs.Subscription, email string) error {
 	return s.Subscribe(new(Game))
 }
 
-func ValidOrders(c common.Context, gameId, province, email string) (result dip.Options, err error) {
+func GetValidOrders(c common.Context, gameId, province, email string) (result dip.Options, err error) {
 	var base64DecodedId []byte
 	base64DecodedId, err = base64.StdEncoding.DecodeString(gameId)
 	if err != nil {

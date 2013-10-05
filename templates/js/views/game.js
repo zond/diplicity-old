@@ -13,7 +13,7 @@ window.GameView = BaseView.extend({
 
 	provinceClicked: function(prov) {
 		var that = this;
-		window.wsRPC('ValidOrders', {
+		window.wsRPC('GetValidOrders', {
 			GameId: that.model.get('Id'),
 			Province: prov,
 		}, function(result) {
@@ -76,7 +76,10 @@ window.GameView = BaseView.extend({
 			  logError("Don't know how to handle options of type", types[0]);
 			}
 		} else {
-	    console.log('decided', that.decision);
+			window.wsRPC('SetOrder', {
+				GameId: that.model.get('Id'),
+				Order: that.decision,
+			});
 			that.decision = null;
 			that.addClickableProvinces();
 		}

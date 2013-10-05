@@ -11,12 +11,10 @@ function wsBackbone(url, start) {
 		}
     ws.sendIfReady(JSON.stringify({
 		  Type: 'RPC',
-			Object: {
-			  URI: id,
-				Data: {
-				  Meth: meth,
-					Params: params,
-				},
+			Method: {
+			  Name: meth,
+			  Id: id,
+				Data: params,
 			},
 		}));
 	};
@@ -104,9 +102,9 @@ function wsBackbone(url, start) {
 		ws.onmessage = function(ev) {
 			var mobj = JSON.parse(ev.data);
 			if (mobj.Type == 'RPC') {
-			  var rpcCall = rpcCalls[mobj.Object.URI];
+			  var rpcCall = rpcCalls[mobj.Method.Id];
 				if (rpcCall != null) {
-				  rpcCall(mobj.Object.Data);
+				  rpcCall(mobj.Method.Data);
 				}
 			} else {
 				if (mobj.Object.URI != null) {

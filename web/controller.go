@@ -80,7 +80,7 @@ func (self *Web) WS(ws *websocket.Conn) {
 				switch message.Object.URI {
 				case "/games":
 					if loggedIn {
-						game.Create(self, common.JSON{message.Object.Data}, email)
+						game.Create(self, subs.JSON{message.Object.Data}, email)
 					}
 				}
 			case common.DeleteType:
@@ -94,20 +94,20 @@ func (self *Web) WS(ws *websocket.Conn) {
 			case common.UpdateType:
 				if strings.Index(message.Object.URI, "/games/") == 0 {
 					if loggedIn {
-						game.AddMember(self, common.JSON{message.Object.Data}, email)
+						game.AddMember(self, subs.JSON{message.Object.Data}, email)
 					}
 				}
 			case common.RPCType:
-				json := common.JSON{message.Object.Data}
-				if json.GetString("Meth") == "ValidOrders" {
+				if message.Method.Name == "GetValidOrders" {
 					if loggedIn {
-						params := json.Get("Params")
-						if options, err := game.ValidOrders(self, params.GetString("GameId"), params.GetString("Province"), email); err == nil {
+						params := subs.JSON{message.Method.Data}
+						if options, err := game.GetValidOrders(self, params.GetString("GameId"), params.GetString("Province"), email); err == nil {
 							if err := websocket.JSON.Send(ws, subs.Message{
 								Type: common.RPCType,
-								Object: subs.Object{
+								Method: subs.Method{
+									Name: message.Method.Name,
+									Id:   message.Method.Id,
 									Data: options,
-									URI:  message.Object.URI,
 								},
 							}); err != nil {
 								self.Errorf("%v", err)
