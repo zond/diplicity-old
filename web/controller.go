@@ -120,9 +120,9 @@ func (self *Web) WS(ws *websocket.Conn) {
 			default:
 				self.Errorf("Unrecognized message Type: %+v", message.Type)
 			}
-			self.Debugf("\t%v\t%v\t%v\t%v\t%v\t%v <-", ws.Request().URL, ws.Request().RemoteAddr, emailIf, message.Type, message.Object.URI, time.Now().Sub(start))
-			if self.logLevel > Trace && message.Object.Data != nil {
-				self.Tracef("%+v", common.Prettify(message.Object.Data))
+			self.Debugf("\t%v\t%v\t%v\t%v\t%v%v\t%v <-", ws.Request().URL, ws.Request().RemoteAddr, emailIf, message.Type, message.Object.URI, message.Method.Name, time.Now().Sub(start))
+			if self.logLevel > Trace && (message.Method.Data != nil || message.Object.Data != nil) {
+				self.Tracef("%+v%+v", common.Prettify(message.Method.Data), common.Prettify(message.Object.Data))
 			}
 		} else if err == io.EOF {
 			break
