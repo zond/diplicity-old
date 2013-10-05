@@ -39,17 +39,8 @@ function dippyMap(container) {
 		var prov = $(el).find('#' + selEscape(province)).first()[0];
 		prov.setAttribute("stroke", 'red');
 		prov.setAttribute("stroke-width", '8');
-		var interval = window.setInterval(function() {
-		  if (prov.getAttribute("stroke") == 'none') {
-				prov.setAttribute("stroke", 'red');
-				prov.setAttribute("stroke-width", '8');
-			} else {
-				prov.setAttribute("stroke", 'none');
-			}
-		}, 500);
 		return function() {
 			prov.setAttribute("stroke", 'none');
-		  window.clearInterval(interval);
 		};
 	};
 	that.addClickListener = function(province, handler) {
@@ -73,21 +64,12 @@ function dippyMap(container) {
 		}
 		copy.setAttribute("transform", "translate(" + x + "," + y + ")");
 		el.appendChild(copy);
-		var mouseDownListener = function(ev) {
-			var pos = $(copy).parent().parent().position();
-			var mouseUpListener = null;
-			mouseUpListener = function() {
-				copy.removeEventListener('mouseup', mouseUpListener);
-				var newPos = $(copy).parent().parent().position();
-				if (Math.sqrt(Math.pow(newPos.top - pos.top, 2), Math.pow(newPos.left - pos.left, 2)) < 5) {
-				handler();
-				}
-			};
-			copy.addEventListener('mouseup', mouseUpListener);
-		};
-		copy.addEventListener('mousedown', mouseDownListener);
+		var ham = $(copy).hammer({
+		  prevent_default: true,
+		});
+		ham.bind('tap', handler);
 		return function() {
-			copy.removeEventListener('mousedown', mouseDownListener);
+			ham.unbind('tap', handler);
 		};
 	};
 	that.addUnit = function(sourceId, province, color, dislodged, build) {
