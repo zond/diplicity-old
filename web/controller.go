@@ -56,10 +56,10 @@ func (self *Web) WS(ws *websocket.Conn) {
 						self.Debugf("\t%v\t%v\t%v\t%v\t%v\t%v <-", ws.Request().URL, ws.Request().RemoteAddr, emailIf, message.Type, message.Object.URI, time.Now().Sub(start))
 					}
 					if self.logLevel > Trace {
-						if message.Method != nil {
+						if message.Method != nil && message.Method.Data != nil {
 							self.Tracef("%+v", common.Prettify(message.Method.Data))
 						}
-						if message.Object != nil {
+						if message.Object != nil && message.Object.Data != nil {
 							self.Tracef("%+v", common.Prettify(message.Object.Data))
 						}
 					}
