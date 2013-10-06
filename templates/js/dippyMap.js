@@ -2,6 +2,10 @@
 function dippyMap(container) {
 	var that = this;
 	var el = null;
+	var SVG = "http://www.w3.org/2000/svg";
+	if (container.find('svg').length > 0) {
+	  el = container.find('svg')[0];
+	}
 	that.centerOf = function(province) {
 		var center = $(el).find('#' + selEscape(province) + "Center").first();
 		var match = /^M\s+([\d.]+),([\d.]+)\s+/.exec(center.attr('d'));
@@ -71,6 +75,19 @@ function dippyMap(container) {
 		return function() {
 			ham.unbind('tap', handler);
 		};
+	};
+	that.addCross = function(province, color) {
+		var boundF = 10;
+		var loc = that.centerOf(province);
+		var path = document.createElementNS(SVG, "path");
+		path.setAttribute("style", "fill:none;stroke:" + color + ";stroke-width:5;stroke-miterlimit:4;stroke-opacity:0.9;");
+		path.setAttribute("d", "M " + (loc.x - boundF) + "," + (loc.y - boundF) + " L " + (loc.x + boundF) + "," + (loc.y + boundF) + " M " + (loc.x - boundF) + "," + (loc.y + boundF) + " L " + (loc.x + boundF) + "," + (loc.y - boundF));
+		el.appendChild(path);
+	};
+	that.addOrder = function(order, color) {
+	  if (order[1] == 'Disband') {
+		  addCross(order[0], color);
+		}
 	};
 	that.addUnit = function(sourceId, province, color, dislodged, build) {
 		var shadow = $('#' + sourceId).find('#shadow').first().clone();
