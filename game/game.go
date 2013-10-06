@@ -486,8 +486,11 @@ func GetValidOrders(c common.Context, gameId, province, email string) (result di
 		err = fmt.Errorf("No phase for %+v found", game)
 		return
 	}
-	state := classical.Blank(classical.Phase(phase.Year, phase.Season, phase.Type))
-	state.Load(
+	state := classical.Blank(classical.Phase(
+		phase.Year,
+		phase.Season,
+		phase.Type,
+	)).Load(
 		phase.Units,
 		phase.SupplyCenters,
 		phase.Dislodgeds,
