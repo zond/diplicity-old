@@ -86,14 +86,18 @@ function dippyMap(container) {
 		}
 		var angle = startAngle;
 		var path = document.createElementNS(SVG, "path");
-		var boundF = 17;
-		path.setAttribute("style", "fill:none;stroke:" + color + ";stroke-width:5;stroke-miterlimit:4;stroke-opacity:0.9;");
-		var d = "M " + (loc.x + Math.cos(angle) * boundF) + "," + (loc.y + Math.sin(angle) * boundF);
-		for (var i = 1; i < corners; i++) {
-			angle += step;
-			d += " L " + (loc.x + Math.cos(angle) * boundF) + "," + (loc.y + Math.sin(angle) * boundF);
-		}      
-		d += " z";
+		path.setAttribute("style", "fill-rule:evenodd;fill:" + color + ";stroke:#000000;stroke-width:0.5;stroke-miterlimit:4;stroke-opacity:1.0;fill-opacity:0.9;");
+		var d = "";
+		var subBox = function(boundF) {
+			d += ("M " + (loc.x + Math.cos(angle) * boundF) + "," + (loc.y + Math.sin(angle) * boundF));
+			for (var i = 1; i < corners; i++) {
+				angle += step;
+				d += " L " + (loc.x + Math.cos(angle) * boundF) + "," + (loc.y + Math.sin(angle) * boundF);
+			}      
+			d += " z";
+		};
+    subBox(20);
+		subBox(15);
 		path.setAttribute("d", d);
 		el.appendChild(path);
 	};
@@ -144,11 +148,25 @@ function dippyMap(container) {
 		el.appendChild(path);
 	};
 	that.addCross = function(province, color) {
-		var boundF = 10;
+		var bound = 10;
+		var width = 3;
 		var loc = that.centerOf(province);
 		var path = document.createElementNS(SVG, "path");
-		path.setAttribute("style", "fill:none;stroke:" + color + ";stroke-width:5;stroke-miterlimit:4;stroke-opacity:0.9;");
-		path.setAttribute("d", "M " + (loc.x - boundF) + "," + (loc.y - boundF) + " L " + (loc.x + boundF) + "," + (loc.y + boundF) + " M " + (loc.x - boundF) + "," + (loc.y + boundF) + " L " + (loc.x + boundF) + "," + (loc.y - boundF));
+		path.setAttribute("style", "fill:" + color + ";stroke:#000000;stroke-width:0.5;stroke-miterlimit:4;stroke-opacity:1.0;fill-opacity:0.9;");
+    var d = (
+			"M " + loc.x + "," + (loc.y + width) + " " + 
+			"L " + (loc.x + bound) + "," + (loc.y + bound + width) + " " + 
+			"L " + (loc.x + bound + width) + "," + (loc.y + bound) + " " + 
+			"L " + (loc.x + width) + "," + loc.y + " " +
+			"L " + (loc.x + bound + width) + "," + (loc.y - bound) + " " +
+			"L " + (loc.x + bound) + "," + (loc.y - bound - width) + " " +
+			"L " + loc.x + "," + (loc.y - width) + " " +
+			"L " + (loc.x - bound) + "," + (loc.y - bound - width) + " " +
+			"L " + (loc.x - bound - width) + "," + (loc.y - bound) + " " +
+			"L " + (loc.x - width) + "," + loc.y + " " +
+			"L " + (loc.x - bound - width) + "," + (loc.y + bound) + " " +
+			"L " + (loc.x - bound) + "," + (loc.y + bound + width) + " z");
+		path.setAttribute("d", d);
 		el.appendChild(path);
 	};
 	that.addOrder = function(order, variant, nation) {
