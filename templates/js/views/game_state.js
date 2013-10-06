@@ -151,6 +151,7 @@ window.GameStateView = BaseView.extend({
 					member: member,
 				}).doRender();
 			} else {
+			  memberView.member = member;
 			  memberView.doRender();
 			}
 			that.$('.game-players').append(memberView.el);
