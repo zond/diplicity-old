@@ -10,7 +10,7 @@ import (
 
 func SetOrder(c common.Context, gameId string, order []string, email string) (err error) {
 	var base64DecodedId []byte
-	base64DecodedId, err = base64.StdEncoding.DecodeString(gameId)
+	base64DecodedId, err = base64.URLEncoding.DecodeString(gameId)
 	if err != nil {
 		return
 	}
@@ -50,7 +50,7 @@ func SetOrder(c common.Context, gameId string, order []string, email string) (er
 
 func GetValidOrders(c common.Context, gameId, province, email string) (result dip.Options, err error) {
 	var base64DecodedId []byte
-	base64DecodedId, err = base64.StdEncoding.DecodeString(gameId)
+	base64DecodedId, err = base64.URLEncoding.DecodeString(gameId)
 	if err != nil {
 		return
 	}
