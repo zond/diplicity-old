@@ -76,6 +76,73 @@ function dippyMap(container) {
 			ham.unbind('tap', handler);
 		};
 	};
+	that.addBox = function(province, corners, color) {
+		var loc = that.centerOf(province);
+		var all = Math.PI * 2;
+		var step = all / corners;
+		var startAngle = Math.PI * 1.5;
+		if (corners % 2 == 0) {
+			startAngle += step / 2;
+		}
+		var angle = startAngle;
+		var path = document.createElementNS(SVG, "path");
+		var boundF = 17;
+		path.setAttribute("style", "fill:none;stroke:" + color + ";stroke-width:5;stroke-miterlimit:4;stroke-opacity:0.9;");
+		var d = "M " + (loc.x + Math.cos(angle) * boundF) + "," + (loc.y + Math.sin(angle) * boundF);
+		for (var i = 1; i < corners; i++) {
+			angle += step;
+			d += " L " + (loc.x + Math.cos(angle) * boundF) + "," + (loc.y + Math.sin(angle) * boundF);
+		}      
+		d += " z";
+		path.setAttribute("d", d);
+		el.appendChild(path);
+	};
+	that.addArrow = function(provs, color) {
+	  var start = null;
+		var middle = null;
+		var end = null;
+	  if (provs.length == 2) {
+		  start = that.centerOf(provs[0]);
+			end = that.centerOf(provs[1]);
+			middle = start.add(end.sub(start).div(2.0));
+		} else {
+		  start = that.centerOf(provs[0]);
+			middle = that.centerOf(provs[1]);
+			end = that.centerOf(provs[2]);
+		}
+		var boundF = 2;
+		var headF1 = boundF * 2;
+		var headF2 = boundF * 4;
+		var spacer = boundF * 2;
+		var boundFDiag = Math.sqrt(Math.pow(boundF, 2) + Math.pow(boundF, 2));
+		var part1 = new Vec(start, middle);
+		var part2 = new Vec(middle, end);
+		var all = new Vec(start, end);
+		var start0 = start.add(part1.dir().mul(spacer)).add(part1.orth().mul(boundF));
+		var start1 = start.add(part1.dir().mul(spacer)).sub(part1.orth().mul(boundF));
+		var sumOrth = part1.orth().add(part2.orth());
+		var avgOrth = sumOrth.div(sumOrth.len());
+		var control0 = middle.add(avgOrth.mul(boundF));
+		var control1 = middle.sub(avgOrth.mul(boundF));
+		var end0 = end.sub(part2.dir().mul(spacer + headF2)).add(part2.orth().mul(boundF));
+		var end1 = end.sub(part2.dir().mul(spacer + headF2)).sub(part2.orth().mul(boundF));
+		var end3 = end.sub(part2.dir().mul(spacer));
+		var head0 = end0.add(part2.orth().mul(headF1));
+		var head1 = end1.sub(part2.orth().mul(headF1));
+
+		var path = document.createElementNS(SVG, "path");
+		path.setAttribute("style", "fill:" + color + ";stroke:" + color + ";stroke-width:1;stroke-miterlimit:4;stroke-opacity:1.0;fill-opacity:0.75;");
+		var d = "M " + start0.x + "," + start0.y;
+		d += " C " + control0.x + "," + control0.y + "," + control0.x + "," + control0.y + "," + end0.x + "," + end0.y;
+		d += " L " + head0.x + "," + head0.y;
+		d += " L " + end3.x + "," + end3.y;   
+		d += " L " + head1.x + "," + head1.y;
+		d += " L " + end1.x + "," + end1.y;
+		d += " C " + control1.x + "," + control1.y + "," + control1.x + "," + control1.y + "," + start1.x + "," + start1.y;
+		d += " z";
+		path.setAttribute("d", d);
+		el.appendChild(path);
+	};
 	that.addCross = function(province, color) {
 		var boundF = 10;
 		var loc = that.centerOf(province);
@@ -84,9 +151,30 @@ function dippyMap(container) {
 		path.setAttribute("d", "M " + (loc.x - boundF) + "," + (loc.y - boundF) + " L " + (loc.x + boundF) + "," + (loc.y + boundF) + " M " + (loc.x - boundF) + "," + (loc.y + boundF) + " L " + (loc.x + boundF) + "," + (loc.y - boundF));
 		el.appendChild(path);
 	};
-	that.addOrder = function(order, color) {
-	  if (order[1] == 'Disband') {
+	that.addOrder = function(order, variant, nation) {
+	  var color = variantColor(variant, nation);
+	  if (order[1] == 'Hold') {
+		  addBox(order[0], 4, color);
+		} else if (order[1] == 'Move') {
+		  addArrow([order[0], order[2]], color);
+		} else if (order[1] == 'MoveViaConvoy') {
+		  addArrow([order[0], order[2]], color);
+			addBox(order[0], 5, color);
+		} else if (order[1] == 'Build') {
+		  addUnit(variant + 'Unit' + order[2], order[0], color, false, true);
+		} else if (order[1] == 'Disband') {
 		  addCross(order[0], color);
+		} else if (order[1] == 'Convoy') {
+			addBox(order[0], 5, color);
+			addArrow([order[3], order[0], order[3]], color);
+		} else if (order[1] == 'Support') {
+		  if (order.length == 3) {
+			  addBox(order[0], 3, color);
+				addArrow([order[2], order[3]], color);
+			} else {
+			  addBox(order[0], 3, color);
+				addArrow([order[2], order[0], order[3]], color);
+			}
 		}
 	};
 	that.addUnit = function(sourceId, province, color, dislodged, build) {
