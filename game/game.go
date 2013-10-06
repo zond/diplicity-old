@@ -19,7 +19,7 @@ func init() {
 type Minutes int
 
 type Game struct {
-	Id []byte
+	Id kol.Id
 
 	Closed           bool `kol:"index"`
 	Started          bool `kol:"index"`
@@ -117,7 +117,7 @@ func (self *Game) Members(d *kol.DB) (result Members) {
 
 func (self *Game) Member(d *kol.DB, email string) (result *Member, err error) {
 	var member Member
-	if _, err = d.Query().Where(kol.And{kol.Equals{"GameId", self.Id}, kol.Equals{"UserId", []byte(email)}}).First(&member); err == nil {
+	if _, err = d.Query().Where(kol.And{kol.Equals{"GameId", self.Id}, kol.Equals{"UserId", kol.Id(email)}}).First(&member); err == nil {
 		result = &member
 	}
 	return
