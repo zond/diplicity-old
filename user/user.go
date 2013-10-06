@@ -7,7 +7,7 @@ import (
 )
 
 type User struct {
-	Id       []byte
+	Id       kol.Id
 	Email    string
 	Nickname string
 }
