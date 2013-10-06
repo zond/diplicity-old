@@ -3,8 +3,14 @@ window.GameView = BaseView.extend({
   template: _.template($('#game_underscore').html()),
 
 	initialize: function(options) {
-	  _.bindAll(this, 'doRender', 'provinceClicked');
-		this.listenTo(this.model, 'change', this.doRender);
+	  _.bindAll(this, 'provinceClicked', 'update');
+		this.listenTo(this.model, 'change', this.update);
+		this.stateView = new GameStateView({ 
+			parentId: 'current_game',
+			play_state: true,
+			editable: false,
+			model: this.model,
+		});
 		this.fetch(this.model);
 		this.decision = null;
 		this.decisionCleaners = null;
@@ -109,26 +115,20 @@ window.GameView = BaseView.extend({
 		});
 	},
 
-	renderMap: function(handler) {
+	renderMap: function() {
 	  var that = this;
 		var phase = that.model.get('Phase');
 		var variant = that.model.get('Variant');
- 
-		if (that.map != null) {
-		  that.$('.map').empty();
-		}
 
-		that.map = dippyMap(that.$('.map'));
-
-	  if (phase != null) {
+		if (phase != null) {
 			that.map.copySVG(variant + 'Map');
 			for (var prov in phase.Units) {
-			  var unit = phase.Units[prov];
-			  that.map.addUnit(variant + 'Unit' + unit.Type, prov, variantColor(variant, unit.Nation));
+				var unit = phase.Units[prov];
+				that.map.addUnit(variant + 'Unit' + unit.Type, prov, variantColor(variant, unit.Nation));
 			}
 			for (var nation in phase.Orders) {
-			  for (var source in phase.Orders[nation]) {
-				  that.map.addOrder([source].concat(phase.Orders[nation][source]), variant, nation);
+				for (var source in phase.Orders[nation]) {
+					that.map.addOrder([source].concat(phase.Orders[nation][source]), variant, nation);
 				}
 			}
 			_.each(variantColorizableProvincesMap[variant], function(prov) {
@@ -143,22 +143,27 @@ window.GameView = BaseView.extend({
 		}
 	},
 
+	update: function() {
+	  var that = this;
+		if (that.model.get('Members') != null) {
+		  if (that.$('#current_game').children().length == 0) {
+				that.$('#current_game').append(that.stateView.el);
+			}
+			if (that.$('.map').length > 0) {
+			  if (that.map == null) {
+					that.map = dippyMap(that.$('.map'));
+				}
+				that.renderMap();
+				panZoom('.map');
+			}
+		}
+	},
+
   render: function() {
 		var that = this;
 		navLinks([]);
-		that.$el.html(that.template({ 
-		}));
-		if (this.model.get('Members') != null) {
-			var state_view = new GameStateView({ 
-				parentId: 'current_game',
-				play_state: true,
-				editable: false,
-				model: that.model,
-			}).doRender();
-			that.$('#current_game').append(state_view.el);
-		}
-		that.renderMap(this.provinceClicked);
-		panZoom('.map');
+		that.$el.html(that.template({}));
+		that.update();
 		return that;
 	},
 
