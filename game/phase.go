@@ -8,8 +8,8 @@ import (
 )
 
 type Phase struct {
-	Id     []byte
-	GameId []byte `kol:"index"`
+	Id     kol.Id
+	GameId kol.Id `kol:"index"`
 
 	Season  dip.Season
 	Year    int
