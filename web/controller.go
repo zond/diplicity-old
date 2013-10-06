@@ -49,12 +49,17 @@ func (self *Web) WS(ws *websocket.Conn) {
 			start = time.Now()
 			func() {
 				defer func() {
-					self.Debugf("\t%v\t%v\t%v\t%v\t%v%v\t%v <-", ws.Request().URL, ws.Request().RemoteAddr, emailIf, message.Type, message.Object.URI, message.Method.Name, time.Now().Sub(start))
+					if message.Method != nil {
+						self.Debugf("\t%v\t%v\t%v\t%v\t%v\t%v <-", ws.Request().URL, ws.Request().RemoteAddr, emailIf, message.Type, message.Method.Name, time.Now().Sub(start))
+					}
+					if message.Object != nil {
+						self.Debugf("\t%v\t%v\t%v\t%v\t%v\t%v <-", ws.Request().URL, ws.Request().RemoteAddr, emailIf, message.Type, message.Object.URI, time.Now().Sub(start))
+					}
 					if self.logLevel > Trace {
-						if message.Method.Data != nil {
+						if message.Method != nil {
 							self.Tracef("%+v", common.Prettify(message.Method.Data))
 						}
-						if message.Object.Data != nil {
+						if message.Object != nil {
 							self.Tracef("%+v", common.Prettify(message.Object.Data))
 						}
 					}
@@ -117,7 +122,7 @@ func (self *Web) WS(ws *websocket.Conn) {
 							if options, err := game.GetValidOrders(self, params.GetString("GameId"), params.GetString("Province"), email); err == nil {
 								if err := websocket.JSON.Send(ws, subs.Message{
 									Type: common.RPCType,
-									Method: subs.Method{
+									Method: &subs.Method{
 										Name: message.Method.Name,
 										Id:   message.Method.Id,
 										Data: options,
