@@ -40,15 +40,17 @@ function dippyMap(container) {
 		path.setAttribute('fill', '#ffffff');
 		path.setAttribute('fill-opacity', '0');
 	};
-	that.blinkProvince = function(province) {
+	that.highlightProvince = function(province) {
 		var prov = $(el).find('#' + selEscape(province)).first()[0];
 		prov.setAttribute("stroke", 'red');
 		prov.setAttribute("stroke-width", '8');
-		return function() {
-			prov.setAttribute("stroke", 'none');
-		};
+	};
+	that.unhighlightProvince = function(province) {
+		var prov = $(el).find('#' + selEscape(province)).first()[0];
+		prov.setAttribute("stroke", 'none');
 	};
 	that.addClickListener = function(province, handler) {
+	  highlightProvince(province);
 		var prov = $(el).find('#' + selEscape(province)).first();
 		var copy = prov.clone()[0];
 		copy.setAttribute("id", prov.attr('id') + "_click");
@@ -74,6 +76,7 @@ function dippyMap(container) {
 		});
 		ham.bind('tap', handler);
 		return function() {
+		  that.unhighlightProvince(province); 
 			ham.unbind('tap', handler);
 		};
 	};
