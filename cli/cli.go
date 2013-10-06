@@ -66,13 +66,13 @@ func main() {
 	}
 
 	if *join != "" {
-		base64DecodedId, err := base64.StdEncoding.DecodeString(*join)
+		base64DecodedId, err := base64.URLEncoding.DecodeString(*join)
 		if err != nil {
 			panic(err)
 		}
 		if err := websocket.JSON.Send(ws, subs.Message{
 			Type: common.UpdateType,
-			Object: subs.Object{
+			Object: &subs.Object{
 				URI: "/games/open",
 				Data: game.GameState{
 					Game: &game.Game{
