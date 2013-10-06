@@ -6,7 +6,6 @@ import (
 	"github.com/zond/diplicity/user"
 	"github.com/zond/kcwraps/kol"
 	"github.com/zond/kcwraps/subs"
-	"net/url"
 )
 
 type MemberState struct {
@@ -51,11 +50,7 @@ func SubscribeCurrent(c common.Context, s *subs.Subscription, email string) erro
 }
 
 func SubscribeGame(c common.Context, s *subs.Subscription, gameId, email string) error {
-	urlDecodedId, err := url.QueryUnescape(gameId)
-	if err != nil {
-		return err
-	}
-	base64DecodedId, err := base64.StdEncoding.DecodeString(urlDecodedId)
+	base64DecodedId, err := base64.URLEncoding.DecodeString(gameId)
 	if err != nil {
 		return err
 	}
