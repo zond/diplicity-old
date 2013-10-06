@@ -1,7 +1,9 @@
 package game
 
 import (
+	"github.com/zond/godip/classical"
 	dip "github.com/zond/godip/common"
+	"github.com/zond/godip/state"
 	"github.com/zond/kcwraps/kol"
 )
 
@@ -28,6 +30,20 @@ func (self *Phase) Updated(d *kol.DB, old *Phase) {
 		panic(err)
 	}
 	d.EmitUpdate(&g)
+}
+
+func (self *Phase) GetState() *state.State {
+	return classical.Blank(classical.Phase(
+		self.Year,
+		self.Season,
+		self.Type,
+	)).Load(
+		self.Units,
+		self.SupplyCenters,
+		self.Dislodgeds,
+		self.Dislodgers,
+		self.Bounces,
+	)
 }
 
 type Phases []Phase

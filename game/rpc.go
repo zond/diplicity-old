@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"github.com/zond/diplicity/common"
-	"github.com/zond/godip/classical"
 	"github.com/zond/godip/classical/orders"
 	dip "github.com/zond/godip/common"
 )
@@ -61,18 +60,7 @@ func GetValidOrders(c common.Context, gameId, province, email string) (result di
 		err = fmt.Errorf("No phase for %+v found", game)
 		return
 	}
-	state := classical.Blank(classical.Phase(
-		phase.Year,
-		phase.Season,
-		phase.Type,
-	)).Load(
-		phase.Units,
-		phase.SupplyCenters,
-		phase.Dislodgeds,
-		phase.Dislodgers,
-		phase.Bounces,
-	)
-	nation, options, found := state.Options(orders.Types(), dip.Province(province))
+	nation, options, found := phase.GetState().Options(orders.Types(), dip.Province(province))
 	if found && nation == member.Nation {
 		result = options
 	}
