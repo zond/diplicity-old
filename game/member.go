@@ -8,9 +8,9 @@ import (
 )
 
 type Member struct {
-	Id     []byte
-	UserId []byte `kol:"index"`
-	GameId []byte `kol:"index"`
+	Id     kol.Id
+	UserId kol.Id `kol:"index"`
+	GameId kol.Id `kol:"index"`
 
 	Nation           dip.Nation
 	PreferredNations []dip.Nation
