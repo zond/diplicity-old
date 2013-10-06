@@ -48,6 +48,31 @@ func SetOrder(c common.Context, gameId string, order []string, email string) (er
 	return c.DB().Set(phase)
 }
 
+func GetPossibleSources(c common.Context, gameId, email string) (result []dip.Province, err error) {
+	var base64DecodedId []byte
+	base64DecodedId, err = base64.URLEncoding.DecodeString(gameId)
+	if err != nil {
+		return
+	}
+	game := Game{Id: base64DecodedId}
+	if err = c.DB().Get(&game); err != nil {
+		return
+	}
+	var member *Member
+	member, err = game.Member(c.DB(), email)
+	if err != nil {
+		return
+	}
+	phase := game.LastPhase(c.DB())
+	if phase == nil {
+		err = fmt.Errorf("No phase for %+v found", game)
+		return
+	}
+	state := phase.GetState()
+	result = state.Phase().PossibleSources(state, member.Nation)
+	return
+}
+
 func GetValidOrders(c common.Context, gameId, province, email string) (result dip.Options, err error) {
 	var base64DecodedId []byte
 	base64DecodedId, err = base64.URLEncoding.DecodeString(gameId)

@@ -116,6 +116,24 @@ func (self *Web) WS(ws *websocket.Conn) {
 					}
 				case common.RPCType:
 					switch message.Method.Name {
+					case "GetPossibleSources":
+						if loggedIn {
+							params := subs.JSON{message.Method.Data}
+							if result, err := game.GetPossibleSources(self, params.GetString("GameId"), email); err == nil {
+								if err := websocket.JSON.Send(ws, subs.Message{
+									Type: common.RPCType,
+									Method: &subs.Method{
+										Name: message.Method.Name,
+										Id:   message.Method.Id,
+										Data: result,
+									},
+								}); err != nil {
+									self.Errorf("%v", err)
+								}
+							} else {
+								self.Errorf("While calculating possible sources for %v in %v: %v", email, params.GetString("GameId"), err)
+							}
+						}
 					case "GetValidOrders":
 						if loggedIn {
 							params := subs.JSON{message.Method.Data}
