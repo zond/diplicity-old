@@ -150,11 +150,15 @@ window.GameView = BaseView.extend({
 				that.$('#current_game').append(that.stateView.el);
 			}
 			if (that.$('.map').length > 0) {
+			  var hadMap = true;
 			  if (that.map == null) {
+				  hadMap = false;
 					that.map = dippyMap(that.$('.map'));
 				}
 				that.renderMap();
-				panZoom('.map');
+				if (!hadMap) {
+					panZoom('.map');
+				}
 			}
 		}
 	},
