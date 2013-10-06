@@ -6,16 +6,11 @@ import (
 	"github.com/zond/diplicity/common"
 	"github.com/zond/kcwraps/kol"
 	"github.com/zond/kcwraps/subs"
-	"net/url"
 )
 
 func DeleteMember(c common.Context, gameId, email string) error {
 	return c.DB().Transact(func(d *kol.DB) error {
-		urlDecodedId, err := url.QueryUnescape(gameId)
-		if err != nil {
-			return err
-		}
-		base64DecodedId, err := base64.StdEncoding.DecodeString(urlDecodedId)
+		base64DecodedId, err := base64.URLEncoding.DecodeString(gameId)
 		if err != nil {
 			return err
 		}
