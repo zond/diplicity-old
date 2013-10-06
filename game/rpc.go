@@ -36,6 +36,14 @@ func SetOrder(c common.Context, gameId string, order []string, email string) (er
 		nationOrders = map[dip.Province][]string{}
 		phase.Orders[member.Nation] = nationOrders
 	}
+	var parsedOrder dip.Order
+	parsedOrder, err = orders.Parse(order)
+	if err != nil {
+		return
+	}
+	if err = parsedOrder.Validate(phase.GetState()); err != nil {
+		return
+	}
 	nationOrders[dip.Province(order[0])] = order[1:]
 	return c.DB().Set(phase)
 }

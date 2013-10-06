@@ -76,9 +76,14 @@ window.GameView = BaseView.extend({
 			  logError("Don't know how to handle options of type", types[0]);
 			}
 		} else {
+		  var decision = that.decision;
 			window.wsRPC('SetOrder', {
 				GameId: that.model.get('Id'),
-				Order: that.decision,
+				Order: decision,
+			}, function(error) {
+			  if (error != null) {
+					logError('While setting order', decision, error);
+				}
 			});
 			that.decision = null;
 			that.addClickableProvinces();
