@@ -24,6 +24,7 @@ function dippyMap(container) {
 	};
 	that.copySVG = function(sourceId) {
 		var source = $('#' + sourceId + ' svg').first().clone();
+		container[0].innerHTML = '';
 		container[0].appendChild(source[0]);
 		el = container.find('svg')[0];
 	};
@@ -191,7 +192,7 @@ function dippyMap(container) {
 				addArrow([order[2], order[3]], color);
 			} else {
 			  addBox(order[0], 3, color);
-				addArrow([order[2], order[0], order[3]], color);
+				addArrow([order[0], order[2], order[3]], color);
 			}
 		}
 	};
