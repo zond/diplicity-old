@@ -8,7 +8,7 @@ function dippyMap(container) {
 	}
 	that.centerOf = function(province) {
 		var center = $(el).find('#' + selEscape(province) + "Center").first();
-		var match = /^M\s+([\d.]+),([\d.]+)\s+/.exec(center.attr('d'));
+		var match = /^m\s+([\d-.]+),([\d-.]+)\s+/.exec(center.attr('d'));
 		var x = Number(match[1]);
 		var y = Number(match[2]);
 		var parentTransform = center.parent().attr("transform");
@@ -234,10 +234,12 @@ function dippyMap(container) {
 		loc.y -= 11;
 		if (hullQuery.length > 0) {
 			unit = hullQuery.first().clone();
-			loc.x -= 27;
+			loc.x -= 65;
+			loc.y -= 15;
 		} else {
 			unit = bodyQuery.first().clone();
-			loc.x -= 16;
+			loc.x -= 40;
+			loc.y -= 5;
 		}
 		shadow.attr("transform", "translate(" + loc.x + ", " + loc.y + ")");
 		unit.attr("transform", "translate(" + loc.x + ", " + loc.y + ")");
