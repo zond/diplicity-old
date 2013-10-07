@@ -61,7 +61,7 @@ function dippyMap(container) {
 		}
 		copy.setAttribute("transform", "translate(" + x + "," + y + ")");
 		copy.setAttribute("stroke", 'none');
-		el.appendChild(copy);
+		$(el).find('#highlights')[0].appendChild(copy);
 	};
 	that.unhighlightProvince = function(province) {
 		$(el).find('#' + selEscape(province) + '_highlight').remove();
@@ -99,6 +99,8 @@ function dippyMap(container) {
 	};
 	that.addBox = function(province, corners, color) {
 		var loc = that.centerOf(province);
+		loc.x -= 3;
+		loc.y -= 3;
 		var all = Math.PI * 2;
 		var step = all / corners;
 		var startAngle = Math.PI * 1.5;
@@ -117,8 +119,8 @@ function dippyMap(container) {
 			}      
 			d += " z";
 		};
-    subBox(20);
-		subBox(15);
+    subBox(27);
+		subBox(20);
 		path.setAttribute("d", d);
 		el.appendChild(path);
 	};
