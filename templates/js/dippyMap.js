@@ -174,8 +174,8 @@ function dippyMap(container) {
 		el.appendChild(path);
 	};
 	that.addCross = function(province, color) {
-		var bound = 10;
-		var width = 3;
+		var bound = 14;
+		var width = 4;
 		var loc = that.centerOf(province);
 		var path = document.createElementNS(SVG, "path");
 		path.setAttribute("style", "fill:" + color + ";stroke:#000000;stroke-width:0.5;stroke-miterlimit:4;stroke-opacity:1.0;fill-opacity:0.9;");
