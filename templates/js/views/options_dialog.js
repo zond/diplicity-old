@@ -13,6 +13,7 @@ window.OptionsDialogView = BaseView.extend({
 		this.options = options.options;
 		this.title = options.title;
 		this.selected = options.selected;
+		this.cancelled = options.cancelled;
 		this.selection = null;
 	},
 
@@ -20,6 +21,10 @@ window.OptionsDialogView = BaseView.extend({
 		this.clean(true);
 	  if (this.selection != null) {
 		  this.selected(this.selection);
+		} else {
+		  if (this.cancelled != null) {
+				this.cancelled();
+			}
 		}
 	},
 

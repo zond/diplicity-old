@@ -52,6 +52,9 @@ window.GameView = BaseView.extend({
 						that.decision = [provs[0], alternative];
 					  that.decide(raw[alternative].Next[provs[0]].Next);
 					},
+					cancelled: function() {
+					  that.addClickableProvinces();
+					},
 				}).display();
 			} else if (types[0] == "Province") {
 			  _.each(opts, function(prov) {
