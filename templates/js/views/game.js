@@ -69,7 +69,7 @@ window.GameView = BaseView.extend({
 				GameId: that.model.get('Id'),
 				Order: decision,
 			}, function(error) {
-			  if (error != null) {
+			  if (error != '') {
 					logError('While setting order', decision, error);
 				}
 			});

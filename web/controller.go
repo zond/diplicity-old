@@ -155,12 +155,17 @@ func (self *Web) WS(ws *websocket.Conn) {
 					case "SetOrder":
 						if loggedIn {
 							params := subs.JSON{message.Method.Data}
+							result := game.SetOrder(self, params.GetString("GameId"), params.GetStringSlice("Order"), email)
+							data := ""
+							if result != nil {
+								data = result.Error()
+							}
 							if err := websocket.JSON.Send(ws, subs.Message{
 								Type: common.RPCType,
 								Method: &subs.Method{
 									Name: message.Method.Name,
 									Id:   message.Method.Id,
-									Data: game.SetOrder(self, params.GetString("GameId"), params.GetStringSlice("Order"), email),
+									Data: data,
 								},
 							}); err != nil {
 								self.Errorf("%v", err)

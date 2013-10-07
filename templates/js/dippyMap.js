@@ -41,13 +41,30 @@ function dippyMap(container) {
 		path.setAttribute('fill-opacity', '0');
 	};
 	that.highlightProvince = function(province) {
-		var prov = $(el).find('#' + selEscape(province)).first()[0];
-		prov.setAttribute("stroke", 'red');
-		prov.setAttribute("stroke-width", '8');
+		var prov = $(el).find('#' + selEscape(province)).first();
+		var copy = prov.clone()[0];
+		copy.setAttribute("id", prov.attr('id') + "_highlight");
+		copy.setAttribute("style", "fill:url(#stripes)");
+		copy.setAttribute('fill-opacity', '1');
+		copy.removeAttribute("transform");
+		var x = 0;
+		var y = 0;
+		var curr = prov[0];
+		while (curr != null && curr.getAttribute != null) {
+			var trans = curr.getAttribute("transform");
+			if (trans != null) {
+				var transMatch = /^translate\(([\d.-]+),\s*([\d.-]+)\)$/.exec(trans);
+				x += Number(transMatch[1]);
+				y += Number(transMatch[2]);
+			}
+			curr = curr.parentNode;
+		}
+		copy.setAttribute("transform", "translate(" + x + "," + y + ")");
+		copy.setAttribute("stroke", 'none');
+		el.appendChild(copy);
 	};
 	that.unhighlightProvince = function(province) {
-		var prov = $(el).find('#' + selEscape(province)).first()[0];
-		prov.setAttribute("stroke", 'none');
+		$(el).find('#' + selEscape(province) + '_highlight').remove();
 	};
 	that.addClickListener = function(province, handler) {
 	  highlightProvince(province);
@@ -109,7 +126,10 @@ function dippyMap(container) {
 	  var start = null;
 		var middle = null;
 		var end = null;
-	  if (provs.length == 2) {
+		if (provs.length == 3 && provs[1] == provs[2]) {
+			provs.pop();
+		}
+		if (provs.length == 2) {
 		  start = that.centerOf(provs[0]);
 			end = that.centerOf(provs[1]);
 			middle = start.add(end.sub(start).div(2.0));
