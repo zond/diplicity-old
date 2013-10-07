@@ -22,11 +22,21 @@ function panZoom(selector) {
 				dragY: dragY,
 			}, null, 2);
 		};
+		var viewToMap = function(p) {
+		  return p.sub(new Poi(parseInt(deltaX + dragX), parseInt(deltaY + dragY))).div(scale * zoom);
+		};
+		var mapToView = function(p) {
+		  return p.mul(scale * zoom).add(new Poi(parseInt(deltaX + dragX), parseInt(deltaY + dragY)));
+		};
+		var getMapCenter = function() {
+		  return viewToMap(new Poi($(window).width() / 2, $(window).height() / 2));
+		};
 		var execute = function() {
 			element.css('-webkit-transform', 'translate3d(' + parseInt(deltaX + dragX) + 'px,' + parseInt(deltaY + dragY) + 'px,0px) scale3d(' + (scale * zoom) + ',' + (scale * zoom) + ',1)');
+			element.css('-webkit-transform-origin', '0 0');
 		};
-		deltaY = $(window).height() / 2 - element.height() / 2;
 		deltaX = $(window).width() / 2 - element.width() / 2;
+		deltaY = $(window).height() / 2 - element.height() / 2;
 		execute();
 		container.bind('mousewheel', function(e) {
 		  e.preventDefault();
@@ -43,7 +53,11 @@ function panZoom(selector) {
 				}
 			}
 			if ((wantedZoom > 1 && scale * wantedZoom < MAX_ZOOM) || (wantedZoom < 1 && scale * wantedZoom > (1 / MAX_ZOOM))) {
+				var oldCenter = getMapCenter();
 				scale = scale * wantedZoom;
+				var d = getMapCenter().sub(oldCenter).mul(scale * zoom);
+				deltaX += d.x;
+				deltaY += d.y;
 				execute();
 			}
 		});
@@ -51,21 +65,19 @@ function panZoom(selector) {
 		  if (!transforming) {
 				dragX = e.gesture.deltaX;
 				dragY = e.gesture.deltaY;
-				var bottom = deltaY + dragY + element.height() * scale * zoom + element.height() * (1 - scale * zoom) * 0.5;
-				if (bottom < $(window).height() / 2) {
-				  deltaY = $(window).height() / 2 + deltaY - bottom;
+				var topLeft = mapToView(new Poi(0, 0));
+				var bottomRight = mapToView(new Poi(element.width(), element.height()));
+				if (bottomRight.y < $(window).height() / 2) {
+				  deltaY = $(window).height() / 2 + deltaY - bottomRight.y;
 				}
-				var top = deltaY + dragY + element.height() * (1 - scale * zoom) * 0.5;
-				if (top > $(window).height() / 2) {
-				  deltaY = $(window).height() / 2 + deltaY - top;
+				if (topLeft.y > $(window).height() / 2) {
+				  deltaY = $(window).height() / 2 + deltaY - topLeft.y;
 				}
-				var left = deltaX + dragX + element.width() * (1 - scale * zoom) * 0.5;
-				if (left > $(window).width() / 2) {
-				  deltaX = $(window).width() / 2 + deltaX - left;
+				if (topLeft.x > $(window).width() / 2) {
+				  deltaX = $(window).width() / 2 + deltaX - topLeft.x;
 				}
-				var right = deltaX + dragX + element.width() * scale * zoom + element.width() * (1 - scale * zoom) * 0.5;
-				if (right < $(window).width() / 2) {
-				  deltaX = $(window).width() / 2 + deltaX - right;
+				if (bottomRight.x < $(window).width() / 2) {
+				  deltaX = $(window).width() / 2 + deltaX - bottomRight.x;
 				}
 				execute();
 			}
@@ -83,7 +95,11 @@ function panZoom(selector) {
 		});
 		container.bind('transform', function(e){
 		  if ((e.gesture.scale > 1 && scale * e.gesture.scale < MAX_ZOOM) || (e.gesture.scale < 1 && scale * e.gesture.scale > (1 / MAX_ZOOM))) {
+				var oldCenter = getMapCenter();
 				zoom = e.gesture.scale;
+				var d = getMapCenter().sub(oldCenter).mul(scale * zoom);
+				deltaX += d.x;
+				deltaY += d.y;
 				execute();
 			}
 		});
