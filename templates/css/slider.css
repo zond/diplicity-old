@@ -1,0 +1,22 @@
+.slider-controls:before {
+	content: '';
+	display: inline-block;
+	height: 100%;
+	vertical-align: middle;
+}
+.slider-content {
+	height: 100%;
+	z-index: 1000;
+	display: inline-block;
+	float: left;
+}
+.slider-control {
+	display: inline-block;
+}
+.slider-controls {
+	display: inline;
+}
+.slider-control span {
+	font-size: x-large;
+}
+
