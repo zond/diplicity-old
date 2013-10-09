@@ -34,6 +34,7 @@ var spaceRegexp = regexp.MustCompile("\\s+")
 
 type Web struct {
 	sessionStore          *sessions.CookieStore
+	secret                string
 	db                    *kol.DB
 	env                   string
 	logLevel              int
@@ -79,6 +80,7 @@ func (self *Web) DB() *kol.DB {
 }
 
 func (self *Web) SetSecret(secret string) *Web {
+	self.secret = secret
 	self.sessionStore = sessions.NewCookieStore([]byte(secret))
 	return self
 }

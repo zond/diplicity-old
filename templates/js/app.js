@@ -2,8 +2,6 @@
 window.session = {};
 
 $(window).load(function() {
-  var match = /^.*:\/\/([^\/]*)\//.exec(window.location.href);
-	var url = "ws://" + match[1] + "/ws";
 	var start = function(ev) {
 		window.session.user = new User();
 
@@ -69,6 +67,8 @@ $(window).load(function() {
 
     navigate(Backbone.history.fragment || '/');
 	};
-  wsBackbone(url, start);
+	var match = /^.*:\/\/([^\/]*)\//.exec(window.location.href);
+	var url = "ws://" + match[1] + "/ws";
+	wsBackbone(url, start);
 
 });

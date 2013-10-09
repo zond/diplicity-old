@@ -2,6 +2,8 @@ package web
 
 import (
 	"code.google.com/p/go.net/websocket"
+	"crypto/sha512"
+	"encoding/base64"
 	"fmt"
 	"github.com/zond/diplicity/common"
 	"github.com/zond/diplicity/game"
@@ -19,41 +21,46 @@ import (
 var gamePattern = regexp.MustCompile("^/games/(.*)$")
 
 func (self *Web) WS(ws *websocket.Conn) {
-	session, err := self.sessionStore.Get(ws.Request(), SessionName)
-	if err != nil {
-		self.Errorf("\t%v\t%v\t%v", ws.Request().URL, ws.Request().RemoteAddr, err)
+	token := ws.Request().URL.Query().Get("token")
+	email := ws.Request().URL.Query().Get("email")
+	loggedIn := false
+	if token != "" {
+		timeout := common.MustParseInt64(ws.Request().URL.Query().Get("timeout"))
+		if now := time.Now().UnixNano(); timeout < now {
+			self.Errorf("\t%v\t%v\t[token too old: %v < %v]", ws.Request().URL, ws.Request().RemoteAddr, timeout, now)
+			return
+		}
+		if correct := self.hash(email, timeout); correct != token {
+			self.Errorf("\t%v\t%v\t[bad token: %v != %v]", ws.Request().URL, ws.Request().RemoteAddr, token, correct)
+			return
+		}
+		loggedIn = true
 	}
 
-	email := ""
-	emailIf, loggedIn := session.Values[SessionEmail]
-	if loggedIn {
-		email = emailIf.(string)
-	}
-
-	self.Infof("\t%v\t%v\t%v <-", ws.Request().URL, ws.Request().RemoteAddr, session.Values[SessionEmail])
+	self.Infof("\t%v\t%v\t%v <-", ws.Request().URL, ws.Request().RemoteAddr, email)
 
 	pack := subs.New(self.db, ws).OnUnsubscribe(func(s *subs.Subscription, reason interface{}) {
-		self.Errorf("\t%v\t%v\t%v\t%v\t%v\t[unsubscribing]", ws.Request().URL, ws.Request().RemoteAddr, emailIf, s.URI(), reason)
+		self.Errorf("\t%v\t%v\t%v\t%v\t%v\t[unsubscribing]", ws.Request().URL.Path, ws.Request().RemoteAddr, email, s.URI(), reason)
 	}).Logger(func(name string, i interface{}, op string, dur time.Duration) {
-		self.Debugf("\t%v\t%v\t%v\t%v\t%v\t%v ->", ws.Request().URL, ws.Request().RemoteAddr, emailIf, op, name, dur)
+		self.Debugf("\t%v\t%v\t%v\t%v\t%v\t%v ->", ws.Request().URL.Path, ws.Request().RemoteAddr, email, op, name, dur)
 	})
 	defer func() {
-		self.Infof("\t%v\t%v\t%v -> [unsubscribing all]", ws.Request().URL, ws.Request().RemoteAddr, session.Values[SessionEmail])
+		self.Infof("\t%v\t%v\t%v -> [unsubscribing all]", ws.Request().URL.Path, ws.Request().RemoteAddr, email)
 		pack.UnsubscribeAll()
 	}()
 
 	var start time.Time
 	for {
 		var message subs.Message
-		if err = websocket.JSON.Receive(ws, &message); err == nil {
+		if err := websocket.JSON.Receive(ws, &message); err == nil {
 			start = time.Now()
 			func() {
 				defer func() {
 					if message.Method != nil {
-						self.Debugf("\t%v\t%v\t%v\t%v\t%v\t%v <-", ws.Request().URL, ws.Request().RemoteAddr, emailIf, message.Type, message.Method.Name, time.Now().Sub(start))
+						self.Debugf("\t%v\t%v\t%v\t%v\t%v\t%v <-", ws.Request().URL.Path, ws.Request().RemoteAddr, email, message.Type, message.Method.Name, time.Now().Sub(start))
 					}
 					if message.Object != nil {
-						self.Debugf("\t%v\t%v\t%v\t%v\t%v\t%v <-", ws.Request().URL, ws.Request().RemoteAddr, emailIf, message.Type, message.Object.URI, time.Now().Sub(start))
+						self.Debugf("\t%v\t%v\t%v\t%v\t%v\t%v <-", ws.Request().URL.Path, ws.Request().RemoteAddr, email, message.Type, message.Object.URI, time.Now().Sub(start))
 					}
 					if self.logLevel > Trace {
 						if message.Method != nil && message.Method.Data != nil {
@@ -197,6 +204,39 @@ func (self *Web) Openid(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Location", redirect.String())
 	w.WriteHeader(302)
 	fmt.Fprintln(w, redirect.String())
+}
+
+type token struct {
+	Authorized bool
+	Token      string
+	Email      string
+	Timeout    string
+}
+
+func (self *Web) hash(email string, timeout int64) string {
+	hash := sha512.New()
+	fmt.Fprintf(hash, "%s:%s:%s", email, self.secret, timeout)
+	return base64.URLEncoding.EncodeToString(hash.Sum(nil))
+}
+
+func (self *Web) Token(w http.ResponseWriter, r *http.Request) {
+	data := self.GetRequestData(w, r)
+	if emailIf, found := data.session.Values[SessionEmail]; found {
+		email := fmt.Sprint(emailIf)
+		timeout := time.Now().Add(time.Minute).UnixNano()
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		common.MustEncodeJSON(w, token{
+			Token:      self.hash(email, timeout),
+			Authorized: true,
+			Email:      email,
+			Timeout:    fmt.Sprint(timeout),
+		})
+	} else {
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		common.MustEncodeJSON(w, token{
+			Authorized: false,
+		})
+	}
 }
 
 func (self *Web) Logout(w http.ResponseWriter, r *http.Request) {
