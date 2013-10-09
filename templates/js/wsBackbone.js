@@ -1,5 +1,7 @@
 function wsBackbone(rawUrl, start) {
-	var ws = null;
+	var ws = {
+	  sendIfReady: function() {},
+	};
 
 	var subscriptions = {};
 	var rpcCalls = {};
@@ -46,6 +48,10 @@ function wsBackbone(rawUrl, start) {
 		  error: function() {
 				if (backoff < 30000) {
 					backoff *= 2;
+				}
+				if (!state.started) {
+					state.started = true;
+					start();
 				}
 				if (!state.reconnecting) {
 					logError('Scheduling refetch of token');
