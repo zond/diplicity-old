@@ -1,22 +1,14 @@
-.slider-controls:before {
-	content: '';
-	display: inline-block;
+.sliders {
+	position: absolute;
 	height: 100%;
-	vertical-align: middle;
-}
-.slider-content {
-	height: 100%;
-	z-index: 1000;
-	display: inline-block;
-	float: left;
-}
-.slider-control {
-	display: inline-block;
 }
 .slider-controls {
-	display: inline;
+	display: inline-block;
+	position: relative;
 }
-.slider-control span {
-	font-size: x-large;
+.slider-content {
+	position: relative;
+	height: 100%;
+	z-index: 1000;
+	float: left;
 }
-
