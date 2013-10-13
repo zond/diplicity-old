@@ -9,6 +9,7 @@
 <div class="collapse navbar-collapse navbar-ex1-collapse">
 	<ul class="nav navbar-nav navbar-right">
 		<% if (window.session.user.loggedIn()) { %>
+		<li><a href="/settings"><span class="glyphicon glyphicon-cog"></span> {{.I "Settings" }}</a></li>
 		<li><a href="/logout"><span class="glyphicon glyphicon-log-out"></span> <%- '{{.I "Logout {0}" }}'.format(window.session.user.get('Email')) %></a></li>
 		<% } else { %>
 		<li><a href="/login"><span class="glyphicon glyphicon-log-in"></span> {{.I "Login" }}</a></li>
