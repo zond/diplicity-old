@@ -13,6 +13,13 @@ $(window).load(function() {
 				"create": "createGame",
 				"menu": "menu",
 				"games/:id": "games",
+				"settings": "settings",
+			},
+
+      settings: function() {
+			  new SettingsView({
+				  el: $('#content'),
+				}).doRender();
 			},
 
 			games: function(id) {

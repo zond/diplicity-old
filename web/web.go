@@ -137,11 +137,14 @@ func (self *Web) render_Templates(data RequestData) {
 		fmt.Fprintf(data.response, "  n = $('<script type=\"text/template\" id=\"%v_underscore\"></script>');\n", strings.Split(templ.Name(), ".")[0])
 		fmt.Fprintf(data.response, "  n.text('")
 		buf = new(bytes.Buffer)
-		templ.Execute(buf, data)
+		if err := templ.Execute(buf, data); err != nil {
+			panic(err)
+		}
 		rendered = string(buf.Bytes())
 		rendered = spaceRegexp.ReplaceAllString(rendered, " ")
 		rendered = strings.Replace(rendered, "\\", "\\\\", -1)
 		rendered = strings.Replace(rendered, "'", "\\'", -1)
+		rendered = strings.Replace(rendered, "\n", "\\n", -1)
 		fmt.Fprint(data.response, rendered)
 		fmt.Fprintln(data.response, "');")
 		fmt.Fprintln(data.response, "  $('head').append(n);")

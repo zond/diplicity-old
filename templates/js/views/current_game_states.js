@@ -18,7 +18,7 @@ window.CurrentGameStatesView = BaseView.extend({
 		that.$el.html(that.template({
 		  user: window.session.user,
 		}));
-		this.collection.forEach(function(model) {
+		that.collection.forEach(function(model) {
 		  that.$('#current_games').append(new GameStateView({ 
 				model: model,
 				parentId: "current_games",
@@ -29,6 +29,9 @@ window.CurrentGameStatesView = BaseView.extend({
 				},
 			}).doRender().el);
 		});
+		if (window.session.user.loggedIn() && that.collection.length == 0) {
+			that.$el.append('<a href="/create" class="btn btn-primary btn-lg btn-block">{{.I "Not member of any games right now, why not create one?" }}</a>');
+		}
 		return that;
 	},
 

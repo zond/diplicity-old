@@ -51,8 +51,11 @@ window.OpenGameStatesView = BaseView.extend({
 					}
 				},
 			}).doRender();
-			that.$el.append(stateView.el);
+			that.$('#open_games').append(stateView.el);
 		});
+		if (window.session.user.loggedIn() && that.collection.length == 0) {
+		  that.$el.append('<a href="/create" class="btn btn-primary btn-lg btn-block">{{.I "No open games, why not create one?" }}</a>');
+		}
 		return that;
 	},
 
