@@ -12,7 +12,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"text/template"
 )
@@ -30,8 +29,6 @@ const (
 	Debug
 	Trace
 )
-
-var spaceRegexp = regexp.MustCompile("\\s+")
 
 type Web struct {
 	sessionStore          *sessions.CookieStore
@@ -142,7 +139,6 @@ func (self *Web) render_Templates(data RequestData) {
 			panic(err)
 		}
 		rendered = string(buf.Bytes())
-		rendered = spaceRegexp.ReplaceAllString(rendered, " ")
 		rendered = strings.Replace(rendered, "\\", "\\\\", -1)
 		rendered = strings.Replace(rendered, "'", "\\'", -1)
 		rendered = strings.Replace(rendered, "\n", "\\n", -1)
