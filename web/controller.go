@@ -120,6 +120,10 @@ func (self *Web) WS(ws *websocket.Conn) {
 						if loggedIn {
 							game.AddMember(self, subs.JSON{message.Object.Data}, email)
 						}
+					} else if strings.Index(message.Object.URI, "/user") == 0 {
+						if loggedIn {
+							user.Update(self, subs.JSON{message.Object.Data}, email)
+						}
 					}
 				case common.RPCType:
 					switch message.Method.Name {

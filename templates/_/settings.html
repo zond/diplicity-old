@@ -1,1 +1,19 @@
-SETTINGS
+<form role="form" onsubmit="return false;">
+	<div class="form-group">
+		<label for="user-held-deadlines">{{.I "Held deadlines" }}</label>
+		<input disabled="disabled" type="text" class="form-control" id="user-held-deadlines" value="<%- model.get('HeldDeadlines') %>">
+	</div>
+	<div class="form-group">
+		<label for="user-missed-deadlines">{{.I "Missed deadlines" }}</label>
+		<input disabled="disabled" type="text" class="form-control" id="user-missed-deadlines" value="<%- model.get('MissedDeadlines') %>">
+	</div>
+	<div class="form-group">
+		<label for="user-ranking">{{.I "Ranking" }}</label>
+		<input disabled="disabled" type="text" class="form-control" id="user-ranking" value="<%- model.get('Ranking') %>">
+	</div>
+	<div class="form-group">
+		<label for="user-nickname">{{.I "Nickname" }}</label>
+		<input type="text" class="form-control user-nickname" id="user-nickname" value="<%- model.get('Nickname') %>" placeholder="{{.I "Nickname" }}">
+	</div>
+	<button type="submit" class="save-button btn btn-default">{{.I "Update" }}</button>
+</form>
