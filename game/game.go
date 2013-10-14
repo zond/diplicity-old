@@ -21,16 +21,18 @@ type Minutes int
 type Game struct {
 	Id kol.Id
 
-	Closed           bool `kol:"index"`
-	Started          bool `kol:"index"`
-	Ended            bool `kol:"index"`
-	Variant          string
-	AllocationMethod string
-	SecretEmail      bool
-	SecretNickname   bool
-	SecretNation     bool
-	EndYear          int
-	Private          bool `kol:"index"`
+	Closed             bool `kol:"index"`
+	Started            bool `kol:"index"`
+	Ended              bool `kol:"index"`
+	Variant            string
+	AllocationMethod   string
+	SecretEmail        bool
+	SecretNickname     bool
+	SecretNation       bool
+	EndYear            int
+	MinimumRanking     int
+	MinimumReliability int
+	Private            bool `kol:"index"`
 
 	Deadlines map[dip.PhaseType]Minutes
 
