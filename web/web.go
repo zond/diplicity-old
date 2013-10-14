@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
+	"github.com/zond/diplicity/common"
 	"github.com/zond/kcwraps/kol"
 	"io"
 	"log"
@@ -166,21 +167,20 @@ func (self *Web) HandleStatic(router *mux.Router, dir string) {
 		router.MatcherFunc(func(r *http.Request, rm *mux.RouteMatch) bool {
 			return strings.HasSuffix(r.URL.Path, cpy)
 		}).HandlerFunc(self.Logger(func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Cache-Control", "public, max-age=864000")
 			if strings.HasSuffix(r.URL.Path, ".css") {
-				w.Header().Set("Content-Type", "text/css; charset=UTF-8")
+				common.SetContentType(w, "text/css; charset=UTF-8", true)
 			} else if strings.HasSuffix(r.URL.Path, ".js") {
-				w.Header().Set("Content-Type", "application/javascript; charset=UTF-8")
+				common.SetContentType(w, "application/javascript; charset=UTF-8", true)
 			} else if strings.HasSuffix(r.URL.Path, ".png") {
-				w.Header().Set("Content-Type", "image/png")
+				common.SetContentType(w, "image/png", true)
 			} else if strings.HasSuffix(r.URL.Path, ".gif") {
-				w.Header().Set("Content-Type", "image/gif")
+				common.SetContentType(w, "image/gif", true)
 			} else if strings.HasSuffix(r.URL.Path, ".woff") {
-				w.Header().Set("Content-Type", "application/font-woff")
+				common.SetContentType(w, "application/font-woff", true)
 			} else if strings.HasSuffix(r.URL.Path, ".ttf") {
-				w.Header().Set("Content-Type", "font/truetype")
+				common.SetContentType(w, "font/truetype", true)
 			} else {
-				w.Header().Set("Content-Type", "application/octet-stream")
+				common.SetContentType(w, "application/octet-stream", true)
 			}
 			if in, err := os.Open(filepath.Join("static", cpy)); err != nil {
 				self.Errorf("%v", err)

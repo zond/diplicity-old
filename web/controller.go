@@ -224,16 +224,14 @@ func (self *Web) Token(w http.ResponseWriter, r *http.Request) {
 	if emailIf, found := data.session.Values[SessionEmail]; found {
 		email := fmt.Sprint(emailIf)
 		timeout := time.Now().Add(time.Minute).UnixNano()
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		common.MustEncodeJSON(w, token{
+		common.RenderJSON(w, token{
 			Token:      self.hash(email, timeout),
 			Authorized: true,
 			Email:      email,
 			Timeout:    fmt.Sprint(timeout),
 		})
 	} else {
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		common.MustEncodeJSON(w, token{
+		common.RenderJSON(w, token{
 			Authorized: false,
 		})
 	}
@@ -271,7 +269,7 @@ func (self *Web) Login(w http.ResponseWriter, r *http.Request) {
 
 func (self *Web) Index(w http.ResponseWriter, r *http.Request) {
 	data := self.GetRequestData(w, r)
-	w.Header().Set("Content-Type", "text/html; charset=UTF-8")
+	common.SetContentType(w, "text/html; charset=UTF-8", false)
 	self.renderText(w, r, self.htmlTemplates, "index.html", data)
 }
 
@@ -287,8 +285,7 @@ func (self *Web) AppCache(w http.ResponseWriter, r *http.Request) {
 
 func (self *Web) AllJs(w http.ResponseWriter, r *http.Request) {
 	data := self.GetRequestData(w, r)
-	w.Header().Set("Cache-Control", "public, max-age=864000")
-	w.Header().Set("Content-Type", "application/javascript; charset=UTF-8")
+	common.SetContentType(w, "application/javascript; charset=UTF-8", true)
 	self.renderText(w, r, self.jsTemplates, "jquery-2.0.3.min.js", data)
 	fmt.Fprintln(w, ";")
 	self.renderText(w, r, self.jsTemplates, "jquery.hammer.min.js", data)
