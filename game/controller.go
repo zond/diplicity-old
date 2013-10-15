@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"github.com/zond/diplicity/common"
+	"github.com/zond/diplicity/user"
 	"github.com/zond/kcwraps/kol"
 	"github.com/zond/kcwraps/subs"
 )
@@ -53,7 +54,19 @@ func AddMember(c common.Context, j subs.JSON, email string) error {
 		if !found {
 			return fmt.Errorf("Unknown variant %v", game.Variant)
 		}
+		me := &user.User{Id: []byte(email)}
+		if err := c.DB().Get(me); err != nil {
+			return err
+		}
+		if game.Disallows(me) {
+			return fmt.Errorf("Is not allowed to join this game due to game settings")
+		}
 		already := game.Members(d)
+		if disallows, err := already.Disallows(d, me); err != nil {
+			return err
+		} else if disallows {
+			return fmt.Errorf("Is not allowed to join this game due to blacklistings")
+		}
 		if len(already) < len(variant.Nations) {
 			id := make([]byte, len(state.Game.Id)+len([]byte(email)))
 			copy(id, state.Game.Id)
