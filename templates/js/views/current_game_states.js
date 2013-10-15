@@ -3,7 +3,6 @@ window.CurrentGameStatesView = BaseView.extend({
   template: _.template($('#current_game_states_underscore').html()),
 
 	initialize: function(options) {
-	  _.bindAll(this, 'doRender');
 		this.listenTo(window.session.user, 'change', this.doRender);
 		this.collection = new GameStates([], { url: '/games/current' });
 		this.listenTo(this.collection, "sync", this.doRender);

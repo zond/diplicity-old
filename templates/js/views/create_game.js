@@ -3,7 +3,6 @@ window.CreateGameView = BaseView.extend({
   template: _.template($('#create_game_underscore').html()),
 
 	initialize: function(options) {
-	  _.bindAll(this, 'doRender');
 		this.listenTo(window.session.user, 'change', this.doRender);
 		var deadlines = {};
 		var chatFlags = {};

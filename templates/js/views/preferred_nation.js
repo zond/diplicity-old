@@ -16,7 +16,6 @@ window.PreferredNationView = BaseView.extend({
 	},
 
 	initialize: function(options) {
-	  _.bindAll(this, 'doRender');
 		this.nation = options.nation;
 		this.action = options.action;
 	},

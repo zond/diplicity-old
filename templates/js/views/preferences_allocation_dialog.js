@@ -10,7 +10,6 @@ window.PreferencesAllocationDialogView = BaseView.extend({
 	},
 
 	initialize: function(options) {
-	  _.bindAll(this, 'doRender');
 		this.gameState = options.gameState;
 		this.cancel = options.cancel;
 		this.done = options.done;

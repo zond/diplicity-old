@@ -9,7 +9,6 @@ window.ChatFlagView = BaseView.extend({
 	},
 
 	initialize: function(options) {
-	  _.bindAll(this, 'doRender');
 		this.opt = options.opt;
 		this.gameState = options.gameState;
 		this.phaseType = options.phaseType;

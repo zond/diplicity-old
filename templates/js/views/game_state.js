@@ -19,7 +19,6 @@ window.GameStateView = BaseView.extend({
 	},
 
 	initialize: function(options) {
-	  _.bindAll(this, 'doRender');
 		this.play_state = options.play_state;
 		this.button_text = options.button_text;
 		this.button_action = options.button_action;

@@ -15,6 +15,16 @@ window.GameState = Backbone.Model.extend({
 		});
 	},
 
+	currentChatFlags: function() {
+	  var that = this;
+	  var phase = that.get('phase');
+		if (phase == null) {
+		  return this.get('ChatFlags')['BeforeGame'] || 0;
+		} else { 
+			return this.get('ChatFlags')[phase.Type] || 0;
+		}
+	},
+
 	describePhaseType: function(phaseType) {
 	  var that = this;
 		var desc = [];

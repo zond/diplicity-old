@@ -11,7 +11,6 @@ window.PhaseTypeView = BaseView.extend({
 	},
 
 	initialize: function(options) {
-	  _.bindAll(this, 'doRender');
 		this.parentId = options.parentId;
 		this.phaseType = options.phaseType;
 		this.editable = options.editable;

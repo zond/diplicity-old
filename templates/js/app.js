@@ -11,7 +11,6 @@ $(window).load(function() {
 				"": "currentGames",
 				"open": "openGames",
 				"create": "createGame",
-				"menu": "menu",
 				"games/:id": "games",
 				"settings": "settings",
 			},
@@ -27,12 +26,6 @@ $(window).load(function() {
 				  model: new GameState({
 						Id: id,
 					}),
-					el: $('#content'),
-				}).doRender();
-			},
-
-			menu: function() {
-				new MenuView({ 
 					el: $('#content'),
 				}).doRender();
 			},

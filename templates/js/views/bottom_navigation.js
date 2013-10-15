@@ -3,7 +3,6 @@ window.BottomNavigationView = BaseView.extend({
   template: _.template($('#bottom_navigation_underscore').html()),
 
 	initialize: function(options) {
-	  _.bindAll(this, 'doRender');
 		this.buttons = options.buttons;
 	},
 

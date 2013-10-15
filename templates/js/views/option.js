@@ -11,7 +11,6 @@ window.OptionView = BaseView.extend({
 	},
 
 	initialize: function(options) {
-	  _.bindAll(this, 'doRender');
 		this.option = options.option;
 		this.selected = options.selected;
 	},

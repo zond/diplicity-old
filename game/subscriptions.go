@@ -110,9 +110,6 @@ func SubscribeMessages(c common.Context, s *subs.Subscription, gameId, email str
 	s.Call = func(i interface{}, op string) error {
 		messages := i.([]*Message)
 		sort.Sort(messagePointers(messages))
-		if len(messages) > 200 {
-			messages = messages[:200]
-		}
 		states := []MessageState{}
 		for _, message := range messages {
 			game := &Game{Id: base64DecodedId}

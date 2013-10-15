@@ -8,7 +8,6 @@ window.SettingsView = BaseView.extend({
 	},
 
 	initialize: function(options) {
-	  _.bindAll(this, 'doRender');
 		this.listenTo(window.session.user, 'change', this.doRender);
 	},
 
