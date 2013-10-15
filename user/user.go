@@ -12,7 +12,23 @@ type User struct {
 	Nickname        string
 	MissedDeadlines int
 	HeldDeadlines   int
-	Ranking         int
+	Ranking         float64
+}
+
+func (self *User) Reliability() float64 {
+	return float64(self.HeldDeadlines+1) / float64(self.MissedDeadlines+1)
+}
+
+func (self *User) Blacklistings(d *kol.DB) (result map[string]bool, err error) {
+	result = map[string]bool{}
+	var blacklistings []Blacklisting
+	if err = d.Query().Where(kol.Equals{"Blacklister", self.Id}).All(&blacklistings); err != nil {
+		return
+	}
+	for _, blacklisting := range blacklistings {
+		result[blacklisting.Blacklistee.String()] = true
+	}
+	return
 }
 
 type Blacklisting struct {
