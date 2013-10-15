@@ -5,6 +5,7 @@ import (
 	"github.com/zond/diplicity/user"
 	dip "github.com/zond/godip/common"
 	"github.com/zond/kcwraps/kol"
+	"time"
 )
 
 type Member struct {
@@ -14,6 +15,41 @@ type Member struct {
 
 	Nation           dip.Nation
 	PreferredNations []dip.Nation
+
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
+type Members []Member
+
+func (self Members) toStates(c common.Context, g *Game, email string) (result []MemberState) {
+	result = make([]MemberState, len(self))
+	for index, member := range self {
+		state := member.toState(c, g, email)
+		result[index] = *state
+	}
+	return
+}
+
+func (self *Member) toState(c common.Context, g *Game, email string) (result *MemberState) {
+	result = &MemberState{
+		Member: &Member{},
+		User:   &user.User{},
+	}
+	me := string(self.UserId) == email
+	if me || !g.SecretNation {
+		result.Member.Nation = self.Nation
+	}
+	if me || !g.SecretEmail || !g.SecretNickname {
+		foundUser := user.EnsureUser(c, string(self.UserId))
+		if me || !g.SecretEmail {
+			result.User.Email = foundUser.Email
+		}
+		if me || !g.SecretNickname {
+			result.User.Nickname = foundUser.Nickname
+		}
+	}
+	return
 }
 
 func (self *Member) Deleted(d *kol.DB) {
@@ -32,8 +68,6 @@ func (self *Member) Created(d *kol.DB) {
 	}
 	d.EmitUpdate(&g)
 }
-
-type Members []Member
 
 func (self Members) Disallows(d *kol.DB, asking *user.User) (result bool, err error) {
 	var askerList map[string]bool
@@ -58,35 +92,6 @@ func (self Members) Disallows(d *kol.DB, asking *user.User) (result bool, err er
 		if memberList[asking.Id.String()] {
 			result = true
 			return
-		}
-	}
-	return
-}
-
-func (self Members) toStates(c common.Context, g *Game, email string) (result []MemberState) {
-	result = make([]MemberState, len(self))
-	for index, member := range self {
-		cpy := member
-		if string(cpy.UserId) != email {
-			cpy.UserId = nil
-			cpy.PreferredNations = nil
-		}
-		if string(cpy.UserId) != email && g.SecretNation {
-			cpy.Nation = ""
-		}
-		result[index] = MemberState{
-			Member: &cpy,
-			User:   &user.User{},
-		}
-		if !g.SecretEmail || !g.SecretNickname {
-			foundUser := user.EnsureUser(c, string(member.UserId))
-			if !g.SecretEmail {
-				result[index].User.Email = foundUser.Email
-				result[index].User.Id = foundUser.Id
-			}
-			if !g.SecretNickname {
-				result[index].User.Nickname = foundUser.Nickname
-			}
 		}
 	}
 	return
