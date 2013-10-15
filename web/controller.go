@@ -18,6 +18,7 @@ import (
 	"time"
 )
 
+var chatMessagesPattern = regexp.MustCompile("^/games/(.*)/messages$")
 var gamePattern = regexp.MustCompile("^/games/(.*)$")
 
 func (self *Web) WS(ws *websocket.Conn) {
@@ -90,7 +91,11 @@ func (self *Web) WS(ws *websocket.Conn) {
 							s.Call(&user.User{}, subs.FetchType)
 						}
 					default:
-						if match := gamePattern.FindStringSubmatch(message.Object.URI); match != nil {
+						if match := chatMessagesPattern.FindStringSubmatch(message.Object.URI); match != nil {
+							if loggedIn {
+								game.SubscribeMessages(self, s, match[1], email)
+							}
+						} else if match := gamePattern.FindStringSubmatch(message.Object.URI); match != nil {
 							if loggedIn {
 								game.SubscribeGame(self, s, match[1], email)
 							}

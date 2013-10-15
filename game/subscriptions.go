@@ -50,7 +50,7 @@ func SubscribeCurrent(c common.Context, s *subs.Subscription, email string) erro
 				}
 			}
 		}
-		if len(states) > 0 {
+		if op == subs.FetchType || len(states) > 0 {
 			return s.Send(states, op)
 		}
 		return nil
@@ -79,6 +79,8 @@ func SubscribeGame(c common.Context, s *subs.Subscription, gameId, email string)
 				Members: members.toStates(c, game, email),
 				Phase:   game.LastPhase(c.DB()),
 			}, op)
+		} else if op == subs.FetchType {
+			return s.Send(GameState{}, op)
 		}
 		return nil
 	}
@@ -129,7 +131,7 @@ func SubscribeMessages(c common.Context, s *subs.Subscription, gameId, email str
 				}
 			}
 		}
-		if len(states) > 0 {
+		if op == subs.FetchType || len(states) > 0 {
 			return s.Send(states, op)
 		}
 		return nil
@@ -172,7 +174,7 @@ func SubscribeOpen(c common.Context, s *subs.Subscription, email string) error {
 				})
 			}
 		}
-		if len(states) > 0 {
+		if op == subs.FetchType || len(states) > 0 {
 			return s.Send(states, op)
 		}
 		return nil
