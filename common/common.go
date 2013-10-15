@@ -73,6 +73,8 @@ const (
 	ChatConference
 )
 
+type ChatChannel map[dip.Nation]bool
+
 type ChatFlagOption struct {
 	Id          ChatFlag
 	Name        string
@@ -112,9 +114,11 @@ const (
 )
 
 const (
-	ClassicalString   = "classical"
-	RandomString      = "random"
-	PreferencesString = "preferences"
+	ClassicalString                   = "classical"
+	RandomString                      = "random"
+	PreferencesString                 = "preferences"
+	BeforeGamePhaseType dip.PhaseType = "BeforeGame"
+	Anonymous           dip.Nation    = "Anonymous"
 )
 
 type AllocationMethod struct {
