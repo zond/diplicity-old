@@ -5,6 +5,7 @@ import (
 	dip "github.com/zond/godip/common"
 	"github.com/zond/godip/state"
 	"github.com/zond/kcwraps/kol"
+	"time"
 )
 
 type Phase struct {
@@ -22,6 +23,9 @@ type Phase struct {
 	Dislodgeds    map[dip.Province]dip.Unit
 	Dislodgers    map[dip.Province]dip.Province
 	Bounces       map[dip.Province]map[dip.Province]bool
+
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 func (self *Phase) Updated(d *kol.DB, old *Phase) {
