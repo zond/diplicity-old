@@ -6,6 +6,7 @@ import (
 	"github.com/zond/diplicity/user"
 	"github.com/zond/kcwraps/kol"
 	"github.com/zond/kcwraps/subs"
+	"sort"
 )
 
 type MemberState struct {
@@ -84,6 +85,20 @@ func SubscribeGame(c common.Context, s *subs.Subscription, gameId, email string)
 	return s.Subscribe(&Game{Id: base64DecodedId})
 }
 
+type messagePointers []*Message
+
+func (self messagePointers) Len() int {
+	return len(self)
+}
+
+func (self messagePointers) Less(j, i int) bool {
+	return self[i].CreatedAt.Before(self[j].CreatedAt)
+}
+
+func (self messagePointers) Swap(i, j int) {
+	self[i], self[j] = self[j], self[i]
+}
+
 func SubscribeMessages(c common.Context, s *subs.Subscription, gameId, email string) error {
 	base64DecodedId, err := base64.URLEncoding.DecodeString(gameId)
 	if err != nil {
@@ -92,6 +107,10 @@ func SubscribeMessages(c common.Context, s *subs.Subscription, gameId, email str
 	s.Query = s.DB().Query().Where(kol.Equals{"GameId", base64DecodedId})
 	s.Call = func(i interface{}, op string) error {
 		messages := i.([]*Message)
+		sort.Sort(messagePointers(messages))
+		if len(messages) > 200 {
+			messages = messages[:200]
+		}
 		states := []MessageState{}
 		for _, message := range messages {
 			game := &Game{Id: base64DecodedId}

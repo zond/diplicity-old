@@ -6,6 +6,7 @@ window.CurrentGameStatesView = BaseView.extend({
 	  _.bindAll(this, 'doRender');
 		this.listenTo(window.session.user, 'change', this.doRender);
 		this.collection = new GameStates([], { url: '/games/current' });
+		this.listenTo(this.collection, "sync", this.doRender);
 		this.listenTo(this.collection, "reset", this.doRender);
 		this.listenTo(this.collection, "add", this.doRender);
 		this.listenTo(this.collection, "remove", this.doRender);

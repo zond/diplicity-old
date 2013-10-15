@@ -5,6 +5,7 @@ window.GameView = BaseView.extend({
 	initialize: function(options) {
 	  _.bindAll(this, 'update');
 		this.listenTo(this.model, 'change', this.update);
+		this.listenTo(window.session.user, 'change', this.doRender);
 		this.stateView = new GameStateView({ 
 			parentId: 'current_game',
 			play_state: true,
@@ -165,6 +166,10 @@ window.GameView = BaseView.extend({
 		var that = this;
 		navLinks([]);
 		that.$el.html(that.template({}));
+		new ChatsView({
+		  el: that.$('#chats_slider'),
+			collection: new ChatMessages([], { url: '/games/' + that.model.get('Id') + '/messages' }),
+		}).doRender();
 		that.update();
 		return that;
 	},
