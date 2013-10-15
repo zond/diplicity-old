@@ -44,7 +44,10 @@ func SubscribeCurrent(c common.Context, s *subs.Subscription, email string) erro
 				}
 			}
 		}
-		return s.Send(states, op)
+		if len(states) > 0 {
+			return s.Send(states, op)
+		}
+		return nil
 	}
 	return s.Subscribe(new(Member))
 }
@@ -82,8 +85,20 @@ func SubscribeOpen(c common.Context, s *subs.Subscription, email string) error {
 		games := i.([]*Game)
 		states := []GameState{}
 		isMember := false
+		me := &user.User{Id: []byte(email)}
+		if err := c.DB().Get(me); err != nil {
+			return err
+		}
 		for _, game := range games {
+			if game.Disallows(me) {
+				break
+			}
 			members := game.Members(c.DB())
+			if disallows, err := members.Disallows(c.DB(), me); err != nil {
+				return err
+			} else if disallows {
+				break
+			}
 			isMember = false
 			for _, m := range members {
 				if string(m.UserId) == email {
@@ -99,7 +114,10 @@ func SubscribeOpen(c common.Context, s *subs.Subscription, email string) error {
 				})
 			}
 		}
-		return s.Send(states, op)
+		if len(states) > 0 {
+			return s.Send(states, op)
+		}
+		return nil
 	}
 	return s.Subscribe(new(Game))
 }
