@@ -35,6 +35,34 @@ func (self *Member) Created(d *kol.DB) {
 
 type Members []Member
 
+func (self Members) Disallows(d *kol.DB, asking *user.User) (result bool, err error) {
+	var askerList map[string]bool
+	if askerList, err = asking.Blacklistings(d); err != nil {
+		return
+	}
+	for _, member := range self {
+		if askerList[member.UserId.String()] {
+			result = true
+			return
+		}
+	}
+	for _, member := range self {
+		memberUser := &user.User{Id: member.UserId}
+		if err = d.Get(memberUser); err != nil {
+			return
+		}
+		var memberList map[string]bool
+		if memberList, err = memberUser.Blacklistings(d); err != nil {
+			return
+		}
+		if memberList[asking.Id.String()] {
+			result = true
+			return
+		}
+	}
+	return
+}
+
 func (self Members) toStates(c common.Context, g *Game, email string) (result []MemberState) {
 	result = make([]MemberState, len(self))
 	for index, member := range self {
