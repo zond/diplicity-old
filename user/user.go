@@ -4,6 +4,7 @@ import (
 	"github.com/zond/diplicity/common"
 	"github.com/zond/kcwraps/kol"
 	"github.com/zond/kcwraps/subs"
+	"time"
 )
 
 type User struct {
@@ -13,6 +14,9 @@ type User struct {
 	MissedDeadlines int
 	HeldDeadlines   int
 	Ranking         float64
+
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 func (self *User) Reliability() float64 {
@@ -35,10 +39,12 @@ type Blacklisting struct {
 	Id          kol.Id
 	Blacklister kol.Id
 	Blacklistee kol.Id
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 }
 
 func SubscribeEmail(c common.Context, s *subs.Subscription, email string) error {
-	return s.Subscribe(&User{Id: []byte(email)})
+	return s.Subscribe(&User{Id: kol.Id(email)})
 }
 
 func Update(c common.Context, j subs.JSON, email string) (err error) {
@@ -54,7 +60,7 @@ func Update(c common.Context, j subs.JSON, email string) (err error) {
 }
 
 func EnsureUser(c common.Context, email string) *User {
-	user := &User{Id: []byte(email)}
+	user := &User{Id: kol.Id(email)}
 	if err := c.DB().Get(user); err == kol.NotFound {
 		user.Email = email
 		if err = c.DB().Set(user); err != nil {
