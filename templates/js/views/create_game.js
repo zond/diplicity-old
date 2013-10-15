@@ -11,6 +11,7 @@ window.CreateGameView = BaseView.extend({
 		  deadlines[type] = defaultDeadline;
       chatFlags[type] = defaultChatFlags;
 		});
+		chatFlags['BeforeGame'] = defaultChatFlags;
 		var member = {
 		  UserId: btoa(window.session.user.get('Email')),
 			User: {
