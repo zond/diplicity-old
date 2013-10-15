@@ -23,7 +23,7 @@ func DeleteMember(c common.Context, gameId, email string) error {
 			return fmt.Errorf("%+v already started", game)
 		}
 		member := Member{}
-		if _, err := d.Query().Where(kol.And{kol.Equals{"GameId", base64DecodedId}, kol.Equals{"UserId", []byte(email)}}).First(&member); err != nil {
+		if _, err := d.Query().Where(kol.And{kol.Equals{"GameId", base64DecodedId}, kol.Equals{"UserId", kol.Id(email)}}).First(&member); err != nil {
 			return err
 		}
 		if err := d.Del(&member); err != nil {
@@ -54,7 +54,7 @@ func AddMember(c common.Context, j subs.JSON, email string) error {
 		if !found {
 			return fmt.Errorf("Unknown variant %v", game.Variant)
 		}
-		me := &user.User{Id: []byte(email)}
+		me := &user.User{Id: kol.Id(email)}
 		if err := c.DB().Get(me); err != nil {
 			return err
 		}
@@ -68,13 +68,13 @@ func AddMember(c common.Context, j subs.JSON, email string) error {
 			return fmt.Errorf("Is not allowed to join this game due to blacklistings")
 		}
 		if len(already) < len(variant.Nations) {
-			id := make([]byte, len(state.Game.Id)+len([]byte(email)))
+			id := make(kol.Id, len(state.Game.Id)+len(kol.Id(email)))
 			copy(id, state.Game.Id)
-			copy(id[len(state.Game.Id):], []byte(email))
+			copy(id[len(state.Game.Id):], kol.Id(email))
 			member := Member{
 				Id:               id,
 				GameId:           state.Game.Id,
-				UserId:           []byte(email),
+				UserId:           kol.Id(email),
 				PreferredNations: state.Members[0].PreferredNations,
 			}
 			if err := d.Set(&member); err != nil {
@@ -115,7 +115,7 @@ func Create(c common.Context, j subs.JSON, creator string) error {
 	}
 
 	member := &Member{
-		UserId:           []byte(creator),
+		UserId:           kol.Id(creator),
 		PreferredNations: state.Members[0].PreferredNations,
 	}
 	return c.DB().Transact(func(d *kol.DB) error {
