@@ -1,7 +1,7 @@
 <div class="panel-heading accordion-toggle" data-toggle="collapse" data-parent="#<%- parentId %>" href="#game_<%- gameState.cid %>_<%- phaseType %>">
 	<h4 class="panel-title">
 		<a class="phase-description">
-			<span class="glyphicon glyphicon-chevron-down"></span> <%- phaseType %>: <%- gameState.describePhaseType(phaseType) %>
+			<span class="glyphicon glyphicon-chevron-down"></span> <%- {{.I "phase_types" }}[phaseType] %>: <%- gameState.describePhaseType(phaseType) %>
 		</a>
 	</h4>
 </div>
@@ -9,11 +9,13 @@
 	<div class="panel-body">
 		<% if (editable) { %>
 		<form role="form">
+			<% if (phaseType != 'BeforeGame') { %>
 			<div class="form-group">
 				<label for="game_<%- gameState.cid %>_<%- phaseType %>_deadline">{{.I "Deadline" }}</label>
 				<select id="game_<%- gameState.cid %>_<%- phaseType %>_deadline" class="form-control phase-deadlines">
 				</select>	
 			</div>
+			<% } %>
 		</form>
 		<% } %>
 	</div>
