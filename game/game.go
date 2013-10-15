@@ -39,6 +39,9 @@ type Game struct {
 	Deadlines map[dip.PhaseType]Minutes
 
 	ChatFlags map[dip.PhaseType]common.ChatFlag
+
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 func (self *Game) Disallows(u *user.User) bool {
@@ -106,6 +109,35 @@ func (self *Game) Updated(d *kol.DB, old *Game) {
 	for _, member := range self.Members(d) {
 		d.EmitUpdate(&member)
 	}
+}
+
+func (self *Game) MessageAllowed(phase *Phase, member *Member, message *Message) bool {
+	if !message.Channel[member.Nation] {
+		return false
+	}
+	flag := common.ChatFlag(0)
+	if phase == nil {
+		flag = self.ChatFlags[common.BeforeGamePhaseType]
+	} else {
+		flag = self.ChatFlags[phase.Type]
+	}
+	if (flag & message.Flag) != message.Flag {
+		return false
+	}
+	if len(message.Channel) == 1 {
+		return (flag & common.ChatPrivate) == common.ChatPrivate
+	}
+
+	variant, found := common.VariantMap[self.Variant]
+	if !found {
+		panic(fmt.Errorf("Unknown variant for %+v", self))
+	}
+
+	if len(message.Channel) == len(variant.Nations) {
+		return (flag & common.ChatConference) == common.ChatConference
+	}
+
+	return (flag & common.ChatGroup) == common.ChatGroup
 }
 
 func (self *Game) LastPhase(d *kol.DB) (result *Phase) {
