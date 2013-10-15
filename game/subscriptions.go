@@ -19,8 +19,13 @@ type GameState struct {
 	Phase   *Phase
 }
 
+type MessageState struct {
+	*Message
+	Member *Member
+}
+
 func SubscribeCurrent(c common.Context, s *subs.Subscription, email string) error {
-	s.Query = s.DB().Query().Where(kol.Equals{"UserId", []byte(email)})
+	s.Query = s.DB().Query().Where(kol.Equals{"UserId", kol.Id(email)})
 	s.Call = func(i interface{}, op string) error {
 		members := i.([]*Member)
 		states := []GameState{}
@@ -49,7 +54,7 @@ func SubscribeCurrent(c common.Context, s *subs.Subscription, email string) erro
 		}
 		return nil
 	}
-	return s.Subscribe(new(Member))
+	return s.Subscribe(&Member{})
 }
 
 func SubscribeGame(c common.Context, s *subs.Subscription, gameId, email string) error {
@@ -79,13 +84,47 @@ func SubscribeGame(c common.Context, s *subs.Subscription, gameId, email string)
 	return s.Subscribe(&Game{Id: base64DecodedId})
 }
 
+func SubscribeMessages(c common.Context, s *subs.Subscription, gameId, email string) error {
+	base64DecodedId, err := base64.URLEncoding.DecodeString(gameId)
+	if err != nil {
+		return err
+	}
+	s.Query = s.DB().Query().Where(kol.Equals{"GameId", base64DecodedId})
+	s.Call = func(i interface{}, op string) error {
+		messages := i.([]*Message)
+		states := []MessageState{}
+		for _, message := range messages {
+			game := &Game{Id: base64DecodedId}
+			if err := c.DB().Get(game); err != nil {
+				return err
+			}
+			member, err := game.Member(s.DB(), email)
+			if err != nil {
+				return err
+			}
+			phase := game.LastPhase(c.DB())
+			if game.MessageAllowed(phase, member, message) {
+				state, err := message.toState(c.DB())
+				if err != nil {
+					states = append(states, *state)
+				}
+			}
+		}
+		if len(states) > 0 {
+			return s.Send(states, op)
+		}
+		return nil
+	}
+	return s.Subscribe(&Message{})
+}
+
 func SubscribeOpen(c common.Context, s *subs.Subscription, email string) error {
 	s.Query = s.DB().Query().Where(kol.And{kol.Equals{"Closed", false}, kol.Equals{"Private", false}})
 	s.Call = func(i interface{}, op string) error {
 		games := i.([]*Game)
 		states := []GameState{}
 		isMember := false
-		me := &user.User{Id: []byte(email)}
+		me := &user.User{Id: kol.Id(email)}
 		if err := c.DB().Get(me); err != nil {
 			return err
 		}
@@ -119,5 +158,5 @@ func SubscribeOpen(c common.Context, s *subs.Subscription, email string) error {
 		}
 		return nil
 	}
-	return s.Subscribe(new(Game))
+	return s.Subscribe(&Game{})
 }
