@@ -3,6 +3,7 @@ package game
 import (
 	"fmt"
 	"github.com/zond/diplicity/common"
+	"github.com/zond/diplicity/user"
 	"github.com/zond/godip/classical"
 	dip "github.com/zond/godip/common"
 	"github.com/zond/godip/state"
@@ -30,13 +31,18 @@ type Game struct {
 	SecretNickname     bool
 	SecretNation       bool
 	EndYear            int
-	MinimumRanking     int
-	MinimumReliability int
+	MinimumRanking     float64
+	MaximumRanking     float64
+	MinimumReliability float64
 	Private            bool `kol:"index"`
 
 	Deadlines map[dip.PhaseType]Minutes
 
 	ChatFlags map[dip.PhaseType]common.ChatFlag
+}
+
+func (self *Game) Disallows(u *user.User) bool {
+	return u.Ranking < self.MinimumRanking || u.Ranking > self.MaximumRanking || u.Reliability() < self.MinimumReliability
 }
 
 func (self *Game) allocate(d *kol.DB) error {
