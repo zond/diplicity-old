@@ -121,6 +121,9 @@ func (self *Game) MessageAllowed(phase *Phase, member *Member, message *Message)
 	} else {
 		flag = self.ChatFlags[phase.Type]
 	}
+	if flag == 0 {
+		return false
+	}
 	if (flag & message.Flag) != message.Flag {
 		return false
 	}
