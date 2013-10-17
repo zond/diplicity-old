@@ -159,7 +159,8 @@ func (self *Game) Members(d *kol.DB) (result Members) {
 
 func (self *Game) Member(d *kol.DB, email string) (result *Member, err error) {
 	var member Member
-	if _, err = d.Query().Where(kol.And{kol.Equals{"GameId", self.Id}, kol.Equals{"UserId", kol.Id(email)}}).First(&member); err == nil {
+	var found bool
+	if found, err = d.Query().Where(kol.And{kol.Equals{"GameId", self.Id}, kol.Equals{"UserId", kol.Id(email)}}).First(&member); found && err == nil {
 		result = &member
 	}
 	return

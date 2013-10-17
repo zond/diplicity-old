@@ -34,8 +34,10 @@ func (self Members) toStates(c common.Context, g *Game, email string) (result []
 
 func (self *Member) toState(c common.Context, g *Game, email string) (result *MemberState) {
 	result = &MemberState{
-		Member: &Member{},
-		User:   &user.User{},
+		Member: &Member{
+			Id: self.Id,
+		},
+		User: &user.User{},
 	}
 	secretNation := false
 	secretEmail := false

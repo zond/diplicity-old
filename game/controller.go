@@ -54,6 +54,11 @@ func AddMember(c common.Context, j subs.JSON, email string) error {
 		if !found {
 			return fmt.Errorf("Unknown variant %v", game.Variant)
 		}
+		if alreadyMember, err := game.Member(d, email); err != nil {
+			return err
+		} else if alreadyMember != nil {
+			return fmt.Errorf("%+v is already member of %v", alreadyMember, game.Id)
+		}
 		me := user.EnsureUser(d, email)
 		if game.Disallows(me) {
 			return fmt.Errorf("Is not allowed to join this game due to game settings")
@@ -65,11 +70,7 @@ func AddMember(c common.Context, j subs.JSON, email string) error {
 			return fmt.Errorf("Is not allowed to join this game due to blacklistings")
 		}
 		if len(already) < len(variant.Nations) {
-			id := make(kol.Id, len(state.Game.Id)+len(kol.Id(email)))
-			copy(id, state.Game.Id)
-			copy(id[len(state.Game.Id):], kol.Id(email))
 			member := Member{
-				Id:               id,
 				GameId:           state.Game.Id,
 				UserId:           kol.Id(email),
 				PreferredNations: state.Members[0].PreferredNations,
