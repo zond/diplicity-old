@@ -23,6 +23,7 @@ window.ChatsView = BaseView.extend({
 						channel: that.game.conferenceChannel(),
 						title: '{{.I "Conference" }}',
 						name: 'Conference',
+						collection: that.collection,
 					}).doRender();
 					that.channelViews['Conference'] = conferenceView;
 					that.$('#chat-channels').append(conferenceView.el);
@@ -39,6 +40,7 @@ window.ChatsView = BaseView.extend({
 							},
 							title: {{.I "nations" }}[nation],
 							name: chatName,
+							collection: that.collection,
 						}).doRender();
 						that.channelViews[chatName] = nationView;
 						that.$('#chat-channels').append(nationView.el);
