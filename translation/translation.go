@@ -27,6 +27,7 @@ var en = map[string]string{
 	"Group press":       "Group press",
 	"Leave":             "Leave",
 	"Conference press":  "Conference press",
+	"Conference":        "Conference",
 	"5 minutes":         "5 minutes",
 	"10 minutes":        "10 minutes",
 	"20 minutes":        "20 minutes",

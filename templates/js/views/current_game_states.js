@@ -19,9 +19,9 @@ window.CurrentGameStatesView = BaseView.extend({
 		  user: window.session.user,
 		}));
 		that.collection.forEach(function(model) {
-		  that.$('#current_games').append(new GameStateView({ 
+		  that.$('#current-games').append(new GameStateView({ 
 				model: model,
-				parentId: "current_games",
+				parentId: "current-games",
 				editable: false,
 				button_text: '{{.I "Leave" }}',
 				button_action: function() {

@@ -16,11 +16,11 @@
 .prioritize .glyphicon {
 	margin-left: 6px;
 }
-#current_game {
+#current-game {
 	position: relative;
 	z-index: 100;
 }
-#bottom_navigation {
+#bottom-navigation {
 	min-height: 0px;
 }
 .view-game {

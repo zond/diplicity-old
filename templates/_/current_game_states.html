@@ -1,5 +1,5 @@
 <% if (window.session.user.loggedIn()) { %>
-<div class="panel-group" id="current_games">
+<div class="panel-group" id="current-games">
 </div>
 <% } else { %>
 <a href="/login?return_to={{.Abs "/"}}" class="btn btn-primary btn-lg btn-block">{{.I "Log in to see your games" }}</a>

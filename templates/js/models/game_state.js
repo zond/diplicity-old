@@ -15,6 +15,14 @@ window.GameState = Backbone.Model.extend({
 		});
 	},
 
+	conferenceChannel: function() {
+		var result = {};
+		_.each(variantNations(this.get('Variant')), function(nation) {
+		  result[nation] = true;
+		});
+		return result
+	},
+
 	describeSecrecy: function(type) {
 	  var flag = this.get(type);
 		var result = [];
@@ -44,17 +52,16 @@ window.GameState = Backbone.Model.extend({
 	describePhaseType: function(phaseType) {
 	  var that = this;
 		var desc = [];
-		if (phaseType != 'BeforeGame' && phaseType != 'AfterGame') {
-			desc.push(_.find(deadlineOptions, function(opt) {
-				return opt.value == that.get('Deadlines')[phaseType];
-			}).name);
-		}
 		_.each(chatFlagOptions(), function(opt) {
 		  if (that.get('ChatFlags')[phaseType] != null && (that.get('ChatFlags')[phaseType] & opt.id) == opt.id) {
 			  desc.push(opt.name);
 			}
 		});
-		
+		if (phaseType != 'BeforeGame' && phaseType != 'AfterGame') {
+			desc.push(_.find(deadlineOptions, function(opt) {
+				return opt.value == that.get('Deadlines')[phaseType];
+			}).name);
+		}
 	  return desc.join(", ");
 	},
 

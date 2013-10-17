@@ -6,7 +6,7 @@ window.GameView = BaseView.extend({
 		this.listenTo(this.model, 'change', this.update);
 		this.listenTo(window.session.user, 'change', this.doRender);
 		this.stateView = new GameStateView({ 
-			parentId: 'current_game',
+			parentId: 'current-game',
 			play_state: true,
 			editable: false,
 			model: this.model,
@@ -134,8 +134,8 @@ window.GameView = BaseView.extend({
 	update: function() {
 	  var that = this;
 		if (that.model.get('Members') != null) {
-		  if (that.$('#current_game').children().length == 0) {
-				that.$('#current_game').append(that.stateView.el);
+		  if (that.$('#current-game').children().length == 0) {
+				that.$('#current-game').append(that.stateView.el);
 			}
 			if (that.model.get('Phase') != null) {
 				if (that.possibleSources == null) {
@@ -166,7 +166,7 @@ window.GameView = BaseView.extend({
 		navLinks([]);
 		that.$el.html(that.template({}));
 		new ChatsView({
-		  el: that.$('#chats_slider'),
+		  el: that.$('#chats-slider'),
 			game: that.model,
 			collection: new ChatMessages([], { url: '/games/' + that.model.get('Id') + '/messages' }),
 		}).doRender();

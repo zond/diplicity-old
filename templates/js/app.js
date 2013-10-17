@@ -53,10 +53,10 @@ $(window).load(function() {
 		window.session.active_url = null;
 
 		new TopNavigationView({
-		  el: $('#top_navigation'),
+		  el: $('#top-navigation'),
 		}).doRender();
 		window.session.bottom_navigation = new BottomNavigationView({
-		  el: $('#bottom_navigation'),
+		  el: $('#bottom-navigation'),
 			buttons: mainButtons,
 		}).doRender();
 
