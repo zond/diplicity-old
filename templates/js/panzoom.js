@@ -32,19 +32,11 @@ function panZoom(selector) {
 		  return viewToMap(new Poi($(window).width() / 2, $(window).height() / 2));
 		};
 		var execute = function() {
-			element.css('left', '' + ((deltaX + dragX) / (scale * zoom)) + 'px');
-			element.css('top', '' + ((deltaY + dragY) / (scale * zoom)) + 'px');
-			element.css('zoom', '' + (scale * zoom));
+			element.css('-webkit-transform', 'translate3d(' + parseInt(deltaX + dragX) + 'px,' + parseInt(deltaY + dragY) + 'px,0px) scale3d(' + (scale * zoom) + ',' + (scale * zoom) + ',1)');
+			element.css('-webkit-transform-origin', '0 0');
 		};
-		var fx = $(window).width() / element.width();
-		var fy = $(window).height() / element.height();
-		if (fx < fy) {
-			scale *= fx;
-		} else {
-			scale *= fy;
-		}
-		deltaX = $(window).width() / 2 - (element.width() * scale / 2);
-		deltaY = $(window).height() / 2 - (element.height() * scale / 2);
+		deltaX = $(window).width() / 2 - element.width() / 2;
+		deltaY = $(window).height() / 2 - element.height() / 2;
 		execute();
 		container.bind('mousewheel', function(e) {
 		  e.preventDefault();
@@ -76,16 +68,16 @@ function panZoom(selector) {
 				var topLeft = mapToView(new Poi(0, 0));
 				var bottomRight = mapToView(new Poi(element.width(), element.height()));
 				if (bottomRight.y < $(window).height() / 2) {
-					deltaY = $(window).height() / 2 + deltaY - bottomRight.y;
+				  deltaY = $(window).height() / 2 + deltaY - bottomRight.y;
 				}
 				if (topLeft.y > $(window).height() / 2) {
-					deltaY = $(window).height() / 2 + deltaY - topLeft.y;
+				  deltaY = $(window).height() / 2 + deltaY - topLeft.y;
 				}
 				if (topLeft.x > $(window).width() / 2) {
-					deltaX = $(window).width() / 2 + deltaX - topLeft.x;
+				  deltaX = $(window).width() / 2 + deltaX - topLeft.x;
 				}
 				if (bottomRight.x < $(window).width() / 2) {
-					deltaX = $(window).width() / 2 + deltaX - bottomRight.x;
+				  deltaX = $(window).width() / 2 + deltaX - bottomRight.x;
 				}
 				execute();
 			}
