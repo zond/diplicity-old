@@ -4,7 +4,7 @@
 <td colspan="2">
 <% } %>
 <% if (member.User.Nickname == "" && member.User.Email == "") { %>
-"{{.I "Anonymous" }}"
+{{.I "Anonymous" }}
 <% } else if (member.User.Nickname == "" && member.User.Email != "") { %>
 &lt;<%- member.User.Email %>&gt;
 <% } else { %>
