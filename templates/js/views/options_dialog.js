@@ -9,6 +9,7 @@ window.OptionsDialogView = BaseView.extend({
 	},
 
 	initialize: function(options) {
+		_.bindAll(this, 'hideAndSelect');
 		this.options = options.options;
 		this.title = options.title;
 		this.selected = options.selected;

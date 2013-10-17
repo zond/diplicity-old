@@ -11,7 +11,7 @@ window.GameState = Backbone.Model.extend({
 		  return null;
 		}
 	  return _.find(this.get('Members'), function(member) {
-		  return member.UserId == btoa(window.session.user.get('Email'));
+		  return member.User.Email == window.session.user.get('Email');
 		});
 	},
 
@@ -37,7 +37,7 @@ window.GameState = Backbone.Model.extend({
 		} else if (that.get('State') == {{.GameState "Ended" }}) {
 		  return that.get('ChatFlags')['AfterGame'] || 0;
 		}
-		var phase = that.get('phase');
+		var phase = that.get('Phase');
 		return that.get('ChatFlags')[phase.Type] || 0;
 	},
 
