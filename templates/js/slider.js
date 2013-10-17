@@ -20,6 +20,7 @@ $(window).load(function() {
 			  width = 400;
 			}
 			content.width(width);
+			content.height($(window).height() - $('#top-navigation').height() - $('#current-game').height());
 			content.removeClass('hidden');
 		} else {
 		  content.addClass('hidden');
