@@ -77,7 +77,7 @@ var en = map[string]string{
 	"Login":           "Login",
 	"nations":         "{'Austria': 'Austria', 'England': 'England', 'France': 'France', 'Germany': 'Germany', 'Italy': 'Italy', 'Russia': 'Russia', 'Turkey': 'Turkey'}",
 	"seasons":         "{'Spring': 'Spring', 'Fall': 'Fall'}",
-	"phase_types":     "{'BeforeGame': 'Before game', 'Movement': 'Movement', 'Retreat': 'Retreat', 'Adjustment': 'Adjustment'}",
+	"phase_types":     "{'AfterGame': 'After game', 'BeforeGame': 'Before game', 'Movement': 'Movement', 'Retreat': 'Retreat', 'Adjustment': 'Adjustment'}",
 	"England":         "England",
 	"Variant":         "Variant",
 	"Classical":       "Classical",

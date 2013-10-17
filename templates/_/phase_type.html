@@ -9,7 +9,7 @@
 	<div class="panel-body">
 		<% if (editable) { %>
 		<form role="form">
-			<% if (phaseType != 'BeforeGame') { %>
+			<% if (phaseType != 'BeforeGame' && phaseType != 'AfterGame') { %>
 			<div class="form-group">
 				<label for="game_<%- gameState.cid %>_<%- phaseType %>_deadline">{{.I "Deadline" }}</label>
 				<select id="game_<%- gameState.cid %>_<%- phaseType %>_deadline" class="form-control phase-deadlines">

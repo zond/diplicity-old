@@ -144,6 +144,18 @@ func (self RequestData) LogLevel() int {
 	return self.web.logLevel
 }
 
+func (self RequestData) GameState(s string) common.GameState {
+	switch s {
+	case "Created":
+		return common.GameStateCreated
+	case "Started":
+		return common.GameStateStarted
+	case "Ended":
+		return common.GameStateEnded
+	}
+	panic(fmt.Errorf("Unknown game state %v", s))
+}
+
 func (self RequestData) ChatFlag(s string) string {
 	var rval common.ChatFlag
 	switch s {

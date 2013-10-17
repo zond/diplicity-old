@@ -118,7 +118,16 @@ const (
 	RandomString                      = "random"
 	PreferencesString                 = "preferences"
 	BeforeGamePhaseType dip.PhaseType = "BeforeGame"
+	AfterGamePhaseType  dip.PhaseType = "AfterGame"
 	Anonymous           dip.Nation    = "Anonymous"
+)
+
+type GameState int
+
+const (
+	GameStateCreated GameState = iota
+	GameStateStarted
+	GameStateEnded
 )
 
 type AllocationMethod struct {

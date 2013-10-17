@@ -17,18 +17,19 @@ window.GameState = Backbone.Model.extend({
 
 	currentChatFlags: function() {
 	  var that = this;
-	  var phase = that.get('phase');
-		if (phase == null) {
-		  return this.get('ChatFlags')['BeforeGame'] || 0;
-		} else { 
-			return this.get('ChatFlags')[phase.Type] || 0;
+		if (that.get('State') == {{.GameState "Created" }}) {
+		  return that.get('ChatFlags')['BeforeGame'] || 0;
+		} else if (that.get('State') == {{.GameState "Ended" }}) {
+		  return that.get('ChatFlags')['AfterGame'] || 0;
 		}
+		var phase = that.get('phase');
+		return that.get('ChatFlags')[phase.Type] || 0;
 	},
 
 	describePhaseType: function(phaseType) {
 	  var that = this;
 		var desc = [];
-		if (phaseType != 'BeforeGame') {
+		if (phaseType != 'BeforeGame' && phaseType != 'AfterGame') {
 			desc.push(_.find(deadlineOptions, function(opt) {
 				return opt.value == that.get('Deadlines')[phaseType];
 			}).name);

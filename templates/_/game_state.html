@@ -100,7 +100,7 @@
 			</tr>
 		</table>
 		<% } %>
-		<% if (!model.get('Started')) { %>
+		<% if (model.get('State') == {{.GameState "Created" }}) { %>
 		<button type="button" class="btn btn-primary btn-lg btn-block game-state-button"><%- button_text %></button>
 		<% } %>
 	</div>

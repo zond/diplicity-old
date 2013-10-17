@@ -23,8 +23,7 @@ type Game struct {
 	Id kol.Id
 
 	Closed             bool `kol:"index"`
-	Started            bool `kol:"index"`
-	Ended              bool `kol:"index"`
+	State              common.GameState
 	Variant            string
 	AllocationMethod   string
 	SecretEmail        bool
@@ -76,10 +75,10 @@ func (self *Game) allocate(d *kol.DB) error {
 }
 
 func (self *Game) start(d *kol.DB) error {
-	if self.Started {
+	if self.State != common.GameStateCreated {
 		return fmt.Errorf("%+v is already started", self)
 	}
-	self.Started = true
+	self.State = common.GameStateStarted
 	self.Closed = true
 	if err := d.Set(self); err != nil {
 		return err

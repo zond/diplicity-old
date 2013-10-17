@@ -19,7 +19,7 @@ func DeleteMember(c common.Context, gameId, email string) error {
 		if err := d.Get(&game); err != nil {
 			return fmt.Errorf("Game not found: %v", err)
 		}
-		if game.Started {
+		if game.State != common.GameStateCreated {
 			return fmt.Errorf("%+v already started", game)
 		}
 		member := Member{}
@@ -47,7 +47,7 @@ func AddMember(c common.Context, j subs.JSON, email string) error {
 		if err := d.Get(&game); err != nil {
 			return fmt.Errorf("Game not found")
 		}
-		if game.Started {
+		if game.State != common.GameStateCreated {
 			return fmt.Errorf("%+v already started")
 		}
 		variant, found := common.VariantMap[game.Variant]

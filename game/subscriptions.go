@@ -41,13 +41,11 @@ func SubscribeCurrent(c common.Context, s *subs.Subscription, email string) erro
 				if err := s.DB().Get(game); err != nil {
 					return err
 				}
-				if !game.Ended {
-					states = append(states, GameState{
-						Game:    game,
-						Members: game.Members(c.DB()).toStates(c, game, email),
-						Phase:   game.LastPhase(c.DB()),
-					})
-				}
+				states = append(states, GameState{
+					Game:    game,
+					Members: game.Members(c.DB()).toStates(c, game, email),
+					Phase:   game.LastPhase(c.DB()),
+				})
 			}
 		}
 		if op == subs.FetchType || len(states) > 0 {
