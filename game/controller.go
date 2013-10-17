@@ -54,10 +54,7 @@ func AddMember(c common.Context, j subs.JSON, email string) error {
 		if !found {
 			return fmt.Errorf("Unknown variant %v", game.Variant)
 		}
-		me := &user.User{Id: kol.Id(email)}
-		if err := c.DB().Get(me); err != nil {
-			return err
-		}
+		me := user.EnsureUser(d, email)
 		if game.Disallows(me) {
 			return fmt.Errorf("Is not allowed to join this game due to game settings")
 		}

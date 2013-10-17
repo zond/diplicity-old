@@ -29,7 +29,8 @@ func main() {
 		return
 	}
 
-	location, err := url.Parse(fmt.Sprintf("ws://%v:%v/ws", *host, *port))
+	token := common.NewToken(*secret, *email)
+	location, err := url.Parse(fmt.Sprintf("ws://%v:%v/ws?email=%v&timeout=%v&token=%v", *host, *port, token.Email, token.Timeout, token.Token))
 	if err != nil {
 		panic(err)
 	}

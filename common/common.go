@@ -2,6 +2,8 @@ package common
 
 import (
 	"bytes"
+	"crypto/sha512"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	cla "github.com/zond/godip/classical/common"
@@ -15,7 +17,30 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
+
+type Token struct {
+	Authorized bool
+	Token      string
+	Email      string
+	Timeout    string
+}
+
+func NewTokenWithTimeout(secret, email string, timeout int64) Token {
+	hash := sha512.New()
+	fmt.Fprintf(hash, "%s:%s:%s", email, secret, timeout)
+	return Token{
+		Token:      base64.URLEncoding.EncodeToString(hash.Sum(nil)),
+		Authorized: true,
+		Email:      email,
+		Timeout:    fmt.Sprint(timeout),
+	}
+}
+
+func NewToken(secret, email string) Token {
+	return NewTokenWithTimeout(secret, email, time.Now().Add(time.Minute).UnixNano())
+}
 
 func RenderJSON(w http.ResponseWriter, i interface{}) {
 	SetContentType(w, "application/json; charset=UTF-8", false)

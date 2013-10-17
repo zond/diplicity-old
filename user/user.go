@@ -47,23 +47,23 @@ func SubscribeEmail(c common.Context, s *subs.Subscription, email string) error 
 	return s.Subscribe(&User{Id: kol.Id(email)})
 }
 
-func Update(c common.Context, j subs.JSON, email string) (err error) {
+func Update(d *kol.DB, j subs.JSON, email string) (err error) {
 	var user User
 	j.Overwrite(&user)
 	current := &User{Id: user.Id}
-	if err = c.DB().Get(current); err != nil {
+	if err = d.Get(current); err != nil {
 		return
 	}
 	current.Nickname = user.Nickname
-	err = c.DB().Set(current)
+	err = d.Set(current)
 	return
 }
 
-func EnsureUser(c common.Context, email string) *User {
+func EnsureUser(d *kol.DB, email string) *User {
 	user := &User{Id: kol.Id(email)}
-	if err := c.DB().Get(user); err == kol.NotFound {
+	if err := d.Get(user); err == kol.NotFound {
 		user.Email = email
-		if err = c.DB().Set(user); err != nil {
+		if err = d.Set(user); err != nil {
 			panic(err)
 		}
 	} else if err != nil {

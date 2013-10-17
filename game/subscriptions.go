@@ -140,10 +140,7 @@ func SubscribeOpen(c common.Context, s *subs.Subscription, email string) error {
 		games := i.([]*Game)
 		states := []GameState{}
 		isMember := false
-		me := &user.User{Id: kol.Id(email)}
-		if err := c.DB().Get(me); err != nil {
-			return err
-		}
+		me := user.EnsureUser(c.DB(), email)
 		for _, game := range games {
 			if game.Disallows(me) {
 				break

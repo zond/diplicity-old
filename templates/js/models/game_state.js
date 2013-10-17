@@ -15,6 +15,21 @@ window.GameState = Backbone.Model.extend({
 		});
 	},
 
+	describeSecrecy: function(type) {
+	  var flag = this.get(type);
+		var result = [];
+		if ((flag & {{.SecretFlag "BeforeGame"}}) == {{.SecretFlag "BeforeGame"}}) {
+		  result.push('{{.I "Before"}}');
+		}
+		if ((flag & {{.SecretFlag "DuringGame"}}) == {{.SecretFlag "DuringGame"}}) {
+		  result.push('{{.I "During"}}');
+		}
+		if ((flag & {{.SecretFlag "AfterGame"}}) == {{.SecretFlag "AfterGame"}}) {
+		  result.push('{{.I "After"}}');
+		}
+		return result.join(", ");
+	},
+
 	currentChatFlags: function() {
 	  var that = this;
 		if (that.get('State') == {{.GameState "Created" }}) {

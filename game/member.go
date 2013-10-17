@@ -57,7 +57,7 @@ func (self *Member) toState(c common.Context, g *Game, email string) (result *Me
 		result.Member.Nation = self.Nation
 	}
 	if me || !secretEmail || !secretNickname {
-		foundUser := user.EnsureUser(c, string(self.UserId))
+		foundUser := user.EnsureUser(c.DB(), string(self.UserId))
 		if me || !secretEmail {
 			result.User.Email = foundUser.Email
 		}

@@ -6,9 +6,6 @@ window.GameStateView = BaseView.extend({
 
   events: {
 		"click .game-private": "changePrivate",
-		"click .game-secret-email": "changeSecretEmail",
-		"click .game-secret-nickname": "changeSecretNickname",
-		"click .game-secret-nation": "changeSecretNation",
     "click .game-state-button": "buttonAction",
 		"change .game-allocation-method": "changeAllocationMethod",
 		"change .game-variant": "changeVariant",
@@ -16,6 +13,7 @@ window.GameStateView = BaseView.extend({
 		"show.bs.collapse .players": "expandPlayers",
 		"hide.bs.collapse .game": "collapse",
 		"show.bs.collapse .game": "expand",
+		"click .game-secret-flag": "changeSecretFlag",
 	},
 
 	initialize: function(options) {
@@ -29,6 +27,15 @@ window.GameStateView = BaseView.extend({
 		this.phaseTypeViews = {};
 		this.memberViews = {};
 		this.listenTo(this.model, 'change', this.doRender);
+	},
+
+	changeSecretFlag: function(ev) {
+	  ev.preventDefault();
+		var type = $(ev.target).attr('data-secret-type');
+		var flag = parseInt($(ev.target).attr('data-secret-flag'));
+		var currently = this.model.get(type) & flag == flag;
+		console.log(type, flag, currently, currently ^ flag);
+		this.model.set(type, currently ^ flag);
 	},
 
 	collapsePlayers: function(ev) {
@@ -64,21 +71,6 @@ window.GameStateView = BaseView.extend({
 
   changePrivate: function(ev) {
 	  this.model.set('Private', $(ev.target).val() == 'true', { silent: true });
-		this.updateDescription();
-	},
-
-  changeSecretEmail: function(ev) {
-	  this.model.set('SecretEmail', $(ev.target).val() == 'true', { silent: true });
-		this.updateDescription();
-	},
-
-  changeSecretNickname: function(ev) {
-	  this.model.set('SecretNickname', $(ev.target).val() == 'true', { silent: true });
-		this.updateDescription();
-	},
-
-  changeSecretNation: function(ev) {
-	  this.model.set('SecretNation', $(ev.target).val() == 'true', { silent: true });
 		this.updateDescription();
 	},
 

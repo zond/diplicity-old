@@ -2,8 +2,6 @@ package web
 
 import (
 	"code.google.com/p/go.net/websocket"
-	"crypto/sha512"
-	"encoding/base64"
 	"fmt"
 	"github.com/zond/diplicity/common"
 	"github.com/zond/diplicity/game"
@@ -31,7 +29,8 @@ func (self *Web) WS(ws *websocket.Conn) {
 			self.Errorf("\t%v\t%v\t[token too old: %v < %v]", ws.Request().URL, ws.Request().RemoteAddr, timeout, now)
 			return
 		}
-		if correct := self.hash(email, timeout); correct != token {
+		correct := common.NewTokenWithTimeout(self.secret, email, timeout)
+		if correct.Token != token {
 			self.Errorf("\t%v\t%v\t[bad token: %v != %v]", ws.Request().URL, ws.Request().RemoteAddr, token, correct)
 			return
 		}
@@ -123,11 +122,13 @@ func (self *Web) WS(ws *websocket.Conn) {
 				case common.UpdateType:
 					if strings.Index(message.Object.URI, "/games/") == 0 {
 						if loggedIn {
-							game.AddMember(self, subs.JSON{message.Object.Data}, email)
+							if err := game.AddMember(self, subs.JSON{message.Object.Data}, email); err != nil {
+								self.Errorf("While trying to add %v to %v: %v", email, message.Object.URI, err)
+							}
 						}
 					} else if strings.Index(message.Object.URI, "/user") == 0 {
 						if loggedIn {
-							user.Update(self, subs.JSON{message.Object.Data}, email)
+							user.Update(self.DB(), subs.JSON{message.Object.Data}, email)
 						}
 					}
 				case common.RPCType:
@@ -205,7 +206,7 @@ func (self *Web) Openid(w http.ResponseWriter, r *http.Request) {
 	redirect, email, ok := openid.VerifyAuth(r)
 	if ok {
 		data.session.Values[SessionEmail] = email
-		user.EnsureUser(self, email)
+		user.EnsureUser(self.DB(), email)
 	} else {
 		delete(data.session.Values, SessionEmail)
 	}
@@ -215,34 +216,13 @@ func (self *Web) Openid(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, redirect.String())
 }
 
-type token struct {
-	Authorized bool
-	Token      string
-	Email      string
-	Timeout    string
-}
-
-func (self *Web) hash(email string, timeout int64) string {
-	hash := sha512.New()
-	fmt.Fprintf(hash, "%s:%s:%s", email, self.secret, timeout)
-	return base64.URLEncoding.EncodeToString(hash.Sum(nil))
-}
-
 func (self *Web) Token(w http.ResponseWriter, r *http.Request) {
 	data := self.GetRequestData(w, r)
 	if emailIf, found := data.session.Values[SessionEmail]; found {
 		email := fmt.Sprint(emailIf)
-		timeout := time.Now().Add(time.Minute).UnixNano()
-		common.RenderJSON(w, token{
-			Token:      self.hash(email, timeout),
-			Authorized: true,
-			Email:      email,
-			Timeout:    fmt.Sprint(timeout),
-		})
+		common.RenderJSON(w, common.NewToken(self.secret, email))
 	} else {
-		common.RenderJSON(w, token{
-			Authorized: false,
-		})
+		common.RenderJSON(w, common.Token{})
 	}
 }
 

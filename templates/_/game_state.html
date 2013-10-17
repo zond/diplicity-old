@@ -69,21 +69,21 @@
 					</tr>
 					<tr>
 						<td>{{.I "Secret email" }}</td>
-						<td><input <%= model.get('SecretEmail') & {{.SecretFlag "BeforeGame"}} == {{.SecretFlag "BeforeGame"}} ? 'checked="checked" ' : '' %>type="checkbox" data-secret-flag="{{.SecretFlag "BeforeGame" }}" data-secret-type="SecretEmail" class="game_secret_flag"></td>
-						<td><input <%= model.get('SecretEmail') & {{.SecretFlag "DuringGame"}} == {{.SecretFlag "DuringGame"}} ? 'checked="checked" ' : '' %>type="checkbox" data-secret-flag="{{.SecretFlag "DuringGame" }}" data-secret-type="SecretEmail" class="game_secret_flag"></td>
-						<td><input <%= model.get('SecretEmail') & {{.SecretFlag "AfterGame"}} == {{.SecretFlag "AfterGame"}} ? 'checked="checked" ' : '' %>type="checkbox" data-secret-flag="{{.SecretFlag "AfterGame" }}" data-secret-type="SecretEmail" class="game_secret_flag"></td>
+						<td><input <%= (model.get('SecretEmail') & {{.SecretFlag "BeforeGame"}}) == {{.SecretFlag "BeforeGame"}} ? 'checked="checked" ' : '' %>type="checkbox" data-secret-flag="{{.SecretFlag "BeforeGame" }}" data-secret-type="SecretEmail" class="game-secret-flag"></td>
+						<td><input <%= (model.get('SecretEmail') & {{.SecretFlag "DuringGame"}}) == {{.SecretFlag "DuringGame"}} ? 'checked="checked" ' : '' %>type="checkbox" data-secret-flag="{{.SecretFlag "DuringGame" }}" data-secret-type="SecretEmail" class="game-secret-flag"></td>
+						<td><input <%= (model.get('SecretEmail') & {{.SecretFlag "AfterGame"}}) == {{.SecretFlag "AfterGame"}} ? 'checked="checked" ' : '' %>type="checkbox" data-secret-flag="{{.SecretFlag "AfterGame" }}" data-secret-type="SecretEmail" class="game-secret-flag"></td>
 					</tr>
 					<tr>
 						<td>{{.I "Secret nickname" }}</td>
-						<td><input <%= model.get('SecretNickname') & {{.SecretFlag "BeforeGame"}} == {{.SecretFlag "BeforeGame"}} ? 'checked="checked" ' : '' %>type="checkbox" data-secret-flag="{{.SecretFlag "BeforeGame" }}" data-secret-type="SecretNickname" class="game_secret_flag"></td>
-						<td><input <%= model.get('SecretNickname') & {{.SecretFlag "DuringGame"}} == {{.SecretFlag "DuringGame"}} ? 'checked="checked" ' : '' %>type="checkbox" data-secret-flag="{{.SecretFlag "DuringGame" }}" data-secret-type="SecretNickname" class="game_secret_flag"></td>
-						<td><input <%= model.get('SecretNickname') & {{.SecretFlag "AfterGame"}} == {{.SecretFlag "AfterGame"}} ? 'checked="checked" ' : '' %>type="checkbox" data-secret-flag="{{.SecretFlag "AfterGame" }}" data-secret-type="SecretNickname" class="game_secret_flag"></td>
+						<td><input <%= (model.get('SecretNickname') & {{.SecretFlag "BeforeGame"}}) == {{.SecretFlag "BeforeGame"}} ? 'checked="checked" ' : '' %>type="checkbox" data-secret-flag="{{.SecretFlag "BeforeGame" }}" data-secret-type="SecretNickname" class="game-secret-flag"></td>
+						<td><input <%= (model.get('SecretNickname') & {{.SecretFlag "DuringGame"}}) == {{.SecretFlag "DuringGame"}} ? 'checked="checked" ' : '' %>type="checkbox" data-secret-flag="{{.SecretFlag "DuringGame" }}" data-secret-type="SecretNickname" class="game-secret-flag"></td>
+						<td><input <%= (model.get('SecretNickname') & {{.SecretFlag "AfterGame"}}) == {{.SecretFlag "AfterGame"}} ? 'checked="checked" ' : '' %>type="checkbox" data-secret-flag="{{.SecretFlag "AfterGame" }}" data-secret-type="SecretNickname" class="game-secret-flag"></td>
 					</tr>
 					<tr>
 						<td>{{.I "Secret nation" }}</td>
-						<td><input <%= model.get('SecretNation') & {{.SecretFlag "BeforeGame"}} == {{.SecretFlag "BeforeGame"}} ? 'checked="checked" ' : '' %>type="checkbox" data-secret-flag="{{.SecretFlag "BeforeGame" }}" data-secret-type="SecretNation" class="game_secret_flag"></td>
-						<td><input <%= model.get('SecretNation') & {{.SecretFlag "DuringGame"}} == {{.SecretFlag "DuringGame"}} ? 'checked="checked" ' : '' %>type="checkbox" data-secret-flag="{{.SecretFlag "DuringGame" }}" data-secret-type="SecretNation" class="game_secret_flag"></td>
-						<td><input <%= model.get('SecretNation') & {{.SecretFlag "AfterGame"}} == {{.SecretFlag "AfterGame"}} ? 'checked="checked" ' : '' %>type="checkbox" data-secret-flag="{{.SecretFlag "AfterGame" }}" data-secret-type="SecretNation" class="game_secret_flag"></td>
+						<td><input <%= (model.get('SecretNation') & {{.SecretFlag "BeforeGame"}}) == {{.SecretFlag "BeforeGame"}} ? 'checked="checked" ' : '' %>type="checkbox" data-secret-flag="{{.SecretFlag "BeforeGame" }}" data-secret-type="SecretNation" class="game-secret-flag"></td>
+						<td><input <%= (model.get('SecretNation') & {{.SecretFlag "DuringGame"}}) == {{.SecretFlag "DuringGame"}} ? 'checked="checked" ' : '' %>type="checkbox" data-secret-flag="{{.SecretFlag "DuringGame" }}" data-secret-type="SecretNation" class="game-secret-flag"></td>
+						<td><input <%= (model.get('SecretNation') & {{.SecretFlag "AfterGame"}}) == {{.SecretFlag "AfterGame"}} ? 'checked="checked" ' : '' %>type="checkbox" data-secret-flag="{{.SecretFlag "AfterGame" }}" data-secret-type="SecretNation" class="game-secret-flag"></td>
 					</tr>
 				</table>
 			</div>
@@ -104,19 +104,18 @@
 			</tr>
 			<tr>
 				<td>{{.I "Secret email"}}</td>
-				<td><%- model.get('SecretEmail') ? '{{.I "Yes" }}' : '{{.I "No" }}' %></td>
+				<td><%- model.describeSecrecy('SecretEmail') %></td>
 			</tr>
 			<tr>
 				<td>{{.I "Secret nickname"}}</td>
-				<td><%- model.get('SecretNickname') ? '{{.I "Yes" }}' : '{{.I "No" }}' %></td>
+				<td><%- model.describeSecrecy('SecretNickname') %></td>
 			</tr>
 			<tr>
 				<td>{{.I "Secret nation"}}</td>
-				<td><%- model.get('SecretNation') ? '{{.I "Yes" }}' : '{{.I "No" }}' %></td>
+				<td><%- model.describeSecrecy('SecretNation') %></td>
 			</tr>
 		</table>
 		<% } %>
-		<% console.log(model.attributes); %>
 		<% if (model.get('State') == {{.GameState "Created" }}) { %>
 		<button type="button" class="btn btn-primary btn-lg btn-block game-state-button"><%- button_text %></button>
 		<% } %>

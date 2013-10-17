@@ -21,10 +21,12 @@ window.ChatsView = BaseView.extend({
 		that.$el.html(that.template({
 		}));
 		if ((that.game.currentChatFlags() & {{.ChatFlag "Conference" }}) == {{.ChatFlag "Conference" }}) {
+		/*
 		  that.channelViews['Conference'] = new ChatChannelView({
 			  channel: that.game.conferenceChannel(),
 			});
-		}
+		*/
+	}
 		return that;
 	},
 
