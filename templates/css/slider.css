@@ -1,6 +1,5 @@
 .sliders {
 	position: absolute;
-	height: 100%;
 }
 .slider-controls {
 	display: inline-block;
@@ -8,7 +7,6 @@
 }
 .slider-content {
 	position: relative;
-	height: 100%;
 	z-index: 1000;
 	float: left;
 }
