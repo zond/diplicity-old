@@ -26,9 +26,9 @@ type Game struct {
 	State              common.GameState
 	Variant            string
 	AllocationMethod   string
-	SecretEmail        bool
-	SecretNickname     bool
-	SecretNation       bool
+	SecretEmail        common.SecretFlag
+	SecretNickname     common.SecretFlag
+	SecretNation       common.SecretFlag
 	EndYear            int
 	MinimumRanking     float64
 	MaximumRanking     float64

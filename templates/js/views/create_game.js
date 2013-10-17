@@ -20,6 +20,7 @@ window.CreateGameView = BaseView.extend({
 		this.gameState = new GameState({
 		  Members: [member],
 			Private: false,
+			State: 0,
 		  Variant: defaultVariant,
 			Deadlines: deadlines,
 			ChatFlags: chatFlags,

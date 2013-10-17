@@ -156,6 +156,18 @@ func (self RequestData) GameState(s string) common.GameState {
 	panic(fmt.Errorf("Unknown game state %v", s))
 }
 
+func (self RequestData) SecretFlag(s string) common.SecretFlag {
+	switch s {
+	case "BeforeGame":
+		return common.SecretBeforeGame
+	case "DuringGame":
+		return common.SecretDuringGame
+	case "AfterGame":
+		return common.SecretAfterGame
+	}
+	panic(fmt.Errorf("Unknown secret flag %v", s))
+}
+
 func (self RequestData) ChatFlag(s string) string {
 	var rval common.ChatFlag
 	switch s {

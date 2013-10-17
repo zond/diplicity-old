@@ -130,6 +130,14 @@ const (
 	GameStateEnded
 )
 
+type SecretFlag int
+
+const (
+	SecretBeforeGame = 1 << iota
+	SecretDuringGame
+	SecretAfterGame
+)
+
 type AllocationMethod struct {
 	Id          string
 	Name        string

@@ -1,6 +1,7 @@
 package game
 
 import (
+	"fmt"
 	"github.com/zond/diplicity/common"
 	"github.com/zond/diplicity/user"
 	dip "github.com/zond/godip/common"
@@ -36,16 +37,31 @@ func (self *Member) toState(c common.Context, g *Game, email string) (result *Me
 		Member: &Member{},
 		User:   &user.User{},
 	}
+	secretNation := false
+	secretEmail := false
+	secretNickname := false
+	var flag common.SecretFlag
+	switch g.State {
+	case common.GameStateCreated:
+		flag = common.SecretBeforeGame
+	case common.GameStateStarted:
+		flag = common.SecretDuringGame
+	case common.GameStateEnded:
+		flag = common.SecretAfterGame
+	default:
+		panic(fmt.Errorf("Unknown game state for %+v", g))
+	}
+	secretNation, secretEmail, secretNickname = g.SecretNation&flag == flag, g.SecretEmail&flag == flag, g.SecretNickname&flag == flag
 	me := string(self.UserId) == email
-	if me || !g.SecretNation {
+	if me || !secretNation {
 		result.Member.Nation = self.Nation
 	}
-	if me || !g.SecretEmail || !g.SecretNickname {
+	if me || !secretEmail || !secretNickname {
 		foundUser := user.EnsureUser(c, string(self.UserId))
-		if me || !g.SecretEmail {
+		if me || !secretEmail {
 			result.User.Email = foundUser.Email
 		}
-		if me || !g.SecretNickname {
+		if me || !secretNickname {
 			result.User.Nickname = foundUser.Nickname
 		}
 	}
