@@ -23,6 +23,18 @@ type Member struct {
 
 type Members []Member
 
+func (self Members) Len() int {
+	return len(self)
+}
+
+func (self Members) Less(i, j int) bool {
+	return self[j].CreatedAt.Before(self[i].CreatedAt)
+}
+
+func (self Members) Swap(i, j int) {
+	self[i], self[j] = self[j], self[i]
+}
+
 func (self Members) toStates(c common.Context, g *Game, email string) (result []MemberState) {
 	result = make([]MemberState, len(self))
 	for index, member := range self {

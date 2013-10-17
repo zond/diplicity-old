@@ -25,11 +25,25 @@ type MessageState struct {
 	Member *Member
 }
 
+type GameStates []GameState
+
+func (self GameStates) Len() int {
+	return len(self)
+}
+
+func (self GameStates) Less(i, j int) bool {
+	return self[j].Game.CreatedAt.Before(self[i].Game.CreatedAt)
+}
+
+func (self GameStates) Swap(i, j int) {
+	self[i], self[j] = self[j], self[i]
+}
+
 func SubscribeCurrent(c common.Context, s *subs.Subscription, email string) error {
 	s.Query = s.DB().Query().Where(kol.Equals{"UserId", kol.Id(email)})
 	s.Call = func(i interface{}, op string) error {
 		members := i.([]*Member)
-		states := []GameState{}
+		states := GameStates{}
 		for _, member := range members {
 			if op == common.DeleteType {
 				states = append(states, GameState{
@@ -49,6 +63,7 @@ func SubscribeCurrent(c common.Context, s *subs.Subscription, email string) erro
 			}
 		}
 		if op == subs.FetchType || len(states) > 0 {
+			sort.Sort(states)
 			return s.Send(states, op)
 		}
 		return nil
@@ -138,7 +153,7 @@ func SubscribeOpen(c common.Context, s *subs.Subscription, email string) error {
 	s.Query = s.DB().Query().Where(kol.And{kol.Equals{"Closed", false}, kol.Equals{"Private", false}})
 	s.Call = func(i interface{}, op string) error {
 		games := i.([]*Game)
-		states := []GameState{}
+		states := GameStates{}
 		isMember := false
 		me := user.EnsureUser(c.DB(), email)
 		for _, game := range games {
@@ -167,6 +182,7 @@ func SubscribeOpen(c common.Context, s *subs.Subscription, email string) error {
 			}
 		}
 		if op == subs.FetchType || len(states) > 0 {
+			sort.Sort(states)
 			return s.Send(states, op)
 		}
 		return nil

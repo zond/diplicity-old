@@ -154,6 +154,7 @@ func (self *Game) LastPhase(d *kol.DB) (result *Phase) {
 
 func (self *Game) Members(d *kol.DB) (result Members) {
 	d.Query().Where(kol.Equals{"GameId", self.Id}).All(&result)
+	sort.Sort(result)
 	return
 }
 
