@@ -33,8 +33,7 @@ window.GameStateView = BaseView.extend({
 	  ev.preventDefault();
 		var type = $(ev.target).attr('data-secret-type');
 		var flag = parseInt($(ev.target).attr('data-secret-flag'));
-		var currently = this.model.get(type) & flag == flag;
-		console.log(type, flag, currently, currently ^ flag);
+		var currently = this.model.get(type);
 		this.model.set(type, currently ^ flag);
 	},
 
