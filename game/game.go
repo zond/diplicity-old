@@ -115,10 +115,14 @@ func (self *Game) MessageAllowed(phase *Phase, member *Member, message *Message)
 		return false
 	}
 	flag := common.ChatFlag(0)
-	if phase == nil {
+	if self.State == common.GameStateCreated {
 		flag = self.ChatFlags[common.BeforeGamePhaseType]
-	} else {
+	} else if self.State == common.GameStateFinished {
+		flag = self.ChatFlags[common.AfterGamePhaseType]
+	} else if phase != nil {
 		flag = self.ChatFlags[phase.Type]
+	} else {
+		panic(fmt.Errorf("%+v has no phase??", self))
 	}
 	if flag == 0 {
 		return false
@@ -126,7 +130,7 @@ func (self *Game) MessageAllowed(phase *Phase, member *Member, message *Message)
 	if (flag & message.Flag) != message.Flag {
 		return false
 	}
-	if len(message.Channel) == 1 {
+	if len(message.Channel) == 2 {
 		return (flag & common.ChatPrivate) == common.ChatPrivate
 	}
 
