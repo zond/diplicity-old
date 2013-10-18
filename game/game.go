@@ -117,7 +117,7 @@ func (self *Game) MessageAllowed(phase *Phase, member *Member, message *Message)
 	flag := common.ChatFlag(0)
 	if self.State == common.GameStateCreated {
 		flag = self.ChatFlags[common.BeforeGamePhaseType]
-	} else if self.State == common.GameStateFinished {
+	} else if self.State == common.GameStateEnded {
 		flag = self.ChatFlags[common.AfterGamePhaseType]
 	} else if phase != nil {
 		flag = self.ChatFlags[phase.Type]
