@@ -109,8 +109,6 @@ function navigate(to) {
 	window.session.active_url = to;
 	window.session.router.navigate(to, { trigger: true });
 	window.session.bottom_navigation.update();
-	$('body').css({'margin-top': (($('.navbar-fixed-top').height()) + 1 )+'px'});
-	$('body').css({'margin-bottom': (($('.navbar-fixed-bottom').height()) + 1 )+'px'});
 }
 
 function Poi(x, y) {

@@ -23,19 +23,28 @@
 #bottom-navigation {
 	min-height: 0px;
 }
+.panel-title {
+	white-space: nowrap;
+}
+.game-state-button {
+	margin-bottom: 35px;
+}
+body {
+	margin-bottom: 35px;
+	margin-top: 51px;
+}
 .view-game {
-	margin-top: -9px;
-	margin-bottom: -9px;
-	margin-right: 5px;
-	margin-left: -9px;
 	float: right;
+	margin-top: -5;
+	margin-right: -7;
+}
+.view-game a {
+	zoom: 0.9;
 }
 .view-game span {
 	font-size: x-large;
-	margin-top: 0px;
 	margin-bottom: 5px;
 	margin-left: -2px;
-	margin-right: 0px;
 }
 .navbar-brand {
 	padding: 0px;
