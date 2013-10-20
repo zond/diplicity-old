@@ -1,7 +1,7 @@
 $(window).load(function() {
   var normWidth = 500;
 	var num = 3;
-	var buttonWidth = 40;
+	var buttonWidth = 50;
   var resizeSliders = function() {
     var win = $(window).width();
 	  var count = $('.slider-content.visible').length;
@@ -19,9 +19,9 @@ $(window).load(function() {
 			count = $('.slider-content.visible').length;
 		}
 		if (count == 1 && win < normWidth + buttonWidth) {
-			$('.slider-content.visible').height($(window).height() - $('#top-navigation').height() - $('#current-game').height()).width(win - buttonWidth);
+			$('.slider-content.visible').width(win - buttonWidth);
 		} else {
-			$('.slider-content.visible').height($(window).height() - $('#top-navigation').height() - $('#current-game').height()).width(normWidth);
+			$('.slider-content.visible').width(normWidth);
 		}
 	};
   $(window).on('orientationchange', resizeSliders);

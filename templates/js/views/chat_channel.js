@@ -1,6 +1,8 @@
 window.ChatChannelView = BaseView.extend({
 
-  className: 'panel panel-default',
+  className: 'btn btn-default btn-block',
+
+	tagName: 'button',
 
   template: _.template($('#chat_channel_underscore').html()),
 

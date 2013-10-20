@@ -174,11 +174,10 @@ window.GameView = BaseView.extend({
 		var that = this;
 		navLinks([]);
 		that.$el.html(that.template({}));
-		new ChatsView({
-		  el: that.$('#chats-slider'),
+		that.$('#chats-slider').append(new ChatsView({
 			game: that.model,
 			collection: new ChatMessages([], { url: '/games/' + that.model.get('Id') + '/messages' }),
-		}).doRender();
+		}).doRender().el);
 		that.update();
 		return that;
 	},
