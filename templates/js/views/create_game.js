@@ -15,15 +15,16 @@ window.CreateGameView = BaseView.extend({
 		var member = {
 		  UserId: btoa(window.session.user.get('Email')),
 			User: {
+			  Email: window.session.user.get('Email'),
 			},
 		};
 		this.gameState = new GameState({
 		  Members: [member],
 			Private: false,
-			State: 0,
 		  Variant: defaultVariant,
 			Deadlines: deadlines,
 			ChatFlags: chatFlags,
+			State: {{.GameState "Created"}},
 			AllocationMethod: defaultAllocationMethod,
 		});
 		this.gameState.url = '/games';

@@ -4,6 +4,7 @@ window.ChatMessagesView = BaseView.extend({
 
 	events: {
 	  "click .back-button": "showChannels",
+		"change .message": "sendMessage",
 	},
 
 	initialize: function(options) {
@@ -27,10 +28,23 @@ window.ChatMessagesView = BaseView.extend({
 		}).doRender();
 	},
 
+	sendMessage: function(ev) {
+	  ev.preventDefault();
+		console.log('gonna send');
+	},
+
   render: function() {
 	  var that = this;
 		that.$el.html(that.template({
 		}));
+    if ((that.game.currentChatFlags() & {{.ChatFlag "Grey" }}) == {{.ChatFlag "Grey"}}) {
+			that.$('.sender-selection').append('<option value="Anonymous">{{.I "Anonymous" }}</option>');
+		}
+		_.each(variantNations(that.game.get('Variant')), function(nation) {
+			if (that.game.me().Nation == nation || (that.game.currentChatFlags() & {{.ChatFlag "Black" }}) == {{.ChatFlag "Black"}}) {
+			  that.$('.sender-selection').append('<option ' + (that.game.me().Nation == nation ? 'selected="selected" ' : '') + 'value="' + nation + '">' + {{.I "nations" }}[nation] + '</option>');
+			}
+		});
 		return that;
 	},
 
