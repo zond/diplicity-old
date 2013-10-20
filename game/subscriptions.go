@@ -20,11 +20,6 @@ type GameState struct {
 	Phase   *Phase
 }
 
-type MessageState struct {
-	*Message
-	Member *Member
-}
-
 type GameStates []GameState
 
 func (self GameStates) Len() int {
@@ -100,20 +95,6 @@ func SubscribeGame(c common.Context, s *subs.Subscription, gameId, email string)
 	return s.Subscribe(&Game{Id: base64DecodedId})
 }
 
-type messagePointers []*Message
-
-func (self messagePointers) Len() int {
-	return len(self)
-}
-
-func (self messagePointers) Less(j, i int) bool {
-	return self[i].CreatedAt.Before(self[j].CreatedAt)
-}
-
-func (self messagePointers) Swap(i, j int) {
-	self[i], self[j] = self[j], self[i]
-}
-
 func SubscribeMessages(c common.Context, s *subs.Subscription, gameId, email string) error {
 	base64DecodedId, err := base64.URLEncoding.DecodeString(gameId)
 	if err != nil {
@@ -122,27 +103,28 @@ func SubscribeMessages(c common.Context, s *subs.Subscription, gameId, email str
 	s.Query = s.DB().Query().Where(kol.Equals{"GameId", base64DecodedId})
 	s.Call = func(i interface{}, op string) error {
 		messages := i.([]*Message)
-		sort.Sort(messagePointers(messages))
-		states := []MessageState{}
+		result := Messages{}
 		for _, message := range messages {
 			game := &Game{Id: base64DecodedId}
 			if err := c.DB().Get(game); err != nil {
 				return err
 			}
-			member, err := game.Member(s.DB(), email)
+			recipient, err := game.Member(s.DB(), email)
+			if err != nil {
+				return err
+			}
+			sender, err := message.sender(s.DB())
 			if err != nil {
 				return err
 			}
 			phase := game.LastPhase(c.DB())
-			if game.MessageAllowed(phase, member, message) {
-				state, err := message.toState(c.DB())
-				if err != nil {
-					states = append(states, *state)
-				}
+			if game.MessageAllowed(phase, sender, recipient, message) {
+				result = append(result, game.SanitizeMessage(sender, message))
 			}
 		}
-		if op == subs.FetchType || len(states) > 0 {
-			return s.Send(states, op)
+		if op == subs.FetchType || len(result) > 0 {
+			sort.Sort(result)
+			return s.Send(result, op)
 		}
 		return nil
 	}

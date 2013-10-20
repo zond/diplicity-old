@@ -110,10 +110,33 @@ func (self *Game) Updated(d *kol.DB, old *Game) {
 	}
 }
 
-func (self *Game) MessageAllowed(phase *Phase, member *Member, message *Message) bool {
-	if !message.Channel[member.Nation] {
+func (self *Game) SanitizeMessage(sender *Member, message *Message) (result Message) {
+	// the result is an anonymized message
+	result = Message{
+		Nation:    message.Nation,
+		Body:      message.Body,
+		Channel:   message.Channel,
+		CreatedAt: message.CreatedAt,
+		UpdatedAt: message.UpdatedAt,
+	}
+	// if it is from anon, and it is a private channel, replace the sender with anon in the chanel
+	if result.Nation == common.Anonymous && len(result.Channel) == 2 {
+		delete(result.Channel, sender.Nation)
+		result.Channel[common.Anonymous] = true
+	}
+	return
+}
+
+func (self *Game) MessageAllowed(phase *Phase, sender, recipient *Member, message *Message) bool {
+	// disallow messages from those not in the channel
+	if !message.Channel[sender.Nation] {
 		return false
 	}
+	// disallow messages to those not in the channel
+	if recipient != nil && !message.Channel[recipient.Nation] {
+		return false
+	}
+	// find the chat settings relevant at this time
 	flag := common.ChatFlag(0)
 	if self.State == common.GameStateCreated {
 		flag = self.ChatFlags[common.BeforeGamePhaseType]
@@ -124,12 +147,31 @@ func (self *Game) MessageAllowed(phase *Phase, member *Member, message *Message)
 	} else {
 		panic(fmt.Errorf("%+v has no phase??", self))
 	}
+	// if no chat is allowed, just return false
 	if flag == 0 {
 		return false
 	}
-	if (flag & message.Flag) != message.Flag {
+	if message.Nation == common.Anonymous {
+		// anonymous messages are only allowed if grey chat is allowed
+		if (flag & common.ChatGrey) != common.ChatGrey {
+			return false
+		}
+	} else if message.Nation != sender.Nation {
+		// faked messages are only allowed if black chat is allowed
+		if (flag & common.ChatBlack) != common.ChatBlack {
+			return false
+		}
+	} else if (flag&common.ChatWhite) != common.ChatWhite && (flag&common.ChatBlack) != common.ChatBlack {
+		// messages with the proper sender is only allowed if white or black chat is allowed
 		return false
 	}
+
+	// if group chat is allowed, all recipient combinations are ok
+	if (flag & common.ChatGroup) == common.ChatGroup {
+		return true
+	}
+
+	// private messages are only allowed if private chat is allowed
 	if len(message.Channel) == 2 {
 		return (flag & common.ChatPrivate) == common.ChatPrivate
 	}
@@ -139,11 +181,13 @@ func (self *Game) MessageAllowed(phase *Phase, member *Member, message *Message)
 		panic(fmt.Errorf("Unknown variant for %+v", self))
 	}
 
+	// messages to everyone is only allowed if conference chat is allowed
 	if len(message.Channel) == len(variant.Nations) {
 		return (flag & common.ChatConference) == common.ChatConference
 	}
 
-	return (flag & common.ChatGroup) == common.ChatGroup
+	// otherwise, we dont allow it
+	return false
 }
 
 func (self *Game) LastPhase(d *kol.DB) (result *Phase) {

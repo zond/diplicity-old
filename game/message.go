@@ -7,14 +7,27 @@ import (
 	"time"
 )
 
+type Messages []Message
+
+func (self Messages) Len() int {
+	return len(self)
+}
+
+func (self Messages) Less(j, i int) bool {
+	return self[i].CreatedAt.Before(self[j].CreatedAt)
+}
+
+func (self Messages) Swap(i, j int) {
+	self[i], self[j] = self[j], self[i]
+}
+
 type Message struct {
 	Id     kol.Id
 	GameId kol.Id `kol:"index"`
 
-	Sender        kol.Id
-	VirtualSender dip.Nation
-	Flag          common.ChatFlag
-	Channel       common.ChatChannel
+	Sender  kol.Id
+	Nation  dip.Nation
+	Channel common.ChatChannel
 
 	Body string
 
@@ -22,25 +35,10 @@ type Message struct {
 	UpdatedAt time.Time
 }
 
-func (self *Message) toState(d *kol.DB) (result *MessageState, err error) {
-	result = &MessageState{
-		Message: &Message{
-			Body: self.Body,
-		},
-		Member: &Member{},
+func (self *Message) sender(d *kol.DB) (result *Member, err error) {
+	result = &Member{
+		Id: self.Sender,
 	}
-	if self.Flag == common.ChatGrey {
-		result.Member.Nation = common.Anonymous
-	}
-	if self.Flag == common.ChatBlack {
-		result.Member.Nation = self.VirtualSender
-	}
-	if self.Flag == common.ChatWhite {
-		member := &Member{Id: self.Sender}
-		if err = d.Get(member); err != nil {
-			return
-		}
-		result.Member.Nation = member.Nation
-	}
+	err = d.Get(result)
 	return
 }
