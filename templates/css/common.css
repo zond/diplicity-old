@@ -1,3 +1,8 @@
+.slider-controls span {
+	background-color: rgba(0,0,0,0.15);
+	padding: 7px;
+	border-radius: 3px;
+}
 .game-description {
 	display: block;
 	overflow: hidden;
