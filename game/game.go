@@ -48,7 +48,10 @@ func (self *Game) Disallows(u *user.User) bool {
 }
 
 func (self *Game) allocate(d *kol.DB) error {
-	members := self.Members(d)
+	members, err := self.Members(d)
+	if err != nil {
+		return err
+	}
 	switch self.AllocationMethod {
 	case common.RandomString:
 		for memberIndex, nationIndex := range rand.Perm(len(members)) {
@@ -105,22 +108,26 @@ func (self *Game) start(d *kol.DB) error {
 }
 
 func (self *Game) Updated(d *kol.DB, old *Game) {
-	for _, member := range self.Members(d) {
-		d.EmitUpdate(&member)
+	members, err := self.Members(d)
+	if err == nil {
+		for _, member := range members {
+			d.EmitUpdate(&member)
+		}
 	}
 }
 
 func (self *Game) SanitizeMessage(sender *Member, message *Message) (result Message) {
 	// the result is an anonymized message
 	result = Message{
-		Nation:    message.Nation,
+		Sender:    message.Sender,
 		Body:      message.Body,
+		GameId:    self.Id,
 		Channel:   message.Channel,
 		CreatedAt: message.CreatedAt,
 		UpdatedAt: message.UpdatedAt,
 	}
 	// if it is from anon, and it is a private channel, replace the sender with anon in the chanel
-	if result.Nation == common.Anonymous && len(result.Channel) == 2 {
+	if result.Sender == common.Anonymous && len(result.Channel) == 2 {
 		delete(result.Channel, sender.Nation)
 		result.Channel[common.Anonymous] = true
 	}
@@ -151,12 +158,12 @@ func (self *Game) MessageAllowed(phase *Phase, sender, recipient *Member, messag
 	if flag == 0 {
 		return false
 	}
-	if message.Nation == common.Anonymous {
+	if message.Sender == common.Anonymous {
 		// anonymous messages are only allowed if grey chat is allowed
 		if (flag & common.ChatGrey) != common.ChatGrey {
 			return false
 		}
-	} else if message.Nation != sender.Nation {
+	} else if message.Sender != sender.Nation {
 		// faked messages are only allowed if black chat is allowed
 		if (flag & common.ChatBlack) != common.ChatBlack {
 			return false
@@ -190,9 +197,11 @@ func (self *Game) MessageAllowed(phase *Phase, sender, recipient *Member, messag
 	return false
 }
 
-func (self *Game) LastPhase(d *kol.DB) (result *Phase) {
+func (self *Game) LastPhase(d *kol.DB) (result *Phase, err error) {
 	var phases Phases
-	d.Query().Where(kol.Equals{"GameId", self.Id}).All(&phases)
+	if err = d.Query().Where(kol.Equals{"GameId", self.Id}).All(&phases); err != nil {
+		return
+	}
 	if len(phases) > 0 {
 		sort.Sort(phases)
 		result = &phases[0]
@@ -200,8 +209,10 @@ func (self *Game) LastPhase(d *kol.DB) (result *Phase) {
 	return
 }
 
-func (self *Game) Members(d *kol.DB) (result Members) {
-	d.Query().Where(kol.Equals{"GameId", self.Id}).All(&result)
+func (self *Game) Members(d *kol.DB) (result Members, err error) {
+	if err = d.Query().Where(kol.Equals{"GameId", self.Id}).All(&result); err != nil {
+		return
+	}
 	sort.Sort(result)
 	return
 }

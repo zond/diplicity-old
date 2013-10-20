@@ -35,10 +35,11 @@ window.ChatsView = BaseView.extend({
 						var chatName = 'Private' + nation;
 						var nationView = that.channelViews[chatName];
 						if (nationView == null) {
+						  var channel = {};
+							channel[nation] = true;
+							channel[that.game.me().Nation] = true;
 							nationView = new ChatChannelView({
-								channel: {
-									nation: true,
-								},
+								channel: channel,
 								title: {{.I "nations" }}[nation],
 								name: chatName,
 								collection: that.collection,

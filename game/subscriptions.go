@@ -50,10 +50,18 @@ func SubscribeCurrent(c common.Context, s *subs.Subscription, email string) erro
 				if err := s.DB().Get(game); err != nil {
 					return err
 				}
+				phase, err := game.LastPhase(c.DB())
+				if err != nil {
+					return err
+				}
+				members, err := game.Members(c.DB())
+				if err != nil {
+					return err
+				}
 				states = append(states, GameState{
 					Game:    game,
-					Members: game.Members(c.DB()).toStates(c, game, email),
-					Phase:   game.LastPhase(c.DB()),
+					Members: members.toStates(c, game, email),
+					Phase:   phase,
 				})
 			}
 		}
@@ -73,19 +81,20 @@ func SubscribeGame(c common.Context, s *subs.Subscription, gameId, email string)
 	}
 	s.Call = func(i interface{}, op string) error {
 		game := i.(*Game)
-		members := game.Members(c.DB())
-		isMember := false
-		for _, m := range members {
-			if string(m.UserId) == email {
-				isMember = true
-				break
-			}
+		members, err := game.Members(c.DB())
+		if err != nil {
+			return err
 		}
+		isMember := members.Contains(email)
 		if !game.Private || isMember {
+			phase, err := game.LastPhase(c.DB())
+			if err != nil {
+				return err
+			}
 			return s.Send(GameState{
 				Game:    game,
 				Members: members.toStates(c, game, email),
-				Phase:   game.LastPhase(c.DB()),
+				Phase:   phase,
 			}, op)
 		} else if op == subs.FetchType {
 			return s.Send(GameState{}, op)
@@ -117,7 +126,10 @@ func SubscribeMessages(c common.Context, s *subs.Subscription, gameId, email str
 			if err != nil {
 				return err
 			}
-			phase := game.LastPhase(c.DB())
+			phase, err := game.LastPhase(c.DB())
+			if err != nil {
+				return err
+			}
 			if game.MessageAllowed(phase, sender, recipient, message) {
 				result = append(result, game.SanitizeMessage(sender, message))
 			}
@@ -142,7 +154,10 @@ func SubscribeOpen(c common.Context, s *subs.Subscription, email string) error {
 			if game.Disallows(me) {
 				break
 			}
-			members := game.Members(c.DB())
+			members, err := game.Members(c.DB())
+			if err != nil {
+				return err
+			}
 			if disallows, err := members.Disallows(c.DB(), me); err != nil {
 				return err
 			} else if disallows {
@@ -156,10 +171,14 @@ func SubscribeOpen(c common.Context, s *subs.Subscription, email string) error {
 				}
 			}
 			if !isMember {
+				phase, err := game.LastPhase(c.DB())
+				if err != nil {
+					return err
+				}
 				states = append(states, GameState{
 					Game:    game,
 					Members: members.toStates(c, game, email),
-					Phase:   game.LastPhase(c.DB()),
+					Phase:   phase,
 				})
 			}
 		}

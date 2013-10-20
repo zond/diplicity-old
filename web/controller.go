@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"runtime/debug"
 	"strings"
 	"time"
 )
@@ -41,6 +42,9 @@ func (self *Web) WS(ws *websocket.Conn) {
 
 	pack := subs.New(self.db, ws).OnUnsubscribe(func(s *subs.Subscription, reason interface{}) {
 		self.Errorf("\t%v\t%v\t%v\t%v\t%v\t[unsubscribing]", ws.Request().URL.Path, ws.Request().RemoteAddr, email, s.URI(), reason)
+		if self.logLevel > Trace {
+			self.Tracef("%s", debug.Stack())
+		}
 	}).Logger(func(name string, i interface{}, op string, dur time.Duration) {
 		self.Debugf("\t%v\t%v\t%v\t%v\t%v\t%v ->", ws.Request().URL.Path, ws.Request().RemoteAddr, email, op, name, dur)
 	})
@@ -71,16 +75,26 @@ func (self *Web) WS(ws *websocket.Conn) {
 						}
 					}
 				}()
+				authenticated := func() bool {
+					if loggedIn {
+						return true
+					}
+					self.Errorf("Unauthenticated access %+v", message)
+					return false
+				}
+				unrecognized := func() {
+					self.Errorf("Unrecognized message %+v", message)
+				}
 				switch message.Type {
 				case common.SubscribeType:
 					s := pack.New(message.Object.URI)
 					switch message.Object.URI {
 					case "/games/current":
-						if loggedIn {
+						if authenticated() {
 							self.Errlog(game.SubscribeCurrent(self, s, email))
 						}
 					case "/games/open":
-						if loggedIn {
+						if authenticated() {
 							self.Errlog(game.SubscribeOpen(self, s, email))
 						}
 					case "/user":
@@ -91,15 +105,15 @@ func (self *Web) WS(ws *websocket.Conn) {
 						}
 					default:
 						if match := chatMessagesPattern.FindStringSubmatch(message.Object.URI); match != nil {
-							if loggedIn {
+							if authenticated() {
 								game.SubscribeMessages(self, s, match[1], email)
 							}
 						} else if match := gamePattern.FindStringSubmatch(message.Object.URI); match != nil {
-							if loggedIn {
+							if authenticated() {
 								game.SubscribeGame(self, s, match[1], email)
 							}
 						} else {
-							self.Errorf("Unrecognized URI: %+v", message.Object.URI)
+							unrecognized()
 						}
 					}
 				case common.UnsubscribeType:
@@ -107,34 +121,42 @@ func (self *Web) WS(ws *websocket.Conn) {
 				case common.CreateType:
 					switch message.Object.URI {
 					case "/games":
-						if loggedIn {
+						if authenticated() {
 							game.Create(self, subs.JSON{message.Object.Data}, email)
+						}
+					default:
+						if match := chatMessagesPattern.FindStringSubmatch(message.Object.URI); match != nil {
+							game.SendMessage(self, match[1], subs.JSON{message.Object.Data}, email)
+						} else {
+							unrecognized()
 						}
 					}
 				case common.DeleteType:
 					if match := gamePattern.FindStringSubmatch(message.Object.URI); match != nil {
-						if loggedIn {
+						if authenticated() {
 							game.DeleteMember(self, match[1], email)
 						}
 					} else {
-						self.Errorf("Unrecognized URI to delete: %v", message.Object.URI)
+						unrecognized()
 					}
 				case common.UpdateType:
 					if strings.Index(message.Object.URI, "/games/") == 0 {
-						if loggedIn {
+						if authenticated() {
 							if err := game.AddMember(self, subs.JSON{message.Object.Data}, email); err != nil {
 								self.Errorf("While trying to add %v to %v: %v", email, message.Object.URI, err)
 							}
 						}
 					} else if strings.Index(message.Object.URI, "/user") == 0 {
-						if loggedIn {
+						if authenticated() {
 							user.Update(self.DB(), subs.JSON{message.Object.Data}, email)
 						}
+					} else {
+						unrecognized()
 					}
 				case common.RPCType:
 					switch message.Method.Name {
 					case "GetPossibleSources":
-						if loggedIn {
+						if authenticated() {
 							params := subs.JSON{message.Method.Data}
 							if result, err := game.GetPossibleSources(self, params.GetString("GameId"), email); err == nil {
 								if err := websocket.JSON.Send(ws, subs.Message{
@@ -152,7 +174,7 @@ func (self *Web) WS(ws *websocket.Conn) {
 							}
 						}
 					case "GetValidOrders":
-						if loggedIn {
+						if authenticated() {
 							params := subs.JSON{message.Method.Data}
 							if options, err := game.GetValidOrders(self, params.GetString("GameId"), params.GetString("Province"), email); err == nil {
 								if err := websocket.JSON.Send(ws, subs.Message{
@@ -170,7 +192,7 @@ func (self *Web) WS(ws *websocket.Conn) {
 							}
 						}
 					case "SetOrder":
-						if loggedIn {
+						if authenticated() {
 							params := subs.JSON{message.Method.Data}
 							result := game.SetOrder(self, params.GetString("GameId"), params.GetStringSlice("Order"), email)
 							data := ""
@@ -190,7 +212,7 @@ func (self *Web) WS(ws *websocket.Conn) {
 						}
 					}
 				default:
-					self.Errorf("Unrecognized message Type: %+v", message.Type)
+					unrecognized()
 				}
 			}()
 		} else if err == io.EOF {

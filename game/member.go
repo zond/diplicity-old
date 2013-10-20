@@ -35,6 +35,15 @@ func (self Members) Swap(i, j int) {
 	self[i], self[j] = self[j], self[i]
 }
 
+func (self Members) Contains(email string) bool {
+	for _, member := range self {
+		if string(member.UserId) == email {
+			return true
+		}
+	}
+	return false
+}
+
 func (self Members) toStates(c common.Context, g *Game, email string) (result []MemberState) {
 	result = make([]MemberState, len(self))
 	for index, member := range self {

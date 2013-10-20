@@ -10,8 +10,7 @@ import (
 
 func SetOrder(c common.Context, gameId string, order []string, email string) (err error) {
 	var base64DecodedId []byte
-	base64DecodedId, err = base64.URLEncoding.DecodeString(gameId)
-	if err != nil {
+	if base64DecodedId, err = base64.URLEncoding.DecodeString(gameId); err != nil {
 		return
 	}
 	game := Game{Id: base64DecodedId}
@@ -19,11 +18,13 @@ func SetOrder(c common.Context, gameId string, order []string, email string) (er
 		return
 	}
 	var member *Member
-	member, err = game.Member(c.DB(), email)
-	if err != nil {
+	if member, err = game.Member(c.DB(), email); err != nil {
 		return
 	}
-	phase := game.LastPhase(c.DB())
+	var phase *Phase
+	if phase, err = game.LastPhase(c.DB()); err != nil {
+		return
+	}
 	if phase == nil {
 		err = fmt.Errorf("No phase for %+v found", game)
 		return
@@ -63,7 +64,10 @@ func GetPossibleSources(c common.Context, gameId, email string) (result []dip.Pr
 	if err != nil {
 		return
 	}
-	phase := game.LastPhase(c.DB())
+	var phase *Phase
+	if phase, err = game.LastPhase(c.DB()); err != nil {
+		return
+	}
 	if phase == nil {
 		err = fmt.Errorf("No phase for %+v found", game)
 		return
@@ -88,7 +92,10 @@ func GetValidOrders(c common.Context, gameId, province, email string) (result di
 	if err != nil {
 		return
 	}
-	phase := game.LastPhase(c.DB())
+	var phase *Phase
+	if phase, err = game.LastPhase(c.DB()); err != nil {
+		return
+	}
 	if phase == nil {
 		err = fmt.Errorf("No phase for %+v found", game)
 		return

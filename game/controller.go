@@ -9,14 +9,45 @@ import (
 	"github.com/zond/kcwraps/subs"
 )
 
+func SendMessage(c common.Context, gameId string, j subs.JSON, email string) error {
+	var message Message
+	j.Overwrite(&message)
+
+	base64DecodedId, err := base64.URLEncoding.DecodeString(gameId)
+	if err != nil {
+		return err
+	}
+	game := &Game{Id: base64DecodedId}
+	if err := c.DB().Get(game); err != nil {
+		return err
+	}
+	sender, err := game.Member(c.DB(), email)
+	if err != nil {
+		return err
+	}
+	phase, err := game.LastPhase(c.DB())
+	if err != nil {
+		return err
+	}
+
+	if game.MessageAllowed(phase, sender, nil, &message) {
+		message.GameId = game.Id
+		message.SenderId = sender.Id
+		return c.DB().Set(&message)
+	} else {
+		c.Errorf("Non-allowed message %+v sent by %#v", message, email)
+	}
+	return nil
+}
+
 func DeleteMember(c common.Context, gameId, email string) error {
 	return c.DB().Transact(func(d *kol.DB) error {
 		base64DecodedId, err := base64.URLEncoding.DecodeString(gameId)
 		if err != nil {
 			return err
 		}
-		game := Game{Id: base64DecodedId}
-		if err := d.Get(&game); err != nil {
+		game := &Game{Id: base64DecodedId}
+		if err := d.Get(game); err != nil {
 			return fmt.Errorf("Game not found: %v", err)
 		}
 		if game.State != common.GameStateCreated {
@@ -29,9 +60,12 @@ func DeleteMember(c common.Context, gameId, email string) error {
 		if err := d.Del(&member); err != nil {
 			return err
 		}
-		left := game.Members(d)
+		left, err := game.Members(d)
+		if err != nil {
+			return err
+		}
 		if len(left) == 0 {
-			if err := d.Del(&game); err != nil {
+			if err := d.Del(game); err != nil {
 				return err
 			}
 		}
@@ -63,7 +97,10 @@ func AddMember(c common.Context, j subs.JSON, email string) error {
 		if game.Disallows(me) {
 			return fmt.Errorf("Is not allowed to join this game due to game settings")
 		}
-		already := game.Members(d)
+		already, err := game.Members(d)
+		if err != nil {
+			return err
+		}
 		if disallows, err := already.Disallows(d, me); err != nil {
 			return err
 		} else if disallows {

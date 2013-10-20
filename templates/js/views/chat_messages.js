@@ -8,10 +8,6 @@ window.ChatMessagesView = BaseView.extend({
 	},
 
 	initialize: function(options) {
-		this.listenTo(this.collection, "sync", this.doRender);
-		this.listenTo(this.collection, "reset", this.doRender);
-		this.listenTo(this.collection, "add", this.doRender);
-		this.listenTo(this.collection, "remove", this.doRender);
 	  this.channel = options.channel;
 		this.title = options.title;
 		this.name = options.name;
@@ -29,8 +25,13 @@ window.ChatMessagesView = BaseView.extend({
 	},
 
 	sendMessage: function(ev) {
+	  console.log('sending', ev);
 	  ev.preventDefault();
-		console.log('gonna send');
+		this.collection.create({
+		  Body: $(ev.target).val(),
+      Sender: this.$('.sender-selection').val(),
+			Channel: this.channel,
+		});
 	},
 
   render: function() {

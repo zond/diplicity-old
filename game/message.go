@@ -25,9 +25,9 @@ type Message struct {
 	Id     kol.Id
 	GameId kol.Id `kol:"index"`
 
-	Sender  kol.Id
-	Nation  dip.Nation
-	Channel common.ChatChannel
+	SenderId kol.Id
+	Sender   dip.Nation
+	Channel  common.ChatChannel
 
 	Body string
 
@@ -37,7 +37,7 @@ type Message struct {
 
 func (self *Message) sender(d *kol.DB) (result *Member, err error) {
 	result = &Member{
-		Id: self.Sender,
+		Id: self.SenderId,
 	}
 	err = d.Get(result)
 	return
