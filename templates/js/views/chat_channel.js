@@ -6,15 +6,28 @@ window.ChatChannelView = BaseView.extend({
 
   template: _.template($('#chat_channel_underscore').html()),
 
+	events: {
+	  "click": 'showMessages',
+	},
+
 	initialize: function(options) {
-		this.listenTo(window.session.user, 'change', this.doRender);
-		this.listenTo(this.collection, "sync", this.doRender);
-		this.listenTo(this.collection, "reset", this.doRender);
-		this.listenTo(this.collection, "add", this.doRender);
-		this.listenTo(this.collection, "remove", this.doRender);
 	  this.channel = options.channel;
 		this.title = options.title;
 		this.name = options.name;
+		this.game = options.game;
+	},
+
+  showMessages: function(ev) {
+	  ev.preventDefault();
+		var that = this;
+		new ChatMessagesView({
+		  el: $('#chats-slider'),
+			channel: that.channel,
+			title: that.title,
+			name: that.name,
+			game: that.game,
+			collection: that.collection,
+		}).doRender();
 	},
 
   render: function() {

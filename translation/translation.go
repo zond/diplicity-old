@@ -6,6 +6,7 @@ var en = map[string]string{
 	"Anonymous":         "Anonymous",
 	"Deadline":          "Deadline",
 	"Yes":               "Yes",
+	"Back":              "Back",
 	"No":                "No",
 	"Cancel":            "Cancel",
 	"Nickname":          "Nickname",

@@ -1,6 +1,5 @@
 $(window).load(function() {
   var normWidth = 500;
-	var num = 3;
 	var buttonWidth = 50;
   var resizeSliders = function() {
     var win = $(window).width();
