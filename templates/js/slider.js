@@ -1,29 +1,41 @@
 $(window).load(function() {
-  $(window).on('orientationchange', function(ev) {
-	  $('.slider-content').addClass('hidden');
-	});
+  var normWidth = 500;
+	var num = 3;
+	var buttonWidth = 40;
+  var resizeSliders = function() {
+    var win = $(window).width();
+	  var count = $('.slider-content.visible').length;
+		while (win < normWidth * count + buttonWidth && count > 1) {
+			var eldest = null;
+			var eldestAt = new Date().getTime();
+			$('.slider-content.visible').each(function(ind, el) {
+				if (eldestAt > parseInt($(el).attr('data-displayed-at'))) {
+					eldestAt = parseInt($(el).attr('data-displayed-at'));
+					eldest = $(el);
+				}
+			});
+			console.log('hiding one');
+			eldest.removeClass('visible').addClass('hidden');
+			count = $('.slider-content.visible').length;
+		}
+		if (count == 1 && win < normWidth + buttonWidth) {
+			$('.slider-content.visible').height($(window).height() - $('#top-navigation').height() - $('#current-game').height()).width(win - buttonWidth);
+		} else {
+			$('.slider-content.visible').height($(window).height() - $('#top-navigation').height() - $('#current-game').height()).width(normWidth);
+		}
+	};
+  $(window).on('orientationchange', resizeSliders);
+	$(window).on('resize', resizeSliders);
   $(document).on('click', '.slider-controls a', function(ev) {
 	  ev.preventDefault();
-		var singleMode = false;
-	  var windowWidth = $(window).width();
-		if (windowWidth < 1240) {
-		  singleMode = true;
-		}
 		var link = $(ev.currentTarget);
 		var content = $('#' + link.attr('data-slider-id')); 
 		if (content.hasClass('hidden')) {
-		  if (singleMode) {
-			  $('.slider-content').addClass('hidden');
-			}
-			var width = $(window).width() - 40;
-			if (width > 400) {
-			  width = 400;
-			}
-			content.width(width);
-			content.height($(window).height() - $('#top-navigation').height() - $('#current-game').height());
-			content.removeClass('hidden');
+			content.removeClass('hidden').addClass('visible');
+			content.attr('data-displayed-at', new Date().getTime());
 		} else {
-		  content.addClass('hidden');
+		  content.addClass('hidden').removeClass('visible');
 		}
+		resizeSliders();
 	});
 });

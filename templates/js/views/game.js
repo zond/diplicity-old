@@ -1,3 +1,11 @@
+
+function resizeMap() {
+	$('.map-container').height($(window).height() - 51);
+}
+
+$(window).on('orientationchange', resizeMap);
+$(window).on('resize', resizeMap);
+
 window.GameView = BaseView.extend({
 
   template: _.template($('#game_underscore').html()),
@@ -159,6 +167,7 @@ window.GameView = BaseView.extend({
 				}
 			}
 		}
+		resizeMap();
 	},
 
   render: function() {

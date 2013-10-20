@@ -1,3 +1,7 @@
+.game-description {
+	display: block;
+	overflow: hidden;
+}
 .white {
 	background-color: white;
 }
@@ -8,6 +12,7 @@
 }
 #content {
 	width: 100%;
+	overflow: scroll;
 	height: 100%;
 }
 .prioritize {
