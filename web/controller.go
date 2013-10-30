@@ -22,20 +22,25 @@ var gamePattern = regexp.MustCompile("^/games/(.*)$")
 
 func (self *Web) WS(ws *websocket.Conn) {
 	token := ws.Request().URL.Query().Get("token")
-	email := ws.Request().URL.Query().Get("email")
+	email := ""
 	loggedIn := false
-	if token != "" {
-		timeout := common.MustParseInt64(ws.Request().URL.Query().Get("timeout"))
-		if now := time.Now().UnixNano(); timeout < now {
-			self.Errorf("\t%v\t%v\t[token too old: %v < %v]", ws.Request().URL, ws.Request().RemoteAddr, timeout, now)
-			return
+	if self.env == "development" || token != "" {
+		email = ws.Request().URL.Query().Get("email")
+		if self.env == "development" {
+			loggedIn = email != ""
+		} else {
+			timeout := common.MustParseInt64(ws.Request().URL.Query().Get("timeout"))
+			if now := time.Now().UnixNano(); timeout < now {
+				self.Errorf("\t%v\t%v\t[token too old: %v < %v]", ws.Request().URL, ws.Request().RemoteAddr, timeout, now)
+				return
+			}
+			correct := common.NewTokenWithTimeout(self.secret, email, timeout)
+			if correct.Token != token {
+				self.Errorf("\t%v\t%v\t[bad token: %v != %v]", ws.Request().URL, ws.Request().RemoteAddr, token, correct)
+				return
+			}
+			loggedIn = true
 		}
-		correct := common.NewTokenWithTimeout(self.secret, email, timeout)
-		if correct.Token != token {
-			self.Errorf("\t%v\t%v\t[bad token: %v != %v]", ws.Request().URL, ws.Request().RemoteAddr, token, correct)
-			return
-		}
-		loggedIn = true
 	}
 
 	self.Infof("\t%v\t%v\t%v <-", ws.Request().URL, ws.Request().RemoteAddr, email)
