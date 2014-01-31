@@ -1,13 +1,7 @@
 package web
 
 import (
-	"code.google.com/p/go.net/websocket"
 	"fmt"
-	"github.com/zond/diplicity/common"
-	"github.com/zond/diplicity/game"
-	"github.com/zond/diplicity/openid"
-	"github.com/zond/diplicity/user"
-	"github.com/zond/kcwraps/subs"
 	"io"
 	"net/http"
 	"net/url"
@@ -15,6 +9,14 @@ import (
 	"runtime/debug"
 	"strings"
 	"time"
+
+	"code.google.com/p/go.net/websocket"
+	"github.com/zond/diplicity/common"
+	"github.com/zond/diplicity/game"
+	"github.com/zond/diplicity/openid"
+	"github.com/zond/diplicity/user"
+	dip "github.com/zond/godip/common"
+	"github.com/zond/kcwraps/subs"
 )
 
 var chatMessagesPattern = regexp.MustCompile("^/games/(.*)/messages$")
@@ -66,169 +68,168 @@ func (self *Web) WS(ws *websocket.Conn) {
 		var message subs.Message
 		if err := websocket.JSON.Receive(ws, &message); err == nil {
 			start = time.Now()
-			func() {
-				defer func() {
-					if message.Method != nil {
-						self.Debugf("\t%v\t%v\t%v\t%v\t%v\t%v <-", ws.Request().URL.Path, ws.Request().RemoteAddr, email, message.Type, message.Method.Name, time.Now().Sub(start))
-					}
-					if message.Object != nil {
-						self.Debugf("\t%v\t%v\t%v\t%v\t%v\t%v <-", ws.Request().URL.Path, ws.Request().RemoteAddr, email, message.Type, message.Object.URI, time.Now().Sub(start))
-					}
-					if self.logLevel > Trace {
-						if message.Method != nil && message.Method.Data != nil {
-							self.Tracef("%+v", common.Prettify(message.Method.Data))
-						}
-						if message.Object != nil && message.Object.Data != nil {
-							self.Tracef("%+v", common.Prettify(message.Object.Data))
-						}
-					}
-				}()
-				authenticated := func() bool {
-					if loggedIn {
-						return true
-					}
-					self.Errorf("Unauthenticated access %+v", message)
-					return false
+			if err = self.handleWSMessage(ws, email, loggedIn, pack, &message); err != nil {
+				self.Errorf("\t%v\t%v\t%v\t%v\t%v\t%v", ws.Request().URL.Path, ws.Request().RemoteAddr, email, message.Type, message.Method.Name, err)
+			}
+			if message.Method != nil {
+				self.Debugf("\t%v\t%v\t%v\t%v\t%v\t%v <-", ws.Request().URL.Path, ws.Request().RemoteAddr, email, message.Type, message.Method.Name, time.Now().Sub(start))
+			}
+			if message.Object != nil {
+				self.Debugf("\t%v\t%v\t%v\t%v\t%v\t%v <-", ws.Request().URL.Path, ws.Request().RemoteAddr, email, message.Type, message.Object.URI, time.Now().Sub(start))
+			}
+			if self.logLevel > Trace {
+				if message.Method != nil && message.Method.Data != nil {
+					self.Tracef("%+v", common.Prettify(message.Method.Data))
 				}
-				unrecognized := func() {
-					self.Errorf("Unrecognized message %+v", message)
+				if message.Object != nil && message.Object.Data != nil {
+					self.Tracef("%+v", common.Prettify(message.Object.Data))
 				}
-				switch message.Type {
-				case common.SubscribeType:
-					s := pack.New(message.Object.URI)
-					switch message.Object.URI {
-					case "/games/current":
-						if authenticated() {
-							self.Errlog(game.SubscribeCurrent(self, s, email))
-						}
-					case "/games/open":
-						if authenticated() {
-							self.Errlog(game.SubscribeOpen(self, s, email))
-						}
-					case "/user":
-						if loggedIn {
-							self.Errlog(user.SubscribeEmail(self, s, email))
-						} else {
-							s.Call(&user.User{}, subs.FetchType)
-						}
-					default:
-						if match := chatMessagesPattern.FindStringSubmatch(message.Object.URI); match != nil {
-							if authenticated() {
-								game.SubscribeMessages(self, s, match[1], email)
-							}
-						} else if match := gamePattern.FindStringSubmatch(message.Object.URI); match != nil {
-							if authenticated() {
-								game.SubscribeGame(self, s, match[1], email)
-							}
-						} else {
-							unrecognized()
-						}
-					}
-				case common.UnsubscribeType:
-					pack.Unsubscribe(message.Object.URI)
-				case common.CreateType:
-					switch message.Object.URI {
-					case "/games":
-						if authenticated() {
-							game.Create(self, subs.JSON{message.Object.Data}, email)
-						}
-					default:
-						if match := chatMessagesPattern.FindStringSubmatch(message.Object.URI); match != nil {
-							game.SendMessage(self, match[1], subs.JSON{message.Object.Data}, email)
-						} else {
-							unrecognized()
-						}
-					}
-				case common.DeleteType:
-					if match := gamePattern.FindStringSubmatch(message.Object.URI); match != nil {
-						if authenticated() {
-							game.DeleteMember(self, match[1], email)
-						}
-					} else {
-						unrecognized()
-					}
-				case common.UpdateType:
-					if strings.Index(message.Object.URI, "/games/") == 0 {
-						if authenticated() {
-							if err := game.AddMember(self, subs.JSON{message.Object.Data}, email); err != nil {
-								self.Errorf("While trying to add %v to %v: %v", email, message.Object.URI, err)
-							}
-						}
-					} else if strings.Index(message.Object.URI, "/user") == 0 {
-						if authenticated() {
-							user.Update(self.DB(), subs.JSON{message.Object.Data}, email)
-						}
-					} else {
-						unrecognized()
-					}
-				case common.RPCType:
-					switch message.Method.Name {
-					case "GetPossibleSources":
-						if authenticated() {
-							params := subs.JSON{message.Method.Data}
-							if result, err := game.GetPossibleSources(self, params.GetString("GameId"), email); err == nil {
-								if err := websocket.JSON.Send(ws, subs.Message{
-									Type: common.RPCType,
-									Method: &subs.Method{
-										Name: message.Method.Name,
-										Id:   message.Method.Id,
-										Data: result,
-									},
-								}); err != nil {
-									self.Errorf("%v", err)
-								}
-							} else {
-								self.Errorf("While calculating possible sources for %v in %v: %v", email, params.GetString("GameId"), err)
-							}
-						}
-					case "GetValidOrders":
-						if authenticated() {
-							params := subs.JSON{message.Method.Data}
-							if options, err := game.GetValidOrders(self, params.GetString("GameId"), params.GetString("Province"), email); err == nil {
-								if err := websocket.JSON.Send(ws, subs.Message{
-									Type: common.RPCType,
-									Method: &subs.Method{
-										Name: message.Method.Name,
-										Id:   message.Method.Id,
-										Data: options,
-									},
-								}); err != nil {
-									self.Errorf("%v", err)
-								}
-							} else {
-								self.Errorf("While calculating valid orders for %v in %v in %v: %v", email, params.GetString("Province"), params.GetString("GameId"), err)
-							}
-						}
-					case "SetOrder":
-						if authenticated() {
-							params := subs.JSON{message.Method.Data}
-							result := game.SetOrder(self, params.GetString("GameId"), params.GetStringSlice("Order"), email)
-							data := ""
-							if result != nil {
-								data = result.Error()
-							}
-							if err := websocket.JSON.Send(ws, subs.Message{
-								Type: common.RPCType,
-								Method: &subs.Method{
-									Name: message.Method.Name,
-									Id:   message.Method.Id,
-									Data: data,
-								},
-							}); err != nil {
-								self.Errorf("%v", err)
-							}
-						}
-					}
-				default:
-					unrecognized()
-				}
-			}()
+			}
 		} else if err == io.EOF {
 			break
 		} else {
 			self.Errorf("%v", err)
 		}
 	}
+}
+
+func (self *Web) handleWSMessage(ws *websocket.Conn, email string, loggedIn bool, pack *subs.Pack, message *subs.Message) (err error) {
+	authenticated := func() bool {
+		if loggedIn {
+			return true
+		}
+		self.Errorf("Unauthenticated access %+v", message)
+		return false
+	}
+	unrecognized := func() error {
+		self.Errorf("Unrecognized message %+v", message)
+		return nil
+	}
+	switch message.Type {
+	case common.SubscribeType:
+		s := pack.New(message.Object.URI)
+		switch message.Object.URI {
+		case "/games/current":
+			if authenticated() {
+				return game.SubscribeCurrent(self, s, email)
+			}
+		case "/games/open":
+			if authenticated() {
+				return game.SubscribeOpen(self, s, email)
+			}
+		case "/user":
+			if loggedIn {
+				return user.SubscribeEmail(self, s, email)
+			} else {
+				return s.Call(&user.User{}, subs.FetchType)
+			}
+		default:
+			if match := chatMessagesPattern.FindStringSubmatch(message.Object.URI); match != nil {
+				if authenticated() {
+					return game.SubscribeMessages(self, s, match[1], email)
+				}
+			} else if match := gamePattern.FindStringSubmatch(message.Object.URI); match != nil {
+				if authenticated() {
+					return game.SubscribeGame(self, s, match[1], email)
+				}
+			} else {
+				return unrecognized()
+			}
+		}
+	case common.UnsubscribeType:
+		pack.Unsubscribe(message.Object.URI)
+		return
+	case common.CreateType:
+		switch message.Object.URI {
+		case "/games":
+			if authenticated() {
+				return game.Create(self, subs.JSON{message.Object.Data}, email)
+			}
+		case "/messages":
+			if authenticated() {
+				// here we create a message
+			}
+		}
+	case common.DeleteType:
+		if match := gamePattern.FindStringSubmatch(message.Object.URI); match != nil {
+			if authenticated() {
+				return game.DeleteMember(self, match[1], email)
+			}
+		} else {
+			return unrecognized()
+		}
+	case common.UpdateType:
+		if strings.Index(message.Object.URI, "/games/") == 0 {
+			if authenticated() {
+				return game.AddMember(self, subs.JSON{message.Object.Data}, email)
+			} else if strings.Index(message.Object.URI, "/user") == 0 {
+				if authenticated() {
+					return user.Update(self.DB(), subs.JSON{message.Object.Data}, email)
+				}
+			} else {
+				return unrecognized()
+			}
+		}
+	case common.RPCType:
+		switch message.Method.Name {
+		case "GetPossibleSources":
+			if authenticated() {
+				params := subs.JSON{message.Method.Data}
+				result := []dip.Province{}
+				if result, err = game.GetPossibleSources(self, params.GetString("GameId"), email); err != nil {
+					return
+				}
+				if err = websocket.JSON.Send(ws, subs.Message{
+					Type: common.RPCType,
+					Method: &subs.Method{
+						Name: message.Method.Name,
+						Id:   message.Method.Id,
+						Data: result,
+					},
+				}); err != nil {
+					return
+				}
+			}
+		case "GetValidOrders":
+			if authenticated() {
+				params := subs.JSON{message.Method.Data}
+				options := dip.Options{}
+				if options, err = game.GetValidOrders(self, params.GetString("GameId"), params.GetString("Province"), email); err != nil {
+					return
+				}
+				if err = websocket.JSON.Send(ws, subs.Message{
+					Type: common.RPCType,
+					Method: &subs.Method{
+						Name: message.Method.Name,
+						Id:   message.Method.Id,
+						Data: options,
+					},
+				}); err != nil {
+					return
+				}
+			}
+		case "SetOrder":
+			if authenticated() {
+				params := subs.JSON{message.Method.Data}
+				result := game.SetOrder(self, params.GetString("GameId"), params.GetStringSlice("Order"), email)
+				data := ""
+				if result != nil {
+					data = result.Error()
+				}
+				if err = websocket.JSON.Send(ws, subs.Message{
+					Type: common.RPCType,
+					Method: &subs.Method{
+						Name: message.Method.Name,
+						Id:   message.Method.Id,
+						Data: data,
+					},
+				}); err != nil {
+					return
+				}
+			}
+		}
+	}
+	return unrecognized()
 }
 
 func (self *Web) Openid(w http.ResponseWriter, r *http.Request) {

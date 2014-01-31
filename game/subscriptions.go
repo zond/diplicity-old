@@ -2,11 +2,12 @@ package game
 
 import (
 	"encoding/base64"
+	"sort"
+
 	"github.com/zond/diplicity/common"
 	"github.com/zond/diplicity/user"
 	"github.com/zond/kcwraps/kol"
 	"github.com/zond/kcwraps/subs"
-	"sort"
 )
 
 type MemberState struct {
@@ -114,25 +115,7 @@ func SubscribeMessages(c common.Context, s *subs.Subscription, gameId, email str
 		messages := i.([]*Message)
 		result := Messages{}
 		for _, message := range messages {
-			game := &Game{Id: base64DecodedId}
-			if err := c.DB().Get(game); err != nil {
-				return err
-			}
-			recipient, err := game.Member(s.DB(), email)
-			if err != nil {
-				return err
-			}
-			sender, err := message.sender(s.DB())
-			if err != nil {
-				return err
-			}
-			phase, err := game.LastPhase(c.DB())
-			if err != nil {
-				return err
-			}
-			if game.MessageAllowed(phase, sender, recipient, message) {
-				result = append(result, game.SanitizeMessage(sender, message))
-			}
+			result = append(result, *message)
 		}
 		if op == subs.FetchType || len(result) > 0 {
 			sort.Sort(result)

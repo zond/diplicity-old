@@ -3,16 +3,24 @@ package game
 import (
 	"encoding/base64"
 	"fmt"
+
 	"github.com/zond/diplicity/common"
 	"github.com/zond/diplicity/user"
 	"github.com/zond/kcwraps/kol"
 	"github.com/zond/kcwraps/subs"
 )
 
-func SendMessage(c common.Context, gameId string, j subs.JSON, email string) error {
-	var message Message
-	j.Overwrite(&message)
+func SendMessage(c common.Context, gameId string, j subs.JSON, senderEmail string) (err error) {
+	// load the  message provided by the client
+	var provided Message
+	j.Overwrite(&provided)
 
+	// find the channel it belongs to
+	channel := &Channel{Id: provided.ChannelId}
+	if err = c.DB().Get(channel); err != nil {
+		return
+	}
+	// find the game it belongs to, and the real sender
 	base64DecodedId, err := base64.URLEncoding.DecodeString(gameId)
 	if err != nil {
 		return err
@@ -21,22 +29,7 @@ func SendMessage(c common.Context, gameId string, j subs.JSON, email string) err
 	if err := c.DB().Get(game); err != nil {
 		return err
 	}
-	sender, err := game.Member(c.DB(), email)
-	if err != nil {
-		return err
-	}
-	phase, err := game.LastPhase(c.DB())
-	if err != nil {
-		return err
-	}
 
-	if game.MessageAllowed(phase, sender, nil, &message) {
-		message.GameId = game.Id
-		message.SenderId = sender.Id
-		return c.DB().Set(&message)
-	} else {
-		c.Errorf("Non-allowed message %+v sent by %#v", message, email)
-	}
 	return nil
 }
 

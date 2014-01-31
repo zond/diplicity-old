@@ -1,10 +1,10 @@
 package game
 
 import (
-	"github.com/zond/diplicity/common"
+	"time"
+
 	dip "github.com/zond/godip/common"
 	"github.com/zond/kcwraps/kol"
-	"time"
 )
 
 type Messages []Message
@@ -22,12 +22,12 @@ func (self Messages) Swap(i, j int) {
 }
 
 type Message struct {
-	Id     kol.Id
-	GameId kol.Id `kol:"index"`
+	Id        kol.Id
+	ChannelId kol.Id
+	GameId    kol.Id
+	SenderId  kol.Id
 
-	SenderId kol.Id
-	Sender   dip.Nation
-	Channel  common.ChatChannel
+	Senders map[dip.Nation]dip.Nation
 
 	Body string
 
@@ -35,10 +35,13 @@ type Message struct {
 	UpdatedAt time.Time
 }
 
-func (self *Message) sender(d *kol.DB) (result *Member, err error) {
-	result = &Member{
-		Id: self.SenderId,
-	}
-	err = d.Get(result)
-	return
+type Channel struct {
+	Id     kol.Id
+	GameId kol.Id
+
+	RealMembers    map[dip.Nation]bool
+	VirtualMembers map[dip.Nation]map[dip.Nation]bool
+
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }

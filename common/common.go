@@ -100,6 +100,14 @@ const (
 
 type ChatChannel map[dip.Nation]bool
 
+func (self ChatChannel) Clone() (result ChatChannel) {
+	result = ChatChannel{}
+	for nation, _ := range self {
+		result[nation] = true
+	}
+	return
+}
+
 type ChatFlagOption struct {
 	Id          ChatFlag
 	Name        string
