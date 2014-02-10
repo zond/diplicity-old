@@ -3,14 +3,15 @@ package web
 import (
 	"bytes"
 	"fmt"
-	"github.com/gorilla/sessions"
-	"github.com/zond/diplicity/common"
-	"github.com/zond/diplicity/translation"
-	dip "github.com/zond/godip/common"
 	"net/http"
 	"net/url"
 	"sort"
 	"time"
+
+	"github.com/gorilla/sessions"
+	"github.com/zond/diplicity/common"
+	"github.com/zond/diplicity/translation"
+	dip "github.com/zond/godip/common"
 )
 
 type RequestData struct {
@@ -171,12 +172,6 @@ func (self RequestData) SecretFlag(s string) common.SecretFlag {
 func (self RequestData) ChatFlag(s string) string {
 	var rval common.ChatFlag
 	switch s {
-	case "White":
-		rval = common.ChatWhite
-	case "Grey":
-		rval = common.ChatGrey
-	case "Black":
-		rval = common.ChatBlack
 	case "Private":
 		rval = common.ChatPrivate
 	case "Group":

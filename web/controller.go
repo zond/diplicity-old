@@ -147,7 +147,7 @@ func (self *Web) handleWSMessage(ws *websocket.Conn, email string, loggedIn bool
 			}
 		case "/messages":
 			if authenticated() {
-				// here we create a message
+				return game.CreateMessage(self, subs.JSON{message.Object.Data}, email)
 			}
 		}
 	case common.DeleteType:

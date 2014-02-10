@@ -22,25 +22,12 @@ func (self Messages) Swap(i, j int) {
 }
 
 type Message struct {
-	Id        kol.Id
-	ChannelId kol.Id
-	GameId    kol.Id
-	SenderId  kol.Id
-
-	Senders map[dip.Nation]dip.Nation
+	Id         kol.Id
+	GameId     kol.Id
+	Sender     dip.Nation
+	Recipients map[dip.Nation]bool
 
 	Body string
-
-	CreatedAt time.Time
-	UpdatedAt time.Time
-}
-
-type Channel struct {
-	Id     kol.Id
-	GameId kol.Id
-
-	RealMembers    map[dip.Nation]bool
-	VirtualMembers map[dip.Nation]map[dip.Nation]bool
 
 	CreatedAt time.Time
 	UpdatedAt time.Time

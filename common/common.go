@@ -6,11 +6,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	cla "github.com/zond/godip/classical/common"
-	"github.com/zond/godip/classical/start"
-	dip "github.com/zond/godip/common"
-	"github.com/zond/godip/graph"
-	"github.com/zond/kcwraps/kol"
 	"io"
 	"net/http"
 	"net/url"
@@ -18,6 +13,12 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	cla "github.com/zond/godip/classical/common"
+	"github.com/zond/godip/classical/start"
+	dip "github.com/zond/godip/common"
+	"github.com/zond/godip/graph"
+	"github.com/zond/kcwraps/kol"
 )
 
 type Token struct {
@@ -90,10 +91,7 @@ func GetLanguage(r *http.Request) string {
 type ChatFlag int
 
 const (
-	ChatWhite ChatFlag = 1 << iota
-	ChatGrey
-	ChatBlack
-	ChatPrivate
+	ChatPrivate = iota
 	ChatGroup
 	ChatConference
 )
@@ -115,18 +113,6 @@ type ChatFlagOption struct {
 }
 
 var ChatFlagOptions = []ChatFlagOption{
-	ChatFlagOption{
-		Id:   ChatWhite,
-		Name: "White press",
-	},
-	ChatFlagOption{
-		Id:   ChatGrey,
-		Name: "Grey press",
-	},
-	ChatFlagOption{
-		Id:   ChatBlack,
-		Name: "Black press",
-	},
 	ChatFlagOption{
 		Id:   ChatPrivate,
 		Name: "Private press",

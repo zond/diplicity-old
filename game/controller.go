@@ -3,6 +3,7 @@ package game
 import (
 	"encoding/base64"
 	"fmt"
+	dip "github.com/zond/godip/common"
 
 	"github.com/zond/diplicity/common"
 	"github.com/zond/diplicity/user"
@@ -10,27 +11,68 @@ import (
 	"github.com/zond/kcwraps/subs"
 )
 
-func SendMessage(c common.Context, gameId string, j subs.JSON, senderEmail string) (err error) {
+func CreateMessage(c common.Context, j subs.JSON, senderEmail string) (err error) {
 	// load the  message provided by the client
-	var provided Message
-	j.Overwrite(&provided)
+	var message Message
+	j.Overwrite(&message)
 
-	// find the channel it belongs to
-	channel := &Channel{Id: provided.ChannelId}
-	if err = c.DB().Get(channel); err != nil {
-		return
-	}
-	// find the game it belongs to, and the real sender
-	base64DecodedId, err := base64.URLEncoding.DecodeString(gameId)
-	if err != nil {
-		return err
-	}
-	game := &Game{Id: base64DecodedId}
+	// and the game
+	game := &Game{Id: message.GameId}
 	if err := c.DB().Get(game); err != nil {
 		return err
 	}
+	// and the member
+	sender, err := game.Member(c.DB(), senderEmail)
+	if err != nil {
+		return
+	}
+	message.Sender = sender.Nation
 
-	return nil
+	var phaseType dip.PhaseType
+	switch game.State {
+	case common.GameStateCreated:
+		phaseType = common.BeforeGamePhaseType
+	case common.GameStateStarted:
+		var phase *Phase
+		if phase, err = game.LastPhase(c.DB()); err != nil {
+			return
+		}
+		phaseType = phase.Type
+	case common.GameStateEnded:
+		phaseType = common.AfterGamePhaseType
+	default:
+		err = fmt.Errorf("Unknown game state for %+v", game)
+		return
+	}
+
+	allowedFlags := game.ChatFlags[phaseType]
+
+	recipients := len(message.Recipients)
+	if recipients == 1 {
+		if (allowedFlags & common.ChatPrivate) == 0 {
+			err = fmt.Errorf("%+v does not allow %+v during %+v", game, message, phaseType)
+			return
+		}
+	} else if recipients == len(common.VariantMap[game.Variant].Nations) {
+		if (allowedFlags & common.ChatConference) == 0 {
+			err = fmt.Errorf("%+v does not allow %+v during %+v", game, message, phaseType)
+			return
+		}
+	} else if recipients > 0 {
+		if (allowedFlags & common.ChatGroup) == 0 {
+			err = fmt.Errorf("%+v does not allow %+v during %+v", game, message, phaseType)
+			return
+		}
+	} else {
+		err = fmt.Errorf("%+v doesn't have any recipients", message)
+		return
+	}
+
+	if err = c.DB().Set(message); err != nil {
+		return
+	}
+
+	return
 }
 
 func DeleteMember(c common.Context, gameId, email string) error {

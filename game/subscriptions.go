@@ -105,17 +105,27 @@ func SubscribeGame(c common.Context, s *subs.Subscription, gameId, email string)
 	return s.Subscribe(&Game{Id: base64DecodedId})
 }
 
-func SubscribeMessages(c common.Context, s *subs.Subscription, gameId, email string) error {
+func SubscribeMessages(c common.Context, s *subs.Subscription, gameId, email string) (err error) {
 	base64DecodedId, err := base64.URLEncoding.DecodeString(gameId)
 	if err != nil {
 		return err
+	}
+	game := &Game{Id: base64DecodedId}
+	if err = c.DB().Get(game); err != nil {
+		return
+	}
+	member, err := game.Member(c.DB(), email)
+	if err != nil {
+		return
 	}
 	s.Query = s.DB().Query().Where(kol.Equals{"GameId", base64DecodedId})
 	s.Call = func(i interface{}, op string) error {
 		messages := i.([]*Message)
 		result := Messages{}
 		for _, message := range messages {
-			result = append(result, *message)
+			if message.Sender == member.Nation || message.Recipients[member.Nation] {
+				result = append(result, *message)
+			}
 		}
 		if op == subs.FetchType || len(result) > 0 {
 			sort.Sort(result)
