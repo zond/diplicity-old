@@ -30,6 +30,17 @@
 	position: relative;
 	z-index: 100;
 }
+.game-controls-buttons {
+	margin-top: -7px;
+	margin-bottom: -7px;
+}
+.game-controls-buttons span {
+	font-size: large;
+	margin-bottom: 5px;
+}
+#current-game .panel {
+	margin-top: 0px;
+}
 #bottom-navigation {
 	min-height: 0px;
 }
@@ -42,16 +53,15 @@ body {
 }
 .view-game {
 	float: right;
-	margin-top: -5;
-	margin-right: -7;
+	margin-bottom: -7px;
+	margin-top: -3px;
 }
 .view-game a {
 	zoom: 0.9;
 }
 .view-game span {
-	font-size: x-large;
+	font-size: large;
 	margin-bottom: 5px;
-	margin-left: -2px;
 }
 .navbar-brand {
 	padding: 0px;

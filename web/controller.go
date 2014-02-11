@@ -102,7 +102,7 @@ func (self *Web) handleWSMessage(ws *websocket.Conn, email string, loggedIn bool
 		return false
 	}
 	unrecognized := func() error {
-		self.Errorf("Unrecognized message %+v", message)
+		self.Errorf("Unrecognized message %+v", common.Prettify(message))
 		return nil
 	}
 	switch message.Type {
@@ -189,6 +189,7 @@ func (self *Web) handleWSMessage(ws *websocket.Conn, email string, loggedIn bool
 				}); err != nil {
 					return
 				}
+				return
 			}
 		case "GetValidOrders":
 			if authenticated() {
@@ -207,6 +208,7 @@ func (self *Web) handleWSMessage(ws *websocket.Conn, email string, loggedIn bool
 				}); err != nil {
 					return
 				}
+				return
 			}
 		case "SetOrder":
 			if authenticated() {
@@ -226,6 +228,7 @@ func (self *Web) handleWSMessage(ws *websocket.Conn, email string, loggedIn bool
 				}); err != nil {
 					return
 				}
+				return
 			}
 		}
 	}
@@ -327,8 +330,6 @@ func (self *Web) AllJs(w http.ResponseWriter, r *http.Request) {
 	self.renderText(w, r, self.jsTemplates, "baseView.js", data)
 	fmt.Fprintln(w, ";")
 	self.renderText(w, r, self.jsTemplates, "dippyMap.js", data)
-	fmt.Fprintln(w, ";")
-	self.renderText(w, r, self.jsTemplates, "slider.js", data)
 	fmt.Fprintln(w, ";")
 	self.render_Templates(data)
 	fmt.Fprintln(w, ";")

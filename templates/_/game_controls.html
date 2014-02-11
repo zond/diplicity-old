@@ -1,0 +1,20 @@
+<div class="panel-heading accordion-toggle" data-toggle="collapse" data-parent="#<%- parentId %>" href="#game_controls_<%- model.cid %>">
+	<div class="game-controls-buttons">
+		<h4 class="panel-title">
+			<a class="btn btn-primary btn-sm view-chat" href="#">
+				<span class="glyphicon glyphicon-user"></span>
+			</a>
+			<a class="btn btn-primary btn-sm view-orders" href="#">
+				<span class="glyphicon glyphicon-hand-right"></span>
+			</a>
+			<a class="btn btn-primary btn-sm view-results" href="#">
+				<span class="glyphicon glyphicon-bell"></span>
+			</a>
+		</h4>
+	</div>
+</div>
+<div id="game_controls_<%- model.cid %>" class="game-controls collapse">
+	<div class="panel-body">
+		chat, orders, results
+	</div>
+</div>

@@ -1,22 +1,22 @@
 <div class="panel-heading<%- editable ? '' : ' accordion-toggle' %>" <%= editable ? '' : 'data-toggle="collapse" ' %>data-parent="#<%- parentId %>" href="#game_<%- model.cid %>">
+	<div class="view-game">
+		<% if (!editable) { %>
+		<%   if (play_state) { %>
+		<a class="btn btn-primary btn-sm view-game navigate" href="/">
+			<span class="glyphicon glyphicon-list"></span>
+		</a>
+		<%   } else { %>
+		<a class="btn btn-primary btn-sm view-game navigate" href="/games/<%- encodeURIComponent(model.get('Id')) %>">
+			<span class="glyphicon glyphicon-play"></span>
+		</a>
+		<%   } %>
+		<% } %>
+	</div>
 	<h4 class="panel-title">
-		<div class="view-game">
-			<% if (!editable) { %>
-			<%   if (play_state) { %>
-			<a class="btn btn-primary btn-sm view-game navigate" href="/">
-				<span class="glyphicon glyphicon-list"></span>
-			</a>
-			<%   } else { %>
-			<a class="btn btn-primary btn-sm view-game navigate" href="/games/<%- encodeURIComponent(model.get('Id')) %>">
-				<span class="glyphicon glyphicon-play"></span>
-			</a>
-			<%   } %>
-			<% } %>
-		</div>
 		<a class="game-description">
 			<%= editable ? '' : '<span class="glyphicon glyphicon-chevron-down"></span> ' %><%- model.describe() %>
 		</a>
-	</div>
+	</h4>
 </div>
 <div id="game_<%- model.cid %>" class="game <%= classes.join(" ") %>">
 	<div class="panel-body">

@@ -19,6 +19,10 @@ window.GameView = BaseView.extend({
 			editable: false,
 			model: this.model,
 		});
+		this.controlsView = new GameControlsView({
+		  parentId: 'current-game',
+			model: this.model,
+		});
 		this.fetch(this.model);
 		this.decision = null;
 		this.decisionCleaners = null;
@@ -144,6 +148,7 @@ window.GameView = BaseView.extend({
 		if (that.model.get('Members') != null) {
 		  if (that.$('#current-game').children().length == 0) {
 				that.$('#current-game').append(that.stateView.el);
+				that.$('#current-game').append(that.controlsView.el);
 			}
 			if (that.model.get('Phase') != null) {
 				if (that.possibleSources == null) {
@@ -174,13 +179,6 @@ window.GameView = BaseView.extend({
 		var that = this;
 		navLinks([]);
 		that.$el.html(that.template({}));
-		var messages = new ChatMessages([], { url: '/games/' + that.model.get('Id') + '/messages' });
-		new ChatsView({
-			el: that.$('#chats-slider'),
-			game: that.model,
-			collection: messages,
-		}).doRender();
-	  this.fetch(messages);
 		that.update();
 		return that;
 	},
