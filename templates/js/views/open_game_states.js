@@ -30,26 +30,6 @@ window.OpenGameStatesView = BaseView.extend({
 				model: model,
 				parentId: 'open_games',
 				editable: false,
-				button_text: '{{.I "Join" }}',
-				button_action: function() {
-				  model.set('Members', [
-						{
-							UserId: btoa(window.session.user.get('Email')),
-							User: {},
-						}
-					]);
-					if (model.get('AllocationMethod') == 'preferences') {
-            new PreferencesAllocationDialogView({ 
-							gameState: model,
-							done: function(nations) {
-								model.get('Members')[0].PreferredNations = nations;
-                save_call();
-							},
-						}).display();
-					} else {
-					  save_call();
-					}
-				},
 			}).doRender();
 			that.$('#open_games').append(stateView.el);
 		});

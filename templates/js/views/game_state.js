@@ -18,8 +18,6 @@ window.GameStateView = BaseView.extend({
 
 	initialize: function(options) {
 		this.play_state = options.play_state;
-		this.button_text = options.button_text;
-		this.button_action = options.button_action;
 		this.editable = options.editable;
 		this.expanded = this.editable;
 		this.membersExpanded = false;
@@ -54,8 +52,51 @@ window.GameStateView = BaseView.extend({
 	},
 
   buttonAction: function(ev) {
-	  ev.preventDefault();
-		this.button_action();
+		var that = this;
+		ev.preventDefault();
+		var save_call = function() {
+			that.model.save(null, {
+				success: function() {
+					navigate('/');
+				},
+			});
+		};
+	  if (that.model.isNew()) {
+			if (that.model.get('AllocationMethod') == 'preferences') {
+				new PreferencesAllocationDialogView({ 
+					gameState: that.model,
+					done: function(nations) {
+						that.model.get('Members')[0].PreferredNations = nations;
+						save_call();
+					},
+				}).display();
+			} else {
+				save_call();
+			}
+		} else {
+		  var me = that.model.me();
+			if (me == null) {
+				that.model.set('Members', [
+					{
+						UserId: btoa(window.session.user.get('Email')),
+						User: {},
+					}
+				]);
+				if (that.model.get('AllocationMethod') == 'preferences') {
+					new PreferencesAllocationDialogView({ 
+						gameState: that.model,
+						done: function(nations) {
+							that.model.get('Members')[0].PreferredNations = nations;
+							save_call();
+						},
+					}).display();
+				} else {
+					save_call();
+				}
+			} else {
+			  that.model.destroy();
+			}
+		}
 	},
 
 	changeVariant: function(ev) {
@@ -77,6 +118,19 @@ window.GameStateView = BaseView.extend({
     this.$('.game-description').text(this.model.describe());
 	},
 
+	buttonText: function() {
+	  if (this.model.isNew()) {
+		  return '{{.I "Create" }}';
+		} else {
+		  var me = this.model.me();
+			if (me == null) {
+				return '{{.I "Join" }}';
+			} else {
+				return '{{.I "Leave" }}';
+			}
+		}
+	},
+
   render: function() {
 	  var that = this;
 		var classes = [];
@@ -94,7 +148,7 @@ window.GameStateView = BaseView.extend({
 			membersExpanded: that.membersExpanded,
 		  model: that.model,
 			editable: that.editable,
-			button_text: that.button_text,
+			button_text: that.buttonText(),
 		}));
 		_.each(variants, function(variant) {
 			that.$('.game-variant').append('<option value="{0}">{1}</option>'.format(variant, variantMap[variant].Name));

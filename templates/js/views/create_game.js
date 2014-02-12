@@ -49,20 +49,6 @@ window.CreateGameView = BaseView.extend({
 				parentId: 'create_game',
 				editable: true,
 				model: that.gameState,
-				button_text: '{{.I "Create" }}',
-				button_action: function() {
-				  if (that.gameState.get('AllocationMethod') == 'preferences') {
-            new PreferencesAllocationDialogView({ 
-							gameState: that.gameState,
-							done: function(nations) {
-								that.gameState.get('Members')[0].PreferredNations = nations;
-                save_call();
-							},
-						}).display();
-					} else {
-					  save_call();
-					}
-				},
 			}).doRender();
 			that.$('#create_game').append(state_view.el);
 		}

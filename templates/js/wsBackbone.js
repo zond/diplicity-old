@@ -142,7 +142,7 @@ function wsBackbone(rawUrl, start) {
 										});
 										subscription.model.trigger('reset');
 									} else {
-										logError("Don't know how to handle Deletes on backbone.Models");
+										subscription.model.trigger('reset');
 									}
 								} else {
 									if (subscription.options != null && subscription.options.success != null) {

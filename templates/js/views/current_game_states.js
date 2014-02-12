@@ -23,10 +23,6 @@ window.CurrentGameStatesView = BaseView.extend({
 				model: model,
 				parentId: "current-games",
 				editable: false,
-				button_text: '{{.I "Leave" }}',
-				button_action: function() {
-					model.destroy();
-				},
 			}).doRender().el);
 		});
 		if (window.session.user.loggedIn() && that.collection.length == 0) {
