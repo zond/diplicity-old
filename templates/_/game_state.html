@@ -96,18 +96,6 @@
 				<td>{{.I "Public"}}</td>
 				<td><%- model.get('Private') ? '{{.I "No" }}' : '{{.I "Yes" }}' %></td>
 			</tr>
-			<tr>
-				<td>{{.I "Secret email"}}</td>
-				<td><%- model.describeSecrecy('SecretEmail') %></td>
-			</tr>
-			<tr>
-				<td>{{.I "Secret nickname"}}</td>
-				<td><%- model.describeSecrecy('SecretNickname') %></td>
-			</tr>
-			<tr>
-				<td>{{.I "Secret nation"}}</td>
-				<td><%- model.describeSecrecy('SecretNation') %></td>
-			</tr>
 		</table>
 		<% } %>
 		<% if (model.get('State') == {{.GameState "Created" }}) { %>

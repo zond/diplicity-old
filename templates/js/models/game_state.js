@@ -23,19 +23,11 @@ window.GameState = Backbone.Model.extend({
 		return result
 	},
 
-	describeSecrecy: function(type) {
+	appendSecrecy: function(type, phaseType, desc) {
 	  var flag = this.get(type);
-		var result = [];
-		if ((flag & {{.SecretFlag "BeforeGame"}}) == {{.SecretFlag "BeforeGame"}}) {
-		  result.push('{{.I "Before"}}');
+		if ((flag & secretFlagMap[phaseType]) == secretFlagMap[phaseType]) {
+		  desc.push(secrecyTypesMap[type]);
 		}
-		if ((flag & {{.SecretFlag "DuringGame"}}) == {{.SecretFlag "DuringGame"}}) {
-		  result.push('{{.I "During"}}');
-		}
-		if ((flag & {{.SecretFlag "AfterGame"}}) == {{.SecretFlag "AfterGame"}}) {
-		  result.push('{{.I "After"}}');
-		}
-		return result.join(", ");
 	},
 
 	currentChatFlags: function() {
@@ -64,6 +56,13 @@ window.GameState = Backbone.Model.extend({
 			desc.push(_.find(deadlineOptions, function(opt) {
 				return opt.value == that.get('Deadlines')[phaseType];
 			}).name);
+			that.appendSecrecy('SecretEmail', 'DuringGame', desc);
+			that.appendSecrecy('SecretNickname', 'DuringGame', desc);
+			that.appendSecrecy('SecretNation', 'DuringGame', desc);
+		} else {
+			that.appendSecrecy('SecretEmail', phaseType, desc);
+			that.appendSecrecy('SecretNickname', phaseType, desc);
+			that.appendSecrecy('SecretNation', phaseType, desc);
 		}
 	  return desc.join(", ");
 	},

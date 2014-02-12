@@ -14,6 +14,8 @@ function selEscape(sel) {
 
 var allocationMethods = {{.AllocationMethods}};
 var allocationMethodMap = {{.AllocationMethodMap}};
+var secrecyTypesMap = {{.SecrecyTypesMap}};
+var secretFlagMap = {{.SecretFlagMap}};
 
 function allocationMethodName(id) {
   return allocationMethodMap[id].Translation;

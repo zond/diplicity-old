@@ -50,6 +50,14 @@ func (self RequestData) AllocationMethodMap() string {
 	return common.Prettify(result)
 }
 
+func (self RequestData) SecrecyTypesMap() string {
+	return common.Prettify(map[string]string{
+		"SecretEmail":    self.I("Secret email"),
+		"SecretNickname": self.I("Secret nickname"),
+		"SecretNation":   self.I("Secret nation"),
+	})
+}
+
 func (self RequestData) AllocationMethods() string {
 	result := sort.StringSlice{}
 	for _, meth := range common.AllocationMethods {
@@ -155,6 +163,14 @@ func (self RequestData) GameState(s string) common.GameState {
 		return common.GameStateEnded
 	}
 	panic(fmt.Errorf("Unknown game state %v", s))
+}
+
+func (self RequestData) SecretFlagMap() string {
+	return common.Prettify(map[string]int{
+		"BeforeGame": common.SecretBeforeGame,
+		"DuringGame": common.SecretDuringGame,
+		"AfterGame":  common.SecretAfterGame,
+	})
 }
 
 func (self RequestData) SecretFlag(s string) common.SecretFlag {
