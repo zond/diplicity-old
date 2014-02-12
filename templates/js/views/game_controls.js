@@ -16,24 +16,29 @@ window.GameControlsView = BaseView.extend({
 	},
 
   viewChat: function(ev) {
-	  ev.preventDefault();
-		ev.stopPropagation();
 		this.$('.game-controls .panel-body').html(new GameChatView().render().el);
-		this.$('.game-controls').collapse('show')
+		this.handleClick(ev, 'chat');
+	},
+
+	handleClick: function(ev, view) {
+		if (ev != null) {
+		  ev.preventDefault();
+			if (this.currentView != view) {
+				ev.stopPropagation();
+				this.$('.game-controls').collapse('show')
+				this.currentView = view;
+			}
+		}
 	},
 
   viewResults: function(ev) {
-	  ev.preventDefault();
-		ev.stopPropagation();
 		this.$('.game-controls .panel-body').html(new GameResultsView().render().el);
-		this.$('.game-controls').collapse('show')
+		this.handleClick(ev, 'results');
 	},
 
   viewOrders: function(ev) {
-	  ev.preventDefault();
-		ev.stopPropagation();
 		this.$('.game-controls .panel-body').html(new GameOrdersView().render().el);
-		this.$('.game-controls').collapse('show')
+		this.handleClick(ev, 'orders');
 	},
 
   render: function() {
@@ -42,7 +47,7 @@ window.GameControlsView = BaseView.extend({
 		  parentId: that.parentId,
 			model: that.model,
 		}));
-		that.$('.game-controls .panel-body').html(new GameChatView().render().el);
+		that.viewChat();
     return that;
 	},
 });
