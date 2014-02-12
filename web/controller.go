@@ -69,7 +69,11 @@ func (self *Web) WS(ws *websocket.Conn) {
 		if err := websocket.JSON.Receive(ws, &message); err == nil {
 			start = time.Now()
 			if err = self.handleWSMessage(ws, email, loggedIn, pack, &message); err != nil {
-				self.Errorf("\t%v\t%v\t%v\t%v\t%v\t%v", ws.Request().URL.Path, ws.Request().RemoteAddr, email, message.Type, message.Method.Name, err)
+				if message.Method != nil {
+					self.Errorf("\t%v\t%v\t%v\t%v\t%v\t%v", ws.Request().URL.Path, ws.Request().RemoteAddr, email, message.Type, message.Method.Name, err)
+				} else {
+					self.Errorf("\t%v\t%v\t%v\t%v\t%v", ws.Request().URL.Path, ws.Request().RemoteAddr, email, message.Type, err)
+				}
 			}
 			if message.Method != nil {
 				self.Debugf("\t%v\t%v\t%v\t%v\t%v\t%v <-", ws.Request().URL.Path, ws.Request().RemoteAddr, email, message.Type, message.Method.Name, time.Now().Sub(start))
