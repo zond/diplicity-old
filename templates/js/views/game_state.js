@@ -95,6 +95,7 @@ window.GameStateView = BaseView.extend({
 				}
 			} else {
 			  that.model.destroy();
+				navigate('/');
 			}
 		}
 	},
