@@ -1,1 +1,10 @@
-<%- title %>
+<div class="panel-heading accordion-toggle" data-toggle="collapse" data-parent="#chat-channels" href="#game_<%- model.cid %>_channel_<%- members.join("-") %>">
+	<h4 class="panel-title">
+		<%- members.join(", ") %>
+	</h4>
+</div>
+<div id="game_<%- model.cid %>_channel_<%- members.join("-") %>" class="channel collapse">
+	<div class="panel-body">
+		hehu
+	</div>
+</div>

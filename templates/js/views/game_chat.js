@@ -6,8 +6,25 @@ window.GameChatView = BaseView.extend({
 	  "click .create-channel-button": "createChannel",
 	},
 
+	initialize: function() {
+	  this.listenTo(this.collection, 'add', 'addMessage');
+	  this.listenTo(this.collection, 'reset', 'loadMessages');
+	},
+
+	loadMessages: function() {
+	  console.log('load messages!');
+	},
+
+	addMessage: function() {
+	  console.log('add message!');
+	},
+
 	createChannel: function() {
-	  console.log('create channel!');
+	  this.$('#chat-channels').append(new ChatChannelView({
+		  collection: this.collection,
+			model: this.model,
+			members: this.$('.new-channel-nations').val().sort(),
+		}).doRender().el);
 	},
 
   render: function() {
