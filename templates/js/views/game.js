@@ -26,6 +26,7 @@ window.GameView = BaseView.extend({
 		this.controlsView = new GameControlsView({
 		  parentId: 'current-game',
 			model: this.model,
+			chatMessages: this.chatMessages,
 		});
 		this.fetch(this.model);
 		this.decision = null;

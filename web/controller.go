@@ -325,6 +325,8 @@ func (self *Web) AllJs(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, ";")
 	self.renderText(w, r, self.jsTemplates, "bootstrap.min.js", data)
 	fmt.Fprintln(w, ";")
+	self.renderText(w, r, self.jsTemplates, "bootstrap-multiselect.js", data)
+	fmt.Fprintln(w, ";")
 	self.renderText(w, r, self.jsTemplates, "log.js", data)
 	fmt.Fprintln(w, ";")
 	self.renderText(w, r, self.jsTemplates, "util.js", data)
@@ -367,6 +369,7 @@ func (self *Web) AllCss(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/css; charset=UTF-8")
 	self.renderText(w, r, self.cssTemplates, "bootstrap.min.css", data)
 	self.renderText(w, r, self.cssTemplates, "bootstrap-theme.min.css", data)
+	self.renderText(w, r, self.cssTemplates, "bootstrap-multiselect.css", data)
 	self.renderText(w, r, self.cssTemplates, "slider.css", data)
 	self.renderText(w, r, self.cssTemplates, "common.css", data)
 }

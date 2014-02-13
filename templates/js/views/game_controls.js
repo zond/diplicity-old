@@ -12,11 +12,15 @@ window.GameControlsView = BaseView.extend({
 
 	initialize: function(options) {
 		this.parentId = options.parentId;
+		this.chatMessages = options.chatMessages;
 		this.listenTo(this.model, 'change', this.doRender);
 	},
 
   viewChat: function(ev) {
-		this.$('.game-controls .panel-body').html(new GameChatView().render().el);
+		this.$('.game-controls .panel-body').html(new GameChatView({
+		  model: this.model,
+			collection: this.chatMessages,
+		}).render().el);
 		this.handleClick(ev, 'chat');
 	},
 
