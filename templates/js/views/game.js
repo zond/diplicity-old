@@ -19,6 +19,10 @@ window.GameView = BaseView.extend({
 			editable: false,
 			model: this.model,
 		});
+		if (!this.model.isNew()) {
+			this.chatMessages = new ChatMessages([], { url: '/games/' + this.model.get('Id') + '/messages' });
+			this.fetch(this.chatMessages);
+		}
 		this.controlsView = new GameControlsView({
 		  parentId: 'current-game',
 			model: this.model,
