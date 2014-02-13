@@ -20,10 +20,13 @@ window.GameChatView = BaseView.extend({
 	},
 
 	createChannel: function() {
+	  var members = _.filter(this.$('.new-channel-nations').val().sort(), function(val) {
+		  return val != 'multiselect-all';
+		});
 	  this.$('#chat-channels').append(new ChatChannelView({
 		  collection: this.collection,
 			model: this.model,
-			members: this.$('.new-channel-nations').val().sort(),
+			members: members,
 		}).doRender().el);
 	},
 
