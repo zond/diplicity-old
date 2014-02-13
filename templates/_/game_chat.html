@@ -1,10 +1,9 @@
 <table class="table table-condensed chat-channels">
 </table>
-<form class="form-horizontal" role="form">
-	<div class="form-group">
-		<div class="col-sm-6">
-			<select id="new-channel-nations" class="multiselect" multiple="multiple">
-			</select>
-		</div>
+<form class="form-horizontal create-channel-form" role="form">
+	<div>
+		<select class="multiselect new-channel-nations" multiple="multiple">
+		</select>
+		<button type="button" class="btn btn-primary create-channel-button">{{.I "Create"}}</button>
 	</div>
 </form>
