@@ -37,7 +37,9 @@ window.GameChatView = BaseView.extend({
 		var me = that.model.me();
 		if (me != null) {
 			_.each(variantNations(that.model.get('Variant')), function(nation) {
-				that.$('.new-channel-nations').append('<option ' + (nation == me.Nation ? 'selected="selected"=" ' : '') + 'value="' + nation + '">' + nation + '</option>');
+			  if (nation != me.Nation) {
+					that.$('.new-channel-nations').append('<option value="' + nation + '">' + nation + '</option>');
+				}
 			});
 			that.$('.multiselect').multiselect({
 				includeSelectAllOption: true,
