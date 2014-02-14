@@ -16,6 +16,7 @@ var allocationMethods = {{.AllocationMethods}};
 var allocationMethodMap = {{.AllocationMethodMap}};
 var secrecyTypesMap = {{.SecrecyTypesMap}};
 var secretFlagMap = {{.SecretFlagMap}};
+var chatFlagMap = {{.ChatFlagMap}};
 
 function allocationMethodName(id) {
   return allocationMethodMap[id].Translation;

@@ -189,7 +189,7 @@ window.GameStateView = BaseView.extend({
 			});
 		}
 		var newMemberViews = {};
-		_.each(that.model.get('Members'), function(member) {
+		_.each(that.model.members(), function(member) {
 			var memberView = that.memberViews[member.Id];
 			if (memberView == null) {
 				memberView = new GameMemberView({

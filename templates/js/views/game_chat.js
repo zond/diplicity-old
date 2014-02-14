@@ -20,14 +20,74 @@ window.GameChatView = BaseView.extend({
 	},
 
 	createChannel: function() {
-	  var members = _.filter(this.$('.new-channel-nations').val().sort(), function(val) {
+	  var that = this;
+	  var members = _.filter(that.$('.new-channel-nations').val().sort(), function(val) {
 		  return val != 'multiselect-all';
 		});
-	  this.$('#chat-channels').append(new ChatChannelView({
-		  collection: this.collection,
-			model: this.model,
-			members: members,
-		}).doRender().el);
+		members.push(that.model.me().Id);
+		var maxMembers = variantNations(that.model.get('Variant')).length;
+		if ((members.length == 1 && !that.model.hasChatFlag("ChatPrivate")) ||
+		    (members.length == maxMembers && !that.model.hasChatFlag("ChatConference")) ||
+				((members.length > 1 && members.length < maxMembers) && !that.model.hasChatFlag("ChatGroup"))) {
+      that.$('.create-channel-container').append('<div class="alert alert-warning fade in">' + 
+			                                           '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>' + 
+																								 '<strong>Hehu</strong>' + 
+																								 '</div>');
+		} else {
+		  members = _.collect(members, function(id) {
+			  return that.model.member(id);
+			});
+			members.sort(function(a, b) {
+			  if (a.Nation == b.Nation) {
+				  if (a.Id < b.Id) {
+					  return -1;
+					} else if (a.Id > b.Id) {
+					  return 1;
+					} else {
+					  return 0;
+					}
+				} else {
+				  if (a.Nation < b.Nation) {
+					  return -1;
+					} else {
+					  return 1;
+					}
+				}
+			});
+			that.$('#chat-channels').append(new ChatChannelView({
+				collection: that.collection,
+				model: that.model,
+				members: members,
+			}).doRender().el);
+		}
+	},
+
+	disableSelector: function() {
+	  var that = this;
+		var sel = that.$('.new-channel-nations');
+		var selectedOptions = sel.find('option:selected');
+		var nonSelectedOptions = sel.find('option').filter(function() {
+			return !$(this).is(':selected');
+		});
+		var dropdown = sel.parent().find('.multiselect-container');
+
+		nonSelectedOptions.each(function() {
+			var input = dropdown.find('input[value="' + $(this).val() + '"]');
+			input.prop('disabled', true);
+			input.parent('li').addClass('disabled');
+		});
+	},
+
+	enableSelector: function() {
+		var that = this;
+		var sel = that.$('.new-channel-nations');
+		var dropdown = sel.parent().find('.multiselect-container');
+
+		sel.find('option').each(function() {
+			var input = dropdown.find('input[value="' + $(this).val() + '"]');
+			input.prop('disabled', false);
+			input.parent('li').addClass('disabled');
+		});
 	},
 
   render: function() {
@@ -36,13 +96,14 @@ window.GameChatView = BaseView.extend({
 		}));
 		var me = that.model.me();
 		if (me != null) {
-			_.each(variantNations(that.model.get('Variant')), function(nation) {
-			  if (nation != me.Nation) {
-					that.$('.new-channel-nations').append('<option value="' + nation + '">' + nation + '</option>');
+			_.each(that.model.members(), function(member) {
+			  if (member.Id != me.Id) {
+					var opt = $('<option value="' + member.Id + '"></option>');
+					opt.text(member.describe(true));
+					that.$('.new-channel-nations').append(opt);
 				}
 			});
-			that.$('.multiselect').multiselect({
-				includeSelectAllOption: true,
+      var opts = {
 				onDropdownHide: function(ev) {
 					var el = $(ev.currentTarget);
 					el.css('margin-bottom', 0);
@@ -51,7 +112,11 @@ window.GameChatView = BaseView.extend({
 					var el = $(ev.currentTarget);
 					el.css('margin-bottom', el.find('.multiselect-container').height());
 				},
-			});
+			};
+			if ((that.model.currentChatFlags() & chatFlagMap["ChatConference"]) == chatFlagMap["ChatConference"]) {
+				opts.includeSelectAllOption = true;
+			}
+			that.$('.new-channel-nations').multiselect(opts);
 		}
 		return that;
 	},

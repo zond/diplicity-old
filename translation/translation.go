@@ -2,6 +2,7 @@ package translation
 
 var en = map[string]string{
 	"Open":              "Open",
+	"Send":              "Send",
 	"Anonymous":         "Anonymous",
 	"Deadline":          "Deadline",
 	"Yes":               "Yes",

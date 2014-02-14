@@ -93,6 +93,14 @@ func (self RequestData) VariantMap() string {
 	return common.Prettify(result)
 }
 
+func (self RequestData) ChatFlagMap() string {
+	return common.Prettify(map[string]int{
+		"ChatPrivate":    common.ChatPrivate,
+		"ChatGroup":      common.ChatGroup,
+		"ChatConference": common.ChatConference,
+	})
+}
+
 func (self RequestData) VariantColorizableProvincesMap() string {
 	result := map[string][]dip.Province{}
 	for _, variant := range common.Variants {

@@ -15,6 +15,44 @@ window.GameState = Backbone.Model.extend({
 		});
 	},
 
+	decorateMember: function(member) {
+		member.describe = function(withNation) {
+			var nation = "";
+			if (withNation && member.Nation != "") {
+				nation = member.Nation;
+			}
+			var identity = "";
+			if (member.User.Nickname == "" && member.User.Email == "") {
+			  identity = '{{.I "Anonymous" }}';
+			} else if (member.User.Nickname == "" && member.User.Email != "") {
+				identity = '<' + member.User.Email + '>';
+			} else { 
+				identity = member.User.Nickname + ' <' + member.User.Email + '>';
+			}
+			if (nation != "" && identity != "") {
+			  return nation + ' (' + identity + ')';
+			} else if (nation != "") {
+			  return nation;
+			} else {
+			  return identity;
+			}
+		};
+		return member;
+	},
+
+	members: function() {
+	  var that = this;
+	  return _.map(that.get('Members'), function(member) {
+		  return that.decorateMember(member);
+		});
+	},
+
+	member: function(id) {
+	  return this.decorateMember(_.find(this.get('Members'), function(member) {
+		  return member.Id == id;
+		}));
+	},
+
 	conferenceChannel: function() {
 		var result = {};
 		_.each(variantNations(this.get('Variant')), function(nation) {
@@ -28,6 +66,10 @@ window.GameState = Backbone.Model.extend({
 		if ((flag & secretFlagMap[phaseType]) == secretFlagMap[phaseType]) {
 		  desc.push(secrecyTypesMap[type]);
 		}
+	},
+
+	hasChatFlag: function(name) {
+	  return (this.currentChatFlags() & chatFlagMap[name]) == chatFlagMap[name];
 	},
 
 	currentChatFlags: function() {

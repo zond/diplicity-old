@@ -6,6 +6,9 @@
 .create-channel-form div {
 	vertical-align: top;
 }
+.new-message-body {
+	width: 100%;
+}
 .game-description {
 	display: block;
 	overflow: hidden;
