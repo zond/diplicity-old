@@ -5,6 +5,17 @@
 </div>
 <div id="game_<%- model.cid %>_channel_<%- members.join("-") %>" class="channel collapse">
 	<div class="panel-body">
-		hehu
+		<table class="table condensed chat-messages">
+		</table>
+		<div class="container-fluid">
+			<form class="form-horizontal create-message-form" role="form">
+				<div class="col-xs-11">
+					<textarea class="new-message-body"></textarea>
+				</div>
+				<div class="col-xs-1">
+					<button type="button" class="btn btn-primary create-channel-button">{{.I "Create"}}</button>
+				</div>
+			</form>
+		</div>
 	</div>
 </div>
