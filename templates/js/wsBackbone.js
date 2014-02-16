@@ -1,4 +1,21 @@
-function wsBackbone(rawUrl, start) {
+
+function jsCacheBackend() {
+  var that = this;
+	var localCache = new Cache(-1, false, new Cache.LocalStorageCacheStorage());
+	that.get = function(key) {
+		return localCache.getItem(key);
+	};
+	that.set = function(key, value) {
+		return localCache.setItem(key, value);
+	};
+  return that;
+}
+
+function wsBackbone(options) {
+  var rawUrl = options.url;
+	var start = options.start;
+	var cacheBackend = options.cacheBackend;
+
 	var ws = {
 	  sendIfReady: function() {},
 	};
@@ -153,7 +170,7 @@ function wsBackbone(rawUrl, start) {
 									}
 								}
 								if (_.result(subscription.model, 'localStorage')) {
-									localStorage.setItem(mobj.Object.URI, JSON.stringify(subscription.model));
+									cacheBackend.set(mobj.Object.URI, JSON.stringify(subscription.model));
 									logDebug('Stored', mobj.Object.URI, 'in localStorage');
 								}
 							} else {
@@ -182,7 +199,7 @@ function wsBackbone(rawUrl, start) {
 		};
 		var urlBefore = options.url || _.result(model, 'url') || urlError(); 
 		if (method == 'read') {
-			var cached = localStorage.getItem(urlBefore);
+			var cached = cacheBackend.get(urlBefore);
 			if (cached != null) {
 				logDebug('Loaded', urlBefore, 'from localStorage');
 				var data = JSON.parse(cached);

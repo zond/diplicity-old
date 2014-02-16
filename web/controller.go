@@ -337,6 +337,8 @@ func (self *Web) AllJs(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, ";")
 	self.renderText(w, r, self.jsTemplates, "panzoom.js", data)
 	fmt.Fprintln(w, ";")
+	self.renderText(w, r, self.jsTemplates, "cache.js", data)
+	fmt.Fprintln(w, ";")
 	self.renderText(w, r, self.jsTemplates, "wsBackbone.js", data)
 	fmt.Fprintln(w, ";")
 	self.renderText(w, r, self.jsTemplates, "baseView.js", data)
