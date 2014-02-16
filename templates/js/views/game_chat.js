@@ -41,7 +41,7 @@ window.GameChatView = BaseView.extend({
 		var that = this;
 		var channelId = that.ensureChannel(message.get('Recipients'));
 		that.renderWithin(function() {
-			that.channels[channelId].$('.chat-messages').append(new ChatMessageView({
+			that.channels[channelId].$('.chat-messages').prepend(new ChatMessageView({
 				model: message,
 				game: that.model,
 			}).doRender().el);

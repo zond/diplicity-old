@@ -5,8 +5,6 @@
 </div>
 <div id="game_<%- model.cid %>_channel_<%- name %>" class="channel collapse">
 	<div class="panel-body">
-		<table class="table condensed chat-messages">
-		</table>
 		<form class="form-horizontal create-message-form" role="form">
 			<div class="col-xs-11">
 				<textarea class="new-message-body" id="new-message-<%- name %>"></textarea>
@@ -15,5 +13,7 @@
 				<button type="button" class="btn btn-primary create-message-button">{{.I "Send"}}</button>
 			</div>
 		</form>
+		<table class="table condensed chat-messages">
+		</table>
 	</div>
 </div>

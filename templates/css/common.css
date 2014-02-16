@@ -6,6 +6,10 @@
 	white-space: nowrap;
 	width: 5%;
 }
+.channel {
+	max-height: 80%;
+	overflow-y: auto;
+}
 .slider-controls span {
 	background-color: rgba(0,0,0,0.15);
 	padding: 7px;
