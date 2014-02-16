@@ -27,7 +27,7 @@ window.GameView = BaseView.extend({
 		  parentId: 'current-game',
 			model: this.model,
 			chatMessages: this.chatMessages,
-		});
+		}).doRender();
 		this.fetch(this.model);
 		this.decision = null;
 		this.decisionCleaners = null;

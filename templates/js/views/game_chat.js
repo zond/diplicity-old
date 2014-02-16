@@ -24,7 +24,6 @@ window.GameChatView = BaseView.extend({
 	  var that = this;
 		var channelId = ChatMessage.channelIdFor(members);
 		if (that.channels[channelId] == null) {
-		  console.log('adding channel view for', channelId);
 		  that.renderWithin(function() {
 				var newChannelView = new ChatChannelView({
 					collection: that.collection,
