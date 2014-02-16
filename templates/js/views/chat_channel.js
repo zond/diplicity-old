@@ -6,6 +6,7 @@ window.ChatChannelView = BaseView.extend({
 
 	events: {
 	  "click .create-message-button": "createMessage",
+		"keyup .new-message-body": "keyup",
 	},
 
 	initialize: function(options) {
@@ -17,6 +18,12 @@ window.ChatChannelView = BaseView.extend({
 		that.title = _.map(that.members, function(x, id) {
 		  return that.model.member(id).describe(true);
 		}).join(", ");
+	},
+
+  keyup: function(ev) {
+		if (ev.keyCode == 13 && !ev.shiftKey && !ev.altKey) { 
+		  this.createMessage(ev);
+		}
 	},
 
 	createMessage: function(ev) {
