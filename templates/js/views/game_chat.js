@@ -7,16 +7,44 @@ window.GameChatView = BaseView.extend({
 	},
 
 	initialize: function() {
+	  this.channels = {};
 	  this.listenTo(this.collection, 'add', this.addMessage);
 	  this.listenTo(this.collection, 'reset', this.loadMessages);
 	},
 
 	loadMessages: function() {
-	  console.log('load messages!');
+	  var that = this;
+		that.$('#chat-channels').empty();
+		that.collection.each(function(message) {
+		  that.addMessage(message);
+		});
 	},
 
-	addMessage: function() {
-	  console.log('add message!');
+	ensureChannel: function(members) {
+	  var that = this;
+		var channelId = ChatMessage.channelIdFor(members);
+		if (that.channels[channelId] == null) {
+		  that.renderWithin(function() {
+				var newChannelView = new ChatChannelView({
+					collection: that.collection,
+					model: that.model,
+					members: members,
+				}).doRender();
+				that.channels[channelId] = newChannelView;
+				that.$('#chat-channels').append(newChannelView.el);
+			});
+		}
+		return channelId;
+	},
+
+	addMessage: function(message) {
+		var that = this;
+		var channelId = that.ensureChannel(message.get('Recipients'));
+		that.renderWithin(function() {
+			that.channels[channelId].$('.chat-messages').append(new ChatMessageView({
+				model: message,
+			}).doRender().el);
+		});
 	},
 
 	createChannel: function() {
@@ -39,11 +67,7 @@ window.GameChatView = BaseView.extend({
 			  sum[id] = true;
 				return sum;
 			}, {});
-			that.$('#chat-channels').append(new ChatChannelView({
-				collection: that.collection,
-				model: that.model,
-				members: members,
-			}).doRender().el);
+			that.ensureChannel(members);
 		}
 	},
 
@@ -103,6 +127,7 @@ window.GameChatView = BaseView.extend({
 			}
 			that.$('.new-channel-nations').multiselect(opts);
 		}
+		this.loadMessages();
 		return that;
 	},
 

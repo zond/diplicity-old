@@ -15,6 +15,10 @@ func CreateMessage(c common.Context, j subs.JSON, senderEmail string) (err error
 	var message Message
 	j.Overwrite(&message)
 
+	if message.Body == "" {
+		return
+	}
+
 	// and the game
 	game := &Game{Id: message.GameId}
 	if err := c.DB().Get(game); err != nil {

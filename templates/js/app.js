@@ -47,9 +47,10 @@ $(window).load(function() {
 		},
 	});
 
-	window.session.router = new AppRouter();
 
 	var start = function(ev) {
+		window.session.router = new AppRouter();
+
 		window.session.user = new User();
 
 		window.session.user.fetch();

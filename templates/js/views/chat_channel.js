@@ -21,12 +21,16 @@ window.ChatChannelView = BaseView.extend({
 
 	createMessage: function(ev) {
 	  var that = this;
-	  ev.preventDefault();
-		that.collection.create({
-			Recipients: that.members,
-			Body: that.$('.new-message-body').text(),
-			GameId: that.model.get('Id'),
-		});
+		ev.preventDefault();
+		// i have NO IDEA AT ALL why i have to use this clunky id scheme to find the body, but that.$('.new-message-body').val() never produced anything but ''
+		var body = $('#new-message-' + that.name).val();
+		if (body != '') {
+			that.collection.create({
+				Recipients: that.members,
+				Body: body,
+				GameId: that.model.get('Id'),
+			});
+		}
 	},
 
   render: function() {

@@ -68,7 +68,10 @@ function wsBackbone(options) {
 				}
 				if (!state.started) {
 					state.started = true;
-					start();
+					if (start != null) {
+						start();
+            start = null;
+					}
 				}
 				if (!state.reconnecting) {
 					logError('Scheduling refetch of token');
@@ -119,7 +122,10 @@ function wsBackbone(options) {
 						}
 					} else {
 						state.started = true;
-						start();
+						if (start != null) {
+							start();
+							start = null;
+						}
 					}
 				};
 				ws.onerror = function(err) {
@@ -130,7 +136,10 @@ function wsBackbone(options) {
 					}
 					if (!state.started) {
 						state.started = true;
-						start();
+						if (start != null) {
+							start();
+							start = null;
+						}
 					}
 					if (!state.reconnecting) {
 						logError('Scheduling reopen');
