@@ -51,7 +51,6 @@ window.GameControlsView = BaseView.extend({
 		  parentId: that.parentId,
 			model: that.model,
 		}));
-		that.viewChat();
     return that;
 	},
 });

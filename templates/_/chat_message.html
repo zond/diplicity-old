@@ -1,9 +1,9 @@
-<td>
-	<%- model.get('CreatedAt') %>
+<td class="chat-timestamp">
+	<abbr class="timeago" title="<%- model.get('CreatedAt') %>"><%- model.get('CreatedAt') %></abbr>
 </td>
-<td>
-	<%- model.get('Sender') %>
+<td class="chat-sender">
+	<%- sender.describe(true) %>
 </td>
-<td>
+<td class="chat-body">
 	<%- model.get('Body') %>
 </td>

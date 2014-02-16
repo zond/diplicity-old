@@ -321,6 +321,8 @@ func (self *Web) AllJs(w http.ResponseWriter, r *http.Request) {
 	common.SetContentType(w, "application/javascript; charset=UTF-8", true)
 	self.renderText(w, r, self.jsTemplates, "jquery-2.0.3.min.js", data)
 	fmt.Fprintln(w, ";")
+	self.renderText(w, r, self.jsTemplates, "jquery.timeago.js", data)
+	fmt.Fprintln(w, ";")
 	self.renderText(w, r, self.jsTemplates, "jquery.hammer.min.js", data)
 	fmt.Fprintln(w, ";")
 	self.renderText(w, r, self.jsTemplates, "underscore-min.js", data)

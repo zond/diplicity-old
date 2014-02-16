@@ -30,6 +30,9 @@ func CreateMessage(c common.Context, j subs.JSON, senderEmail string) (err error
 		return
 	}
 
+	// make sure the sender is correct
+	message.Sender = sender.Id
+
 	// make sure the sender is one of the recipients
 	message.Recipients[sender.Id.String()] = true
 

@@ -1,3 +1,21 @@
+jQuery.timeago.settings.strings = {
+  prefixAgo: {{.I "timeago.prefixAgo" }},
+  prefixFromNow: {{.I "timeago.prefixFromNow" }},
+  suffixAgo: {{.I "timeago.suffixAgo" }},
+  suffixFromNow: {{.I "timeago.suffixFromNow" }},
+  seconds: {{.I "timeago.seconds" }},
+  minute: {{.I "timeago.minute" }},
+  minutes: {{.I "timeago.minutes" }},
+  hour: {{.I "timeago.hour" }},
+  hours: {{.I "timeago.hours" }},
+  day: {{.I "timeago.day" }},
+  days: {{.I "timeago.days" }},
+  month: {{.I "timeago.month" }},
+  months: {{.I "timeago.months" }},
+  year: {{.I "timeago.year" }},
+  years: {{.I "timeago.years" }}
+};
+
 String.prototype.format = function() {
 	var args = arguments;
 	return this.replace(/{(\d+)}/g, function(match, number) { 
@@ -7,6 +25,10 @@ String.prototype.format = function() {
 		;
 	});
 };
+
+function nbsp(s) {
+  return s.replace(/\s/g, '&nbsp;');
+}
 
 function selEscape(sel) {
   return sel.replace("/", "\\/");
