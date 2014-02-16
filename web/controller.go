@@ -151,9 +151,13 @@ func (self *Web) handleWSMessage(ws *websocket.Conn, email string, loggedIn bool
 			if authenticated() {
 				return game.Create(self, subs.JSON{message.Object.Data}, email)
 			}
-		case "/messages":
-			if authenticated() {
-				return game.CreateMessage(self, subs.JSON{message.Object.Data}, email)
+		default:
+			if match := chatMessagesPattern.FindStringSubmatch(message.Object.URI); match != nil {
+				if authenticated() {
+					return game.CreateMessage(self, subs.JSON{message.Object.Data}, email)
+				}
+			} else {
+				return unrecognized()
 			}
 		}
 	case common.DeleteType:

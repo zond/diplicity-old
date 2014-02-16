@@ -91,7 +91,7 @@ func GetLanguage(r *http.Request) string {
 type ChatFlag int
 
 const (
-	ChatPrivate = iota
+	ChatPrivate = 1 << iota
 	ChatGroup
 	ChatConference
 )

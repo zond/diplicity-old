@@ -1,7 +1,6 @@
 package game
 
 import (
-	"encoding/base64"
 	"fmt"
 	dip "github.com/zond/godip/common"
 
@@ -26,7 +25,9 @@ func CreateMessage(c common.Context, j subs.JSON, senderEmail string) (err error
 	if err != nil {
 		return
 	}
-	message.Sender = sender.Nation
+
+	// make sure the sender is one of the recipients
+	message.Recipients[sender.Id.String()] = true
 
 	var phaseType dip.PhaseType
 	switch game.State {
@@ -48,9 +49,9 @@ func CreateMessage(c common.Context, j subs.JSON, senderEmail string) (err error
 	allowedFlags := game.ChatFlags[phaseType]
 
 	recipients := len(message.Recipients)
-	if recipients == 1 {
+	if recipients == 2 {
 		if (allowedFlags & common.ChatPrivate) == 0 {
-			err = fmt.Errorf("%+v does not allow %+v during %+v", game, message, phaseType)
+			err = fmt.Errorf("%+v does not allow %+v during %+v (%v)", game, message, phaseType, common.ChatPrivate)
 			return
 		}
 	} else if recipients == len(common.VariantMap[game.Variant].Nations) {
@@ -58,7 +59,7 @@ func CreateMessage(c common.Context, j subs.JSON, senderEmail string) (err error
 			err = fmt.Errorf("%+v does not allow %+v during %+v", game, message, phaseType)
 			return
 		}
-	} else if recipients > 0 {
+	} else if recipients > 2 {
 		if (allowedFlags & common.ChatGroup) == 0 {
 			err = fmt.Errorf("%+v does not allow %+v during %+v", game, message, phaseType)
 			return
@@ -68,7 +69,7 @@ func CreateMessage(c common.Context, j subs.JSON, senderEmail string) (err error
 		return
 	}
 
-	if err = c.DB().Set(message); err != nil {
+	if err = c.DB().Set(&message); err != nil {
 		return
 	}
 
@@ -77,11 +78,11 @@ func CreateMessage(c common.Context, j subs.JSON, senderEmail string) (err error
 
 func DeleteMember(c common.Context, gameId, email string) error {
 	return c.DB().Transact(func(d *kol.DB) error {
-		base64DecodedId, err := base64.URLEncoding.DecodeString(gameId)
+		decodedId, err := kol.DecodeId(gameId)
 		if err != nil {
 			return err
 		}
-		game := &Game{Id: base64DecodedId}
+		game := &Game{Id: decodedId}
 		if err := d.Get(game); err != nil {
 			return fmt.Errorf("Game not found: %v", err)
 		}
@@ -89,7 +90,7 @@ func DeleteMember(c common.Context, gameId, email string) error {
 			return fmt.Errorf("%+v already started", game)
 		}
 		member := Member{}
-		if _, err := d.Query().Where(kol.And{kol.Equals{"GameId", base64DecodedId}, kol.Equals{"UserId", kol.Id(email)}}).First(&member); err != nil {
+		if _, err := d.Query().Where(kol.And{kol.Equals{"GameId", decodedId}, kol.Equals{"UserId", kol.Id(email)}}).First(&member); err != nil {
 			return err
 		}
 		if err := d.Del(&member); err != nil {

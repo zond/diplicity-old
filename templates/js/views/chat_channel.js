@@ -4,23 +4,37 @@ window.ChatChannelView = BaseView.extend({
 
 	className: "panel panel-default",
 
+	events: {
+	  "click .create-message-button": "createMessage",
+	},
+
 	initialize: function(options) {
-	  this.members = options.members;
+	  var that = this;
+	  that.members = options.members;
+		that.name = _.map(that.members, function(x, id) {
+		  return id;
+		}).join("-");
+		that.title = _.map(that.members, function(x, id) {
+		  return that.model.member(id).describe(true);
+		}).join(", ");
+	},
+
+	createMessage: function(ev) {
+	  var that = this;
+	  ev.preventDefault();
+		that.collection.create({
+			Recipients: that.members,
+			Body: that.$('.new-message-body').text(),
+			GameId: that.model.get('Id'),
+		});
 	},
 
   render: function() {
 	  var that = this;
-		var name = _.collect(that.members, function(member) {
-		  return member.Id;
-		}).join("-");
-		var title = _.collect(that.members, function(member) {
-		  return member.describe(true);
-		}).join(", ");
 		that.$el.html(that.template({
-		  members: that.members,
 			model: that.model,
-			name: name,
-			title: title,
+			name: that.name,
+			title: that.title,
 		}));
 		return that;
 	},

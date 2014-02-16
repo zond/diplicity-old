@@ -7,8 +7,8 @@ window.GameChatView = BaseView.extend({
 	},
 
 	initialize: function() {
-	  this.listenTo(this.collection, 'add', 'addMessage');
-	  this.listenTo(this.collection, 'reset', 'loadMessages');
+	  this.listenTo(this.collection, 'add', this.addMessage);
+	  this.listenTo(this.collection, 'reset', this.loadMessages);
 	},
 
 	loadMessages: function() {
@@ -21,39 +21,24 @@ window.GameChatView = BaseView.extend({
 
 	createChannel: function() {
 	  var that = this;
-	  var members = _.filter(that.$('.new-channel-nations').val().sort(), function(val) {
+	  var memberIds = _.filter(that.$('.new-channel-nations').val().sort(), function(val) {
 		  return val != 'multiselect-all';
 		});
-		members.push(that.model.me().Id);
+		memberIds.push(that.model.me().Id);
 		var maxMembers = variantNations(that.model.get('Variant')).length;
-		if ((members.length == 1 && !that.model.hasChatFlag("ChatPrivate")) ||
-		    (members.length == maxMembers && !that.model.hasChatFlag("ChatConference")) ||
-				((members.length > 1 && members.length < maxMembers) && !that.model.hasChatFlag("ChatGroup"))) {
+		if ((memberIds.length == 2 && !that.model.hasChatFlag("ChatPrivate")) ||
+		    (memberIds.length == maxMembers && !that.model.hasChatFlag("ChatConference")) ||
+				((memberIds.length > 2 && memberIds.length < maxMembers) && !that.model.hasChatFlag("ChatGroup")) ||
+				memberIds.length < 2) {
       that.$('.create-channel-container').append('<div class="alert alert-warning fade in">' + 
 			                                           '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>' + 
 																								 '<strong>Hehu</strong>' + 
 																								 '</div>');
 		} else {
-		  members = _.collect(members, function(id) {
-			  return that.model.member(id);
-			});
-			members.sort(function(a, b) {
-			  if (a.Nation == b.Nation) {
-				  if (a.Id < b.Id) {
-					  return -1;
-					} else if (a.Id > b.Id) {
-					  return 1;
-					} else {
-					  return 0;
-					}
-				} else {
-				  if (a.Nation < b.Nation) {
-					  return -1;
-					} else {
-					  return 1;
-					}
-				}
-			});
+		  members = _.inject(memberIds, function(sum, id) {
+			  sum[id] = true;
+				return sum;
+			}, {});
 			that.$('#chat-channels').append(new ChatChannelView({
 				collection: that.collection,
 				model: that.model,

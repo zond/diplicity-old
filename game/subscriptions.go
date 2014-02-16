@@ -118,12 +118,13 @@ func SubscribeMessages(c common.Context, s *subs.Subscription, gameId, email str
 	if err != nil {
 		return
 	}
+	memberId := member.Id.String()
 	s.Query = s.DB().Query().Where(kol.Equals{"GameId", base64DecodedId})
 	s.Call = func(i interface{}, op string) error {
 		messages := i.([]*Message)
 		result := Messages{}
 		for _, message := range messages {
-			if message.Sender == member.Nation || message.Recipients[member.Nation] {
+			if message.Recipients[memberId] {
 				result = append(result, *message)
 			}
 		}
