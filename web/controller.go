@@ -50,7 +50,7 @@ func (self *Web) WS(ws *websocket.Conn) {
 
 	self.Infof("\t%v\t%v\t%v <-", ws.Request().URL, ws.Request().RemoteAddr, email)
 
-	pack := subs.New(self.db, ws).OnUnsubscribe(func(s *subs.Subscription, reason interface{}) {
+	pack := subs.NewPack(self.db, ws).OnUnsubscribe(func(s *subs.Subscription, reason interface{}) {
 		self.Errorf("\t%v\t%v\t%v\t%v\t%v\t[unsubscribing]", ws.Request().URL.Path, ws.Request().RemoteAddr, email, s.URI(), reason)
 		if self.logLevel > Trace {
 			self.Tracef("%s", debug.Stack())
