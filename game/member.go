@@ -46,16 +46,19 @@ func (self Members) Contains(email string) bool {
 	return false
 }
 
-func (self Members) toStates(c subs.Context, g *Game, email string) (result []MemberState) {
+func (self Members) toStates(c subs.Context, g *Game, email string) (result []MemberState, err error) {
 	result = make([]MemberState, len(self))
 	for index, member := range self {
-		state := member.toState(c, g, email)
+		var state *MemberState
+		if state, err = member.toState(c, g, email); err != nil {
+			return
+		}
 		result[index] = *state
 	}
 	return
 }
 
-func (self *Member) toState(c subs.Context, g *Game, email string) (result *MemberState) {
+func (self *Member) toState(c subs.Context, g *Game, email string) (result *MemberState, err error) {
 	result = &MemberState{
 		Member: &Member{
 			Id: self.Id,
@@ -82,7 +85,10 @@ func (self *Member) toState(c subs.Context, g *Game, email string) (result *Memb
 		result.Member.Nation = self.Nation
 	}
 	if me || !secretEmail || !secretNickname {
-		foundUser := user.EnsureUser(c.DB(), string(self.UserId))
+		var foundUser *user.User
+		if foundUser, err = user.EnsureUser(c.DB(), string(self.UserId)); err != nil {
+			return
+		}
 		if me || !secretEmail {
 			result.User.Email = foundUser.Email
 		}

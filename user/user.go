@@ -75,11 +75,11 @@ func Update(c subs.Context) (err error) {
 	return
 }
 
-func EnsureUser(c subs.Context) (result *User, err error) {
-	result = &User{Id: kol.Id(c.Principal())}
-	if err = c.DB().Get(result); err == kol.NotFound {
-		result.Email = c.Principal()
-		err = c.DB().Set(result)
+func EnsureUser(db *kol.DB, email string) (result *User, err error) {
+	result = &User{Id: kol.Id(email)}
+	if err = db.Get(result); err == kol.NotFound {
+		result.Email = email
+		err = db.Set(result)
 	}
 	return
 }

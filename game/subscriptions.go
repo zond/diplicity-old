@@ -60,9 +60,13 @@ func SubscribeCurrent(c subs.Context) error {
 				if err != nil {
 					return err
 				}
+				memberStates, err := members.toStates(c, game, c.Principal())
+				if err != nil {
+					return err
+				}
 				states = append(states, GameState{
 					Game:    game,
-					Members: members.toStates(c, game, c.Principal()),
+					Members: memberStates,
 					Phase:   phase,
 				})
 			}
@@ -94,9 +98,13 @@ func SubscribeGame(c subs.Context) error {
 			if err != nil {
 				return err
 			}
+			memberStates, err := members.toStates(c, game, c.Principal())
+			if err != nil {
+				return err
+			}
 			return s.Send(GameState{
 				Game:    game,
-				Members: members.toStates(c, game, c.Principal()),
+				Members: memberStates,
 				Phase:   phase,
 			}, op)
 		} else if op == subs.FetchType {
@@ -147,7 +155,10 @@ func SubscribeOpen(c subs.Context) error {
 		games := i.([]*Game)
 		states := GameStates{}
 		isMember := false
-		me := user.EnsureUser(c.DB(), c.Principal())
+		me, err := user.EnsureUser(c.DB(), c.Principal())
+		if err != nil {
+			return err
+		}
 		for _, game := range games {
 			if game.Disallows(me) {
 				break
@@ -173,9 +184,13 @@ func SubscribeOpen(c subs.Context) error {
 				if err != nil {
 					return err
 				}
+				memberStates, err := members.toStates(c, game, c.Principal())
+				if err != nil {
+					return err
+				}
 				states = append(states, GameState{
 					Game:    game,
-					Members: members.toStates(c, game, c.Principal()),
+					Members: memberStates,
 					Phase:   phase,
 				})
 			}

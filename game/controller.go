@@ -136,7 +136,7 @@ func AddMember(c subs.Context) error {
 		} else if alreadyMember != nil {
 			return fmt.Errorf("%+v is already member of %v", alreadyMember, game.Id)
 		}
-		me, err := user.EnsureUser(c)
+		me, err := user.EnsureUser(c.DB(), c.Principal())
 		if err != nil {
 			return err
 		}
