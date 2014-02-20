@@ -54,19 +54,19 @@ window.GameChatView = BaseView.extend({
 		  return val != 'multiselect-all';
 		});
 		memberIds.push(that.model.me().Id);
-		if (!that.model.allowChatMembers(memberIds.length)) {
-      that.$('.create-channel-container').append('<div class="alert alert-warning fade in">' + 
-			                                           '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>' + 
-																								 '<strong>' +
-																								 '{{.I "The game does not allow that particular number of members in a chat channel right now. The only types of chat allowed at the moment are {0}."}}'.format(that.model.describeCurrentChatFlagOptions()) +
-																								 '</strong>' + 
-																								 '</div>');
-		} else {
+		if (that.model.allowChatMembers(memberIds.length)) {
 		  members = _.inject(memberIds, function(sum, id) {
 			  sum[id] = true;
 				return sum;
 			}, {});
 			that.ensureChannel(members);
+		} else {
+			that.$('.create-channel-container').append('<div class="alert alert-warning fade in">' + 
+				'<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>' + 
+				'<strong>' +
+				'{{.I "The game does not allow that particular number of members in a chat channel right now. The only types of chat allowed at the moment are {0}."}}'.format(that.model.describeCurrentChatFlagOptions()) +
+				'</strong>' + 
+			'</div>');
 		}
 	},
 
