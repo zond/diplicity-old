@@ -10,10 +10,10 @@ import (
 	"github.com/zond/kcwraps/subs"
 )
 
-func CreateMessage(c common.Context, j subs.JSON, senderEmail string) (err error) {
+func CreateMessage(c subs.Context) (err error) {
 	// load the  message provided by the client
 	var message Message
-	j.Overwrite(&message)
+	c.Data().Overwrite(&message)
 
 	if message.Body == "" {
 		return
@@ -25,7 +25,7 @@ func CreateMessage(c common.Context, j subs.JSON, senderEmail string) (err error
 		return err
 	}
 	// and the member
-	sender, err := game.Member(c.DB(), senderEmail)
+	sender, err := game.Member(c.DB(), c.Principal())
 	if err != nil {
 		return
 	}
@@ -83,9 +83,9 @@ func CreateMessage(c common.Context, j subs.JSON, senderEmail string) (err error
 	return
 }
 
-func DeleteMember(c common.Context, gameId, email string) error {
+func DeleteMember(c subs.Context) error {
 	return c.DB().Transact(func(d *kol.DB) error {
-		decodedId, err := kol.DecodeId(gameId)
+		decodedId, err := kol.DecodeId(c.Match()[1])
 		if err != nil {
 			return err
 		}
@@ -97,7 +97,7 @@ func DeleteMember(c common.Context, gameId, email string) error {
 			return fmt.Errorf("%+v already started", game)
 		}
 		member := Member{}
-		if _, err := d.Query().Where(kol.And{kol.Equals{"GameId", decodedId}, kol.Equals{"UserId", kol.Id(email)}}).First(&member); err != nil {
+		if _, err := d.Query().Where(kol.And{kol.Equals{"GameId", decodedId}, kol.Equals{"UserId", kol.Id(c.Principal())}}).First(&member); err != nil {
 			return err
 		}
 		if err := d.Del(&member); err != nil {
@@ -116,9 +116,9 @@ func DeleteMember(c common.Context, gameId, email string) error {
 	})
 }
 
-func AddMember(c common.Context, j subs.JSON, email string) error {
+func AddMember(c subs.Context) error {
 	var state GameState
-	j.Overwrite(&state)
+	c.Data().Overwrite(&state)
 	return c.DB().Transact(func(d *kol.DB) error {
 		game := Game{Id: state.Game.Id}
 		if err := d.Get(&game); err != nil {
@@ -131,12 +131,12 @@ func AddMember(c common.Context, j subs.JSON, email string) error {
 		if !found {
 			return fmt.Errorf("Unknown variant %v", game.Variant)
 		}
-		if alreadyMember, err := game.Member(d, email); err != nil {
+		if alreadyMember, err := game.Member(d, c.Principal()); err != nil {
 			return err
 		} else if alreadyMember != nil {
 			return fmt.Errorf("%+v is already member of %v", alreadyMember, game.Id)
 		}
-		me := user.EnsureUser(d, email)
+		me := user.EnsureUser(d, c.Principal())
 		if game.Disallows(me) {
 			return fmt.Errorf("Is not allowed to join this game due to game settings")
 		}
@@ -152,7 +152,7 @@ func AddMember(c common.Context, j subs.JSON, email string) error {
 		if len(already) < len(variant.Nations) {
 			member := Member{
 				GameId:           state.Game.Id,
-				UserId:           kol.Id(email),
+				UserId:           kol.Id(c.Principal()),
 				PreferredNations: state.Members[0].PreferredNations,
 			}
 			if err := d.Set(&member); err != nil {
@@ -168,9 +168,9 @@ func AddMember(c common.Context, j subs.JSON, email string) error {
 	})
 }
 
-func Create(c common.Context, j subs.JSON, creator string) error {
+func Create(c subs.Context) error {
 	var state GameState
-	j.Overwrite(&state)
+	c.Data().Overwrite(&state)
 
 	game := &Game{
 		Variant:          state.Game.Variant,
@@ -193,7 +193,7 @@ func Create(c common.Context, j subs.JSON, creator string) error {
 	}
 
 	member := &Member{
-		UserId:           kol.Id(creator),
+		UserId:           kol.Id(c.Principal()),
 		PreferredNations: state.Members[0].PreferredNations,
 	}
 	return c.DB().Transact(func(d *kol.DB) error {

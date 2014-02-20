@@ -1,13 +1,16 @@
 package main
 
 import (
-	"code.google.com/p/go.net/websocket"
 	"flag"
 	"fmt"
+	"net/http"
+
 	"github.com/gorilla/mux"
 	"github.com/zond/diplicity/common"
+	"github.com/zond/diplicity/game"
+	"github.com/zond/diplicity/user"
 	"github.com/zond/diplicity/web"
-	"net/http"
+	"github.com/zond/kcwraps/subs"
 )
 
 func wantsJSON(r *http.Request, m *mux.RouteMatch) bool {
@@ -40,8 +43,30 @@ func main() {
 	router.HandleFunc("/openid", server.Logger(server.Openid))
 	router.HandleFunc("/token", server.Logger(server.Token))
 
+	wsRouter := subs.NewRouter(server.DB())
+	wsRouter.Resource("^/games/current$").Auth().
+		Handle(subs.SubscribeType, game.SubscribeCurrent)
+	wsRouter.Resource("^/games/open$").Auth().
+		Handle(subs.SubscribeType, game.SubscribeOpen).
+		Handle(subs.UpdateType, game.AddMember)
+	wsRouter.Resource("^/user$").
+		Handle(subs.SubscribeType, user.SubscribeEmail).
+		Handle(subs.UpdateType, user.Update)
+	wsRouter.Resource("^/games/(.*)/messages$").Auth()
+	Handle(subs.SubscribeType, game.SubscribeMessages).
+		Handle(subs.CreateType, game.CreateMessage)
+	wsRouter.Resource("^/games/(.*)$").
+		Handle(subs.SubscribeType, game.SubscribeGame).
+		Handle(subs.DeleteType, game.DeleteMember)
+	wsRouter.Resource("^/games$").Auth()
+	Handle(subs.CreateType, game.Create)
+
+	wsRouter.RPC("GetPossibleSources", game.GetPossibleSources).Auth()
+	wsRouter.RPC("GetValidOrders", game.GetValidOrders).Auth()
+	wsRouter.RPC("SetOrder", game.SetOrder).Auth()
+
 	// The websocket
-	router.Path("/ws").Handler(websocket.Handler(server.WS))
+	router.Path("/ws").Handler(wsRouter)
 
 	// Static content
 	router.HandleFunc("/js/{ver}/all", server.Logger(server.AllJs))

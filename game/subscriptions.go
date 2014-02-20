@@ -35,8 +35,9 @@ func (self GameStates) Swap(i, j int) {
 	self[i], self[j] = self[j], self[i]
 }
 
-func SubscribeCurrent(c common.Context, s *subs.Subscription, email string) error {
-	s.Query = s.DB().Query().Where(kol.Equals{"UserId", kol.Id(email)})
+func SubscribeCurrent(c subs.Context) error {
+	s := c.Pack().New(c.Match()[0])
+	s.Query = s.DB().Query().Where(kol.Equals{"UserId", kol.Id(c.Principal())})
 	s.Call = func(i interface{}, op string) error {
 		members := i.([]*Member)
 		states := GameStates{}
@@ -61,7 +62,7 @@ func SubscribeCurrent(c common.Context, s *subs.Subscription, email string) erro
 				}
 				states = append(states, GameState{
 					Game:    game,
-					Members: members.toStates(c, game, email),
+					Members: members.toStates(c, game, c.Principal()),
 					Phase:   phase,
 				})
 			}
@@ -75,18 +76,19 @@ func SubscribeCurrent(c common.Context, s *subs.Subscription, email string) erro
 	return s.Subscribe(&Member{})
 }
 
-func SubscribeGame(c common.Context, s *subs.Subscription, gameId, email string) error {
-	base64DecodedId, err := base64.URLEncoding.DecodeString(gameId)
+func SubscribeGame(c subs.Context) error {
+	base64DecodedId, err := base64.URLEncoding.DecodeString(c.Match()[1])
 	if err != nil {
 		return err
 	}
+	s := c.Pack().New(c.Match()[0])
 	s.Call = func(i interface{}, op string) error {
 		game := i.(*Game)
 		members, err := game.Members(c.DB())
 		if err != nil {
 			return err
 		}
-		isMember := members.Contains(email)
+		isMember := members.Contains(c.Principal())
 		if !game.Private || isMember {
 			phase, err := game.LastPhase(c.DB())
 			if err != nil {
@@ -94,7 +96,7 @@ func SubscribeGame(c common.Context, s *subs.Subscription, gameId, email string)
 			}
 			return s.Send(GameState{
 				Game:    game,
-				Members: members.toStates(c, game, email),
+				Members: members.toStates(c, game, c.Principal()),
 				Phase:   phase,
 			}, op)
 		} else if op == subs.FetchType {
@@ -105,8 +107,8 @@ func SubscribeGame(c common.Context, s *subs.Subscription, gameId, email string)
 	return s.Subscribe(&Game{Id: base64DecodedId})
 }
 
-func SubscribeMessages(c common.Context, s *subs.Subscription, gameId, email string) (err error) {
-	base64DecodedId, err := base64.URLEncoding.DecodeString(gameId)
+func SubscribeMessages(c subs.Context) (err error) {
+	base64DecodedId, err := base64.URLEncoding.DecodeString(c.Match()[1])
 	if err != nil {
 		return err
 	}
@@ -114,11 +116,12 @@ func SubscribeMessages(c common.Context, s *subs.Subscription, gameId, email str
 	if err = c.DB().Get(game); err != nil {
 		return
 	}
-	member, err := game.Member(c.DB(), email)
+	member, err := game.Member(c.DB(), c.Principal())
 	if err != nil {
 		return
 	}
 	memberId := member.Id.String()
+	s := c.Pack().New(c.Match()[0])
 	s.Query = s.DB().Query().Where(kol.Equals{"GameId", base64DecodedId})
 	s.Call = func(i interface{}, op string) error {
 		messages := i.([]*Message)
@@ -137,13 +140,14 @@ func SubscribeMessages(c common.Context, s *subs.Subscription, gameId, email str
 	return s.Subscribe(&Message{})
 }
 
-func SubscribeOpen(c common.Context, s *subs.Subscription, email string) error {
+func SubscribeOpen(c subs.Context) error {
+	s := c.Pack().New(c.Match()[0])
 	s.Query = s.DB().Query().Where(kol.And{kol.Equals{"Closed", false}, kol.Equals{"Private", false}})
 	s.Call = func(i interface{}, op string) error {
 		games := i.([]*Game)
 		states := GameStates{}
 		isMember := false
-		me := user.EnsureUser(c.DB(), email)
+		me := user.EnsureUser(c.DB(), c.Principal())
 		for _, game := range games {
 			if game.Disallows(me) {
 				break
@@ -159,7 +163,7 @@ func SubscribeOpen(c common.Context, s *subs.Subscription, email string) error {
 			}
 			isMember = false
 			for _, m := range members {
-				if string(m.UserId) == email {
+				if string(m.UserId) == c.Principal() {
 					isMember = true
 					break
 				}
@@ -171,7 +175,7 @@ func SubscribeOpen(c common.Context, s *subs.Subscription, email string) error {
 				}
 				states = append(states, GameState{
 					Game:    game,
-					Members: members.toStates(c, game, email),
+					Members: members.toStates(c, game, c.Principal()),
 					Phase:   phase,
 				})
 			}

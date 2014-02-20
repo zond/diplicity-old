@@ -1,10 +1,11 @@
 package user
 
 import (
-	"github.com/zond/diplicity/common"
+	"time"
+	"code.google.com/p/go.net/websocket"
+
 	"github.com/zond/kcwraps/kol"
 	"github.com/zond/kcwraps/subs"
-	"time"
 )
 
 type User struct {
@@ -43,13 +44,23 @@ type Blacklisting struct {
 	UpdatedAt   time.Time
 }
 
-func SubscribeEmail(c common.Context, s *subs.Subscription, email string) error {
-	return s.Subscribe(&User{Id: kol.Id(email)})
+func SubscribeEmail(c subs.Context) error {
+	if c.Principal() == "" {
+		return websocket.JSON.Send(c.Conn(), subs.Message{
+			Type: subs.FetchType,
+			Object: &subs.Object{
+				URI:  c.Match()[0],
+				Data: &User{},
+			},
+		})
+	}
+	s := c.Pack().New(c.Match()[0])
+	return s.Subscribe(&User{Id: kol.Id(c.Principal())})
 }
 
-func Update(d *kol.DB, j subs.JSON, email string) (err error) {
+func Update(d *kol.DB) (err error) {
 	var user User
-	j.Overwrite(&user)
+	c.Data().Overwrite(&user)
 	current := &User{Id: user.Id}
 	if err = d.Get(current); err != nil {
 		return

@@ -2,8 +2,6 @@ package common
 
 import (
 	"bytes"
-	"crypto/sha512"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -12,36 +10,12 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
 
 	cla "github.com/zond/godip/classical/common"
 	"github.com/zond/godip/classical/start"
 	dip "github.com/zond/godip/common"
 	"github.com/zond/godip/graph"
-	"github.com/zond/kcwraps/kol"
 )
-
-type Token struct {
-	Authorized bool
-	Token      string
-	Email      string
-	Timeout    string
-}
-
-func NewTokenWithTimeout(secret, email string, timeout int64) Token {
-	hash := sha512.New()
-	fmt.Fprintf(hash, "%s:%s:%s", email, secret, timeout)
-	return Token{
-		Token:      base64.URLEncoding.EncodeToString(hash.Sum(nil)),
-		Authorized: true,
-		Email:      email,
-		Timeout:    fmt.Sprint(timeout),
-	}
-}
-
-func NewToken(secret, email string) Token {
-	return NewTokenWithTimeout(secret, email, time.Now().Add(time.Minute).UnixNano())
-}
 
 func RenderJSON(w http.ResponseWriter, i interface{}) {
 	SetContentType(w, "application/json; charset=UTF-8", false)
@@ -58,28 +32,6 @@ func SetContentType(w http.ResponseWriter, t string, cache bool) {
 		w.Header().Set("Pragma", "no-cache")
 		w.Header().Set("Expires", "0")
 	}
-}
-
-type Subscriber func(i interface{}, op string)
-
-type Subscription struct {
-	Name       string
-	Subscriber Subscriber
-	Object     interface{}
-	Query      *kol.Query
-}
-
-type Logger interface {
-	Fatalf(format string, params ...interface{})
-	Errorf(format string, params ...interface{})
-	Infof(format string, params ...interface{})
-	Debugf(format string, params ...interface{})
-	Tracef(format string, params ...interface{})
-}
-
-type Context interface {
-	Logger
-	DB() *kol.DB
 }
 
 func GetLanguage(r *http.Request) string {

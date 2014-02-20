@@ -3,12 +3,13 @@ package game
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/zond/diplicity/common"
+
 	"github.com/zond/godip/classical/orders"
 	dip "github.com/zond/godip/common"
+	"github.com/zond/kcwraps/subs"
 )
 
-func SetOrder(c common.Context, gameId string, order []string, email string) (err error) {
+func SetOrder(c subs.Context, gameId string, order []string, email string) (err error) {
 	var base64DecodedId []byte
 	if base64DecodedId, err = base64.URLEncoding.DecodeString(gameId); err != nil {
 		return
@@ -49,7 +50,7 @@ func SetOrder(c common.Context, gameId string, order []string, email string) (er
 	return c.DB().Set(phase)
 }
 
-func GetPossibleSources(c common.Context, gameId, email string) (result []dip.Province, err error) {
+func GetPossibleSources(c subs.Context, gameId, email string) (result []dip.Province, err error) {
 	var base64DecodedId []byte
 	base64DecodedId, err = base64.URLEncoding.DecodeString(gameId)
 	if err != nil {
@@ -77,7 +78,7 @@ func GetPossibleSources(c common.Context, gameId, email string) (result []dip.Pr
 	return
 }
 
-func GetValidOrders(c common.Context, gameId, province, email string) (result dip.Options, err error) {
+func GetValidOrders(c subs.Context, gameId, province, email string) (result dip.Options, err error) {
 	var base64DecodedId []byte
 	base64DecodedId, err = base64.URLEncoding.DecodeString(gameId)
 	if err != nil {

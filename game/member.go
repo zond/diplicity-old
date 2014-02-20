@@ -2,11 +2,13 @@ package game
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/zond/diplicity/common"
 	"github.com/zond/diplicity/user"
 	dip "github.com/zond/godip/common"
 	"github.com/zond/kcwraps/kol"
-	"time"
+	"github.com/zond/kcwraps/subs"
 )
 
 type Member struct {
@@ -44,7 +46,7 @@ func (self Members) Contains(email string) bool {
 	return false
 }
 
-func (self Members) toStates(c common.Context, g *Game, email string) (result []MemberState) {
+func (self Members) toStates(c subs.Context, g *Game, email string) (result []MemberState) {
 	result = make([]MemberState, len(self))
 	for index, member := range self {
 		state := member.toState(c, g, email)
@@ -53,7 +55,7 @@ func (self Members) toStates(c common.Context, g *Game, email string) (result []
 	return
 }
 
-func (self *Member) toState(c common.Context, g *Game, email string) (result *MemberState) {
+func (self *Member) toState(c subs.Context, g *Game, email string) (result *MemberState) {
 	result = &MemberState{
 		Member: &Member{
 			Id: self.Id,

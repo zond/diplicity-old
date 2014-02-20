@@ -143,7 +143,7 @@ func (self RequestData) Authenticated() bool {
 }
 
 func (self RequestData) Abs(path string) string {
-	return url.QueryEscape(common.MustParseURL("http://" + self.request.Host + path).String())
+	return url.QueryEscape(fmt.Sprintf("http://%v%v", self.request.Host, path))
 }
 
 func (self RequestData) I(phrase string, args ...string) string {
