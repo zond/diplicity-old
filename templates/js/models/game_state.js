@@ -72,21 +72,26 @@ window.GameState = Backbone.Model.extend({
 	  return (this.currentChatFlags() & chatFlagMap[name]) == chatFlagMap[name];
 	},
 
-	currentChatFlags: function() {
-	  var that = this;
-		if (that.get('State') != null) {
-			if (that.get('State') == {{.GameState "Created" }}) {
-				return that.get('ChatFlags')['BeforeGame'] || 0;
-			} else if (that.get('State') == {{.GameState "Ended" }}) {
-				return that.get('ChatFlags')['AfterGame'] || 0;
+	currentPhaseType: function() {
+		if (this.get('State') != null) {
+			if (this.get('State') == {{.GameState "Created" }}) {
+				return 'BeforeGame';
+			} else if (this.get('State') == {{.GameState "Ended" }}) {
+				return 'AfterGame';
 			}
-			var phase = that.get('Phase');
-			return that.get('ChatFlags')[phase.Type] || 0;
+			return this.get('Phase').Type;
 		}
-		return 0;
 	},
 
-	describePhaseType: function(phaseType) {
+	currentChatFlags: function() {
+	  return this.get('ChatFlags')[this.currentPhaseType()];
+	},
+
+	describeCurrentChatFlagOptions: function() {
+	  return enumerate(this.phaseTypeChatFlagOptions(this.currentPhaseType()));
+	},
+
+	phaseTypeChatFlagOptions: function(phaseType) {
 	  var that = this;
 		var desc = [];
 		_.each(chatFlagOptions(), function(opt) {
@@ -94,6 +99,12 @@ window.GameState = Backbone.Model.extend({
 			  desc.push(opt.name);
 			}
 		});
+		return desc;
+	},
+
+	describePhaseType: function(phaseType) {
+	  var that = this;
+		var desc = that.phaseTypeChatFlagOptions(phaseType);
 		if (phaseType != 'BeforeGame' && phaseType != 'AfterGame') {
 			desc.push(_.find(deadlineOptions, function(opt) {
 				return opt.value == that.get('Deadlines')[phaseType];
@@ -107,6 +118,20 @@ window.GameState = Backbone.Model.extend({
 			that.appendSecrecy('SecretNation', phaseType, desc);
 		}
 	  return desc.join(", ");
+	},
+
+  allowChatMembers: function(n) {
+		var maxMembers = variantNations(this.get('Variant')).length;
+	  if (n == 2 && this.hasChatFlag("ChatPrivate")) {
+			return true;
+		}
+		if (n == maxMembers && this.hasChatFlag("ChatConference")) {
+		  return true;
+		}
+		if ((n > 2 && n < maxMembers) && this.hasChatFlag("ChatGroup")) {
+		  return true;
+		}
+		return false;
 	},
 
 	describe: function() {

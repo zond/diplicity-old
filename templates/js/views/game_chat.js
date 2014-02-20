@@ -54,14 +54,12 @@ window.GameChatView = BaseView.extend({
 		  return val != 'multiselect-all';
 		});
 		memberIds.push(that.model.me().Id);
-		var maxMembers = variantNations(that.model.get('Variant')).length;
-		if ((memberIds.length == 2 && !that.model.hasChatFlag("ChatPrivate")) ||
-		    (memberIds.length == maxMembers && !that.model.hasChatFlag("ChatConference")) ||
-				((memberIds.length > 2 && memberIds.length < maxMembers) && !that.model.hasChatFlag("ChatGroup")) ||
-				memberIds.length < 2) {
+		if (!that.model.allowChatMembers(memberIds.length)) {
       that.$('.create-channel-container').append('<div class="alert alert-warning fade in">' + 
 			                                           '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>' + 
-																								 '<strong>Hehu</strong>' + 
+																								 '<strong>' +
+																								 '{{.I "The game does not allow that particular number of members in a chat channel right now. The only types of chat allowed at the moment are {0}."}}'.format(that.model.describeCurrentChatFlagOptions()) +
+																								 '</strong>' + 
 																								 '</div>');
 		} else {
 		  members = _.inject(memberIds, function(sum, id) {

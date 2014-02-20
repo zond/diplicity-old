@@ -16,6 +16,25 @@ jQuery.timeago.settings.strings = {
   years: {{.I "timeago.years" }}
 };
 
+function enumerate(ary) {
+  if (ary.length == 0) {
+	  return "";
+	} else if (ary.length == 1) {
+	  return ary[0];
+	} else {
+	  var result = "";
+	  for (var i = 0; i < ary.length; i++) {
+		  result = result + ary[i];
+			if (i < ary.length - 2) {
+			  result = result + ", ";
+			} else if (i < ary.length - 1) {
+			  result = result + " {{.I "and" }} ";
+			}
+		}
+		return result;
+	}
+}
+
 String.prototype.format = function() {
 	var args = arguments;
 	return this.replace(/{(\d+)}/g, function(match, number) { 
@@ -24,7 +43,7 @@ String.prototype.format = function() {
 		: match
 		;
 	});
-};
+}
 
 function nbsp(s) {
   return s.replace(/\s/g, '&nbsp;');
@@ -51,7 +70,7 @@ var variantColorizableProvincesMap = {{.VariantColorizableProvincesMap}};
 
 function variantName(id) {
   return variantMap[id].Translation;
-};
+}
 
 function variantNations(id) {
   return variantMap[id].Nations;
