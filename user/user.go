@@ -1,6 +1,7 @@
 package user
 
 import (
+	"fmt"
 	"time"
 	"code.google.com/p/go.net/websocket"
 
@@ -58,27 +59,27 @@ func SubscribeEmail(c subs.Context) error {
 	return s.Subscribe(&User{Id: kol.Id(c.Principal())})
 }
 
-func Update(d *kol.DB) (err error) {
+func Update(c subs.Context) (err error) {
 	var user User
 	c.Data().Overwrite(&user)
 	current := &User{Id: user.Id}
-	if err = d.Get(current); err != nil {
+	if err = c.DB().Get(current); err != nil {
+		return
+	}
+	if current.Email != c.Principal() {
+		err = fmt.Errorf("Unauthorized")
 		return
 	}
 	current.Nickname = user.Nickname
-	err = d.Set(current)
+	err = c.DB().Set(current)
 	return
 }
 
-func EnsureUser(d *kol.DB, email string) *User {
-	user := &User{Id: kol.Id(email)}
-	if err := d.Get(user); err == kol.NotFound {
-		user.Email = email
-		if err = d.Set(user); err != nil {
-			panic(err)
-		}
-	} else if err != nil {
-		panic(err)
+func EnsureUser(c subs.Context) (result *User, err error) {
+	result = &User{Id: kol.Id(c.Principal())}
+	if err = c.DB().Get(result); err == kol.NotFound {
+		result.Email = c.Principal()
+		err = c.DB().Set(result)
 	}
-	return user
+	return
 }

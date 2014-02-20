@@ -136,7 +136,10 @@ func AddMember(c subs.Context) error {
 		} else if alreadyMember != nil {
 			return fmt.Errorf("%+v is already member of %v", alreadyMember, game.Id)
 		}
-		me := user.EnsureUser(d, c.Principal())
+		me, err := user.EnsureUser(c)
+		if err != nil {
+			return err
+		}
 		if game.Disallows(me) {
 			return fmt.Errorf("Is not allowed to join this game due to game settings")
 		}
