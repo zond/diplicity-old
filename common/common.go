@@ -204,14 +204,6 @@ var VariantMap = map[string]Variant{
 
 var prefPattern = regexp.MustCompile("^([^\\s;]+)(;q=([\\d.]+))?$")
 
-func Prettify(obj interface{}) string {
-	b, err := json.MarshalIndent(obj, "", "  ")
-	if err != nil {
-		panic(err)
-	}
-	return string(b)
-}
-
 func MustParseFloat64(s string) (result float64) {
 	var err error
 	if result, err = strconv.ParseFloat(s, 64); err != nil {

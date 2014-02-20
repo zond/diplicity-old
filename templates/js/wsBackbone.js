@@ -81,8 +81,8 @@ function wsBackbone(options) {
 			},
 			success: function(data) {
 				var url = rawUrl;
-				if (data.Authorized) {
-					url = rawUrl + '?email=' + encodeURIComponent(data.Email) + '&timeout=' + encodeURIComponent(data.Timeout) + '&token=' + encodeURIComponent(data.Token);
+				if (data.Encoded) {
+					url = rawUrl + '?token=' + encodeURIComponent(data.Encoded);
 				}
 
 				logInfo("Opening socket to", url);
@@ -154,6 +154,8 @@ function wsBackbone(options) {
 						if (rpcCall != null) {
 							rpcCall(mobj.Method.Data);
 						}
+					} else if (mobj.Type == 'Error') {
+					  console.log(mobj);
 					} else {
 						if (mobj.Object.URI != null) {
 							var subscription = subscriptions[mobj.Object.URI];

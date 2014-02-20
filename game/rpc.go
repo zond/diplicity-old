@@ -9,9 +9,9 @@ import (
 	"github.com/zond/kcwraps/subs"
 )
 
-func SetOrder(c subs.Context, gameId string, order []string, email string) (err error) {
+func SetOrder(c subs.Context) (result interface{}, err error) {
 	var base64DecodedId []byte
-	if base64DecodedId, err = base64.URLEncoding.DecodeString(gameId); err != nil {
+	if base64DecodedId, err = base64.URLEncoding.DecodeString(c.Data().GetString("GameId")); err != nil {
 		return
 	}
 	game := Game{Id: base64DecodedId}
@@ -19,7 +19,7 @@ func SetOrder(c subs.Context, gameId string, order []string, email string) (err 
 		return
 	}
 	var member *Member
-	if member, err = game.Member(c.DB(), email); err != nil {
+	if member, err = game.Member(c.DB(), c.Principal()); err != nil {
 		return
 	}
 	var phase *Phase
@@ -38,6 +38,7 @@ func SetOrder(c subs.Context, gameId string, order []string, email string) (err 
 		nationOrders = map[dip.Province][]string{}
 		phase.Orders[member.Nation] = nationOrders
 	}
+	order := c.Data().GetStringSlice("Order")
 	var parsedOrder dip.Order
 	parsedOrder, err = orders.Parse(order)
 	if err != nil {
@@ -47,12 +48,15 @@ func SetOrder(c subs.Context, gameId string, order []string, email string) (err 
 		return
 	}
 	nationOrders[dip.Province(order[0])] = order[1:]
-	return c.DB().Set(phase)
+	if err = c.DB().Set(phase); err != nil {
+		return
+	}
+	return
 }
 
-func GetPossibleSources(c subs.Context, gameId, email string) (result []dip.Province, err error) {
+func GetPossibleSources(c subs.Context) (result interface{}, err error) {
 	var base64DecodedId []byte
-	base64DecodedId, err = base64.URLEncoding.DecodeString(gameId)
+	base64DecodedId, err = base64.URLEncoding.DecodeString(c.Data().GetString("GameId"))
 	if err != nil {
 		return
 	}
@@ -61,7 +65,7 @@ func GetPossibleSources(c subs.Context, gameId, email string) (result []dip.Prov
 		return
 	}
 	var member *Member
-	member, err = game.Member(c.DB(), email)
+	member, err = game.Member(c.DB(), c.Principal())
 	if err != nil {
 		return
 	}
@@ -78,9 +82,9 @@ func GetPossibleSources(c subs.Context, gameId, email string) (result []dip.Prov
 	return
 }
 
-func GetValidOrders(c subs.Context, gameId, province, email string) (result dip.Options, err error) {
+func GetValidOrders(c subs.Context) (result interface{}, err error) {
 	var base64DecodedId []byte
-	base64DecodedId, err = base64.URLEncoding.DecodeString(gameId)
+	base64DecodedId, err = base64.URLEncoding.DecodeString(c.Data().GetString("GameId"))
 	if err != nil {
 		return
 	}
@@ -89,7 +93,7 @@ func GetValidOrders(c subs.Context, gameId, province, email string) (result dip.
 		return
 	}
 	var member *Member
-	member, err = game.Member(c.DB(), email)
+	member, err = game.Member(c.DB(), c.Principal())
 	if err != nil {
 		return
 	}
@@ -101,7 +105,7 @@ func GetValidOrders(c subs.Context, gameId, province, email string) (result dip.
 		err = fmt.Errorf("No phase for %+v found", game)
 		return
 	}
-	nation, options, found := phase.GetState().Options(orders.Types(), dip.Province(province))
+	nation, options, found := phase.GetState().Options(orders.Types(), dip.Province(c.Data().GetString("Province")))
 	if found && nation == member.Nation {
 		result = options
 	}
