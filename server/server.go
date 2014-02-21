@@ -11,6 +11,7 @@ import (
 	"github.com/zond/diplicity/user"
 	"github.com/zond/diplicity/web"
 	"github.com/zond/kcwraps/subs"
+	"github.com/zond/wsubs/gosubs"
 )
 
 func wantsJSON(r *http.Request, m *mux.RouteMatch) bool {
@@ -44,23 +45,23 @@ func main() {
 	router.HandleFunc("/token", server.Logger(server.Token))
 
 	wsRouter := subs.NewRouter(server.DB())
-	wsRouter.LogLevel = subs.DebugLevel
+	wsRouter.LogLevel = gosubs.DebugLevel
 	wsRouter.Resource("^/games/current$").
-		Handle(subs.SubscribeType, game.SubscribeCurrent).Auth()
+		Handle(gosubs.SubscribeType, game.SubscribeCurrent).Auth()
 	wsRouter.Resource("^/games/open$").
-		Handle(subs.SubscribeType, game.SubscribeOpen).Auth()
+		Handle(gosubs.SubscribeType, game.SubscribeOpen).Auth()
 	wsRouter.Resource("^/user$").
-		Handle(subs.SubscribeType, user.SubscribeEmail).
-		Handle(subs.UpdateType, user.Update).Auth()
+		Handle(gosubs.SubscribeType, user.SubscribeEmail).
+		Handle(gosubs.UpdateType, user.Update).Auth()
 	wsRouter.Resource("^/games/(.*)/messages$").
-		Handle(subs.SubscribeType, game.SubscribeMessages).Auth().
-		Handle(subs.CreateType, game.CreateMessage).Auth()
+		Handle(gosubs.SubscribeType, game.SubscribeMessages).Auth().
+		Handle(gosubs.CreateType, game.CreateMessage).Auth()
 	wsRouter.Resource("^/games/(.*)$").
-		Handle(subs.SubscribeType, game.SubscribeGame).Auth().
-		Handle(subs.DeleteType, game.DeleteMember).Auth().
-		Handle(subs.UpdateType, game.AddMember).Auth()
+		Handle(gosubs.SubscribeType, game.SubscribeGame).Auth().
+		Handle(gosubs.DeleteType, game.DeleteMember).Auth().
+		Handle(gosubs.UpdateType, game.AddMember).Auth()
 	wsRouter.Resource("^/games$").
-		Handle(subs.CreateType, game.Create).Auth()
+		Handle(gosubs.CreateType, game.Create).Auth()
 
 	wsRouter.RPC("GetPossibleSources", game.GetPossibleSources).Auth()
 	wsRouter.RPC("GetValidOrders", game.GetValidOrders).Auth()

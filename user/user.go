@@ -7,6 +7,7 @@ import (
 
 	"github.com/zond/kcwraps/kol"
 	"github.com/zond/kcwraps/subs"
+	"github.com/zond/wsubs/gosubs"
 )
 
 type User struct {
@@ -47,9 +48,9 @@ type Blacklisting struct {
 
 func SubscribeEmail(c subs.Context) error {
 	if c.Principal() == "" {
-		return websocket.JSON.Send(c.Conn(), subs.Message{
-			Type: subs.FetchType,
-			Object: &subs.Object{
+		return websocket.JSON.Send(c.Conn(), gosubs.Message{
+			Type: gosubs.FetchType,
+			Object: &gosubs.Object{
 				URI:  c.Match()[0],
 				Data: &User{},
 			},

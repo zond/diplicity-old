@@ -8,6 +8,7 @@ import (
 	"github.com/zond/diplicity/user"
 	"github.com/zond/kcwraps/kol"
 	"github.com/zond/kcwraps/subs"
+	"github.com/zond/wsubs/gosubs"
 )
 
 type MemberState struct {
@@ -71,7 +72,7 @@ func SubscribeCurrent(c subs.Context) error {
 				})
 			}
 		}
-		if op == subs.FetchType || len(states) > 0 {
+		if op == gosubs.FetchType || len(states) > 0 {
 			sort.Sort(states)
 			return s.Send(states, op)
 		}
@@ -107,7 +108,7 @@ func SubscribeGame(c subs.Context) error {
 				Members: memberStates,
 				Phase:   phase,
 			}, op)
-		} else if op == subs.FetchType {
+		} else if op == gosubs.FetchType {
 			return s.Send(GameState{}, op)
 		}
 		return nil
@@ -139,7 +140,7 @@ func SubscribeMessages(c subs.Context) (err error) {
 				result = append(result, *message)
 			}
 		}
-		if op == subs.FetchType || len(result) > 0 {
+		if op == gosubs.FetchType || len(result) > 0 {
 			sort.Sort(result)
 			return s.Send(result, op)
 		}
@@ -195,7 +196,7 @@ func SubscribeOpen(c subs.Context) error {
 				})
 			}
 		}
-		if op == subs.FetchType || len(states) > 0 {
+		if op == gosubs.FetchType || len(states) > 0 {
 			sort.Sort(states)
 			return s.Send(states, op)
 		}

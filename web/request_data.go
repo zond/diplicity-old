@@ -12,7 +12,7 @@ import (
 	"github.com/zond/diplicity/common"
 	"github.com/zond/diplicity/translation"
 	dip "github.com/zond/godip/common"
-	"github.com/zond/kcwraps/subs"
+	"github.com/zond/wsubs/gosubs"
 )
 
 type RequestData struct {
@@ -48,11 +48,11 @@ func (self RequestData) AllocationMethodMap() string {
 		meth.Translation = self.I(meth.Name)
 		result[meth.Id] = meth
 	}
-	return subs.Prettify(result)
+	return gosubs.Prettify(result)
 }
 
 func (self RequestData) SecrecyTypesMap() string {
-	return subs.Prettify(map[string]string{
+	return gosubs.Prettify(map[string]string{
 		"SecretEmail":    self.I("Secret email"),
 		"SecretNickname": self.I("Secret nickname"),
 		"SecretNation":   self.I("Secret nation"),
@@ -65,7 +65,7 @@ func (self RequestData) AllocationMethods() string {
 		result = append(result, meth.Id)
 	}
 	sort.Sort(result)
-	return subs.Prettify(result)
+	return gosubs.Prettify(result)
 }
 
 func (self RequestData) DefaultAllocationMethod() string {
@@ -82,7 +82,7 @@ func (self RequestData) Variants() string {
 		result = append(result, variant.Id)
 	}
 	sort.Sort(result)
-	return subs.Prettify(result)
+	return gosubs.Prettify(result)
 }
 
 func (self RequestData) VariantMap() string {
@@ -91,11 +91,11 @@ func (self RequestData) VariantMap() string {
 		variant.Translation = self.I(variant.Name)
 		result[variant.Id] = variant
 	}
-	return subs.Prettify(result)
+	return gosubs.Prettify(result)
 }
 
 func (self RequestData) ChatFlagMap() string {
-	return subs.Prettify(map[string]int{
+	return gosubs.Prettify(map[string]int{
 		"ChatPrivate":    common.ChatPrivate,
 		"ChatGroup":      common.ChatGroup,
 		"ChatConference": common.ChatConference,
@@ -113,7 +113,7 @@ func (self RequestData) VariantColorizableProvincesMap() string {
 			result[variant.Id] = append(result[variant.Id], prov)
 		}
 	}
-	return subs.Prettify(result)
+	return gosubs.Prettify(result)
 }
 
 func (self RequestData) VariantMainProvincesMap() string {
@@ -126,7 +126,7 @@ func (self RequestData) VariantMainProvincesMap() string {
 			}
 		}
 	}
-	return subs.Prettify(result)
+	return gosubs.Prettify(result)
 }
 
 func (self RequestData) ChatFlagOptions() (result []common.ChatFlagOption) {
@@ -175,7 +175,7 @@ func (self RequestData) GameState(s string) common.GameState {
 }
 
 func (self RequestData) SecretFlagMap() string {
-	return subs.Prettify(map[string]int{
+	return gosubs.Prettify(map[string]int{
 		"BeforeGame": common.SecretBeforeGame,
 		"DuringGame": common.SecretDuringGame,
 		"AfterGame":  common.SecretAfterGame,

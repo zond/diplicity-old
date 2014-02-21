@@ -9,7 +9,7 @@ import (
 	"github.com/zond/diplicity/common"
 	"github.com/zond/diplicity/user"
 	"github.com/zond/gopenid"
-	"github.com/zond/kcwraps/subs"
+	"github.com/zond/wsubs/gosubs"
 )
 
 func (self *Web) Openid(w http.ResponseWriter, r *http.Request) {
@@ -30,7 +30,7 @@ func (self *Web) Openid(w http.ResponseWriter, r *http.Request) {
 func (self *Web) Token(w http.ResponseWriter, r *http.Request) {
 	data := self.GetRequestData(w, r)
 	if emailIf, found := data.session.Values[SessionEmail]; found {
-		token := &subs.Token{
+		token := &gosubs.Token{
 			Principal: fmt.Sprint(emailIf),
 			Timeout:   time.Now().Add(time.Second * 10),
 		}
@@ -41,7 +41,7 @@ func (self *Web) Token(w http.ResponseWriter, r *http.Request) {
 		}
 		common.RenderJSON(w, token)
 	} else {
-		common.RenderJSON(w, subs.Token{})
+		common.RenderJSON(w, gosubs.Token{})
 	}
 }
 
