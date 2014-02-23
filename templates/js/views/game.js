@@ -85,11 +85,11 @@ window.GameView = BaseView.extend({
 			}
 		} else {
 		  var decision = that.decision;
-			window.wsRPC('SetOrder', {
+			RPC('SetOrder', {
 				GameId: that.model.get('Id'),
 				Order: decision,
 			}, function(error) {
-			  if (error != '') {
+			  if (error != null && error != '') {
 					logError('While setting order', decision, error);
 				}
 			});
@@ -112,7 +112,7 @@ window.GameView = BaseView.extend({
 		that.cleanDecision();
 		_.each(that.possibleSources, function(prov) {
 			that.decisionCleaners.push(that.map.addClickListener(prov, function(ev) {
-				wsRPC('GetValidOrders', {
+				RPC('GetValidOrders', {
 					GameId: that.model.get('Id'),
 					Province: prov,
 				}, function(result) {
@@ -157,7 +157,7 @@ window.GameView = BaseView.extend({
 			}
 			if (that.model.get('Phase') != null) {
 				if (that.possibleSources == null) {
-					wsRPC('GetPossibleSources', {
+					RPC('GetPossibleSources', {
 						GameId: that.model.get('Id'),
 					}, function(data) {
 						that.possibleSources = data;

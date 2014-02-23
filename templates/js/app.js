@@ -1,6 +1,8 @@
 
 window.session = {};
 
+Backbone.Model.prototype.idAttribute = "Id";
+
 $(window).load(function() {
 
 	var AppRouter = Backbone.Router.extend({
@@ -78,7 +80,15 @@ $(window).load(function() {
 	wsBackbone({
 	  url: url, 
 		start: start,
-		cacheBackend: jsCacheBackend(),
+		token_producer: function(opts) {
+		  $.ajax('/token', {
+        success: function(data) {
+				  opts.success(data.Encoded);
+				},
+				error: opts.error,
+			});
+		},
+		cache_backend: jsCacheBackend(),
 	});
 
 });
