@@ -26,7 +26,9 @@ window.GameState = Backbone.Model.extend({
 			  identity = '{{.I "Anonymous" }}';
 			} else if (member.User.Nickname == "" && member.User.Email != "") {
 				identity = '<' + member.User.Email + '>';
-			} else { 
+			} else if (member.User.Nickname != "" && member.User.Email == "") {
+			  identity = member.User.Nickname;
+			} else {
 				identity = member.User.Nickname + ' <' + member.User.Email + '>';
 			}
 			if (nation != "" && identity != "") {

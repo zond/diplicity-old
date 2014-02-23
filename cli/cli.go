@@ -1,18 +1,16 @@
 package main
 
 import (
-	"code.google.com/p/go.net/websocket"
 	"encoding/base64"
 	"flag"
 	"fmt"
-	"github.com/gorilla/securecookie"
-	"github.com/gorilla/sessions"
+	"time"
+
+	"code.google.com/p/go.net/websocket"
 	"github.com/zond/diplicity/common"
 	"github.com/zond/diplicity/game"
 	"github.com/zond/diplicity/web"
-	"github.com/zond/kcwraps/subs"
-	"net/http"
-	"net/url"
+	"github.com/zond/wsubs/gosubs"
 )
 
 func main() {
@@ -29,41 +27,19 @@ func main() {
 		return
 	}
 
-	token := common.NewToken(*secret, *email)
-	location, err := url.Parse(fmt.Sprintf("ws://%v:%v/ws?email=%v&timeout=%v&token=%v", *host, *port, token.Email, token.Timeout, token.Token))
-	if err != nil {
+	gosubs.Secret = *secret
+	token := &gosubs.Token{
+		Principal: *email,
+		Timeout:   time.Now().Add(time.Second * 10),
+	}
+	if err := token.Encode(); err != nil {
 		panic(err)
 	}
-	origin, err := url.Parse("http://localhost")
+	url := fmt.Sprintf("ws://%v:%v/ws?token=%v", *host, *port, token.Encoded)
+
+	ws, err := websocket.Dial(url, "tcp", "http://localhost/")
 	if err != nil {
 		panic(err)
-	}
-
-	encoded, err := securecookie.EncodeMulti(web.SessionName, map[interface{}]interface{}{
-		web.SessionEmail: *email,
-	}, securecookie.CodecsFromPairs([]byte(*secret))...)
-	if err != nil {
-		panic(err)
-	}
-
-	cookie := sessions.NewCookie(web.SessionName, encoded, &sessions.Options{
-		Path:   "/",
-		MaxAge: 86400 * 30,
-	})
-
-	header := http.Header{
-		"Cookie": []string{cookie.String()},
-	}
-
-	config := &websocket.Config{
-		Location: location,
-		Origin:   origin,
-		Version:  13,
-		Header:   header,
-	}
-	ws, err := websocket.DialConfig(config)
-	if err != nil {
-		return
 	}
 
 	if *join != "" {
@@ -71,10 +47,10 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		if err := websocket.JSON.Send(ws, subs.Message{
+		if err := websocket.JSON.Send(ws, gosubs.Message{
 			Type: common.UpdateType,
-			Object: &subs.Object{
-				URI: "/games/open",
+			Object: &gosubs.Object{
+				URI: fmt.Sprintf("/games/%v", *join),
 				Data: game.GameState{
 					Game: &game.Game{
 						Id: base64DecodedId,
