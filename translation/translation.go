@@ -62,7 +62,8 @@ var en = map[string]string{
 	"2 weeks":           "2 weeks",
 	"Diplicity Welcome": "Welcome to Diplicity! <br /> What would you like to do?",
 
-	"Log in to see your games":                               "Log in to see your games",
+	"Log in to see your games": "Log in to see your games",
+	"Play": "Play",
 	"Log in to create a game":                                "Log in to create a game",
 	"Log in to join a game":                                  "Log in to join a game",
 	"Create a game":                                          "Create a game",
@@ -113,6 +114,7 @@ var en = map[string]string{
 	"Home":            "Home",
 	"Map":             "Map",
 	"Chat":            "Chat",
+	"Commit":          "Commit",
 	"Orders":          "Orders",
 	"Results":         "Results",
 }

@@ -8,11 +8,17 @@ window.GameControlsView = BaseView.extend({
     "click .view-chat": "viewChat",
     "click .view-orders": "viewOrders",
     "click .view-results": "viewResults",
+		"click .commit-phase": "commitPhase",
 	},
 
 	initialize: function(options) {
 		this.parentId = options.parentId;
 		this.chatMessages = options.chatMessages;
+	},
+
+	commitPhase: function(ev) {
+	  ev.preventDefault();
+		ev.stopPropagation();
 	},
 
   viewChat: function(ev) {

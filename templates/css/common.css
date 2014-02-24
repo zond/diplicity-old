@@ -1,3 +1,6 @@
+.game-controls-right {
+	float: right;
+}
 .chat-timestamp {
 	white-space: nowrap;
 	width: 5%;
