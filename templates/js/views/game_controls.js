@@ -40,7 +40,9 @@ window.GameControlsView = BaseView.extend({
 	},
 
   viewOrders: function(ev) {
-		this.$('.game-controls .panel-body').html(new GameOrdersView().render().el);
+		this.$('.game-controls .panel-body').html(new GameOrdersView({
+		  model: this.model,
+		}).render().el);
 		this.handleClick(ev, 'orders');
 	},
 
