@@ -78,6 +78,28 @@ func (self *Game) allocate(d *kol.DB) error {
 	return fmt.Errorf("Unknown allocation method %v", self.AllocationMethod)
 }
 
+func (self *Game) resolve(d *kol.DB, phase *Phase) (err error) {
+	if self.State != common.GameStateStarted {
+		err = fmt.Errorf("%+v is not started", self)
+		return
+	}
+	state := phase.GetState()
+	if err = state.Next(); err != nil {
+		return
+	}
+	nextDipPhase := state.Phase()
+	nextPhase := &Phase{
+		GameId:    self.Id,
+		Ordinal:   phase.Ordinal + 1,
+		Committed: map[dip.Nation]bool{},
+		Season:    nextDipPhase.Season(),
+		Year:      nextDipPhase.Year(),
+		Type:      nextDipPhase.Type(),
+	}
+	nextPhase.Units, nextPhase.SupplyCenters, nextPhase.Dislodgeds, nextPhase.Dislodgers, nextPhase.Bounces = state.Dump()
+	return d.Set(nextPhase)
+}
+
 func (self *Game) start(d *kol.DB) error {
 	if self.State != common.GameStateCreated {
 		return fmt.Errorf("%+v is already started", self)

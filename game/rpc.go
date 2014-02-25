@@ -4,8 +4,10 @@ import (
 	"encoding/base64"
 	"fmt"
 
+	"github.com/zond/diplicity/common"
 	"github.com/zond/godip/classical/orders"
 	dip "github.com/zond/godip/common"
+	"github.com/zond/kcwraps/kol"
 	"github.com/zond/kcwraps/subs"
 )
 
@@ -24,21 +26,41 @@ func setPhaseCommitted(c subs.Context, commit bool) (err error) {
 	if err != nil {
 		return
 	}
-	phase := Phase{Id: phaseId}
-	if err = c.DB().Get(&phase); err != nil {
+	return c.DB().Transact(func(d *kol.DB) (err error) {
+		phase := &Phase{Id: phaseId}
+		if err = d.Get(phase); err != nil {
+			return
+		}
+		game, err := phase.Game(d)
+		if err != nil {
+			return
+		}
+		member, err := game.Member(d, c.Principal())
+		if err != nil {
+			return
+		}
+		phase.Committed[member.Nation] = commit
+		if !phase.Resolved {
+			count := 0
+			for _, com := range phase.Committed {
+				if com {
+					count++
+				}
+			}
+			variant, found := common.VariantMap[game.Variant]
+			if !found {
+				return fmt.Errorf("Unknown variant %v", game.Variant)
+			}
+			if count == len(variant.Nations) {
+				if err = game.resolve(d, phase); err != nil {
+					return
+				}
+				phase.Resolved = true
+			}
+		}
+		err = d.Set(&phase)
 		return
-	}
-	game, err := phase.Game(c.DB())
-	if err != nil {
-		return
-	}
-	member, err := game.Member(c.DB(), c.Principal())
-	if err != nil {
-		return
-	}
-	phase.Committed[member.Nation] = commit
-	err = c.DB().Set(&phase)
-	return
+	})
 }
 
 func SetOrder(c subs.Context) (result interface{}, err error) {
