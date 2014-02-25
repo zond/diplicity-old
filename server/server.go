@@ -66,6 +66,8 @@ func main() {
 	wsRouter.RPC("GetPossibleSources", game.GetPossibleSources).Auth()
 	wsRouter.RPC("GetValidOrders", game.GetValidOrders).Auth()
 	wsRouter.RPC("SetOrder", game.SetOrder).Auth()
+	wsRouter.RPC("Commit", game.CommitPhase).Auth()
+	wsRouter.RPC("Uncommit", game.UncommitPhase).Auth()
 
 	// The websocket
 	router.Path("/ws").Handler(wsRouter)

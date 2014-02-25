@@ -98,11 +98,12 @@ func (self *Game) start(d *kol.DB) error {
 	}
 	startPhase := startState.Phase()
 	phase := &Phase{
-		GameId:  self.Id,
-		Ordinal: 0,
-		Season:  startPhase.Season(),
-		Year:    startPhase.Year(),
-		Type:    startPhase.Type(),
+		GameId:    self.Id,
+		Ordinal:   0,
+		Committed: map[dip.Nation]bool{},
+		Season:    startPhase.Season(),
+		Year:      startPhase.Year(),
+		Type:      startPhase.Type(),
 	}
 	phase.Units, phase.SupplyCenters, phase.Dislodgeds, phase.Dislodgers, phase.Bounces = startState.Dump()
 	return d.Set(phase)

@@ -9,6 +9,38 @@ import (
 	"github.com/zond/kcwraps/subs"
 )
 
+func UncommitPhase(c subs.Context) (result interface{}, err error) {
+	err = setPhaseCommitted(c, false)
+	return
+}
+
+func CommitPhase(c subs.Context) (result interface{}, err error) {
+	err = setPhaseCommitted(c, true)
+	return
+}
+
+func setPhaseCommitted(c subs.Context, commit bool) (err error) {
+	phaseId, err := base64.URLEncoding.DecodeString(c.Data().GetString("PhaseId"))
+	if err != nil {
+		return
+	}
+	phase := Phase{Id: phaseId}
+	if err = c.DB().Get(&phase); err != nil {
+		return
+	}
+	game, err := phase.GetGame(c.DB())
+	if err != nil {
+		return
+	}
+	member, err := game.Member(c.DB(), c.Principal())
+	if err != nil {
+		return
+	}
+	phase.Committed[member.Nation] = commit
+	err = c.DB().Set(&phase)
+	return
+}
+
 func SetOrder(c subs.Context) (result interface{}, err error) {
 	var base64DecodedId []byte
 	if base64DecodedId, err = base64.URLEncoding.DecodeString(c.Data().GetString("GameId")); err != nil {

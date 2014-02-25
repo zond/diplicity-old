@@ -32,6 +32,12 @@ type Phase struct {
 	UpdatedAt time.Time
 }
 
+func (self *Phase) GetGame(d *kol.DB) (result *Game, err error) {
+	result = &Game{Id: self.GameId}
+	err = d.Get(result)
+	return
+}
+
 func (self *Phase) Updated(d *kol.DB, old *Phase) {
 	g := Game{Id: self.GameId}
 	if err := d.Get(&g); err != nil {
@@ -40,20 +46,24 @@ func (self *Phase) Updated(d *kol.DB, old *Phase) {
 	d.EmitUpdate(&g)
 }
 
-func (self Phase) redact(member *Member) *Phase {
+func (self *Phase) redact(member *Member) *Phase {
+	if self == nil {
+		return nil
+	}
+	result := *self
 	for nat, _ := range self.Committed {
 		if member == nil || member.Nation != nat {
-			delete(self.Committed, nat)
+			delete(result.Committed, nat)
 		}
 	}
 	if !self.Resolved {
 		for nat, _ := range self.Orders {
 			if member == nil || member.Nation != nat {
-				delete(self.Orders, nat)
+				delete(result.Orders, nat)
 			}
 		}
 	}
-	return &self
+	return &result
 }
 
 func (self *Phase) GetState() *state.State {

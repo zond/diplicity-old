@@ -14,6 +14,9 @@ window.GameControlsView = BaseView.extend({
 	initialize: function(options) {
 		this.parentId = options.parentId;
 		this.chatMessages = options.chatMessages;
+		_.bindAll(this, 'update');
+		this.listenTo(this.model, 'change', this.update);
+		this.listenTo(this.model, 'reset', this.update);
 	},
 
 	commitPhase: function(ev) {
@@ -50,6 +53,22 @@ window.GameControlsView = BaseView.extend({
 		  model: this.model,
 		}).render().el);
 		this.handleClick(ev, 'orders');
+	},
+
+	update: function() {
+	  var that = this;
+		if (that.model.get('Phase') != null) {
+			var me = that.model.me();
+			if (me != null) {
+				if (that.model.get('Phase').Committed[me.Nation]) {
+					that.$('a.commit-button').removeClass('commit-phase').addClass('uncommit-phase');
+					that.$('span.commit-button').removeClass('glyphicon-ok').addClass('glyphicon-remove');
+				} else {
+					that.$('a.commit-button').removeClass('uncommit-phase').addClass('commit-phase');
+					that.$('span.commit-button').removeClass('glyphicon-remove').addClass('glyphicon-ok');
+				}
+			}
+		}
 	},
 
   render: function() {
