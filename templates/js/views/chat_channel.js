@@ -18,7 +18,7 @@ window.ChatChannelView = BaseView.extend({
 		  return nat;
 		}).join("-");
 		that.title = _.map(that.members, function(x, nat) {
-		  return that.model.nation(nat).describe(true);
+		  return nat;
 		}).join(", ");
 	},
 

@@ -107,7 +107,7 @@ window.GameChatView = BaseView.extend({
 			_.each(that.model.members(), function(member) {
 			  if (member.Id != me.Id) {
 					var opt = $('<option value="' + member.Nation + '"></option>');
-					opt.text(member.describe(true));
+					opt.text(member.Nation);
 					that.$('.new-channel-nations').append(opt);
 				}
 			});

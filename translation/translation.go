@@ -115,6 +115,7 @@ var en = map[string]string{
 	"Map":             "Map",
 	"Chat":            "Chat",
 	"Commit":          "Commit",
+	"Uncommit":        "Uncommit",
 	"Orders":          "Orders",
 	"Results":         "Results",
 }

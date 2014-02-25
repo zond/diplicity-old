@@ -1,8 +1,8 @@
+<td class="chat-sender">
+	<%- sender.Nation %>
+</td>
 <td class="chat-timestamp">
 	<abbr class="timeago" title="<%- model.get('CreatedAt') %>"><%- model.get('CreatedAt') %></abbr>
-</td>
-<td class="chat-sender">
-	<%- sender.describe(true) %>
 </td>
 <td class="chat-body">
 	<pre><%- model.get('Body') %></pre>
