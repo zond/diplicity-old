@@ -32,7 +32,7 @@ type Phase struct {
 	UpdatedAt time.Time
 }
 
-func (self *Phase) GetGame(d *kol.DB) (result *Game, err error) {
+func (self *Phase) Game(d *kol.DB) (result *Game, err error) {
 	result = &Game{Id: self.GameId}
 	err = d.Get(result)
 	return

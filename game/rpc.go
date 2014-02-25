@@ -28,7 +28,7 @@ func setPhaseCommitted(c subs.Context, commit bool) (err error) {
 	if err = c.DB().Get(&phase); err != nil {
 		return
 	}
-	game, err := phase.GetGame(c.DB())
+	game, err := phase.Game(c.DB())
 	if err != nil {
 		return
 	}
