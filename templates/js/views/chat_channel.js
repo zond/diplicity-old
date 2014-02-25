@@ -13,12 +13,12 @@ window.ChatChannelView = BaseView.extend({
 	  var that = this;
 	  that.members = options.members;
 		that.nMembers = 0;
-		that.name = _.map(that.members, function(x, id) {
+		that.name = _.map(that.members, function(x, nat) {
 		  that.nMembers++;
-		  return id;
+		  return nat;
 		}).join("-");
-		that.title = _.map(that.members, function(x, id) {
-		  return that.model.member(id).describe(true);
+		that.title = _.map(that.members, function(x, nat) {
+		  return that.model.nation(nat).describe(true);
 		}).join(", ");
 	},
 

@@ -49,6 +49,12 @@ window.GameState = Backbone.Model.extend({
 		});
 	},
 
+	nation: function(nat) {
+	  return this.decorateMember(_.find(this.get('Members'), function(member) {
+		  return member.Nation == nat;
+		}));
+	},
+
 	member: function(id) {
 	  return this.decorateMember(_.find(this.get('Members'), function(member) {
 		  return member.Id == id;

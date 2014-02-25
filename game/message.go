@@ -3,6 +3,7 @@ package game
 import (
 	"time"
 
+	dip "github.com/zond/godip/common"
 	"github.com/zond/kcwraps/kol"
 )
 
@@ -24,7 +25,7 @@ type Message struct {
 	Id         kol.Id
 	GameId     kol.Id `kol:"index"`
 	Sender     kol.Id
-	Recipients map[string]bool
+	Recipients map[dip.Nation]bool
 
 	Body string
 

@@ -50,13 +50,13 @@ window.GameChatView = BaseView.extend({
 
 	createChannel: function() {
 	  var that = this;
-	  var memberIds = _.filter(that.$('.new-channel-nations').val().sort(), function(val) {
+	  var memberNations = _.filter(that.$('.new-channel-nations').val().sort(), function(val) {
 		  return val != 'multiselect-all';
 		});
-		memberIds.push(that.model.me().Id);
-		if (that.model.allowChatMembers(memberIds.length)) {
-		  members = _.inject(memberIds, function(sum, id) {
-			  sum[id] = true;
+		memberNations.push(that.model.me().Nation);
+		if (that.model.allowChatMembers(memberNations.length)) {
+		  members = _.inject(memberNations, function(sum, nat) {
+			  sum[nat] = true;
 				return sum;
 			}, {});
 			that.ensureChannel(members);
@@ -106,7 +106,7 @@ window.GameChatView = BaseView.extend({
 		if (me != null) {
 			_.each(that.model.members(), function(member) {
 			  if (member.Id != me.Id) {
-					var opt = $('<option value="' + member.Id + '"></option>');
+					var opt = $('<option value="' + member.Nation + '"></option>');
 					opt.text(member.describe(true));
 					that.$('.new-channel-nations').append(opt);
 				}

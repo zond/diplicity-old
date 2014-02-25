@@ -68,7 +68,7 @@ func SubscribeCurrent(c subs.Context) error {
 				states = append(states, GameState{
 					Game:    game,
 					Members: memberStates,
-					Phase:   phase,
+					Phase:   phase.redact(member),
 				})
 			}
 		}
@@ -93,7 +93,8 @@ func SubscribeGame(c subs.Context) error {
 		if err != nil {
 			return err
 		}
-		isMember := members.Contains(c.Principal())
+		member := members.Get(c.Principal())
+		isMember := member != nil
 		if !game.Private || isMember {
 			phase, err := game.LastPhase(c.DB())
 			if err != nil {
@@ -106,7 +107,7 @@ func SubscribeGame(c subs.Context) error {
 			return s.Send(GameState{
 				Game:    game,
 				Members: memberStates,
-				Phase:   phase,
+				Phase:   phase.redact(member),
 			}, op)
 		} else if op == gosubs.FetchType {
 			return s.Send(GameState{}, op)
@@ -129,14 +130,13 @@ func SubscribeMessages(c subs.Context) (err error) {
 	if err != nil {
 		return
 	}
-	memberId := member.Id.String()
 	s := c.Pack().New(c.Match()[0])
 	s.Query = s.DB().Query().Where(kol.Equals{"GameId", base64DecodedId})
 	s.Call = func(i interface{}, op string) error {
 		messages := i.([]*Message)
 		result := Messages{}
 		for _, message := range messages {
-			if message.Recipients[memberId] {
+			if message.Recipients[member.Nation] {
 				result = append(result, *message)
 			}
 		}
@@ -173,13 +173,7 @@ func SubscribeOpen(c subs.Context) error {
 			} else if disallows {
 				break
 			}
-			isMember = false
-			for _, m := range members {
-				if string(m.UserId) == c.Principal() {
-					isMember = true
-					break
-				}
-			}
+			isMember = members.Contains(c.Principal())
 			if !isMember {
 				phase, err := game.LastPhase(c.DB())
 				if err != nil {
@@ -192,7 +186,7 @@ func SubscribeOpen(c subs.Context) error {
 				states = append(states, GameState{
 					Game:    game,
 					Members: memberStates,
-					Phase:   phase,
+					Phase:   phase.redact(nil),
 				})
 			}
 		}

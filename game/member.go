@@ -37,6 +37,15 @@ func (self Members) Swap(i, j int) {
 	self[i], self[j] = self[j], self[i]
 }
 
+func (self Members) Get(email string) *Member {
+	for _, member := range self {
+		if string(member.UserId) == email {
+			return &member
+		}
+	}
+	return nil
+}
+
 func (self Members) Contains(email string) bool {
 	for _, member := range self {
 		if string(member.UserId) == email {

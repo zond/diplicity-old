@@ -34,7 +34,7 @@ func CreateMessage(c subs.Context) (err error) {
 	message.Sender = sender.Id
 
 	// make sure the sender is one of the recipients
-	message.Recipients[sender.Id.String()] = true
+	message.Recipients[sender.Nation] = true
 
 	var phaseType dip.PhaseType
 	switch game.State {
