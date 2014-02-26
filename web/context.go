@@ -2,6 +2,7 @@ package web
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -20,7 +21,25 @@ type Context struct {
 	request      *http.Request
 	session      *sessions.Session
 	translations map[string]string
+	vars         map[string]string
 	web          *Web
+}
+
+func (self *Context) SetContentType(t string, cache bool) {
+	self.Resp().Header().Set("Content-Type", t)
+	self.Resp().Header().Set("Vary", "Accept")
+	if cache {
+		self.Resp().Header().Set("Cache-Control", "public, max-age=864000")
+	} else {
+		self.Resp().Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+		self.Resp().Header().Set("Pragma", "no-cache")
+		self.Resp().Header().Set("Expires", "0")
+	}
+}
+
+func (self *Context) RenderJSON(i interface{}) (err error) {
+	self.SetContentType("application/json; charset=UTF-8", false)
+	return json.NewEncoder(self.Resp()).Encode(i)
 }
 
 func (self *Context) RenderJS(template string) {
@@ -34,6 +53,10 @@ func (self *Context) RenderText(templates *template.Template, template string) {
 	if err := templates.ExecuteTemplate(self.Resp(), template, self); err != nil {
 		panic(fmt.Errorf("While rendering text: %v", err))
 	}
+}
+
+func (self *Context) Vars() map[string]string {
+	return self.vars
 }
 
 func (self *Context) Resp() http.ResponseWriter {

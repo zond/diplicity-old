@@ -17,23 +17,6 @@ import (
 	"github.com/zond/godip/graph"
 )
 
-func RenderJSON(w http.ResponseWriter, i interface{}) {
-	SetContentType(w, "application/json; charset=UTF-8", false)
-	MustEncodeJSON(w, i)
-}
-
-func SetContentType(w http.ResponseWriter, t string, cache bool) {
-	w.Header().Set("Content-Type", t)
-	w.Header().Set("Vary", "Accept")
-	if cache {
-		w.Header().Set("Cache-Control", "public, max-age=864000")
-	} else {
-		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
-		w.Header().Set("Pragma", "no-cache")
-		w.Header().Set("Expires", "0")
-	}
-}
-
 func GetLanguage(r *http.Request) string {
 	bestLanguage := MostAccepted(r, "default", "Accept-Language")
 	parts := strings.Split(bestLanguage, "-")

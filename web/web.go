@@ -87,6 +87,7 @@ func (self *Web) GetContext(w http.ResponseWriter, r *http.Request) (result *Con
 		request:      r,
 		web:          self,
 		translations: translation.GetTranslations(common.GetLanguage(r)),
+		vars:         mux.Vars(r),
 	}
 	result.session, _ = self.sessionStore.Get(r, SessionName)
 	return
@@ -97,7 +98,7 @@ func (self *Web) SetAppcache(appcache bool) *Web {
 	return self
 }
 
-func (self *Web) Handle(r *mux.Route, f func(c *Context)) {
+func (self *Web) Handle(r *mux.Route, f func(c *Context) error) {
 	r.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		lw := &loggingResponseWriter{
 			ResponseWriter: w,
@@ -117,7 +118,12 @@ func (self *Web) Handle(r *mux.Route, f func(c *Context)) {
 				lw.inc()
 			}
 		}()
-		f(self.GetContext(w, r))
+		if err := f(self.GetContext(w, r)); err != nil {
+			lw.WriteHeader(500)
+			fmt.Fprintln(lw, err)
+			self.Errorf("%v", err)
+		}
+		return
 	})
 }
 
@@ -189,34 +195,34 @@ func (self *Web) HandleStatic(router *mux.Router, dir string) {
 		cpy := fil
 		self.Handle(router.MatcherFunc(func(r *http.Request, rm *mux.RouteMatch) bool {
 			return strings.HasSuffix(r.URL.Path, cpy)
-		}), func(c *Context) {
+		}), func(c *Context) (err error) {
 			if strings.HasSuffix(c.Req().URL.Path, ".css") {
-				common.SetContentType(c.Resp(), "text/css; charset=UTF-8", true)
+				c.SetContentType("text/css; charset=UTF-8", true)
 			} else if strings.HasSuffix(c.Req().URL.Path, ".js") {
-				common.SetContentType(c.Resp(), "application/javascript; charset=UTF-8", true)
+				c.SetContentType("application/javascript; charset=UTF-8", true)
 			} else if strings.HasSuffix(c.Req().URL.Path, ".png") {
-				common.SetContentType(c.Resp(), "image/png", true)
+				c.SetContentType("image/png", true)
 			} else if strings.HasSuffix(c.Req().URL.Path, ".gif") {
-				common.SetContentType(c.Resp(), "image/gif", true)
+				c.SetContentType("image/gif", true)
 			} else if strings.HasSuffix(c.Req().URL.Path, ".c.Resp()off") {
-				common.SetContentType(c.Resp(), "application/font-c.Resp()off", true)
+				c.SetContentType("application/font-c.Resp()off", true)
 			} else if strings.HasSuffix(c.Req().URL.Path, ".ttf") {
-				common.SetContentType(c.Resp(), "font/truetype", true)
+				c.SetContentType("font/truetype", true)
 			} else {
-				common.SetContentType(c.Resp(), "application/octet-stream", true)
+				c.SetContentType("application/octet-stream", true)
 			}
-			if in, err := os.Open(filepath.Join("static", cpy)); err != nil {
+			in, err := os.Open(filepath.Join("static", cpy))
+			if err != nil {
 				self.Errorf("%v", err)
 				c.Resp().WriteHeader(500)
 				fmt.Fprintln(c.Resp(), err)
 			} else {
 				defer in.Close()
-				if _, err := io.Copy(c.Resp(), in); err != nil {
-					self.Errorf("%v", err)
-					c.Resp().WriteHeader(500)
-					fmt.Println(c.Resp(), err)
+				if _, err = io.Copy(c.Resp(), in); err != nil {
+					return
 				}
 			}
+			return
 		})
 	}
 }
