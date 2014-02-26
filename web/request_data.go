@@ -15,7 +15,7 @@ import (
 	"github.com/zond/wsubs/gosubs"
 )
 
-type RequestData struct {
+type Context struct {
 	response     http.ResponseWriter
 	request      *http.Request
 	session      *sessions.Session
@@ -23,8 +23,8 @@ type RequestData struct {
 	web          *Web
 }
 
-func (self *Web) GetRequestData(w http.ResponseWriter, r *http.Request) (result RequestData) {
-	result = RequestData{
+func (self *Web) GetContext(w http.ResponseWriter, r *http.Request) (result *Context) {
+	result = &Context{
 		response:     w,
 		request:      r,
 		web:          self,
@@ -34,15 +34,23 @@ func (self *Web) GetRequestData(w http.ResponseWriter, r *http.Request) (result 
 	return
 }
 
-func (self RequestData) Close() {
+func (self *Context) Resp() http.ResponseWriter {
+	return self.response
+}
+
+func (self *Context) Req() *http.Request {
+	return self.request
+}
+
+func (self *Context) Close() {
 	self.session.Save(self.request, self.response)
 }
 
-func (self RequestData) Appcache() bool {
+func (self *Context) Appcache() bool {
 	return self.web.appcache
 }
 
-func (self RequestData) AllocationMethodMap() string {
+func (self *Context) AllocationMethodMap() string {
 	result := map[string]common.AllocationMethod{}
 	for _, meth := range common.AllocationMethodMap {
 		meth.Translation = self.I(meth.Name)
@@ -51,7 +59,7 @@ func (self RequestData) AllocationMethodMap() string {
 	return gosubs.Prettify(result)
 }
 
-func (self RequestData) SecrecyTypesMap() string {
+func (self *Context) SecrecyTypesMap() string {
 	return gosubs.Prettify(map[string]string{
 		"SecretEmail":    self.I("Secret email"),
 		"SecretNickname": self.I("Secret nickname"),
@@ -59,7 +67,7 @@ func (self RequestData) SecrecyTypesMap() string {
 	})
 }
 
-func (self RequestData) AllocationMethods() string {
+func (self *Context) AllocationMethods() string {
 	result := sort.StringSlice{}
 	for _, meth := range common.AllocationMethods {
 		result = append(result, meth.Id)
@@ -68,15 +76,15 @@ func (self RequestData) AllocationMethods() string {
 	return gosubs.Prettify(result)
 }
 
-func (self RequestData) DefaultAllocationMethod() string {
+func (self *Context) DefaultAllocationMethod() string {
 	return common.RandomString
 }
 
-func (self RequestData) DefaultVariant() string {
+func (self *Context) DefaultVariant() string {
 	return common.ClassicalString
 }
 
-func (self RequestData) Variants() string {
+func (self *Context) Variants() string {
 	result := sort.StringSlice{}
 	for _, variant := range common.Variants {
 		result = append(result, variant.Id)
@@ -85,7 +93,7 @@ func (self RequestData) Variants() string {
 	return gosubs.Prettify(result)
 }
 
-func (self RequestData) VariantMap() string {
+func (self *Context) VariantMap() string {
 	result := map[string]common.Variant{}
 	for _, variant := range common.Variants {
 		variant.Translation = self.I(variant.Name)
@@ -94,7 +102,7 @@ func (self RequestData) VariantMap() string {
 	return gosubs.Prettify(result)
 }
 
-func (self RequestData) ChatFlagMap() string {
+func (self *Context) ChatFlagMap() string {
 	return gosubs.Prettify(map[string]int{
 		"ChatPrivate":    common.ChatPrivate,
 		"ChatGroup":      common.ChatGroup,
@@ -102,7 +110,7 @@ func (self RequestData) ChatFlagMap() string {
 	})
 }
 
-func (self RequestData) VariantColorizableProvincesMap() string {
+func (self *Context) VariantColorizableProvincesMap() string {
 	result := map[string][]dip.Province{}
 	for _, variant := range common.Variants {
 		supers := map[dip.Province]bool{}
@@ -116,7 +124,7 @@ func (self RequestData) VariantColorizableProvincesMap() string {
 	return gosubs.Prettify(result)
 }
 
-func (self RequestData) VariantMainProvincesMap() string {
+func (self *Context) VariantMainProvincesMap() string {
 	result := map[string][]dip.Province{}
 	for _, variant := range common.Variants {
 		result[variant.Id] = []dip.Province{}
@@ -129,7 +137,7 @@ func (self RequestData) VariantMainProvincesMap() string {
 	return gosubs.Prettify(result)
 }
 
-func (self RequestData) ChatFlagOptions() (result []common.ChatFlagOption) {
+func (self *Context) ChatFlagOptions() (result []common.ChatFlagOption) {
 	for _, option := range common.ChatFlagOptions {
 		result = append(result, common.ChatFlagOption{
 			Id:          option.Id,
@@ -139,15 +147,15 @@ func (self RequestData) ChatFlagOptions() (result []common.ChatFlagOption) {
 	return
 }
 
-func (self RequestData) Authenticated() bool {
+func (self *Context) Authenticated() bool {
 	return true
 }
 
-func (self RequestData) Abs(path string) string {
+func (self *Context) Abs(path string) string {
 	return url.QueryEscape(fmt.Sprintf("http://%v%v", self.request.Host, path))
 }
 
-func (self RequestData) I(phrase string, args ...string) string {
+func (self *Context) I(phrase string, args ...string) string {
 	pattern, ok := self.translations[phrase]
 	if !ok {
 		panic(fmt.Errorf("Found no translation for %v", phrase))
@@ -158,11 +166,11 @@ func (self RequestData) I(phrase string, args ...string) string {
 	return pattern
 }
 
-func (self RequestData) LogLevel() int {
+func (self *Context) LogLevel() int {
 	return self.web.logLevel
 }
 
-func (self RequestData) GameState(s string) common.GameState {
+func (self *Context) GameState(s string) common.GameState {
 	switch s {
 	case "Created":
 		return common.GameStateCreated
@@ -174,7 +182,7 @@ func (self RequestData) GameState(s string) common.GameState {
 	panic(fmt.Errorf("Unknown game state %v", s))
 }
 
-func (self RequestData) SecretFlagMap() string {
+func (self *Context) SecretFlagMap() string {
 	return gosubs.Prettify(map[string]int{
 		"BeforeGame": common.SecretBeforeGame,
 		"DuringGame": common.SecretDuringGame,
@@ -182,7 +190,7 @@ func (self RequestData) SecretFlagMap() string {
 	})
 }
 
-func (self RequestData) SecretFlag(s string) common.SecretFlag {
+func (self *Context) SecretFlag(s string) common.SecretFlag {
 	switch s {
 	case "BeforeGame":
 		return common.SecretBeforeGame
@@ -194,7 +202,7 @@ func (self RequestData) SecretFlag(s string) common.SecretFlag {
 	panic(fmt.Errorf("Unknown secret flag %v", s))
 }
 
-func (self RequestData) ChatFlag(s string) string {
+func (self *Context) ChatFlag(s string) string {
 	var rval common.ChatFlag
 	switch s {
 	case "Private":
@@ -209,11 +217,11 @@ func (self RequestData) ChatFlag(s string) string {
 
 var version = time.Now()
 
-func (self RequestData) Version() string {
+func (self *Context) Version() string {
 	return fmt.Sprintf("%v", version.UnixNano())
 }
 
-func (self RequestData) SVG(p string) string {
+func (self *Context) SVG(p string) string {
 	b := new(bytes.Buffer)
 	if err := self.web.svgTemplates.ExecuteTemplate(b, p, self); err != nil {
 		panic(fmt.Errorf("While rendering text: %v", err))

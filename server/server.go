@@ -24,26 +24,27 @@ func wantsHTML(r *http.Request, m *mux.RouteMatch) bool {
 
 func main() {
 	port := flag.Int("port", 8080, "The port to listen on")
-	secret := flag.String("secret", web.DefaultSecret, "The cookie store secret")
+	secret := flag.String("secret", gosubs.Secret, "The cookie store secret")
 	env := flag.String("env", "development", "What environment to run")
 	appcache := flag.Bool("appcache", true, "Whether to enable appcache")
 
 	flag.Parse()
 
-	if *env != "development" && *secret == web.DefaultSecret {
+	if *env != "development" && *secret == gosubs.Secret {
 		panic("Only development env can run with the default secret")
 	}
 
-	server := web.New().SetEnv(*env).SetSecret(*secret).SetAppcache(*appcache)
+	server := web.New().SetEnv(*env).SetAppcache(*appcache)
 
 	router := mux.NewRouter()
 
 	// Login/logout
-	router.HandleFunc("/login", server.Logger(server.Login))
-	router.HandleFunc("/logout", server.Logger(server.Logout))
-	router.HandleFunc("/openid", server.Logger(server.Openid))
-	router.HandleFunc("/token", server.Logger(server.Token))
+	server.Handle(router.Path("/login"), server.Login)
+	server.Handle(router.Path("/logout"), server.Logout)
+	server.Handle(router.Path("/openid"), server.Openid)
+	server.Handle(router.Path("/token"), server.Token)
 
+	// Resource routes for the WebSocket
 	wsRouter := subs.NewRouter(server.DB())
 	wsRouter.LogLevel = gosubs.DebugLevel
 	wsRouter.Resource("^/games/current$").
@@ -63,6 +64,7 @@ func main() {
 	wsRouter.Resource("^/games$").
 		Handle(gosubs.CreateType, game.Create).Auth()
 
+	// RPC routes for the WebSocket
 	wsRouter.RPC("GetPossibleSources", game.GetPossibleSources).Auth()
 	wsRouter.RPC("GetValidOrders", game.GetValidOrders).Auth()
 	wsRouter.RPC("SetOrder", game.SetOrder).Auth()
@@ -73,13 +75,13 @@ func main() {
 	router.Path("/ws").Handler(wsRouter)
 
 	// Static content
-	router.HandleFunc("/js/{ver}/all", server.Logger(server.AllJs))
-	router.HandleFunc("/css/{ver}/all", server.Logger(server.AllCss))
-	router.HandleFunc("/diplicity.appcache", server.Logger(server.AppCache))
+	server.Handle(router.Path("/js/{ver}/all"), server.AllJs)
+	server.Handle(router.Path("/css/{ver}/all"), server.AllCss)
+	server.Handle(router.Path("/diplicity.appcache"), server.AppCache)
 	server.HandleStatic(router, "static")
 
 	// Everything else HTMLy
-	router.MatcherFunc(wantsHTML).HandlerFunc(server.Logger(server.Index))
+	server.Handle(router.MatcherFunc(wantsHTML), server.Index)
 
 	addr := fmt.Sprintf("0.0.0.0:%v", *port)
 

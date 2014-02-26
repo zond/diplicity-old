@@ -9,7 +9,9 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync/atomic"
 	"text/template"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
@@ -19,14 +21,9 @@ import (
 )
 
 const (
-	SessionEmail  = "email"
-	SessionName   = "diplicity_session"
-	DefaultSecret = "something very secret"
+	SessionEmail = "email"
+	SessionName  = "diplicity_session"
 )
-
-func init() {
-	gosubs.Secret = DefaultSecret
-}
 
 const (
 	Fatal = iota
@@ -38,7 +35,6 @@ const (
 
 type Web struct {
 	sessionStore          *sessions.CookieStore
-	secret                string
 	db                    *kol.DB
 	env                   string
 	logLevel              int
@@ -67,6 +63,7 @@ func New() (result *Web) {
 		_Templates:            template.Must(template.New("_Templates").ParseGlob("templates/_/*.html")),
 		jsViewTemplates:       template.Must(template.New("jsViewTemplates").ParseGlob("templates/js/views/*.js")),
 		db:                    kol.Must("diplicity"),
+		sessionStore:          sessions.NewCookieStore([]byte(gosubs.Secret)),
 	}
 	return
 }
@@ -83,21 +80,39 @@ func (self *Web) DB() *kol.DB {
 	return self.db
 }
 
-func (self *Web) SetSecret(secret string) *Web {
-	self.secret = secret
-	self.sessionStore = sessions.NewCookieStore([]byte(secret))
-	return self
-}
-
 func (self *Web) SetAppcache(appcache bool) *Web {
 	self.appcache = appcache
 	return self
 }
 
-func (self *Web) renderText(w http.ResponseWriter, r *http.Request, templates *template.Template, template string, data interface{}) {
-	if err := templates.ExecuteTemplate(w, template, data); err != nil {
+func (self *Web) renderText(c *Context, templates *template.Template, template string) {
+	if err := templates.ExecuteTemplate(c.Resp(), template, c); err != nil {
 		panic(fmt.Errorf("While rendering text: %v", err))
 	}
+}
+
+func (self *Web) Handle(r *mux.Route, f func(c *Context)) {
+	r.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		lw := &loggingResponseWriter{
+			ResponseWriter: w,
+			request:        r,
+			start:          time.Now(),
+			status:         200,
+			web:            self,
+		}
+		var i int64
+		defer func() {
+			atomic.StoreInt64(&i, 1)
+			lw.log(recover())
+		}()
+		go func() {
+			time.Sleep(time.Second)
+			if atomic.CompareAndSwapInt64(&i, 0, 1) {
+				lw.inc()
+			}
+		}()
+		f(self.GetContext(w, r))
+	})
 }
 
 func (self *Web) Logf(level int, format string, args ...interface{}) {
@@ -132,7 +147,7 @@ func (self *Web) Tracef(format string, args ...interface{}) {
 	self.Logf(Trace, "\033[1;32mTRACE\t"+format+"\033[0m", args...)
 }
 
-func (self *Web) render_Templates(data RequestData) {
+func (self *Web) render_Templates(data *Context) {
 	fmt.Fprintln(data.response, "(function() {")
 	fmt.Fprintln(data.response, "  var n;")
 	var buf *bytes.Buffer
@@ -166,36 +181,36 @@ func (self *Web) HandleStatic(router *mux.Router, dir string) {
 	}
 	for _, fil := range children {
 		cpy := fil
-		router.MatcherFunc(func(r *http.Request, rm *mux.RouteMatch) bool {
+		self.Handle(router.MatcherFunc(func(r *http.Request, rm *mux.RouteMatch) bool {
 			return strings.HasSuffix(r.URL.Path, cpy)
-		}).HandlerFunc(self.Logger(func(w http.ResponseWriter, r *http.Request) {
-			if strings.HasSuffix(r.URL.Path, ".css") {
-				common.SetContentType(w, "text/css; charset=UTF-8", true)
-			} else if strings.HasSuffix(r.URL.Path, ".js") {
-				common.SetContentType(w, "application/javascript; charset=UTF-8", true)
-			} else if strings.HasSuffix(r.URL.Path, ".png") {
-				common.SetContentType(w, "image/png", true)
-			} else if strings.HasSuffix(r.URL.Path, ".gif") {
-				common.SetContentType(w, "image/gif", true)
-			} else if strings.HasSuffix(r.URL.Path, ".woff") {
-				common.SetContentType(w, "application/font-woff", true)
-			} else if strings.HasSuffix(r.URL.Path, ".ttf") {
-				common.SetContentType(w, "font/truetype", true)
+		}), func(c *Context) {
+			if strings.HasSuffix(c.Req().URL.Path, ".css") {
+				common.SetContentType(c.Resp(), "text/css; charset=UTF-8", true)
+			} else if strings.HasSuffix(c.Req().URL.Path, ".js") {
+				common.SetContentType(c.Resp(), "application/javascript; charset=UTF-8", true)
+			} else if strings.HasSuffix(c.Req().URL.Path, ".png") {
+				common.SetContentType(c.Resp(), "image/png", true)
+			} else if strings.HasSuffix(c.Req().URL.Path, ".gif") {
+				common.SetContentType(c.Resp(), "image/gif", true)
+			} else if strings.HasSuffix(c.Req().URL.Path, ".c.Resp()off") {
+				common.SetContentType(c.Resp(), "application/font-c.Resp()off", true)
+			} else if strings.HasSuffix(c.Req().URL.Path, ".ttf") {
+				common.SetContentType(c.Resp(), "font/truetype", true)
 			} else {
-				common.SetContentType(w, "application/octet-stream", true)
+				common.SetContentType(c.Resp(), "application/octet-stream", true)
 			}
 			if in, err := os.Open(filepath.Join("static", cpy)); err != nil {
 				self.Errorf("%v", err)
-				w.WriteHeader(500)
-				fmt.Fprintln(w, err)
+				c.Resp().WriteHeader(500)
+				fmt.Fprintln(c.Resp(), err)
 			} else {
 				defer in.Close()
-				if _, err := io.Copy(w, in); err != nil {
+				if _, err := io.Copy(c.Resp(), in); err != nil {
 					self.Errorf("%v", err)
-					w.WriteHeader(500)
-					fmt.Println(w, err)
+					c.Resp().WriteHeader(500)
+					fmt.Println(c.Resp(), err)
 				}
 			}
-		}))
+		})
 	}
 }

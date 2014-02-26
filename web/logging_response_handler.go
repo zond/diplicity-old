@@ -2,7 +2,6 @@ package web
 
 import (
 	"net/http"
-	"sync/atomic"
 	"time"
 )
 
@@ -42,28 +41,4 @@ func (self *loggingResponseWriter) log(err interface{}) {
 
 func (self *loggingResponseWriter) inc() {
 	self.web.Infof("%v\t%v\t%v\t%v", self.request.Method, self.request.URL, self.request.RemoteAddr, self.email())
-}
-
-func (self *Web) Logger(f func(w http.ResponseWriter, r *http.Request)) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		lw := &loggingResponseWriter{
-			ResponseWriter: w,
-			request:        r,
-			start:          time.Now(),
-			status:         200,
-			web:            self,
-		}
-		var i int64
-		defer func() {
-			atomic.StoreInt64(&i, 1)
-			lw.log(recover())
-		}()
-		go func() {
-			time.Sleep(time.Second)
-			if atomic.CompareAndSwapInt64(&i, 0, 1) {
-				lw.inc()
-			}
-		}()
-		f(lw, r)
-	}
 }

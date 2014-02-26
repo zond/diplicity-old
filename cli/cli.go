@@ -10,7 +10,6 @@ import (
 	"code.google.com/p/go.net/websocket"
 	"github.com/zond/diplicity/common"
 	"github.com/zond/diplicity/game"
-	"github.com/zond/diplicity/web"
 	"github.com/zond/wsubs/gosubs"
 )
 
@@ -18,7 +17,7 @@ func main() {
 	host := flag.String("host", "localhost", "The host to connect to.")
 	port := flag.Int("port", 8080, "The port to connect to.")
 	email := flag.String("email", "", "The email to fake authenticating as. Mandatory.")
-	secret := flag.String("secret", web.DefaultSecret, "The token secret of the server.")
+	secret := flag.String("secret", gosubs.Secret, "The token secret of the server.")
 	join := flag.String("join", "", "A game to join as the provided email.")
 	commit := flag.String("commit", "", "A game to commit the latest phase as the provided email.")
 
