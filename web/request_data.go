@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"sort"
+	"text/template"
 	"time"
 
 	"github.com/gorilla/sessions"
@@ -32,6 +33,12 @@ func (self *Web) GetContext(w http.ResponseWriter, r *http.Request) (result *Con
 	}
 	result.session, _ = self.sessionStore.Get(r, SessionName)
 	return
+}
+
+func (self *Context) RenderText(templates *template.Template, template string) {
+	if err := templates.ExecuteTemplate(self.Resp(), template, self); err != nil {
+		panic(fmt.Errorf("While rendering text: %v", err))
+	}
 }
 
 func (self *Context) Resp() http.ResponseWriter {
