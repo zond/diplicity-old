@@ -3,10 +3,6 @@ package web
 import (
 	"bytes"
 	"fmt"
-	"github.com/gorilla/mux"
-	"github.com/gorilla/sessions"
-	"github.com/zond/diplicity/common"
-	"github.com/zond/kcwraps/kol"
 	"io"
 	"log"
 	"net/http"
@@ -14,6 +10,12 @@ import (
 	"path/filepath"
 	"strings"
 	"text/template"
+
+	"github.com/gorilla/mux"
+	"github.com/gorilla/sessions"
+	"github.com/zond/diplicity/common"
+	"github.com/zond/kcwraps/kol"
+	"github.com/zond/wsubs/gosubs"
 )
 
 const (
@@ -21,6 +23,10 @@ const (
 	SessionName   = "diplicity_session"
 	DefaultSecret = "something very secret"
 )
+
+func init() {
+	gosubs.Secret = DefaultSecret
+}
 
 const (
 	Fatal = iota

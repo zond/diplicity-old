@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"flag"
 	"fmt"
+	"math/rand"
 	"time"
 
 	"code.google.com/p/go.net/websocket"
@@ -17,8 +18,9 @@ func main() {
 	host := flag.String("host", "localhost", "The host to connect to.")
 	port := flag.Int("port", 8080, "The port to connect to.")
 	email := flag.String("email", "", "The email to fake authenticating as. Mandatory.")
-	secret := flag.String("secret", web.DefaultSecret, "The cookie store secret of the server.")
+	secret := flag.String("secret", web.DefaultSecret, "The token secret of the server.")
 	join := flag.String("join", "", "A game to join as the provided email.")
+	commit := flag.String("commit", "", "A game to commit the latest phase as the provided email.")
 
 	flag.Parse()
 
@@ -41,6 +43,16 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	receiver := make(chan gosubs.Message, 1024)
+	go func() {
+		var err error
+		for err == nil {
+			mess := gosubs.Message{}
+			if err = websocket.JSON.Receive(ws, &mess); err == nil {
+				receiver <- mess
+			}
+		}
+	}()
 
 	if *join != "" {
 		base64DecodedId, err := base64.URLEncoding.DecodeString(*join)
@@ -48,7 +60,7 @@ func main() {
 			panic(err)
 		}
 		if err := websocket.JSON.Send(ws, gosubs.Message{
-			Type: common.UpdateType,
+			Type: gosubs.UpdateType,
 			Object: &gosubs.Object{
 				URI: fmt.Sprintf("/games/%v", *join),
 				Data: game.GameState{
@@ -68,5 +80,33 @@ func main() {
 			panic(err)
 		}
 	}
+
+	if *commit != "" {
+		if err := websocket.JSON.Send(ws, gosubs.Message{
+			Type: gosubs.SubscribeType,
+			Object: &gosubs.Object{
+				URI: fmt.Sprintf("/games/%v", *commit),
+			},
+		}); err != nil {
+			panic(err)
+		}
+		mess := <-receiver
+		id := fmt.Sprint(rand.Int63())
+		if err := websocket.JSON.Send(ws, gosubs.Message{
+			Type: gosubs.RPCType,
+			Method: &gosubs.Method{
+				Name: "Commit",
+				Id:   id,
+				Data: map[string]interface{}{
+					"PhaseId": mess.Object.Data.(map[string]interface{})["Phase"].(map[string]interface{})["Id"],
+				},
+			},
+		}); err != nil {
+			panic(err)
+		}
+		for mess = <-receiver; mess.Type != gosubs.RPCType || mess.Method.Id != id; mess = <-receiver {
+		}
+	}
+	ws.Close()
 
 }

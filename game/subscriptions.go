@@ -3,8 +3,6 @@ package game
 import (
 	"encoding/base64"
 	"sort"
-
-	"github.com/zond/diplicity/common"
 	"github.com/zond/diplicity/user"
 	"github.com/zond/kcwraps/kol"
 	"github.com/zond/kcwraps/subs"
@@ -43,7 +41,7 @@ func SubscribeCurrent(c subs.Context) error {
 		members := i.([]*Member)
 		states := GameStates{}
 		for _, member := range members {
-			if op == common.DeleteType {
+			if op == gosubs.DeleteType {
 				states = append(states, GameState{
 					Game:    &Game{Id: member.GameId},
 					Members: []MemberState{MemberState{Member: member}},

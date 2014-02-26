@@ -58,7 +58,7 @@ func setPhaseCommitted(c subs.Context, commit bool) (err error) {
 				phase.Resolved = true
 			}
 		}
-		err = d.Set(&phase)
+		err = d.Set(phase)
 		return
 	})
 }
