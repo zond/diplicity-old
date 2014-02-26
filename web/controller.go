@@ -62,9 +62,9 @@ func (self *Web) Token(c *Context) (err error) {
 		if err = token.Encode(); err != nil {
 			return
 		}
-		c.RenderJSON(token)
+		err = c.RenderJSON(token)
 	} else {
-		c.RenderJSON(gosubs.Token{})
+		err = c.RenderJSON(gosubs.Token{})
 	}
 	return
 }
@@ -158,6 +158,6 @@ func (self *Web) AllCss(c *Context) (err error) {
 	c.RenderText(self.cssTemplates, "bootstrap-theme.min.css")
 	c.RenderText(self.cssTemplates, "bootstrap-multiselect.css")
 	c.RenderText(self.cssTemplates, "slider.css")
-	c.RenderText(self.cssTemplates, "common.css")
+	e.RenderText(self.cssTemplates, "common.css")
 	return
 }
