@@ -10,33 +10,9 @@ import (
 	"github.com/zond/wsubs/gosubs"
 )
 
-func (self *Web) AdminGetPhase(c *Context) (err error) {
-	/*
-		gameId, err := base64.URLEncoding.DecodeString(c.Vars()["game_id"])
-		if err != nil {
-			return
-		}
-		game := &game.Game{Id: gameId}
-		if err = c.DB().Get(game); err != nil {
-			return
-		}
-	*/
-	return
-}
-
-func (self *Web) AdminGetGame(c *Context) (err error) {
-	/*
-		gameId, err := base64.URLEncoding.DecodeString(c.Vars()["game_id"])
-		if err != nil {
-			return
-		}
-		game := &game.Game{Id: gameId}
-		if err = c.DB().Get(game); err != nil {
-			return
-		}
-	*/
-	return
-}
+const (
+	admin = "Admin"
+)
 
 func (self *Web) Openid(c *Context) (err error) {
 	redirect, email, ok := gopenid.VerifyAuth(c.Req())
@@ -158,6 +134,6 @@ func (self *Web) AllCss(c *Context) (err error) {
 	c.RenderText(self.cssTemplates, "bootstrap-theme.min.css")
 	c.RenderText(self.cssTemplates, "bootstrap-multiselect.css")
 	c.RenderText(self.cssTemplates, "slider.css")
-	e.RenderText(self.cssTemplates, "common.css")
+	c.RenderText(self.cssTemplates, "common.css")
 	return
 }
