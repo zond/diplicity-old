@@ -35,6 +35,13 @@ func (self *Web) GetContext(w http.ResponseWriter, r *http.Request) (result *Con
 	return
 }
 
+func (self *Context) RenderJS(template string) {
+	if err := self.web.jsTemplates.ExecuteTemplate(self.Resp(), template, self); err != nil {
+		panic(fmt.Errorf("While rendering text: %v", err))
+	}
+	fmt.Fprintln(self.Resp(), ";")
+}
+
 func (self *Context) RenderText(templates *template.Template, template string) {
 	if err := templates.ExecuteTemplate(self.Resp(), template, self); err != nil {
 		panic(fmt.Errorf("While rendering text: %v", err))

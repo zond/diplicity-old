@@ -87,58 +87,38 @@ func (self *Web) AppCache(c *Context) {
 
 func (self *Web) AllJs(c *Context) {
 	common.SetContentType(c.Resp(), "application/javascript; charset=UTF-8", true)
-	c.RenderText(self.jsTemplates, "jquery-2.0.3.min.js")
-	fmt.Fprintln(c.Resp(), ";")
-	c.RenderText(self.jsTemplates, "jquery.timeago.js")
-	fmt.Fprintln(c.Resp(), ";")
-	c.RenderText(self.jsTemplates, "jquery.hammer.min.js")
-	fmt.Fprintln(c.Resp(), ";")
-	c.RenderText(self.jsTemplates, "underscore-min.js")
-	fmt.Fprintln(c.Resp(), ";")
-	c.RenderText(self.jsTemplates, "backbone-min.js")
-	fmt.Fprintln(c.Resp(), ";")
-	c.RenderText(self.jsTemplates, "bootstrap.min.js")
-	fmt.Fprintln(c.Resp(), ";")
-	c.RenderText(self.jsTemplates, "bootstrap-multiselect.js")
-	fmt.Fprintln(c.Resp(), ";")
-	c.RenderText(self.jsTemplates, "log.js")
-	fmt.Fprintln(c.Resp(), ";")
-	c.RenderText(self.jsTemplates, "util.js")
-	fmt.Fprintln(c.Resp(), ";")
-	c.RenderText(self.jsTemplates, "panzoom.js")
-	fmt.Fprintln(c.Resp(), ";")
-	c.RenderText(self.jsTemplates, "cache.js")
-	fmt.Fprintln(c.Resp(), ";")
-	c.RenderText(self.jsTemplates, "jsock.js")
-	fmt.Fprintln(c.Resp(), ";")
-	c.RenderText(self.jsTemplates, "wsbackbone.js")
-	fmt.Fprintln(c.Resp(), ";")
-	c.RenderText(self.jsTemplates, "baseView.js")
-	fmt.Fprintln(c.Resp(), ";")
-	c.RenderText(self.jsTemplates, "dippyMap.js")
-	fmt.Fprintln(c.Resp(), ";")
+	c.RenderJS("jquery-2.0.3.min.js")
+	c.RenderJS("jquery.timeago.js")
+	c.RenderJS("jquery.hammer.min.js")
+	c.RenderJS("underscore-min.js")
+	c.RenderJS("backbone-min.js")
+	c.RenderJS("bootstrap.min.js")
+	c.RenderJS("bootstrap-multiselect.js")
+	c.RenderJS("log.js")
+	c.RenderJS("util.js")
+	c.RenderJS("panzoom.js")
+	c.RenderJS("cache.js")
+	c.RenderJS("jsock.js")
+	c.RenderJS("wsbackbone.js")
+	c.RenderJS("baseView.js")
+	c.RenderJS("dippyMap.js")
 	self.render_Templates(c)
-	fmt.Fprintln(c.Resp(), ";")
 	for _, templ := range self.jsModelTemplates.Templates() {
 		if err := templ.Execute(c.Resp(), c); err != nil {
 			panic(err)
 		}
-		fmt.Fprintln(c.Resp(), ";")
 	}
 	for _, templ := range self.jsCollectionTemplates.Templates() {
 		if err := templ.Execute(c.Resp(), c); err != nil {
 			panic(err)
 		}
-		fmt.Fprintln(c.Resp(), ";")
 	}
 	for _, templ := range self.jsViewTemplates.Templates() {
 		if err := templ.Execute(c.Resp(), c); err != nil {
 			panic(err)
 		}
-		fmt.Fprintln(c.Resp(), ";")
 	}
-	c.RenderText(self.jsTemplates, "app.js")
-	fmt.Fprintln(c.Resp(), ";")
+	c.RenderJS("app.js")
 }
 
 func (self *Web) AllCss(c *Context) {

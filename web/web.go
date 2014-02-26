@@ -85,12 +85,6 @@ func (self *Web) SetAppcache(appcache bool) *Web {
 	return self
 }
 
-func (self *Web) renderText(c *Context, templates *template.Template, template string) {
-	if err := templates.ExecuteTemplate(c.Resp(), template, c); err != nil {
-		panic(fmt.Errorf("While rendering text: %v", err))
-	}
-}
-
 func (self *Web) Handle(r *mux.Route, f func(c *Context)) {
 	r.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		lw := &loggingResponseWriter{
