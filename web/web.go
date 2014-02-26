@@ -16,6 +16,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/zond/diplicity/common"
+	"github.com/zond/diplicity/translation"
 	"github.com/zond/kcwraps/kol"
 	"github.com/zond/wsubs/gosubs"
 )
@@ -78,6 +79,17 @@ func (self *Web) SetEnv(env string) *Web {
 
 func (self *Web) DB() *kol.DB {
 	return self.db
+}
+
+func (self *Web) GetContext(w http.ResponseWriter, r *http.Request) (result *Context) {
+	result = &Context{
+		response:     w,
+		request:      r,
+		web:          self,
+		translations: translation.GetTranslations(common.GetLanguage(r)),
+	}
+	result.session, _ = self.sessionStore.Get(r, SessionName)
+	return
 }
 
 func (self *Web) SetAppcache(appcache bool) *Web {

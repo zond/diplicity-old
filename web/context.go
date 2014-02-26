@@ -11,7 +11,6 @@ import (
 
 	"github.com/gorilla/sessions"
 	"github.com/zond/diplicity/common"
-	"github.com/zond/diplicity/translation"
 	dip "github.com/zond/godip/common"
 	"github.com/zond/wsubs/gosubs"
 )
@@ -22,17 +21,6 @@ type Context struct {
 	session      *sessions.Session
 	translations map[string]string
 	web          *Web
-}
-
-func (self *Web) GetContext(w http.ResponseWriter, r *http.Request) (result *Context) {
-	result = &Context{
-		response:     w,
-		request:      r,
-		web:          self,
-		translations: translation.GetTranslations(common.GetLanguage(r)),
-	}
-	result.session, _ = self.sessionStore.Get(r, SessionName)
-	return
 }
 
 func (self *Context) RenderJS(template string) {
