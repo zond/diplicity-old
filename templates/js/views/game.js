@@ -23,6 +23,10 @@ window.GameView = BaseView.extend({
 			this.chatMessages = new ChatMessages([], { url: '/games/' + this.model.get('Id') + '/messages' });
 			this.fetch(this.chatMessages);
 		}
+		this.lastPhaseOrdinal = 0;
+		if (this.model.get('Phase') != null) {
+		  this.lastPhaseOrdinal = this.model.get('Phase').Ordinal;
+		}
 		this.controlsView = new GameControlsView({
 		  parentId: 'current-game',
 			model: this.model,
@@ -150,6 +154,9 @@ window.GameView = BaseView.extend({
 
 	update: function() {
 	  var that = this;
+		if (that.model.get('Phase') != null && that.model.get('Phase').Ordinal != that.lastPhaseOrdinal) {
+		  that.possibleSources = null;
+		}
 		if (that.model.get('Members') != null) {
 		  if (that.$('#current-game').children().length == 0) {
 				that.$('#current-game').append(that.stateView.el);
