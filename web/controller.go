@@ -1,18 +1,44 @@
 package web
 
 import (
+	"encoding/base64"
 	"fmt"
 	"net/url"
 	"time"
 
+	"github.com/zond/diplicity/game"
 	"github.com/zond/diplicity/user"
 	"github.com/zond/gopenid"
 	"github.com/zond/wsubs/gosubs"
 )
 
-const (
-	admin = "Admin"
-)
+func (self *Web) AdminGetGame(c *Context) (err error) {
+	gameId, err := base64.URLEncoding.DecodeString(c.Vars()["game_id"])
+	if err != nil {
+		return
+	}
+	g := &game.Game{Id: gameId}
+	if err = c.DB().Get(g); err != nil {
+		return
+	}
+	phase, err := g.LastPhase(c.DB())
+	if err != nil {
+		return
+	}
+	members, err := g.Members(c.DB())
+	if err != nil {
+		return
+	}
+	memberStates, err := members.ToStates(c.DB(), g, "")
+	if err != nil {
+		return
+	}
+	return c.RenderJSON(game.GameState{
+		Game:    g,
+		Phase:   phase,
+		Members: memberStates,
+	})
+}
 
 func (self *Web) Openid(c *Context) (err error) {
 	redirect, email, ok := gopenid.VerifyAuth(c.Req())

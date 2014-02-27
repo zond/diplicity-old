@@ -3,6 +3,7 @@ package game
 import (
 	"encoding/base64"
 	"sort"
+
 	"github.com/zond/diplicity/user"
 	"github.com/zond/kcwraps/kol"
 	"github.com/zond/kcwraps/subs"
@@ -59,7 +60,7 @@ func SubscribeCurrent(c subs.Context) error {
 				if err != nil {
 					return err
 				}
-				memberStates, err := members.toStates(c, game, c.Principal())
+				memberStates, err := members.ToStates(c.DB(), game, c.Principal())
 				if err != nil {
 					return err
 				}
@@ -98,7 +99,7 @@ func SubscribeGame(c subs.Context) error {
 			if err != nil {
 				return err
 			}
-			memberStates, err := members.toStates(c, game, c.Principal())
+			memberStates, err := members.ToStates(c.DB(), game, c.Principal())
 			if err != nil {
 				return err
 			}
@@ -177,7 +178,7 @@ func SubscribeOpen(c subs.Context) error {
 				if err != nil {
 					return err
 				}
-				memberStates, err := members.toStates(c, game, c.Principal())
+				memberStates, err := members.ToStates(c.DB(), game, c.Principal())
 				if err != nil {
 					return err
 				}

@@ -8,7 +8,6 @@ import (
 	"github.com/zond/diplicity/user"
 	dip "github.com/zond/godip/common"
 	"github.com/zond/kcwraps/kol"
-	"github.com/zond/kcwraps/subs"
 )
 
 type Member struct {
@@ -55,11 +54,11 @@ func (self Members) Contains(email string) bool {
 	return false
 }
 
-func (self Members) toStates(c subs.Context, g *Game, email string) (result []MemberState, err error) {
+func (self Members) ToStates(d *kol.DB, g *Game, email string) (result []MemberState, err error) {
 	result = make([]MemberState, len(self))
 	for index, member := range self {
 		var state *MemberState
-		if state, err = member.toState(c, g, email); err != nil {
+		if state, err = member.ToState(d, g, email); err != nil {
 			return
 		}
 		result[index] = *state
@@ -67,7 +66,7 @@ func (self Members) toStates(c subs.Context, g *Game, email string) (result []Me
 	return
 }
 
-func (self *Member) toState(c subs.Context, g *Game, email string) (result *MemberState, err error) {
+func (self *Member) ToState(d *kol.DB, g *Game, email string) (result *MemberState, err error) {
 	result = &MemberState{
 		Member: &Member{
 			Id: self.Id,
@@ -89,19 +88,19 @@ func (self *Member) toState(c subs.Context, g *Game, email string) (result *Memb
 		panic(fmt.Errorf("Unknown game state for %+v", g))
 	}
 	secretNation, secretEmail, secretNickname = g.SecretNation&flag == flag, g.SecretEmail&flag == flag, g.SecretNickname&flag == flag
-	me := string(self.UserId) == email
-	if me || !secretNation {
+	allowed := email == "" || string(self.UserId) == email
+	if allowed || !secretNation {
 		result.Member.Nation = self.Nation
 	}
-	if me || !secretEmail || !secretNickname {
+	if allowed || !secretEmail || !secretNickname {
 		var foundUser *user.User
-		if foundUser, err = user.EnsureUser(c.DB(), string(self.UserId)); err != nil {
+		if foundUser, err = user.EnsureUser(d, string(self.UserId)); err != nil {
 			return
 		}
-		if me || !secretEmail {
+		if allowed || !secretEmail {
 			result.User.Email = foundUser.Email
 		}
-		if me || !secretNickname {
+		if allowed || !secretNickname {
 			result.User.Nickname = foundUser.Nickname
 		}
 	}

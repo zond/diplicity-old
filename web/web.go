@@ -24,6 +24,7 @@ import (
 const (
 	SessionEmail = "email"
 	SessionName  = "diplicity_session"
+	Admin        = "Admin"
 )
 
 const (
@@ -88,6 +89,7 @@ func (self *Web) GetContext(w http.ResponseWriter, r *http.Request) (result *Con
 		web:          self,
 		translations: translation.GetTranslations(common.GetLanguage(r)),
 		vars:         mux.Vars(r),
+		db:           self.db,
 	}
 	result.session, _ = self.sessionStore.Get(r, SessionName)
 	return
@@ -96,6 +98,25 @@ func (self *Web) GetContext(w http.ResponseWriter, r *http.Request) (result *Con
 func (self *Web) SetAppcache(appcache bool) *Web {
 	self.appcache = appcache
 	return self
+}
+
+func (self *Web) AdminHandle(r *mux.Route, f func(c *Context) error) {
+	self.Handle(r, func(c *Context) (err error) {
+		tokenStr := c.Req().FormValue("token")
+		if tokenStr == "" {
+			err = fmt.Errorf("Missing token")
+			return
+		}
+		token, err := gosubs.DecodeToken(tokenStr)
+		if err != nil {
+			return
+		}
+		if token.Principal != Admin {
+			err = fmt.Errorf("Not admin")
+			return
+		}
+		return f(c)
+	})
 }
 
 func (self *Web) Handle(r *mux.Route, f func(c *Context) error) {

@@ -13,6 +13,7 @@ import (
 	"github.com/gorilla/sessions"
 	"github.com/zond/diplicity/common"
 	dip "github.com/zond/godip/common"
+	"github.com/zond/kcwraps/kol"
 	"github.com/zond/wsubs/gosubs"
 )
 
@@ -23,6 +24,11 @@ type Context struct {
 	translations map[string]string
 	vars         map[string]string
 	web          *Web
+	db           *kol.DB
+}
+
+func (self *Context) DB() *kol.DB {
+	return self.db
 }
 
 func (self *Context) SetContentType(t string, cache bool) {
@@ -38,8 +44,13 @@ func (self *Context) SetContentType(t string, cache bool) {
 }
 
 func (self *Context) RenderJSON(i interface{}) (err error) {
+	b, err := json.MarshalIndent(i, "", "  ")
+	if err != nil {
+		return
+	}
 	self.SetContentType("application/json; charset=UTF-8", false)
-	return json.NewEncoder(self.Resp()).Encode(i)
+	_, err = self.Resp().Write(b)
+	return
 }
 
 func (self *Context) RenderJS(template string) {
