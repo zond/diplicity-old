@@ -100,7 +100,11 @@ func SetOrder(c subs.Context) (result interface{}, err error) {
 		if err != nil {
 			return
 		}
-		if err = parsedOrder.Validate(phase.GetState()); err != nil {
+		state, err := phase.GetState()
+		if err != nil {
+			return
+		}
+		if err = parsedOrder.Validate(state); err != nil {
 			return
 		}
 		nationOrders[dip.Province(order[0])] = order[1:]
@@ -135,7 +139,10 @@ func GetPossibleSources(c subs.Context) (result interface{}, err error) {
 		err = fmt.Errorf("No phase for %+v found", game)
 		return
 	}
-	state := phase.GetState()
+	state, err := phase.GetState()
+	if err != nil {
+		return
+	}
 	result = state.Phase().PossibleSources(state, member.Nation)
 	return
 }
@@ -163,7 +170,11 @@ func GetValidOrders(c subs.Context) (result interface{}, err error) {
 		err = fmt.Errorf("No phase for %+v found", game)
 		return
 	}
-	nation, options, found := phase.GetState().Options(orders.Types(), dip.Province(c.Data().GetString("Province")))
+	state, err := phase.GetState()
+	if err != nil {
+		return
+	}
+	nation, options, found := state.Options(orders.Types(), dip.Province(c.Data().GetString("Province")))
 	if found && nation == member.Nation {
 		result = options
 	}

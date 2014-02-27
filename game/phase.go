@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/zond/godip/classical"
+	"github.com/zond/godip/classical/orders"
 	dip "github.com/zond/godip/common"
 	"github.com/zond/godip/state"
 	"github.com/zond/kcwraps/kol"
@@ -66,8 +67,12 @@ func (self *Phase) redact(member *Member) *Phase {
 	return &result
 }
 
-func (self *Phase) GetState() *state.State {
-	return classical.Blank(classical.Phase(
+func (self *Phase) GetState() (result *state.State, err error) {
+	parsedOrders, err := orders.ParseAll(self.Orders)
+	if err != nil {
+		return
+	}
+	result = classical.Blank(classical.Phase(
 		self.Year,
 		self.Season,
 		self.Type,
@@ -77,7 +82,9 @@ func (self *Phase) GetState() *state.State {
 		self.Dislodgeds,
 		self.Dislodgers,
 		self.Bounces,
+		parsedOrders,
 	)
+	return
 }
 
 type Phases []Phase

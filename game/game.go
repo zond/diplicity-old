@@ -83,7 +83,10 @@ func (self *Game) resolve(d *kol.DB, phase *Phase) (err error) {
 		err = fmt.Errorf("%+v is not started", self)
 		return
 	}
-	state := phase.GetState()
+	state, err := phase.GetState()
+	if err != nil {
+		return
+	}
 	if err = state.Next(); err != nil {
 		return
 	}
@@ -96,7 +99,7 @@ func (self *Game) resolve(d *kol.DB, phase *Phase) (err error) {
 		Year:      nextDipPhase.Year(),
 		Type:      nextDipPhase.Type(),
 	}
-	nextPhase.Units, nextPhase.SupplyCenters, nextPhase.Dislodgeds, nextPhase.Dislodgers, nextPhase.Bounces = state.Dump()
+	nextPhase.Units, nextPhase.SupplyCenters, nextPhase.Dislodgeds, nextPhase.Dislodgers, nextPhase.Bounces, _ = state.Dump()
 	if err = d.Set(nextPhase); err != nil {
 		return
 	}
@@ -134,7 +137,7 @@ func (self *Game) start(d *kol.DB) error {
 		Year:      startPhase.Year(),
 		Type:      startPhase.Type(),
 	}
-	phase.Units, phase.SupplyCenters, phase.Dislodgeds, phase.Dislodgers, phase.Bounces = startState.Dump()
+	phase.Units, phase.SupplyCenters, phase.Dislodgeds, phase.Dislodgers, phase.Bounces, _ = startState.Dump()
 	return d.Set(phase)
 }
 
