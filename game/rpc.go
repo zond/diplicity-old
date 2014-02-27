@@ -100,7 +100,7 @@ func SetOrder(c subs.Context) (result interface{}, err error) {
 		if err != nil {
 			return
 		}
-		state, err := phase.GetState()
+		state, err := phase.State()
 		if err != nil {
 			return
 		}
@@ -139,11 +139,7 @@ func GetPossibleSources(c subs.Context) (result interface{}, err error) {
 		err = fmt.Errorf("No phase for %+v found", game)
 		return
 	}
-	state, err := phase.GetState()
-	if err != nil {
-		return
-	}
-	result = state.Phase().PossibleSources(state, member.Nation)
+	result, err = phase.PossibleSources(member.Nation)
 	return
 }
 
@@ -170,7 +166,7 @@ func GetValidOrders(c subs.Context) (result interface{}, err error) {
 		err = fmt.Errorf("No phase for %+v found", game)
 		return
 	}
-	state, err := phase.GetState()
+	state, err := phase.State()
 	if err != nil {
 		return
 	}

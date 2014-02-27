@@ -67,7 +67,16 @@ func (self *Phase) redact(member *Member) *Phase {
 	return &result
 }
 
-func (self *Phase) GetState() (result *state.State, err error) {
+func (self *Phase) PossibleSources(nation dip.Nation) (result []dip.Province, err error) {
+	state, err := self.State()
+	if err != nil {
+		return
+	}
+	result = state.Phase().PossibleSources(state, nation)
+	return
+}
+
+func (self *Phase) State() (result *state.State, err error) {
 	parsedOrders, err := orders.ParseAll(self.Orders)
 	if err != nil {
 		return

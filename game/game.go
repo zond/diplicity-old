@@ -83,29 +83,50 @@ func (self *Game) resolve(d *kol.DB, phase *Phase) (err error) {
 		err = fmt.Errorf("%+v is not started", self)
 		return
 	}
-	state, err := phase.GetState()
+	variant, found := common.VariantMap[self.Variant]
+	if !found {
+		err = fmt.Errorf("Unrecognized variant for %+v", self)
+		return
+	}
+	var possibleSources []dip.Province
+	state, err := phase.State()
 	if err != nil {
 		return
 	}
-	if err = state.Next(); err != nil {
-		return
-	}
-	nextDipPhase := state.Phase()
-	nextPhase := &Phase{
-		GameId:    self.Id,
-		Ordinal:   phase.Ordinal + 1,
-		Committed: map[dip.Nation]bool{},
-		Season:    nextDipPhase.Season(),
-		Year:      nextDipPhase.Year(),
-		Type:      nextDipPhase.Type(),
-	}
-	nextPhase.Units, nextPhase.SupplyCenters, nextPhase.Dislodgeds, nextPhase.Dislodgers, nextPhase.Bounces, _ = state.Dump()
-	if err = d.Set(nextPhase); err != nil {
-		return
-	}
-	phase.Resolved = true
-	if err = d.Set(phase); err != nil {
-		return
+	for i := 0; i < 100; i++ {
+		if err = state.Next(); err != nil {
+			return
+		}
+		nextDipPhase := state.Phase()
+		nextPhase := &Phase{
+			GameId:    self.Id,
+			Ordinal:   phase.Ordinal + 1,
+			Committed: map[dip.Nation]bool{},
+			Season:    nextDipPhase.Season(),
+			Year:      nextDipPhase.Year(),
+			Type:      nextDipPhase.Type(),
+		}
+		nextPhase.Units, nextPhase.SupplyCenters, nextPhase.Dislodgeds, nextPhase.Dislodgers, nextPhase.Bounces, _ = state.Dump()
+		for _, nation := range variant.Nations {
+			possibleSources, err = nextPhase.PossibleSources(nation)
+			if err != nil {
+				return
+			}
+			if len(possibleSources) == 0 {
+				nextPhase.Committed[nation] = true
+			}
+		}
+		if err = d.Set(nextPhase); err != nil {
+			return
+		}
+		phase.Resolved = true
+		if err = d.Set(phase); err != nil {
+			return
+		}
+		if len(nextPhase.Committed) < len(variant.Nations) {
+			break
+		}
+		phase = nextPhase
 	}
 	return
 }
