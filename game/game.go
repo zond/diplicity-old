@@ -140,9 +140,14 @@ func (self *Game) Updated(d *kol.DB, old *Game) {
 	}
 }
 
+func (self *Game) Phases(d *kol.DB) (result Phases, err error) {
+	err = d.Query().Where(kol.Equals{"GameId", self.Id}).All(&result)
+	return
+}
+
 func (self *Game) LastPhase(d *kol.DB) (result *Phase, err error) {
-	var phases Phases
-	if err = d.Query().Where(kol.Equals{"GameId", self.Id}).All(&phases); err != nil {
+	phases, err := self.Phases(d)
+	if err != nil {
 		return
 	}
 	if len(phases) > 0 {

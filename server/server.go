@@ -44,9 +44,6 @@ func main() {
 	server.Handle(router.Path("/openid"), server.Openid)
 	server.Handle(router.Path("/token"), server.Token)
 
-	// Admin
-	server.AdminHandle(router.Path("/games/{game_id}"), server.AdminGetGame)
-
 	// Resource routes for the WebSocket
 	wsRouter := subs.NewRouter(server.DB())
 	wsRouter.LogLevel = gosubs.DebugLevel
@@ -82,6 +79,9 @@ func main() {
 	server.Handle(router.Path("/css/{ver}/all"), server.AllCss)
 	server.Handle(router.Path("/diplicity.appcache"), server.AppCache)
 	server.HandleStatic(router, "static")
+
+	// Admin
+	server.AdminHandle(router.Path("/admin/games/{game_id}"), server.AdminGetGame)
 
 	// Everything else HTMLy
 	server.Handle(router.MatcherFunc(wantsHTML), server.Index)

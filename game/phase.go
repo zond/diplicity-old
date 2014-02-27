@@ -86,7 +86,7 @@ func (self Phases) Len() int {
 	return len(self)
 }
 
-func (self Phases) Less(i, j int) bool {
+func (self Phases) Less(j, i int) bool {
 	return self[i].Ordinal < self[j].Ordinal
 }
 

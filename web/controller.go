@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/url"
+	"sort"
 	"time"
 
 	"github.com/zond/diplicity/game"
@@ -11,6 +12,12 @@ import (
 	"github.com/zond/gopenid"
 	"github.com/zond/wsubs/gosubs"
 )
+
+type AdminGameState struct {
+	Game    *game.Game
+	Phases  game.Phases
+	Members []game.MemberState
+}
 
 func (self *Web) AdminGetGame(c *Context) (err error) {
 	gameId, err := base64.URLEncoding.DecodeString(c.Vars()["game_id"])
@@ -21,10 +28,6 @@ func (self *Web) AdminGetGame(c *Context) (err error) {
 	if err = c.DB().Get(g); err != nil {
 		return
 	}
-	phase, err := g.LastPhase(c.DB())
-	if err != nil {
-		return
-	}
 	members, err := g.Members(c.DB())
 	if err != nil {
 		return
@@ -33,9 +36,14 @@ func (self *Web) AdminGetGame(c *Context) (err error) {
 	if err != nil {
 		return
 	}
-	return c.RenderJSON(game.GameState{
+	phases, err := g.Phases(c.DB())
+	if err != nil {
+		return
+	}
+	sort.Sort(phases)
+	return c.RenderJSON(AdminGameState{
 		Game:    g,
-		Phase:   phase,
+		Phases:  phases,
 		Members: memberStates,
 	})
 }
