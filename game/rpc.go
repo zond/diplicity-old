@@ -7,6 +7,7 @@ import (
 	"github.com/zond/diplicity/common"
 	"github.com/zond/godip/classical/orders"
 	dip "github.com/zond/godip/common"
+	"github.com/zond/godip/state"
 	"github.com/zond/kcwraps/kol"
 	"github.com/zond/kcwraps/subs"
 )
@@ -86,28 +87,30 @@ func SetOrder(c subs.Context) (result interface{}, err error) {
 			err = fmt.Errorf("No phase for %+v found", game)
 			return
 		}
-		if phase.Orders == nil {
-			phase.Orders = map[dip.Nation]map[dip.Province][]string{}
-		}
 		nationOrders, found := phase.Orders[member.Nation]
 		if !found {
 			nationOrders = map[dip.Province][]string{}
 			phase.Orders[member.Nation] = nationOrders
 		}
 		order := c.Data().GetStringSlice("Order")
-		var parsedOrder dip.Order
-		parsedOrder, err = orders.Parse(order)
-		if err != nil {
-			return
+		if len(order) == 1 {
+			delete(nationOrders, dip.Province(order[0]))
+		} else {
+			var parsedOrder dip.Order
+			parsedOrder, err = orders.Parse(order)
+			if err != nil {
+				return
+			}
+			var state *state.State
+			state, err = phase.State()
+			if err != nil {
+				return
+			}
+			if err = parsedOrder.Validate(state); err != nil {
+				return
+			}
+			nationOrders[dip.Province(order[0])] = order[1:]
 		}
-		state, err := phase.State()
-		if err != nil {
-			return
-		}
-		if err = parsedOrder.Validate(state); err != nil {
-			return
-		}
-		nationOrders[dip.Province(order[0])] = order[1:]
 		if err = d.Set(phase); err != nil {
 			return
 		}

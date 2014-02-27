@@ -56,6 +56,42 @@ window.GameView = BaseView.extend({
 			logError("Don't know how to decide when having options", raw, "of different types", types);
 		} else if (types.length > 0) {
 			if (types[0] == "OrderType") {
+			  var dialogOptions = [
+				  {
+					  name: '{{.I "Cancel" }}',
+						value: '{{.I "Cancel" }}',
+					},
+				];
+				_.each(opts, function(opt) {
+				  dialogOptions.push({
+					  name: opt,
+						value: opt,
+					});
+				});
+				new OptionsDialogView({ 
+					options: dialogOptions,
+					selected: function(alternative) {
+					  if (alternative == '{{.I "Cancel" }}') {
+							var provs = [];
+							for (var p in raw[opts[0]].Next) {
+								provs.push(p);
+							}
+						  that.decision = [provs[0]];
+							that.decide({});
+						} else {
+							var provs = [];
+							for (var p in raw[alternative].Next) {
+								provs.push(p);
+							}
+							that.decision = [provs[0], alternative];
+							that.decide(raw[alternative].Next[provs[0]].Next);
+						}
+					},
+					cancelled: function() {
+					  that.addClickableProvinces();
+					},
+				}).display();
+			} else if (types[0] == "UnitType") {
 			  var dialogOptions = [];
 				_.each(opts, function(opt) {
 				  dialogOptions.push({
@@ -66,12 +102,8 @@ window.GameView = BaseView.extend({
 				new OptionsDialogView({ 
 					options: dialogOptions,
 					selected: function(alternative) {
-					  var provs = [];
-						for (var p in raw[alternative].Next) {
-						  provs.push(p);
-						}
-						that.decision = [provs[0], alternative];
-					  that.decide(raw[alternative].Next[provs[0]].Next);
+						that.decision.push(alternative);
+					  that.decide(raw[alternative].Next);
 					},
 					cancelled: function() {
 					  that.addClickableProvinces();
