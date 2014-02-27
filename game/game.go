@@ -97,7 +97,14 @@ func (self *Game) resolve(d *kol.DB, phase *Phase) (err error) {
 		Type:      nextDipPhase.Type(),
 	}
 	nextPhase.Units, nextPhase.SupplyCenters, nextPhase.Dislodgeds, nextPhase.Dislodgers, nextPhase.Bounces = state.Dump()
-	return d.Set(nextPhase)
+	if err = d.Set(nextPhase); err != nil {
+		return
+	}
+	phase.Resolved = true
+	if err = d.Set(phase); err != nil {
+		return
+	}
+	return
 }
 
 func (self *Game) start(d *kol.DB) error {

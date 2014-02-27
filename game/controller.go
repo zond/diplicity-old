@@ -165,6 +165,7 @@ func AddMember(c subs.Context) error {
 				if err := game.start(d); err != nil {
 					return err
 				}
+				c.Infof("Started %v", game.Id)
 			}
 		}
 		return nil
