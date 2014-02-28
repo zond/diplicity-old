@@ -34,6 +34,7 @@ window.GameView = BaseView.extend({
 		}).doRender();
 		this.fetch(this.model);
 		this.decision = null;
+		this.decisionFor = null;
 		this.decisionCleaners = null;
 		this.map = null;
 		this.possibleSources = null;
@@ -56,35 +57,44 @@ window.GameView = BaseView.extend({
 			logError("Don't know how to decide when having options", raw, "of different types", types);
 		} else if (types.length > 0) {
 			if (types[0] == "OrderType") {
-			  var dialogOptions = [
-				  {
-					  name: '{{.I "Cancel" }}',
-						value: '{{.I "Cancel" }}',
-					},
-				];
+			  var dialogOptions = [];
 				_.each(opts, function(opt) {
 				  dialogOptions.push({
 					  name: opt,
 						value: opt,
 					});
 				});
+				dialogOptions.push({
+					name: '{{.I "Cancel" }}',
+					value: '{{.I "Cancel" }}',
+				});
 				new OptionsDialogView({ 
 					options: dialogOptions,
 					selected: function(alternative) {
 					  if (alternative == '{{.I "Cancel" }}') {
-							var provs = [];
-							for (var p in raw[opts[0]].Next) {
-								provs.push(p);
+						  var toCancel = [that.decisionFor];
+              var split = that.decisionFor.split("/");
+							if (split.length == 2) {
+							  toCancel.push(split[0])
 							}
-						  that.decision = [provs[0]];
-							that.decide({});
+							_.each(toCancel, function(provToCancel) {
+								RPC('SetOrder', {
+									GameId: that.model.get('Id'),
+									Order: [provToCancel],
+								}, function(error) {
+									if (error != null && error != '') {
+										logError('While setting order', [provToCancel], error);
+									}
+									toCancel.pop();
+									if (toCancel.length == 0) {
+										that.decision = null;
+										that.addClickableProvinces();
+									}
+								});
+							});
 						} else {
-							var provs = [];
-							for (var p in raw[alternative].Next) {
-								provs.push(p);
-							}
-							that.decision = [provs[0], alternative];
-							that.decide(raw[alternative].Next[provs[0]].Next);
+							that.decision.push(alternative);
+							that.decide(raw[alternative].Next);
 						}
 					},
 					cancelled: function() {
@@ -116,6 +126,9 @@ window.GameView = BaseView.extend({
 						that.decide(raw[prov].Next);
 					}));
 				});
+			} else if (types[0] == "SrcProvince") {
+			  that.decision.unshift(opts[0]);
+				that.decide(raw[opts[0]].Next);
 			} else {
 			  logError("Don't know how to handle options of type", types[0]);
 			}
@@ -152,6 +165,8 @@ window.GameView = BaseView.extend({
 					GameId: that.model.get('Id'),
 					Province: prov,
 				}, function(result) {
+					that.decision = [];
+					that.decisionFor = prov;
 					that.decide(result);
 				});
 			}));
