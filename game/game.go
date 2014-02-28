@@ -99,15 +99,26 @@ func (self *Game) resolve(d *kol.DB, phase *Phase) (err error) {
 		}
 		nextDipPhase := state.Phase()
 		nextPhase := &Phase{
-			GameId:    self.Id,
-			Ordinal:   phase.Ordinal + 1,
-			Committed: map[dip.Nation]bool{},
-			Orders:    map[dip.Nation]map[dip.Province][]string{},
-			Season:    nextDipPhase.Season(),
-			Year:      nextDipPhase.Year(),
-			Type:      nextDipPhase.Type(),
+			GameId:      self.Id,
+			Ordinal:     phase.Ordinal + 1,
+			Committed:   map[dip.Nation]bool{},
+			Orders:      map[dip.Nation]map[dip.Province][]string{},
+			Resolutions: map[dip.Province]string{},
+			Season:      nextDipPhase.Season(),
+			Year:        nextDipPhase.Year(),
+			Type:        nextDipPhase.Type(),
 		}
-		nextPhase.Units, nextPhase.SupplyCenters, nextPhase.Dislodgeds, nextPhase.Dislodgers, nextPhase.Bounces, _ = state.Dump()
+		var resolutions map[dip.Province]error
+		nextPhase.Units, nextPhase.SupplyCenters, nextPhase.Dislodgeds, nextPhase.Dislodgers, nextPhase.Bounces, resolutions = state.Dump()
+		for _, nationOrders := range phase.Orders {
+			for prov, _ := range nationOrders {
+				if res, found := resolutions[prov]; found && res != nil {
+					phase.Resolutions[prov] = res.Error()
+				} else {
+					phase.Resolutions[prov] = "OK"
+				}
+			}
+		}
 		for _, nation := range variant.Nations {
 			possibleSources, err = nextPhase.PossibleSources(nation)
 			if err != nil {
@@ -152,13 +163,14 @@ func (self *Game) start(d *kol.DB) error {
 	}
 	startPhase := startState.Phase()
 	phase := &Phase{
-		GameId:    self.Id,
-		Ordinal:   0,
-		Committed: map[dip.Nation]bool{},
-		Orders:    map[dip.Nation]map[dip.Province][]string{},
-		Season:    startPhase.Season(),
-		Year:      startPhase.Year(),
-		Type:      startPhase.Type(),
+		GameId:      self.Id,
+		Ordinal:     0,
+		Committed:   map[dip.Nation]bool{},
+		Orders:      map[dip.Nation]map[dip.Province][]string{},
+		Resolutions: map[dip.Province]string{},
+		Season:      startPhase.Season(),
+		Year:        startPhase.Year(),
+		Type:        startPhase.Type(),
 	}
 	phase.Units, phase.SupplyCenters, phase.Dislodgeds, phase.Dislodgers, phase.Bounces, _ = startState.Dump()
 	return d.Set(phase)

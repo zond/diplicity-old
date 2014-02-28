@@ -2,6 +2,10 @@ window.GameOrdersView = BaseView.extend({
 
   template: _.template($('#game_orders_underscore').html()),
 
+	initialize: function() {
+	  this.listenTo(this.model, 'change', this.render);
+	},
+
 	shorten: function(part) {
 		if (part == "Move") {
 			return "M";
@@ -37,7 +41,6 @@ window.GameOrdersView = BaseView.extend({
 	  var that = this;
     that.$el.html(that.template({
 		}));
-		console.log(that.model.get('Phase'));
 		var me = that.model.me();
 		if (me != null) {
 			_.each(that.model.get('Phase').Orders, function(orders, nation) {

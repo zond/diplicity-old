@@ -145,6 +145,11 @@ func main() {
 		}
 		io.Copy(os.Stdout, bod)
 	} else {
+		if *join == "" && *commitAll == "" && *commit == "" {
+			flag.Usage()
+			return
+		}
+
 		if *join != "" {
 			if *email == "" {
 				flag.Usage()

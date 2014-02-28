@@ -26,6 +26,7 @@ type Phase struct {
 	Dislodgeds    map[dip.Province]dip.Unit
 	Dislodgers    map[dip.Province]dip.Province
 	Bounces       map[dip.Province]map[dip.Province]bool
+	Resolutions   map[dip.Province]string
 
 	Committed map[dip.Nation]bool
 
