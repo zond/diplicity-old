@@ -187,6 +187,7 @@ window.GameView = BaseView.extend({
 	update: function() {
 	  var that = this;
 		if (that.model.get('Phase') != null && that.model.get('Phase').Ordinal != that.lastPhaseOrdinal) {
+			that.lastPhaseOrdinal = that.model.get('Phase').Ordinal;
 		  that.possibleSources = null;
 		}
 		if (that.model.get('Members') != null) {
