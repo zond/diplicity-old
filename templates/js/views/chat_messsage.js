@@ -14,7 +14,6 @@ window.ChatMessageView = BaseView.extend({
 		  model: that.model,
 			sender: that.game.member(that.model.get('Sender')),
 		}));
-		that.$('abbr.timeago').timeago();
 		return that;
 	},
 

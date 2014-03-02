@@ -105,6 +105,13 @@ type skinnyWeb struct {
 	db *kol.DB
 }
 
+func (self skinnyWeb) BetweenTransactions(f func(c common.SkinnyContext)) {
+	self.db.BetweenTransactions(func(d *kol.DB) {
+		self.db = d
+		f(self)
+	})
+}
+
 func (self skinnyWeb) Transact(f func(c common.SkinnyContext) error) error {
 	return self.db.Transact(func(d *kol.DB) error {
 		self.db = d

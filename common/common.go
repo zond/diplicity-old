@@ -23,11 +23,18 @@ import (
 type SkinnyContext interface {
 	gosubs.Logger
 	DB() *kol.DB
+	BetweenTransactions(func(c SkinnyContext))
 	Transact(func(c SkinnyContext) error) error
 }
 
 type skinnyContext struct {
 	subs.Context
+}
+
+func (self skinnyContext) BetweenTransactions(f func(c SkinnyContext)) {
+	self.Context.BetweenTransactions(func(c subs.Context) {
+		f(c.(SkinnyContext))
+	})
 }
 
 func (self skinnyContext) Transact(f func(c SkinnyContext) error) error {

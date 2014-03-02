@@ -46,30 +46,32 @@ func (self *Phase) Schedule(c common.SkinnyContext) (err error) {
 			return
 		}
 		timeout := self.Deadline - ep
-		time.AfterFunc(timeout, func() {
-			if err := c.Transact(func(c common.SkinnyContext) (err error) {
-				if err = c.DB().Get(self); err != nil {
-					return
-				}
-				if !self.Resolved {
-					ep, err = epoch.Get(c.DB())
-					if err != nil {
+		c.BetweenTransactions(func(c common.SkinnyContext) {
+			time.AfterFunc(timeout, func() {
+				if err := c.Transact(func(c common.SkinnyContext) (err error) {
+					if err = c.DB().Get(self); err != nil {
 						return
 					}
-					if ep > self.Deadline {
-						game := &Game{Id: self.GameId}
-						if err = c.DB().Get(game); err != nil {
+					if !self.Resolved {
+						ep, err = epoch.Get(c.DB())
+						if err != nil {
 							return
 						}
-						return game.resolve(c, self)
+						if ep > self.Deadline {
+							game := &Game{Id: self.GameId}
+							if err = c.DB().Get(game); err != nil {
+								return
+							}
+							return game.resolve(c, self)
+						}
 					}
+					return
+				}); err != nil {
+					c.Errorf("Unable to resolve %+v: %v", self, err)
 				}
-				return
-			}); err != nil {
-				c.Errorf("Unable to resolve %+v: %v", self, err)
-			}
+			})
+			c.Infof("Scheduled resolution of %v in %v", self.GameId, timeout)
 		})
-		c.Infof("Scheduled resolution of %v in %v", self.GameId, timeout)
 	}
 	return
 }

@@ -1,13 +1,30 @@
 .game-controls-right {
 	float: right;
 }
-.chat-timestamp {
-	white-space: nowrap;
-	width: 5%;
+.channel .panel-body {
+	padding: 0px;
+}
+.game-controls .panel-body {
+	padding: 0px;
+}
+.create-message-button {
+	width: 60px;
+	float: right;
+}
+.chat-messages tbody tr td {
+	padding: 0px;
+	padding-left: 9px;
+}
+.chat-messages pre {
+	padding: 0px;
+	margin
+}
+.new-message-container {
+	margin-right: 60px;
 }
 .chat-sender {
 	white-space: nowrap;
-	width: 5%;
+	width: 1%;
 }
 .channel {
 	max-height: 80%;
