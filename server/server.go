@@ -89,6 +89,9 @@ func main() {
 	addr := fmt.Sprintf("0.0.0.0:%v", *port)
 
 	server.Infof("Listening to %v  (env=%v, appcache=%v)", addr, *env, *appcache)
+	if err := server.Start(); err != nil {
+		panic(err)
+	}
 	server.Fatalf("%v", http.ListenAndServe(addr, router))
 
 }
