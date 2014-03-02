@@ -47,7 +47,7 @@ func (self *Phase) Schedule(c common.SkinnyContext) (err error) {
 		}
 		timeout := self.Deadline - ep
 		time.AfterFunc(timeout, func() {
-			if err := c.DB().Transact(func(d *kol.DB) (err error) {
+			if err := c.Transact(func(c common.SkinnyContext) (err error) {
 				if err = c.DB().Get(self); err != nil {
 					return
 				}
@@ -69,7 +69,7 @@ func (self *Phase) Schedule(c common.SkinnyContext) (err error) {
 				c.Errorf("Unable to resolve %+v: %v", self, err)
 			}
 		})
-		c.Infof("Scheduled resolution of %v in %v", self.Id, timeout)
+		c.Infof("Scheduled resolution of %v in %v", self.GameId, timeout)
 	}
 	return
 }

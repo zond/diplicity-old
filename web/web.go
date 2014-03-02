@@ -77,7 +77,7 @@ func (self *Web) Start() (err error) {
 	if err != nil {
 		return
 	}
-	self.Debugf("At %v", startedAt)
+	self.Debugf("Epoch %v", startedAt)
 	startedTime := time.Now()
 	var currently time.Duration
 	go func() {
@@ -87,7 +87,7 @@ func (self *Web) Start() (err error) {
 			if err = epoch.Set(self.DB(), currently); err != nil {
 				panic(err)
 			}
-			self.Debugf("At %v", currently)
+			self.Debugf("Epoch %v", currently)
 		}
 	}()
 	unresolved := game.Phases{}
@@ -95,9 +95,28 @@ func (self *Web) Start() (err error) {
 		return err
 	}
 	for _, phase := range unresolved {
-		phase.Schedule(self)
+		phase.Schedule(self.SkinnyContext())
 	}
 	return
+}
+
+type skinnyWeb struct {
+	*Web
+	db *kol.DB
+}
+
+func (self skinnyWeb) Transact(f func(c common.SkinnyContext) error) error {
+	return self.db.Transact(func(d *kol.DB) error {
+		self.db = d
+		return f(self)
+	})
+}
+
+func (self *Web) SkinnyContext() common.SkinnyContext {
+	return skinnyWeb{
+		Web: self,
+		db:  self.DB(),
+	}
 }
 
 func (self *Web) SetEnv(env string) *Web {

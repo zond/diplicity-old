@@ -84,31 +84,31 @@ func CreateMessage(c subs.Context) (err error) {
 }
 
 func DeleteMember(c subs.Context) error {
-	return c.DB().Transact(func(d *kol.DB) error {
+	return c.Transact(func(c subs.Context) error {
 		decodedId, err := kol.DecodeId(c.Match()[1])
 		if err != nil {
 			return err
 		}
 		game := &Game{Id: decodedId}
-		if err := d.Get(game); err != nil {
+		if err := c.DB().Get(game); err != nil {
 			return fmt.Errorf("Game not found: %v", err)
 		}
 		if game.State != common.GameStateCreated {
 			return fmt.Errorf("%+v already started", game)
 		}
 		member := Member{}
-		if _, err := d.Query().Where(kol.And{kol.Equals{"GameId", decodedId}, kol.Equals{"UserId", kol.Id(c.Principal())}}).First(&member); err != nil {
+		if _, err := c.DB().Query().Where(kol.And{kol.Equals{"GameId", decodedId}, kol.Equals{"UserId", kol.Id(c.Principal())}}).First(&member); err != nil {
 			return err
 		}
-		if err := d.Del(&member); err != nil {
+		if err := c.DB().Del(&member); err != nil {
 			return err
 		}
-		left, err := game.Members(d)
+		left, err := game.Members(c.DB())
 		if err != nil {
 			return err
 		}
 		if len(left) == 0 {
-			if err := d.Del(game); err != nil {
+			if err := c.DB().Del(game); err != nil {
 				return err
 			}
 		}
@@ -119,9 +119,9 @@ func DeleteMember(c subs.Context) error {
 func AddMember(c subs.Context) error {
 	var state GameState
 	c.Data().Overwrite(&state)
-	return c.DB().Transact(func(d *kol.DB) error {
+	return c.Transact(func(c subs.Context) error {
 		game := Game{Id: state.Game.Id}
-		if err := d.Get(&game); err != nil {
+		if err := c.DB().Get(&game); err != nil {
 			return fmt.Errorf("Game not found")
 		}
 		if game.State != common.GameStateCreated {
@@ -131,23 +131,23 @@ func AddMember(c subs.Context) error {
 		if !found {
 			return fmt.Errorf("Unknown variant %v", game.Variant)
 		}
-		if alreadyMember, err := game.Member(d, c.Principal()); err != nil {
+		if alreadyMember, err := game.Member(c.DB(), c.Principal()); err != nil {
 			return err
 		} else if alreadyMember != nil {
 			return fmt.Errorf("%+v is already member of %v", alreadyMember, game.Id)
 		}
-		me, err := user.EnsureUser(d, c.Principal())
+		me, err := user.EnsureUser(c.DB(), c.Principal())
 		if err != nil {
 			return err
 		}
 		if game.Disallows(me) {
 			return fmt.Errorf("Is not allowed to join this game due to game settings")
 		}
-		already, err := game.Members(d)
+		already, err := game.Members(c.DB())
 		if err != nil {
 			return err
 		}
-		if disallows, err := already.Disallows(d, me); err != nil {
+		if disallows, err := already.Disallows(c.DB(), me); err != nil {
 			return err
 		} else if disallows {
 			return fmt.Errorf("Is not allowed to join this game due to blacklistings")
@@ -158,11 +158,11 @@ func AddMember(c subs.Context) error {
 				UserId:           kol.Id(c.Principal()),
 				PreferredNations: state.Members[0].PreferredNations,
 			}
-			if err := d.Set(&member); err != nil {
+			if err := c.DB().Set(&member); err != nil {
 				return err
 			}
 			if len(already) == len(variant.Nations)-1 {
-				if err := game.start(c); err != nil {
+				if err := game.start(common.Diet(c)); err != nil {
 					return err
 				}
 				c.Infof("Started %v", game.Id)
@@ -200,11 +200,11 @@ func Create(c subs.Context) error {
 		UserId:           kol.Id(c.Principal()),
 		PreferredNations: state.Members[0].PreferredNations,
 	}
-	return c.DB().Transact(func(d *kol.DB) error {
-		if err := d.Set(game); err != nil {
+	return c.Transact(func(c subs.Context) error {
+		if err := c.DB().Set(game); err != nil {
 			return err
 		}
 		member.GameId = game.Id
-		return d.Set(member)
+		return c.DB().Set(member)
 	})
 }

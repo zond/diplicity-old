@@ -27,16 +27,16 @@ func setPhaseCommitted(c subs.Context, commit bool) (err error) {
 	if err != nil {
 		return
 	}
-	return c.DB().Transact(func(d *kol.DB) (err error) {
+	return c.Transact(func(c subs.Context) (err error) {
 		phase := &Phase{Id: phaseId}
-		if err = d.Get(phase); err != nil {
+		if err = c.DB().Get(phase); err != nil {
 			return
 		}
-		game, err := phase.Game(d)
+		game, err := phase.Game(c.DB())
 		if err != nil {
 			return
 		}
-		member, err := game.Member(d, c.Principal())
+		member, err := game.Member(c.DB(), c.Principal())
 		if err != nil {
 			return
 		}
@@ -53,14 +53,14 @@ func setPhaseCommitted(c subs.Context, commit bool) (err error) {
 				return fmt.Errorf("Unknown variant %v", game.Variant)
 			}
 			if count == len(variant.Nations) {
-				if err = game.resolve(c, phase); err != nil {
+				if err = game.resolve(common.Diet(c), phase); err != nil {
 					return
 				}
 				c.Infof("Resolved %v", game.Id)
 				return
 			}
 		}
-		err = d.Set(phase)
+		err = c.DB().Set(phase)
 		return
 	})
 }

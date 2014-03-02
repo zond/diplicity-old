@@ -16,12 +16,28 @@ import (
 	dip "github.com/zond/godip/common"
 	"github.com/zond/godip/graph"
 	"github.com/zond/kcwraps/kol"
+	"github.com/zond/kcwraps/subs"
 	"github.com/zond/wsubs/gosubs"
 )
 
 type SkinnyContext interface {
 	gosubs.Logger
 	DB() *kol.DB
+	Transact(func(c SkinnyContext) error) error
+}
+
+type skinnyContext struct {
+	subs.Context
+}
+
+func (self skinnyContext) Transact(f func(c SkinnyContext) error) error {
+	return self.Context.Transact(func(c subs.Context) error {
+		return f(c.(SkinnyContext))
+	})
+}
+
+func Diet(c subs.Context) SkinnyContext {
+	return skinnyContext{c}
 }
 
 func GetLanguage(r *http.Request) string {
