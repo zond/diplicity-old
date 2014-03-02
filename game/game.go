@@ -98,6 +98,7 @@ func (self *Game) resolve(c common.SkinnyContext, phase *Phase) (err error) {
 	if err != nil {
 		return
 	}
+	// Just to limit runaway resolution to 100 phases.
 	for i := 0; i < 100; i++ {
 		if err = state.Next(); err != nil {
 			return
