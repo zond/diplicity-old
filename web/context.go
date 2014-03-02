@@ -24,11 +24,10 @@ type Context struct {
 	translations map[string]string
 	vars         map[string]string
 	web          *Web
-	db           *kol.DB
 }
 
 func (self *Context) DB() *kol.DB {
-	return self.db
+	return self.web.db
 }
 
 func (self *Context) SetContentType(t string, cache bool) {

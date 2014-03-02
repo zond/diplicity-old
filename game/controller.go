@@ -162,7 +162,7 @@ func AddMember(c subs.Context) error {
 				return err
 			}
 			if len(already) == len(variant.Nations)-1 {
-				if err := game.start(d); err != nil {
+				if err := game.start(c); err != nil {
 					return err
 				}
 				c.Infof("Started %v", game.Id)

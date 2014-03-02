@@ -3,6 +3,8 @@ package game
 import (
 	"time"
 
+	"github.com/zond/diplicity/common"
+	"github.com/zond/diplicity/epoch"
 	"github.com/zond/godip/classical"
 	"github.com/zond/godip/classical/orders"
 	dip "github.com/zond/godip/common"
@@ -18,7 +20,7 @@ type Phase struct {
 	Year     int
 	Type     dip.PhaseType
 	Ordinal  int
-	Resolved bool
+	Resolved bool `kol:"index"`
 
 	Units         map[dip.Province]dip.Unit
 	Orders        map[dip.Nation]map[dip.Province][]string
@@ -30,8 +32,46 @@ type Phase struct {
 
 	Committed map[dip.Nation]bool
 
+	Deadline time.Duration
+
 	CreatedAt time.Time
 	UpdatedAt time.Time
+}
+
+func (self *Phase) Schedule(c common.SkinnyContext) (err error) {
+	if !self.Resolved {
+		var ep time.Duration
+		ep, err = epoch.Get(c.DB())
+		if err != nil {
+			return
+		}
+		timeout := self.Deadline - ep
+		time.AfterFunc(timeout, func() {
+			if err := c.DB().Transact(func(d *kol.DB) (err error) {
+				if err = c.DB().Get(self); err != nil {
+					return
+				}
+				if !self.Resolved {
+					ep, err = epoch.Get(c.DB())
+					if err != nil {
+						return
+					}
+					if ep > self.Deadline {
+						game := &Game{Id: self.GameId}
+						if err = c.DB().Get(game); err != nil {
+							return
+						}
+						return game.resolve(c, self)
+					}
+				}
+				return
+			}); err != nil {
+				c.Errorf("Unable to resolve %+v: %v", self, err)
+			}
+		})
+		c.Infof("Scheduled resolution of %v in %v", self.Id, timeout)
+	}
+	return
 }
 
 func (self *Phase) Game(d *kol.DB) (result *Game, err error) {

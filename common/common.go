@@ -15,7 +15,14 @@ import (
 	"github.com/zond/godip/classical/start"
 	dip "github.com/zond/godip/common"
 	"github.com/zond/godip/graph"
+	"github.com/zond/kcwraps/kol"
+	"github.com/zond/wsubs/gosubs"
 )
+
+type SkinnyContext interface {
+	gosubs.Logger
+	DB() *kol.DB
+}
 
 func GetLanguage(r *http.Request) string {
 	bestLanguage := MostAccepted(r, "default", "Accept-Language")

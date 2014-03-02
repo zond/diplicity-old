@@ -16,6 +16,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/zond/diplicity/common"
+	"github.com/zond/diplicity/epoch"
+	"github.com/zond/diplicity/game"
 	"github.com/zond/diplicity/translation"
 	"github.com/zond/kcwraps/kol"
 	"github.com/zond/wsubs/gosubs"
@@ -50,7 +52,6 @@ type Web struct {
 	cssTemplates          *template.Template
 	_Templates            *template.Template
 	jsViewTemplates       *template.Template
-	epoch                 *Epoch
 }
 
 func New() (result *Web) {
@@ -67,43 +68,35 @@ func New() (result *Web) {
 		jsViewTemplates:       template.Must(template.New("jsViewTemplates").ParseGlob("templates/js/views/*.js")),
 		db:                    kol.Must("diplicity"),
 		sessionStore:          sessions.NewCookieStore([]byte(gosubs.Secret)),
-		epoch: &Epoch{
-			Id: kol.Id("github.com/zond/diplicity/web.Web.epoch"),
-		},
 	}
 	return
 }
 
-type Epoch struct {
-	Id kol.Id
-	At time.Duration
-}
-
-func (self *Web) Epoch() time.Duration {
-	return time.Duration(atomic.LoadInt64((*int64)(&self.epoch.At)))
-}
-
 func (self *Web) Start() (err error) {
-	if err = self.DB().Get(self.epoch); err != nil {
-		if err == kol.NotFound {
-			err = nil
-		} else {
-			return
-		}
+	startedAt, err := epoch.Get(self.DB())
+	if err != nil {
+		return
 	}
-	self.Debugf("At %v", self.epoch.At)
-	startedAt := self.epoch.At
+	self.Debugf("At %v", startedAt)
 	startedTime := time.Now()
+	var currently time.Duration
 	go func() {
 		for {
 			time.Sleep(time.Minute)
-			atomic.StoreInt64((*int64)(&self.epoch.At), int64(time.Now().Sub(startedTime)+startedAt))
-			if err = self.DB().Set(self.epoch); err != nil {
+			currently = time.Now().Sub(startedTime) + startedAt
+			if err = epoch.Set(self.DB(), currently); err != nil {
 				panic(err)
 			}
-			self.Debugf("At %v", self.epoch.At)
+			self.Debugf("At %v", currently)
 		}
 	}()
+	unresolved := game.Phases{}
+	if err = self.DB().Query().Where(kol.Equals{"Resolved", false}).All(&unresolved); err != nil {
+		return err
+	}
+	for _, phase := range unresolved {
+		phase.Schedule(self)
+	}
 	return
 }
 
@@ -126,7 +119,6 @@ func (self *Web) GetContext(w http.ResponseWriter, r *http.Request) (result *Con
 		web:          self,
 		translations: translation.GetTranslations(common.GetLanguage(r)),
 		vars:         mux.Vars(r),
-		db:           self.db,
 	}
 	result.session, _ = self.sessionStore.Get(r, SessionName)
 	return

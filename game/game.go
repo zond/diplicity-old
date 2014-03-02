@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/zond/diplicity/common"
+	"github.com/zond/diplicity/epoch"
 	"github.com/zond/diplicity/user"
 	"github.com/zond/godip/classical"
 	dip "github.com/zond/godip/common"
@@ -78,7 +79,7 @@ func (self *Game) allocate(d *kol.DB) error {
 	return fmt.Errorf("Unknown allocation method %v", self.AllocationMethod)
 }
 
-func (self *Game) resolve(d *kol.DB, phase *Phase) (err error) {
+func (self *Game) resolve(c common.SkinnyContext, phase *Phase) (err error) {
 	if self.State != common.GameStateStarted {
 		err = fmt.Errorf("%+v is not started", self)
 		return
@@ -90,6 +91,10 @@ func (self *Game) resolve(d *kol.DB, phase *Phase) (err error) {
 	}
 	var possibleSources []dip.Province
 	state, err := phase.State()
+	if err != nil {
+		return
+	}
+	epoch, err := epoch.Get(c.DB())
 	if err != nil {
 		return
 	}
@@ -107,6 +112,7 @@ func (self *Game) resolve(d *kol.DB, phase *Phase) (err error) {
 			Season:      nextDipPhase.Season(),
 			Year:        nextDipPhase.Year(),
 			Type:        nextDipPhase.Type(),
+			Deadline:    epoch + (time.Minute * time.Duration(self.Deadlines[nextDipPhase.Type()])),
 		}
 		var resolutions map[dip.Province]error
 		nextPhase.Units, nextPhase.SupplyCenters, nextPhase.Dislodgeds, nextPhase.Dislodgers, nextPhase.Bounces, resolutions = state.Dump()
@@ -128,11 +134,14 @@ func (self *Game) resolve(d *kol.DB, phase *Phase) (err error) {
 				nextPhase.Committed[nation] = true
 			}
 		}
-		if err = d.Set(nextPhase); err != nil {
+		if err = c.DB().Set(nextPhase); err != nil {
+			return
+		}
+		if err = nextPhase.Schedule(c); err != nil {
 			return
 		}
 		phase.Resolved = true
-		if err = d.Set(phase); err != nil {
+		if err = c.DB().Set(phase); err != nil {
 			return
 		}
 		if len(nextPhase.Committed) < len(variant.Nations) {
@@ -143,25 +152,31 @@ func (self *Game) resolve(d *kol.DB, phase *Phase) (err error) {
 	return
 }
 
-func (self *Game) start(d *kol.DB) error {
+func (self *Game) start(c common.SkinnyContext) (err error) {
 	if self.State != common.GameStateCreated {
-		return fmt.Errorf("%+v is already started", self)
+		err = fmt.Errorf("%+v is already started", self)
+		return
 	}
 	self.State = common.GameStateStarted
 	self.Closed = true
-	if err := d.Set(self); err != nil {
-		return err
+	if err = c.DB().Set(self); err != nil {
+		return
 	}
-	if err := self.allocate(d); err != nil {
-		return err
+	if err = self.allocate(c.DB()); err != nil {
+		return
 	}
 	var startState *state.State
 	if self.Variant == common.ClassicalString {
 		startState = classical.Start()
 	} else {
-		return fmt.Errorf("Unknown variant %v", self.Variant)
+		err = fmt.Errorf("Unknown variant %v", self.Variant)
+		return
 	}
 	startPhase := startState.Phase()
+	epoch, err := epoch.Get(c.DB())
+	if err != nil {
+		return
+	}
 	phase := &Phase{
 		GameId:      self.Id,
 		Ordinal:     0,
@@ -171,9 +186,16 @@ func (self *Game) start(d *kol.DB) error {
 		Season:      startPhase.Season(),
 		Year:        startPhase.Year(),
 		Type:        startPhase.Type(),
+		Deadline:    epoch + (time.Minute * time.Duration(self.Deadlines[startPhase.Type()])),
 	}
 	phase.Units, phase.SupplyCenters, phase.Dislodgeds, phase.Dislodgers, phase.Bounces, _ = startState.Dump()
-	return d.Set(phase)
+	if err = c.DB().Set(phase); err != nil {
+		return
+	}
+	if err = phase.Schedule(c); err != nil {
+		return
+	}
+	return
 }
 
 func (self *Game) Updated(d *kol.DB, old *Game) {

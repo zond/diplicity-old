@@ -53,7 +53,7 @@ func setPhaseCommitted(c subs.Context, commit bool) (err error) {
 				return fmt.Errorf("Unknown variant %v", game.Variant)
 			}
 			if count == len(variant.Nations) {
-				if err = game.resolve(d, phase); err != nil {
+				if err = game.resolve(c, phase); err != nil {
 					return
 				}
 				c.Infof("Resolved %v", game.Id)
