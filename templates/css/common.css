@@ -55,7 +55,7 @@
 }
 #content {
 	width: 100%;
-	overflow: scroll;
+	overflow: auto;
 	height: 100%;
 }
 .prioritize {
@@ -85,8 +85,10 @@
 .panel-title {
 	white-space: nowrap;
 }
-body {
+.bottom-lift {
 	margin-bottom: 35px;
+}
+body {
 	margin-top: 51px;
 }
 .view-game {

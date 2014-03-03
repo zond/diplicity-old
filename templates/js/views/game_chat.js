@@ -50,9 +50,7 @@ window.GameChatView = BaseView.extend({
 
 	createChannel: function() {
 	  var that = this;
-	  var memberNations = _.filter(that.$('.new-channel-nations').val().sort(), function(val) {
-		  return val != 'multiselect-all';
-		});
+	  var memberNations = that.$('.new-channel-nations').val().sort();
 		memberNations.push(that.model.me().Nation);
 		if (that.model.allowChatMembers(memberNations.length)) {
 		  members = _.inject(memberNations, function(sum, nat) {
@@ -121,9 +119,6 @@ window.GameChatView = BaseView.extend({
 					el.css('margin-bottom', el.find('.multiselect-container').height());
 				},
 			};
-			if ((that.model.currentChatFlags() & chatFlagMap["ChatConference"]) == chatFlagMap["ChatConference"]) {
-				opts.includeSelectAllOption = true;
-			}
 			that.$('.new-channel-nations').multiselect(opts);
 		}
 		this.loadMessages();

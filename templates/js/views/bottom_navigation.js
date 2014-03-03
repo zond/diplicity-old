@@ -25,6 +25,11 @@ window.BottomNavigationView = BaseView.extend({
 		  that.$('.buttons').append('<a href="' + b.url + '" class="btn navigate">' + b.label + '</a>');
 		});
 		that.update();
+		if (that.buttons.length == 0) {
+		  $('body').removeClass('bottom-lift');
+		} else {
+		  $('body').addClass('bottom-lift');
+		}
 		return that;
 	},
 
