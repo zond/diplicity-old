@@ -47,7 +47,7 @@ func main() {
 	// Resource routes for the WebSocket
 	wsRouter := subs.NewRouter(server.DB())
 	if *env == "development" {
-		wsRouter.SetDevMode()
+		wsRouter.DevMode = true
 	}
 	wsRouter.LogLevel = gosubs.DebugLevel
 	wsRouter.Resource("^/games/current$").
