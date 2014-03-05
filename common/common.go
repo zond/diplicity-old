@@ -33,7 +33,7 @@ type skinnyContext struct {
 
 func (self skinnyContext) BetweenTransactions(f func(c SkinnyContext)) {
 	self.Context.BetweenTransactions(func(c subs.Context) {
-		f(c.(SkinnyContext))
+		f(Diet(c))
 	})
 }
 

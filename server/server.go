@@ -46,6 +46,9 @@ func main() {
 
 	// Resource routes for the WebSocket
 	wsRouter := subs.NewRouter(server.DB())
+	if *env == "development" {
+		wsRouter.SetDevMode()
+	}
 	wsRouter.LogLevel = gosubs.DebugLevel
 	wsRouter.Resource("^/games/current$").
 		Handle(gosubs.SubscribeType, game.SubscribeCurrent).Auth()
