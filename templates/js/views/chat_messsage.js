@@ -12,7 +12,7 @@ window.ChatMessageView = BaseView.extend({
 	  var that = this;
 		that.$el.html(that.template({
 		  model: that.model,
-			sender: that.game.member(that.model.get('Sender')),
+			sender: that.game.member(that.model.get('SenderId')),
 		}));
 		return that;
 	},

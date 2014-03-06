@@ -24,7 +24,7 @@ func (self Messages) Swap(i, j int) {
 type Message struct {
 	Id         kol.Id
 	GameId     kol.Id `kol:"index"`
-	Sender     kol.Id
+	SenderId   kol.Id
 	Recipients map[dip.Nation]bool
 
 	Body string

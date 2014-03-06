@@ -129,6 +129,7 @@ func main() {
 	url := flag.String("url", "", "A url to fetch authenticated as Admin.")
 	commit := flag.String("commit", "", "A game to commit the latest phase as the provided email.")
 	commitAll := flag.String("commit_all", "", "A game to commit the latest phase as all members.")
+	joinX := flag.Int("joinX", 0, "A number of members to join automatically to the game defined by -join.")
 
 	flag.Parse()
 
@@ -151,34 +152,43 @@ func main() {
 		}
 
 		if *join != "" {
-			if *email == "" {
+			if (*email == "" && *joinX < 1) || (*email != "" && *joinX > 0) {
 				flag.Usage()
 				return
+			}
+
+			if *joinX > 0 {
+				*email = fmt.Sprintf("%v@dom.tld", *joinX)
+			} else if *email != "" {
+				*joinX = 1
 			}
 
 			g, err := cli.game(*join)
 			if err != nil {
 				panic(err)
 			}
-			if err := cli.send(*email, gosubs.Message{
-				Type: gosubs.UpdateType,
-				Object: &gosubs.Object{
-					URI: fmt.Sprintf("/games/%v", *join),
-					Data: game.GameState{
-						Game: &game.Game{
-							Id: g.Game.Id,
-						},
-						Members: []game.MemberState{
-							game.MemberState{
-								Member: &game.Member{
-									PreferredNations: common.VariantMap[common.ClassicalString].Nations,
+			for ; *joinX > 0; *joinX-- {
+				if err := cli.send(*email, gosubs.Message{
+					Type: gosubs.UpdateType,
+					Object: &gosubs.Object{
+						URI: fmt.Sprintf("/games/%v", *join),
+						Data: game.GameState{
+							Game: &game.Game{
+								Id: g.Game.Id,
+							},
+							Members: []game.MemberState{
+								game.MemberState{
+									Member: &game.Member{
+										PreferredNations: common.VariantMap[common.ClassicalString].Nations,
+									},
 								},
 							},
 						},
 					},
-				},
-			}); err != nil {
-				panic(err)
+				}); err != nil {
+					panic(err)
+				}
+				*email = fmt.Sprintf("%v@dom.tld", *joinX-1)
 			}
 		}
 

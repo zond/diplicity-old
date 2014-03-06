@@ -14,6 +14,9 @@ func CreateMessage(c subs.Context) (err error) {
 	// load the  message provided by the client
 	var message Message
 	c.Data().Overwrite(&message)
+	if message.Recipients == nil {
+		message.Recipients = map[dip.Nation]bool{}
+	}
 
 	if message.Body == "" {
 		return
@@ -31,7 +34,7 @@ func CreateMessage(c subs.Context) (err error) {
 	}
 
 	// make sure the sender is correct
-	message.Sender = sender.Id
+	message.SenderId = sender.Id
 
 	// make sure the sender is one of the recipients
 	message.Recipients[sender.Nation] = true
@@ -76,8 +79,19 @@ func CreateMessage(c subs.Context) (err error) {
 		return
 	}
 
+	members, err := game.Members(c.DB())
+	if err != nil {
+		return
+	}
 	if err = c.DB().Set(&message); err != nil {
 		return
+	}
+	for recip, _ := range message.Recipients {
+		for _, member := range members {
+			if recip == member.Nation && !message.SenderId.Equals(member.Id) && !c.IsSubscribing(string(recip), fmt.Sprintf("/game/%v/messages", game.Id)) {
+				c.Infof("### Would have notified %#v", recip)
+			}
+		}
 	}
 
 	return
