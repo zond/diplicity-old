@@ -131,7 +131,13 @@ func SubscribeMessages(c subs.Context) (err error) {
 	}
 	s := c.Pack().New(c.Match()[0])
 	s.Query = s.DB().Query().Where(kol.Equals{"GameId", base64DecodedId})
-	s.Call = func(i interface{}, op string) error {
+	s.Call = func(i interface{}, op string) (err error) {
+		if member.Nation == "" {
+			member, err = game.Member(c.DB(), c.Principal())
+			if err != nil {
+				return
+			}
+		}
 		messages := i.([]*Message)
 		result := Messages{}
 		for _, message := range messages {
@@ -143,7 +149,7 @@ func SubscribeMessages(c subs.Context) (err error) {
 			sort.Sort(result)
 			return s.Send(result, op)
 		}
-		return nil
+		return
 	}
 	return s.Subscribe(&Message{})
 }

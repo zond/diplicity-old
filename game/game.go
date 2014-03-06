@@ -241,3 +241,19 @@ func (self *Game) Member(d *kol.DB, email string) (result *Member, err error) {
 	}
 	return
 }
+
+func (self *Game) Users(d *kol.DB) (result user.Users, err error) {
+	members, err := self.Members(d)
+	if err != nil {
+		return
+	}
+	result = make(user.Users, len(members))
+	for index, member := range members {
+		user := user.User{Id: member.UserId}
+		if err = d.Get(&user); err != nil {
+			return
+		}
+		result[index] = user
+	}
+	return
+}

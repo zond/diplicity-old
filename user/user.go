@@ -10,6 +10,8 @@ import (
 	"github.com/zond/wsubs/gosubs"
 )
 
+type Users []User
+
 type User struct {
 	Id              kol.Id
 	Email           string

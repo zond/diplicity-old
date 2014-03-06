@@ -88,8 +88,14 @@ func CreateMessage(c subs.Context) (err error) {
 	}
 	for recip, _ := range message.Recipients {
 		for _, member := range members {
-			if recip == member.Nation && !message.SenderId.Equals(member.Id) && !c.IsSubscribing(string(recip), fmt.Sprintf("/game/%v/messages", game.Id)) {
-				c.Infof("### Would have notified %#v", recip)
+			if recip == member.Nation && !message.SenderId.Equals(member.Id) {
+				user := &user.User{Id: member.UserId}
+				if err = c.DB().Get(user); err != nil {
+					return
+				}
+				if !c.IsSubscribing(user.Email, fmt.Sprintf("/games/%v/messages", game.Id)) {
+					c.Infof("### Would have notified %#v, because %v is not listening to %v", recip, user.Email, fmt.Sprintf("/games/%v/messages", game.Id))
+				}
 			}
 		}
 	}
