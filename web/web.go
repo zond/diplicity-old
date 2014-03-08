@@ -52,6 +52,8 @@ type Web struct {
 	cssTemplates          *template.Template
 	_Templates            *template.Template
 	jsViewTemplates       *template.Template
+	gmailAccount          string
+	gmailPassword         string
 }
 
 func New() (result *Web) {
@@ -148,6 +150,11 @@ func (self *Web) GetContext(w http.ResponseWriter, r *http.Request) (result *Con
 	}
 	result.session, _ = self.sessionStore.Get(r, SessionName)
 	return
+}
+
+func (self *Web) SetGMail(account, password string) *Web {
+	self.gmailAccount, self.gmailPassword = account, password
+	return self
 }
 
 func (self *Web) SetAppcache(appcache bool) *Web {

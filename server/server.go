@@ -25,6 +25,8 @@ func wantsHTML(r *http.Request, m *mux.RouteMatch) bool {
 func main() {
 	port := flag.Int("port", 8080, "The port to listen on")
 	secret := flag.String("secret", gosubs.Secret, "The cookie store secret")
+	gmailAccount := flag.String("gmail_account", "", "The GMail account to use for sending and receiving message email")
+	gmailPassword := flag.String("gmail_password", "", "The GMail account password")
 	env := flag.String("env", "development", "What environment to run")
 	appcache := flag.Bool("appcache", true, "Whether to enable appcache")
 
@@ -34,7 +36,7 @@ func main() {
 		panic("Only development env can run with the default secret")
 	}
 
-	server := web.New().SetEnv(*env).SetAppcache(*appcache)
+	server := web.New().SetEnv(*env).SetAppcache(*appcache).SetGMail(*gmailAccount, *gmailPassword)
 
 	router := mux.NewRouter()
 
