@@ -5,10 +5,16 @@ window.SettingsView = BaseView.extend({
 	events: {
 	  "change .user-nickname": "changeNickname",
 	  "click .save-button": "saveSettings",
+		"click .user-message-email-disabled": "toggleMessageEmailDisabled",
 	},
 
 	initialize: function(options) {
 		this.listenTo(window.session.user, 'change', this.doRender);
+	},
+
+  toggleMessageEmailDisabled: function(ev) {
+	  ev.preventDefault();
+		window.session.user.set('MessageEmailDisabled', !window.session.user.get('MessageEmailDisabled'));
 	},
 
 	changeNickname: function(ev) {

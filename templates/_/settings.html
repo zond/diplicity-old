@@ -15,5 +15,9 @@
 		<label for="user-nickname">{{.I "Nickname" }}</label>
 		<input type="text" class="form-control user-nickname" id="user-nickname" value="<%- model.get('Nickname') %>" placeholder="{{.I "Nickname" }}">
 	</div>
+	<div class="form-group">
+		<label for="user-message-email-disabled">{{.I "Disable message emails" }}</label>
+		<input type="checkbox" class="form-control user-message-email-disabled" id="user-message-email-disabled"<%= model.get('MessageEmailDisabled') ? ' checked="checked"' : '' %>>
+	</div>
 	<button type="submit" class="save-button btn btn-default">{{.I "Update" }}</button>
 </form>

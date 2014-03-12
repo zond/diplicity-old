@@ -13,12 +13,13 @@ import (
 type Users []User
 
 type User struct {
-	Id              kol.Id
-	Email           string
-	Nickname        string
-	MissedDeadlines int
-	HeldDeadlines   int
-	Ranking         float64
+	Id                   kol.Id
+	Email                string
+	Nickname             string
+	MessageEmailDisabled bool
+	MissedDeadlines      int
+	HeldDeadlines        int
+	Ranking              float64
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -74,6 +75,7 @@ func Update(c subs.Context) (err error) {
 		return
 	}
 	current.Nickname = user.Nickname
+	current.MessageEmailDisabled = user.MessageEmailDisabled
 	err = c.DB().Set(current)
 	return
 }
