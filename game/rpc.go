@@ -12,17 +12,17 @@ import (
 	"github.com/zond/kcwraps/subs"
 )
 
-func UncommitPhase(c subs.Context) (result interface{}, err error) {
+func UncommitPhase(c common.Context) (result interface{}, err error) {
 	err = setPhaseCommitted(c, false)
 	return
 }
 
-func CommitPhase(c subs.Context) (result interface{}, err error) {
+func CommitPhase(c common.Context) (result interface{}, err error) {
 	err = setPhaseCommitted(c, true)
 	return
 }
 
-func setPhaseCommitted(c subs.Context, commit bool) (err error) {
+func setPhaseCommitted(c common.Context, commit bool) (err error) {
 	phaseId, err := base64.URLEncoding.DecodeString(c.Data().GetString("PhaseId"))
 	if err != nil {
 		return
@@ -65,7 +65,7 @@ func setPhaseCommitted(c subs.Context, commit bool) (err error) {
 	})
 }
 
-func SetOrder(c subs.Context) (result interface{}, err error) {
+func SetOrder(c common.Context) (result interface{}, err error) {
 	var base64DecodedId []byte
 	if base64DecodedId, err = base64.URLEncoding.DecodeString(c.Data().GetString("GameId")); err != nil {
 		return
@@ -119,7 +119,7 @@ func SetOrder(c subs.Context) (result interface{}, err error) {
 	return
 }
 
-func GetPossibleSources(c subs.Context) (result interface{}, err error) {
+func GetPossibleSources(c common.Context) (result interface{}, err error) {
 	var base64DecodedId []byte
 	base64DecodedId, err = base64.URLEncoding.DecodeString(c.Data().GetString("GameId"))
 	if err != nil {
@@ -146,7 +146,7 @@ func GetPossibleSources(c subs.Context) (result interface{}, err error) {
 	return
 }
 
-func GetValidOrders(c subs.Context) (result interface{}, err error) {
+func GetValidOrders(c common.Context) (result interface{}, err error) {
 	var base64DecodedId []byte
 	base64DecodedId, err = base64.URLEncoding.DecodeString(c.Data().GetString("GameId"))
 	if err != nil {

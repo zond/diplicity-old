@@ -15,10 +15,12 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
+	"github.com/jhillyerd/go.enmime"
 	"github.com/zond/diplicity/common"
 	"github.com/zond/diplicity/epoch"
 	"github.com/zond/diplicity/game"
 	"github.com/zond/diplicity/translation"
+	"github.com/zond/gmail"
 	"github.com/zond/kcwraps/kol"
 	"github.com/zond/wsubs/gosubs"
 )
@@ -40,6 +42,7 @@ const (
 type Web struct {
 	sessionStore          *sessions.CookieStore
 	db                    *kol.DB
+	gmail                 *gmail.Client
 	env                   string
 	logLevel              int
 	appcache              bool
@@ -99,7 +102,20 @@ func (self *Web) Start() (err error) {
 	for _, phase := range unresolved {
 		phase.Schedule(self.SkinnyContext())
 	}
+	if self.gmailAccount != "" {
+		if self.gmail, err = gmail.New(self.gmailAccount, self.gmailPassword).MailHandler(self.IncomingMail).ErrorHandler(func(e error) {
+			self.Fatalf("Mail handler: %v", e)
+		}).Start(); err != nil {
+			return
+		}
+		self.Debugf("Listening for email to %#v", self.gmailAccount)
+	}
 	return
+}
+
+func (self *Web) IncomingMail(msg *enmime.MIMEBody) error {
+	self.Infof("Incoming mail: %v", msg)
+	return nil
 }
 
 type skinnyWeb struct {
@@ -126,6 +142,10 @@ func (self *Web) SkinnyContext() common.SkinnyContext {
 		Web: self,
 		db:  self.DB(),
 	}
+}
+
+func (self *Web) SendMail(subject, message string, recips ...string) (err error) {
+	return self.gmail.Send(subject, message, recips...)
 }
 
 func (self *Web) SetEnv(env string) *Web {

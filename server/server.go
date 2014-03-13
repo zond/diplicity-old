@@ -10,7 +10,6 @@ import (
 	"github.com/zond/diplicity/game"
 	"github.com/zond/diplicity/user"
 	"github.com/zond/diplicity/web"
-	"github.com/zond/kcwraps/subs"
 	"github.com/zond/wsubs/gosubs"
 )
 
@@ -47,7 +46,7 @@ func main() {
 	server.Handle(router.Path("/token"), server.Token)
 
 	// Resource routes for the WebSocket
-	wsRouter := subs.NewRouter(server.DB())
+	wsRouter := common.NewRouter(server.DB(), server)
 	if *env == "development" {
 		wsRouter.DevMode = true
 	}

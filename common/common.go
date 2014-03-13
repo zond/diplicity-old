@@ -20,6 +20,79 @@ import (
 	"github.com/zond/wsubs/gosubs"
 )
 
+type MailSender interface {
+	SendMail(subject, message string, recips ...string) error
+}
+
+type Context interface {
+	subs.Context
+	MailSender
+}
+
+type defaultContext struct {
+	subs.Context
+	MailSender
+}
+
+type Router struct {
+	*subs.Router
+	mailSender MailSender
+}
+
+func NewRouter(db *kol.DB, sender MailSender) *Router {
+	return &Router{
+		Router:     subs.NewRouter(db),
+		mailSender: sender,
+	}
+}
+
+type RPC struct {
+	*gosubs.RPC
+}
+
+func (self *RPC) Auth() *RPC {
+	self.RPC.Auth()
+	return self
+}
+
+type Resource struct {
+	*subs.Resource
+	mailSender MailSender
+}
+
+func (self *Resource) Handle(op string, f func(c Context) error) *Resource {
+	self.Resource.Handle(op, func(c subs.Context) error {
+		return f(&defaultContext{
+			Context:    c,
+			MailSender: self.mailSender,
+		})
+	})
+	return self
+}
+
+func (self *Resource) Auth() *Resource {
+	self.Resource.Auth()
+	return self
+}
+
+func (self *Router) Resource(s string) *Resource {
+	return &Resource{
+		Resource:   self.Router.Resource(s),
+		mailSender: self.mailSender,
+	}
+}
+
+func (self *Router) RPC(m string, f func(c Context) (result interface{}, err error)) *RPC {
+	return &RPC{
+		RPC: self.Router.RPC(m, func(c subs.Context) (result interface{}, err error) {
+			return f(&defaultContext{
+				Context:    c,
+				MailSender: self.mailSender,
+			})
+		}),
+	}
+}
+
 type SkinnyContext interface {
 	gosubs.Logger
 	DB() *kol.DB

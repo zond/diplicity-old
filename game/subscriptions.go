@@ -4,9 +4,9 @@ import (
 	"encoding/base64"
 	"sort"
 
+	"github.com/zond/diplicity/common"
 	"github.com/zond/diplicity/user"
 	"github.com/zond/kcwraps/kol"
-	"github.com/zond/kcwraps/subs"
 	"github.com/zond/wsubs/gosubs"
 )
 
@@ -35,7 +35,7 @@ func (self GameStates) Swap(i, j int) {
 	self[i], self[j] = self[j], self[i]
 }
 
-func SubscribeCurrent(c subs.Context) error {
+func SubscribeCurrent(c common.Context) error {
 	s := c.Pack().New(c.Match()[0])
 	s.Query = s.DB().Query().Where(kol.Equals{"UserId", kol.Id(c.Principal())})
 	s.Call = func(i interface{}, op string) error {
@@ -80,7 +80,7 @@ func SubscribeCurrent(c subs.Context) error {
 	return s.Subscribe(&Member{})
 }
 
-func SubscribeGame(c subs.Context) error {
+func SubscribeGame(c common.Context) error {
 	base64DecodedId, err := base64.URLEncoding.DecodeString(c.Match()[1])
 	if err != nil {
 		return err
@@ -116,7 +116,7 @@ func SubscribeGame(c subs.Context) error {
 	return s.Subscribe(&Game{Id: base64DecodedId})
 }
 
-func SubscribeMessages(c subs.Context) (err error) {
+func SubscribeMessages(c common.Context) (err error) {
 	base64DecodedId, err := base64.URLEncoding.DecodeString(c.Match()[1])
 	if err != nil {
 		return err
@@ -154,7 +154,7 @@ func SubscribeMessages(c subs.Context) (err error) {
 	return s.Subscribe(&Message{})
 }
 
-func SubscribeOpen(c subs.Context) error {
+func SubscribeOpen(c common.Context) error {
 	s := c.Pack().New(c.Match()[0])
 	s.Query = s.DB().Query().Where(kol.And{kol.Equals{"Closed", false}, kol.Equals{"Private", false}})
 	s.Call = func(i interface{}, op string) error {

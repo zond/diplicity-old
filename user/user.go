@@ -5,8 +5,8 @@ import (
 	"time"
 	"code.google.com/p/go.net/websocket"
 
+	"github.com/zond/diplicity/common"
 	"github.com/zond/kcwraps/kol"
-	"github.com/zond/kcwraps/subs"
 	"github.com/zond/wsubs/gosubs"
 )
 
@@ -49,7 +49,7 @@ type Blacklisting struct {
 	UpdatedAt   time.Time
 }
 
-func SubscribeEmail(c subs.Context) error {
+func SubscribeEmail(c common.Context) error {
 	if c.Principal() == "" {
 		return websocket.JSON.Send(c.Conn(), gosubs.Message{
 			Type: gosubs.FetchType,
@@ -63,7 +63,7 @@ func SubscribeEmail(c subs.Context) error {
 	return s.Subscribe(&User{Id: kol.Id(c.Principal())})
 }
 
-func Update(c subs.Context) (err error) {
+func Update(c common.Context) (err error) {
 	var user User
 	c.Data().Overwrite(&user)
 	current := &User{Id: user.Id}

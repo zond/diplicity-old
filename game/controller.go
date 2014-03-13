@@ -10,7 +10,7 @@ import (
 	"github.com/zond/kcwraps/subs"
 )
 
-func CreateMessage(c subs.Context) (err error) {
+func CreateMessage(c common.Context) (err error) {
 	// load the  message provided by the client
 	var message Message
 	c.Data().Overwrite(&message)
@@ -103,7 +103,7 @@ func CreateMessage(c subs.Context) (err error) {
 	return
 }
 
-func DeleteMember(c subs.Context) error {
+func DeleteMember(c common.Context) error {
 	return c.Transact(func(c subs.Context) error {
 		decodedId, err := kol.DecodeId(c.Match()[1])
 		if err != nil {
@@ -136,7 +136,7 @@ func DeleteMember(c subs.Context) error {
 	})
 }
 
-func AddMember(c subs.Context) error {
+func AddMember(c common.Context) error {
 	var state GameState
 	c.Data().Overwrite(&state)
 	return c.Transact(func(c subs.Context) error {
@@ -192,7 +192,7 @@ func AddMember(c subs.Context) error {
 	})
 }
 
-func Create(c subs.Context) error {
+func Create(c common.Context) error {
 	var state GameState
 	c.Data().Overwrite(&state)
 
