@@ -78,6 +78,14 @@ func New() (result *Web) {
 }
 
 func (self *Web) Start() (err error) {
+	if self.gmailAccount != "" {
+		if self.gmail, err = gmail.New(self.gmailAccount, self.gmailPassword).MailHandler(self.IncomingMail).ErrorHandler(func(e error) {
+			self.Fatalf("Mail handler: %v", e)
+		}).Start(); err != nil {
+			return
+		}
+		self.Infof("Listening for email to %#v", self.gmailAccount)
+	}
 	startedAt, err := epoch.Get(self.DB())
 	if err != nil {
 		return
@@ -101,14 +109,6 @@ func (self *Web) Start() (err error) {
 	}
 	for _, phase := range unresolved {
 		phase.Schedule(self.SkinnyContext())
-	}
-	if self.gmailAccount != "" {
-		if self.gmail, err = gmail.New(self.gmailAccount, self.gmailPassword).MailHandler(self.IncomingMail).ErrorHandler(func(e error) {
-			self.Fatalf("Mail handler: %v", e)
-		}).Start(); err != nil {
-			return
-		}
-		self.Debugf("Listening for email to %#v", self.gmailAccount)
 	}
 	return
 }
@@ -135,6 +135,10 @@ func (self skinnyWeb) Transact(f func(c common.SkinnyContext) error) error {
 		self.db = d
 		return f(self)
 	})
+}
+
+func (self skinnyWeb) DB() *kol.DB {
+	return self.db
 }
 
 func (self *Web) SkinnyContext() common.SkinnyContext {

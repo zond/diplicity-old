@@ -80,30 +80,37 @@ func (self *Game) allocate(d *kol.DB) error {
 }
 
 func (self *Game) resolve(c common.SkinnyContext, phase *Phase) (err error) {
+	// Check that we are in a phase where we CAN resolve
 	if self.State != common.GameStateStarted {
 		err = fmt.Errorf("%+v is not started", self)
 		return
 	}
+	// Check that we have a valid variant
 	variant, found := common.VariantMap[self.Variant]
 	if !found {
 		err = fmt.Errorf("Unrecognized variant for %+v", self)
 		return
 	}
 	var possibleSources []dip.Province
+	// Load the godip state for the phase
 	state, err := phase.State()
 	if err != nil {
 		return
 	}
+	// Load "now"
 	epoch, err := epoch.Get(c.DB())
 	if err != nil {
 		return
 	}
 	// Just to limit runaway resolution to 100 phases.
 	for i := 0; i < 100; i++ {
+		// Resolve the phase!
 		if err = state.Next(); err != nil {
 			return
 		}
+		// Load the new godip phase from the state
 		nextDipPhase := state.Phase()
+		// Create a diplicity phase for the new phase
 		nextPhase := &Phase{
 			GameId:      self.Id,
 			Ordinal:     phase.Ordinal + 1,
@@ -115,8 +122,10 @@ func (self *Game) resolve(c common.SkinnyContext, phase *Phase) (err error) {
 			Type:        nextDipPhase.Type(),
 			Deadline:    epoch + (time.Minute * time.Duration(self.Deadlines[nextDipPhase.Type()])),
 		}
+		// Set the new phase positions
 		var resolutions map[dip.Province]error
 		nextPhase.Units, nextPhase.SupplyCenters, nextPhase.Dislodgeds, nextPhase.Dislodgers, nextPhase.Bounces, resolutions = state.Dump()
+		// Store the results of the previous godip phase in the previous diplicity phase
 		for _, nationOrders := range phase.Orders {
 			for prov, _ := range nationOrders {
 				if res, found := resolutions[prov]; found && res != nil {
@@ -126,6 +135,7 @@ func (self *Game) resolve(c common.SkinnyContext, phase *Phase) (err error) {
 				}
 			}
 		}
+		// Commit everyone that doesn't have any orders to give
 		for _, nation := range variant.Nations {
 			possibleSources, err = nextPhase.PossibleSources(nation)
 			if err != nil {
@@ -135,17 +145,20 @@ func (self *Game) resolve(c common.SkinnyContext, phase *Phase) (err error) {
 				nextPhase.Committed[nation] = true
 			}
 		}
+		// Store the new phase
 		if err = c.DB().Set(nextPhase); err != nil {
 			return
 		}
-		if err = nextPhase.Schedule(c); err != nil {
-			return
-		}
+		// Mark the old phase as resolved, and save it
 		phase.Resolved = true
 		if err = c.DB().Set(phase); err != nil {
 			return
 		}
+		// If everyone in the new phase isn't commited, schedule an auto resolve and break here.
 		if len(nextPhase.Committed) < len(variant.Nations) {
+			if err = nextPhase.Schedule(c); err != nil {
+				return
+			}
 			break
 		}
 		phase = nextPhase
