@@ -93,8 +93,8 @@ func CreateMessage(c common.Context) (err error) {
 				if err = c.DB().Get(user); err != nil {
 					return
 				}
-				if !c.IsSubscribing(user.Email, fmt.Sprintf("/games/%v/messages", game.Id)) {
-					c.Infof("### Would have notified %#v, because %v is not listening to %v", recip, user.Email, fmt.Sprintf("/games/%v/messages", game.Id))
+				if !user.MessageEmailDisabled && !c.IsSubscribing(user.Email, fmt.Sprintf("/games/%v/messages", game.Id)) {
+					go message.EmailTo(c, user.Email)
 				}
 			}
 		}
