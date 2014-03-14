@@ -112,7 +112,7 @@ func (self skinnyContext) BetweenTransactions(f func(c SkinnyContext)) {
 
 func (self skinnyContext) Transact(f func(c SkinnyContext) error) error {
 	return self.Context.Transact(func(c subs.Context) error {
-		return f(c.(SkinnyContext))
+		return f(Diet(c))
 	})
 }
 

@@ -84,13 +84,12 @@ func (self *Web) Start() (err error) {
 		}).Start(); err != nil {
 			return
 		}
-		self.Infof("Listening for email to %#v", self.gmailAccount)
 	}
 	startedAt, err := epoch.Get(self.DB())
 	if err != nil {
 		return
 	}
-	self.Debugf("Epoch %v", startedAt)
+	self.Infof("Started at epoch %v", startedAt)
 	startedTime := time.Now()
 	var currently time.Duration
 	go func() {

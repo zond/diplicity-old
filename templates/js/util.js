@@ -100,6 +100,7 @@ defaultDeadline = 1440;
 defaultChatFlags = {{.ChatFlag "White"}} | {{.ChatFlag "Conference"}} | {{.ChatFlag "Private"}};
 
 deadlineOptions = [
+	{ value: 1, name: '{{.I "1 minute" }}' },
 	{ value: 5, name: '{{.I "5 minutes" }}' },
 	{ value: 10, name: '{{.I "10 minutes" }}' },
 	{ value: 20, name: '{{.I "20 minutes" }}' },

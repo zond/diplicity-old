@@ -44,6 +44,7 @@ var en = map[string]string{
 	"Leave":                  "Leave",
 	"Conference press":       "Conference press",
 	"Conference":             "Conference",
+	"1 minute":               "1 minute",
 	"5 minutes":              "5 minutes",
 	"10 minutes":             "10 minutes",
 	"20 minutes":             "20 minutes",

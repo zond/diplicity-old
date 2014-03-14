@@ -48,24 +48,20 @@ func (self *Phase) Schedule(c common.SkinnyContext) (err error) {
 		timeout := self.Deadline - ep
 		c.BetweenTransactions(func(c common.SkinnyContext) {
 			time.AfterFunc(timeout, func() {
+				c.Infof("Auto resolving %v due to timeout", self.GameId)
 				if err := c.Transact(func(c common.SkinnyContext) (err error) {
 					if err = c.DB().Get(self); err != nil {
 						return
 					}
-					if !self.Resolved {
-						ep, err = epoch.Get(c.DB())
-						if err != nil {
-							return
-						}
-						if ep > self.Deadline {
-							game := &Game{Id: self.GameId}
-							if err = c.DB().Get(game); err != nil {
-								return
-							}
-							return game.resolve(c, self)
-						}
+					if self.Resolved {
+						c.Infof("%v was already resolved, skipping", self.Id)
+						return
 					}
-					return
+					game := &Game{Id: self.GameId}
+					if err = c.DB().Get(game); err != nil {
+						return
+					}
+					return game.resolve(c, self)
 				}); err != nil {
 					c.Errorf("Unable to resolve %+v: %v", self, err)
 				}
