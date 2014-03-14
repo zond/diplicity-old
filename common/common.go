@@ -4,9 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
-	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
@@ -19,79 +17,6 @@ import (
 	"github.com/zond/kcwraps/subs"
 	"github.com/zond/wsubs/gosubs"
 )
-
-type MailSender interface {
-	SendMail(subject, message string, recips ...string) error
-}
-
-type Context interface {
-	subs.Context
-	MailSender
-}
-
-type defaultContext struct {
-	subs.Context
-	MailSender
-}
-
-type Router struct {
-	*subs.Router
-	mailSender MailSender
-}
-
-func NewRouter(db *kol.DB, sender MailSender) *Router {
-	return &Router{
-		Router:     subs.NewRouter(db),
-		mailSender: sender,
-	}
-}
-
-type RPC struct {
-	*gosubs.RPC
-}
-
-func (self *RPC) Auth() *RPC {
-	self.RPC.Auth()
-	return self
-}
-
-type Resource struct {
-	*subs.Resource
-	mailSender MailSender
-}
-
-func (self *Resource) Handle(op string, f func(c Context) error) *Resource {
-	self.Resource.Handle(op, func(c subs.Context) error {
-		return f(&defaultContext{
-			Context:    c,
-			MailSender: self.mailSender,
-		})
-	})
-	return self
-}
-
-func (self *Resource) Auth() *Resource {
-	self.Resource.Auth()
-	return self
-}
-
-func (self *Router) Resource(s string) *Resource {
-	return &Resource{
-		Resource:   self.Router.Resource(s),
-		mailSender: self.mailSender,
-	}
-}
-
-func (self *Router) RPC(m string, f func(c Context) (result interface{}, err error)) *RPC {
-	return &RPC{
-		RPC: self.Router.RPC(m, func(c subs.Context) (result interface{}, err error) {
-			return f(&defaultContext{
-				Context:    c,
-				MailSender: self.mailSender,
-			})
-		}),
-	}
-}
 
 type SkinnyContext interface {
 	gosubs.Logger
@@ -246,7 +171,8 @@ type Variant struct {
 }
 
 func (self Variant) JSONNations() string {
-	return string(MustMarshalJSON(self.Nations))
+	b, _ := json.Marshal(self.Nations)
+	return string(b)
 }
 
 type VariantSlice []Variant
@@ -290,65 +216,6 @@ var VariantMap = map[string]Variant{
 
 var prefPattern = regexp.MustCompile("^([^\\s;]+)(;q=([\\d.]+))?$")
 
-func MustParseFloat64(s string) (result float64) {
-	var err error
-	if result, err = strconv.ParseFloat(s, 64); err != nil {
-		panic(err)
-	}
-	return
-}
-
-func MustParseInt64(s string) (result int64) {
-	var err error
-	if result, err = strconv.ParseInt(s, 10, 64); err != nil {
-		panic(err)
-	}
-	return
-}
-
-func MustParseInt(s string) (result int) {
-	var err error
-	if result, err = strconv.Atoi(s); err != nil {
-		panic(err)
-	}
-	return
-}
-
-func MustParseURL(s string) (result *url.URL) {
-	var err error
-	if result, err = url.Parse(s); err != nil {
-		panic(err)
-	}
-	return
-}
-
-func MustMarshalJSON(i interface{}) (result []byte) {
-	var err error
-	result, err = json.Marshal(i)
-	if err != nil {
-		panic(err)
-	}
-	return
-}
-
-func MustUnmarshalJSON(data []byte, result interface{}) {
-	if err := json.Unmarshal(data, result); err != nil {
-		panic(err)
-	}
-}
-
-func MustEncodeJSON(w io.Writer, i interface{}) {
-	if err := json.NewEncoder(w).Encode(i); err != nil {
-		panic(err)
-	}
-}
-
-func MustDecodeJSON(r io.Reader, result interface{}) {
-	if err := json.NewDecoder(r).Decode(result); err != nil {
-		panic(err)
-	}
-}
-
 func MostAccepted(r *http.Request, def, name string) string {
 	bestValue := def
 	var bestScore float64 = -1
@@ -357,7 +224,7 @@ func MostAccepted(r *http.Request, def, name string) string {
 		if match := prefPattern.FindStringSubmatch(pref); match != nil {
 			score = 1
 			if match[3] != "" {
-				score = MustParseFloat64(match[3])
+				score, _ = strconv.ParseFloat(match[3], 64)
 			}
 			if score > bestScore {
 				bestScore = score

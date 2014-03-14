@@ -49,7 +49,7 @@ type Blacklisting struct {
 	UpdatedAt   time.Time
 }
 
-func SubscribeEmail(c common.Context) error {
+func SubscribeEmail(c common.WSContext) error {
 	if c.Principal() == "" {
 		return websocket.JSON.Send(c.Conn(), gosubs.Message{
 			Type: gosubs.FetchType,
@@ -63,7 +63,7 @@ func SubscribeEmail(c common.Context) error {
 	return s.Subscribe(&User{Id: kol.Id(c.Principal())})
 }
 
-func Update(c common.Context) (err error) {
+func Update(c common.WSContext) (err error) {
 	var user User
 	c.Data().Overwrite(&user)
 	current := &User{Id: user.Id}

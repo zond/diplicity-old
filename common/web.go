@@ -1,4 +1,4 @@
-package web
+package common
 
 import (
 	"bytes"
@@ -16,9 +16,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/jhillyerd/go.enmime"
-	"github.com/zond/diplicity/common"
-	"github.com/zond/diplicity/epoch"
-	"github.com/zond/diplicity/game"
 	"github.com/zond/diplicity/translation"
 	"github.com/zond/gmail"
 	"github.com/zond/kcwraps/kol"
@@ -59,7 +56,7 @@ type Web struct {
 	gmailPassword         string
 }
 
-func New() (result *Web) {
+func NewWeb() (result *Web) {
 	result = &Web{
 		appcache:              true,
 		svgTemplates:          template.Must(template.New("svgTemplates").ParseGlob("templates/svg/*.svg")),
@@ -85,30 +82,6 @@ func (self *Web) Start() (err error) {
 			return
 		}
 	}
-	startedAt, err := epoch.Get(self.DB())
-	if err != nil {
-		return
-	}
-	self.Infof("Started at epoch %v", startedAt)
-	startedTime := time.Now()
-	var currently time.Duration
-	go func() {
-		for {
-			time.Sleep(time.Minute)
-			currently = time.Now().Sub(startedTime) + startedAt
-			if err = epoch.Set(self.DB(), currently); err != nil {
-				panic(err)
-			}
-			self.Debugf("Epoch %v", currently)
-		}
-	}()
-	unresolved := game.Phases{}
-	if err = self.DB().Query().Where(kol.Equals{"Resolved", false}).All(&unresolved); err != nil {
-		return err
-	}
-	for _, phase := range unresolved {
-		phase.Schedule(self.SkinnyContext())
-	}
 	return
 }
 
@@ -122,14 +95,14 @@ type skinnyWeb struct {
 	db *kol.DB
 }
 
-func (self skinnyWeb) BetweenTransactions(f func(c common.SkinnyContext)) {
+func (self skinnyWeb) BetweenTransactions(f func(c SkinnyContext)) {
 	self.db.BetweenTransactions(func(d *kol.DB) {
 		self.db = d
 		f(self)
 	})
 }
 
-func (self skinnyWeb) Transact(f func(c common.SkinnyContext) error) error {
+func (self skinnyWeb) Transact(f func(c SkinnyContext) error) error {
 	return self.db.Transact(func(d *kol.DB) error {
 		self.db = d
 		return f(self)
@@ -140,15 +113,15 @@ func (self skinnyWeb) DB() *kol.DB {
 	return self.db
 }
 
-func (self *Web) SkinnyContext() common.SkinnyContext {
+func (self *Web) SkinnyContext() SkinnyContext {
 	return skinnyWeb{
 		Web: self,
 		db:  self.DB(),
 	}
 }
 
-func (self *Web) SendMail(subject, message string, recips ...string) (err error) {
-	return self.gmail.Send(subject, message, recips...)
+func (self *Web) SendMail(from, subject, message string, recips ...string) (err error) {
+	return self.gmail.Send(from, subject, message, recips...)
 }
 
 func (self *Web) SetEnv(env string) *Web {
@@ -163,12 +136,12 @@ func (self *Web) DB() *kol.DB {
 	return self.db
 }
 
-func (self *Web) GetContext(w http.ResponseWriter, r *http.Request) (result *Context) {
-	result = &Context{
+func (self *Web) GetContext(w http.ResponseWriter, r *http.Request) (result *HTTPContext) {
+	result = &HTTPContext{
 		response:     w,
 		request:      r,
 		web:          self,
-		translations: translation.GetTranslations(common.GetLanguage(r)),
+		translations: translation.GetTranslations(GetLanguage(r)),
 		vars:         mux.Vars(r),
 	}
 	result.session, _ = self.sessionStore.Get(r, SessionName)
@@ -185,8 +158,8 @@ func (self *Web) SetAppcache(appcache bool) *Web {
 	return self
 }
 
-func (self *Web) AdminHandle(r *mux.Route, f func(c *Context) error) {
-	self.Handle(r, func(c *Context) (err error) {
+func (self *Web) AdminHandle(r *mux.Route, f func(c *HTTPContext) error) {
+	self.Handle(r, func(c *HTTPContext) (err error) {
 		tokenStr := c.Req().FormValue("token")
 		if tokenStr == "" {
 			err = fmt.Errorf("Missing token")
@@ -204,7 +177,7 @@ func (self *Web) AdminHandle(r *mux.Route, f func(c *Context) error) {
 	})
 }
 
-func (self *Web) Handle(r *mux.Route, f func(c *Context) error) {
+func (self *Web) Handle(r *mux.Route, f func(c *HTTPContext) error) {
 	r.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		lw := &loggingResponseWriter{
 			ResponseWriter: w,
@@ -265,7 +238,7 @@ func (self *Web) Tracef(format string, args ...interface{}) {
 	self.Logf(Trace, "\033[1;32mTRACE\t"+format+"\033[0m", args...)
 }
 
-func (self *Web) render_Templates(data *Context) {
+func (self *Web) render_Templates(data *HTTPContext) {
 	fmt.Fprintln(data.response, "(function() {")
 	fmt.Fprintln(data.response, "  var n;")
 	var buf *bytes.Buffer
@@ -301,7 +274,7 @@ func (self *Web) HandleStatic(router *mux.Router, dir string) {
 		cpy := fil
 		self.Handle(router.MatcherFunc(func(r *http.Request, rm *mux.RouteMatch) bool {
 			return strings.HasSuffix(r.URL.Path, cpy)
-		}), func(c *Context) (err error) {
+		}), func(c *HTTPContext) (err error) {
 			if strings.HasSuffix(c.Req().URL.Path, ".css") {
 				c.SetContentType("text/css; charset=UTF-8", true)
 			} else if strings.HasSuffix(c.Req().URL.Path, ".js") {

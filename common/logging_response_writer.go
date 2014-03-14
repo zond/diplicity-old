@@ -1,4 +1,4 @@
-package web
+package common
 
 import (
 	"net/http"

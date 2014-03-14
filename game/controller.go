@@ -1,7 +1,9 @@
 package game
 
 import (
+	"encoding/base64"
 	"fmt"
+	"sort"
 	dip "github.com/zond/godip/common"
 
 	"github.com/zond/diplicity/common"
@@ -10,7 +12,42 @@ import (
 	"github.com/zond/kcwraps/subs"
 )
 
-func CreateMessage(c common.Context) (err error) {
+type AdminGameState struct {
+	Game    *Game
+	Phases  Phases
+	Members []MemberState
+}
+
+func AdminGetGame(c *common.HTTPContext) (err error) {
+	gameId, err := base64.URLEncoding.DecodeString(c.Vars()["game_id"])
+	if err != nil {
+		return
+	}
+	g := &Game{Id: gameId}
+	if err = c.DB().Get(g); err != nil {
+		return
+	}
+	members, err := g.Members(c.DB())
+	if err != nil {
+		return
+	}
+	memberStates, err := members.ToStates(c.DB(), g, "")
+	if err != nil {
+		return
+	}
+	phases, err := g.Phases(c.DB())
+	if err != nil {
+		return
+	}
+	sort.Sort(phases)
+	return c.RenderJSON(AdminGameState{
+		Game:    g,
+		Phases:  phases,
+		Members: memberStates,
+	})
+}
+
+func CreateMessage(c common.WSContext) (err error) {
 	// load the  message provided by the client
 	var message Message
 	c.Data().Overwrite(&message)
@@ -103,7 +140,7 @@ func CreateMessage(c common.Context) (err error) {
 	return
 }
 
-func DeleteMember(c common.Context) error {
+func DeleteMember(c common.WSContext) error {
 	return c.Transact(func(c subs.Context) error {
 		decodedId, err := kol.DecodeId(c.Match()[1])
 		if err != nil {
@@ -136,7 +173,7 @@ func DeleteMember(c common.Context) error {
 	})
 }
 
-func AddMember(c common.Context) error {
+func AddMember(c common.WSContext) error {
 	var state GameState
 	c.Data().Overwrite(&state)
 	return c.Transact(func(c subs.Context) error {
@@ -192,7 +229,7 @@ func AddMember(c common.Context) error {
 	})
 }
 
-func Create(c common.Context) error {
+func Create(c common.WSContext) error {
 	var state GameState
 	c.Data().Overwrite(&state)
 

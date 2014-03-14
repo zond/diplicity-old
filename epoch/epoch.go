@@ -3,6 +3,7 @@ package epoch
 import (
 	"time"
 
+	"github.com/zond/diplicity/common"
 	"github.com/zond/kcwraps/kol"
 )
 
@@ -36,5 +37,26 @@ func Set(d *kol.DB, at time.Duration) (err error) {
 		At: at,
 	}
 	err = d.Set(epoch)
+	return
+}
+
+func Start(c common.SkinnyContext) (err error) {
+	startedAt, err := Get(c.DB())
+	if err != nil {
+		return
+	}
+	c.Infof("Started at epoch %v", startedAt)
+	startedTime := time.Now()
+	var currently time.Duration
+	go func() {
+		for {
+			time.Sleep(time.Minute)
+			currently = time.Now().Sub(startedTime) + startedAt
+			if err = Set(c.DB(), currently); err != nil {
+				panic(err)
+			}
+			c.Debugf("Epoch %v", currently)
+		}
+	}()
 	return
 }

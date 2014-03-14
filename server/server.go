@@ -7,9 +7,9 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/zond/diplicity/common"
+	"github.com/zond/diplicity/epoch"
 	"github.com/zond/diplicity/game"
 	"github.com/zond/diplicity/user"
-	"github.com/zond/diplicity/web"
 	"github.com/zond/wsubs/gosubs"
 )
 
@@ -35,18 +35,18 @@ func main() {
 		panic("Only development env can run with the default secret")
 	}
 
-	server := web.New().SetEnv(*env).SetAppcache(*appcache).SetGMail(*gmailAccount, *gmailPassword)
+	server := common.NewWeb().SetEnv(*env).SetAppcache(*appcache).SetGMail(*gmailAccount, *gmailPassword)
 
 	router := mux.NewRouter()
 
 	// Login/logout
-	server.Handle(router.Path("/login"), server.Login)
-	server.Handle(router.Path("/logout"), server.Logout)
-	server.Handle(router.Path("/openid"), server.Openid)
-	server.Handle(router.Path("/token"), server.Token)
+	server.Handle(router.Path("/login"), user.Login)
+	server.Handle(router.Path("/logout"), user.Logout)
+	server.Handle(router.Path("/openid"), user.Openid)
+	server.Handle(router.Path("/token"), user.Token)
 
 	// Resource routes for the WebSocket
-	wsRouter := common.NewRouter(server.DB(), server)
+	wsRouter := common.NewRouter(server)
 	if *env == "development" {
 		wsRouter.DevMode = true
 	}
@@ -85,7 +85,7 @@ func main() {
 	server.HandleStatic(router, "static")
 
 	// Admin
-	server.AdminHandle(router.Path("/admin/games/{game_id}"), server.AdminGetGame)
+	server.AdminHandle(router.Path("/admin/games/{game_id}"), game.AdminGetGame)
 
 	// Everything else HTMLy
 	server.Handle(router.MatcherFunc(wantsHTML), server.Index)
@@ -93,6 +93,12 @@ func main() {
 	addr := fmt.Sprintf("0.0.0.0:%v", *port)
 
 	if err := server.Start(); err != nil {
+		panic(err)
+	}
+	if err := epoch.Start(server.SkinnyContext()); err != nil {
+		panic(err)
+	}
+	if err := game.ScheduleUnresolvedPhases(server.SkinnyContext()); err != nil {
 		panic(err)
 	}
 	server.Infof("Listening to %v  (env=%#v, appcache=%#v, gmail_account=%#v)", addr, *env, *appcache, *gmailAccount)

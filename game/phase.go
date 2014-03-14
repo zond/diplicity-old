@@ -12,6 +12,17 @@ import (
 	"github.com/zond/kcwraps/kol"
 )
 
+func ScheduleUnresolvedPhases(c common.SkinnyContext) (err error) {
+	unresolved := Phases{}
+	if err = c.DB().Query().Where(kol.Equals{"Resolved", false}).All(&unresolved); err != nil {
+		return
+	}
+	for _, phase := range unresolved {
+		phase.Schedule(c)
+	}
+	return
+}
+
 type Phase struct {
 	Id     kol.Id
 	GameId kol.Id `kol:"index"`

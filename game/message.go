@@ -48,5 +48,5 @@ func (self *MailTag) Hash() []byte {
 	return h.Sum(nil)
 }
 
-func (self *Message) EmailTo(c common.Context, recip string) {
+func (self *Message) EmailTo(c common.WSContext, recip string) {
 }
