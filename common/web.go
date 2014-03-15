@@ -128,6 +128,8 @@ func (self *Web) SetEnv(env string) *Web {
 	self.env = env
 	if env == "development" {
 		self.logLevel = 100
+	} else {
+		self.logLevel = Debug
 	}
 	return self
 }

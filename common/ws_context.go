@@ -62,11 +62,13 @@ type Router struct {
 	web *Web
 }
 
-func NewRouter(web *Web) *Router {
-	return &Router{
+func NewRouter(web *Web) (result *Router) {
+	result = &Router{
 		Router: subs.NewRouter(web.DB()),
 		web:    web,
 	}
+	result.Router.LogLevel = web.logLevel
+	return
 }
 
 type RPC struct {

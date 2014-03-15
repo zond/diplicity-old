@@ -50,7 +50,6 @@ func main() {
 	if *env == "development" {
 		wsRouter.DevMode = true
 	}
-	wsRouter.LogLevel = gosubs.DebugLevel
 	wsRouter.Resource("^/games/current$").
 		Handle(gosubs.SubscribeType, game.SubscribeCurrent).Auth()
 	wsRouter.Resource("^/games/open$").
