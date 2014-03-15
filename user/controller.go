@@ -3,6 +3,7 @@ package user
 import (
 	"fmt"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/zond/diplicity/common"
@@ -16,7 +17,7 @@ func Openid(c *common.HTTPContext) (err error) {
 		return
 	}
 	if ok {
-		c.Session().Values[common.SessionEmail] = email
+		c.Session().Values[common.SessionEmail] = strings.ToLower(email)
 		EnsureUser(c.DB(), email)
 	} else {
 		delete(c.Session().Values, common.SessionEmail)
