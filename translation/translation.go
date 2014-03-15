@@ -100,6 +100,7 @@ var en = map[string]string{
 	"phase_types":     "{'AfterGame': 'After game', 'BeforeGame': 'Before game', 'Movement': 'Movement', 'Retreat': 'Retreat', 'Adjustment': 'Adjustment'}",
 	"England":         "England",
 	"After":           "After",
+	"From %v to %v":   "From %v to %v",
 	"During":          "During",
 	"Before":          "Before",
 	"Variant":         "Variant",

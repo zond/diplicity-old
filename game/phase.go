@@ -1,6 +1,7 @@
 package game
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/zond/diplicity/common"
@@ -47,6 +48,10 @@ type Phase struct {
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
+}
+
+func (self *Phase) ShortString() string {
+	return fmt.Sprintf("%v %v, %v", self.Season, self.Year, self.Type)
 }
 
 func (self *Phase) Schedule(c common.SkinnyContext) (err error) {

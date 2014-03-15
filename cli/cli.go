@@ -13,7 +13,6 @@ import (
 	"code.google.com/p/go.net/websocket"
 	"github.com/zond/diplicity/common"
 	"github.com/zond/diplicity/game"
-	"github.com/zond/diplicity/web"
 	"github.com/zond/wsubs/gosubs"
 )
 
@@ -67,7 +66,7 @@ func (self *cli) send(email string, mess gosubs.Message) (err error) {
 }
 
 func (self *cli) req(path string) (result io.ReadCloser, err error) {
-	token, err := self.token(web.Admin)
+	token, err := self.token(common.Admin)
 	cli := &http.Client{}
 	resp, err := cli.Get(fmt.Sprintf("http://%v:%v%v?token=%v", self.host, self.port, path, token))
 	if err != nil {
@@ -83,7 +82,7 @@ func (self *cli) get(path string) (result interface{}, err error) {
 	return
 }
 
-func (self *cli) game(id string) (result web.AdminGameState, err error) {
+func (self *cli) game(id string) (result game.AdminGameState, err error) {
 	bod, err := self.req("/admin/games/" + id)
 	err = json.NewDecoder(bod).Decode(&result)
 	return
@@ -129,7 +128,7 @@ func main() {
 	url := flag.String("url", "", "A url to fetch authenticated as Admin.")
 	commit := flag.String("commit", "", "A game to commit the latest phase as the provided email.")
 	commitAll := flag.String("commit_all", "", "A game to commit the latest phase as all members.")
-	joinX := flag.Int("joinX", 0, "A number of members to join automatically to the game defined by -join.")
+	joinX := flag.Int("join_x", 0, "A number of members to join automatically to the game defined by -join.")
 
 	flag.Parse()
 

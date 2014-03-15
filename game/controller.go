@@ -76,18 +76,26 @@ func CreateMessage(c common.WSContext) (err error) {
 	// make sure the sender is one of the recipients
 	message.Recipients[sender.Nation] = true
 
+	phaseDescription := ""
 	var phaseType dip.PhaseType
 	switch game.State {
 	case common.GameStateCreated:
 		phaseType = common.BeforeGamePhaseType
+		if phaseDescription, err = c.I(string(phaseType)); err != nil {
+			return
+		}
 	case common.GameStateStarted:
 		var phase *Phase
 		if phase, err = game.LastPhase(c.DB()); err != nil {
 			return
 		}
+		phaseDescription = phase.ShortString()
 		phaseType = phase.Type
 	case common.GameStateEnded:
 		phaseType = common.AfterGamePhaseType
+		if phaseDescription, err = c.I(string(phaseType)); err != nil {
+			return
+		}
 	default:
 		err = fmt.Errorf("Unknown game state for %+v", game)
 		return
@@ -123,15 +131,18 @@ func CreateMessage(c common.WSContext) (err error) {
 	if err = c.DB().Set(&message); err != nil {
 		return
 	}
-	for recip, _ := range message.Recipients {
-		for _, member := range members {
-			if recip == member.Nation && !message.SenderId.Equals(member.Id) {
-				user := &user.User{Id: member.UserId}
-				if err = c.DB().Get(user); err != nil {
-					return
-				}
-				if !user.MessageEmailDisabled && !c.IsSubscribing(user.Email, fmt.Sprintf("/games/%v/messages", game.Id)) {
-					go message.EmailTo(c, user.Email)
+	if c.MailAddress() != "" {
+		for recip, _ := range message.Recipients {
+			for _, member := range members {
+				if recip == member.Nation && !message.SenderId.Equals(member.Id) {
+					user := &user.User{Id: member.UserId}
+					if err = c.DB().Get(user); err != nil {
+						return
+					}
+					if !user.MessageEmailDisabled && !c.IsSubscribing(user.Email, fmt.Sprintf("/games/%v/messages", game.Id)) {
+						memberCopy := member
+						go message.EmailTo(c, sender, &memberCopy, user, phaseDescription)
+					}
 				}
 			}
 		}

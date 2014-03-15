@@ -1,6 +1,9 @@
 package common
 
 import (
+	"fmt"
+
+	"github.com/zond/diplicity/translation"
 	"github.com/zond/kcwraps/subs"
 	"github.com/zond/wsubs/gosubs"
 )
@@ -8,11 +11,46 @@ import (
 type WSContext interface {
 	subs.Context
 	SendMail(from, subject, message string, recips ...string) error
+	MailAddress() string
+	I(phrase string, args ...interface{}) (string, error)
+	Env() string
+}
+
+func NewWSContext(c subs.Context, web *Web) WSContext {
+	return &defaultWSContext{
+		Context:      c,
+		web:          web,
+		translations: translation.GetTranslations(GetLanguage(c.Conn().Request())),
+	}
 }
 
 type defaultWSContext struct {
 	subs.Context
-	web *Web
+	web          *Web
+	translations map[string]string
+}
+
+func (self *defaultWSContext) Env() string {
+	return self.web.env
+}
+
+func (self *defaultWSContext) I(phrase string, args ...interface{}) (result string, err error) {
+	pattern, ok := self.translations[phrase]
+	if !ok {
+		err = fmt.Errorf("Found no translation for %v", phrase)
+		result = err.Error()
+		return
+	}
+	if len(args) > 0 {
+		result = fmt.Sprintf(pattern, args...)
+		return
+	}
+	result = pattern
+	return
+}
+
+func (self *defaultWSContext) MailAddress() string {
+	return self.web.gmailAccount
 }
 
 func (self *defaultWSContext) SendMail(from, subject, message string, recips ...string) error {
@@ -47,10 +85,7 @@ type Resource struct {
 
 func (self *Resource) Handle(op string, f func(c WSContext) error) *Resource {
 	self.Resource.Handle(op, func(c subs.Context) error {
-		return f(&defaultWSContext{
-			Context: c,
-			web:     self.web,
-		})
+		return f(NewWSContext(c, self.web))
 	})
 	return self
 }
@@ -70,10 +105,7 @@ func (self *Router) Resource(s string) *Resource {
 func (self *Router) RPC(m string, f func(c WSContext) (result interface{}, err error)) *RPC {
 	return &RPC{
 		RPC: self.Router.RPC(m, func(c subs.Context) (result interface{}, err error) {
-			return f(&defaultWSContext{
-				Context: c,
-				web:     self.web,
-			})
+			return f(NewWSContext(c, self.web))
 		}),
 	}
 }

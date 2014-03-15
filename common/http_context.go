@@ -88,10 +88,15 @@ func (self *HTTPContext) Appcache() bool {
 	return self.web.appcache
 }
 
+func (self *HTTPContext) mI(pattern string, args ...interface{}) (result string) {
+	result, _ = self.I(pattern, args...)
+	return
+}
+
 func (self *HTTPContext) AllocationMethodMap() string {
 	result := map[string]AllocationMethod{}
 	for _, meth := range AllocationMethodMap {
-		meth.Translation = self.I(meth.Name)
+		meth.Translation = self.mI(meth.Name)
 		result[meth.Id] = meth
 	}
 	return gosubs.Prettify(result)
@@ -99,9 +104,9 @@ func (self *HTTPContext) AllocationMethodMap() string {
 
 func (self *HTTPContext) SecrecyTypesMap() string {
 	return gosubs.Prettify(map[string]string{
-		"SecretEmail":    self.I("Secret email"),
-		"SecretNickname": self.I("Secret nickname"),
-		"SecretNation":   self.I("Secret nation"),
+		"SecretEmail":    self.mI("Secret email"),
+		"SecretNickname": self.mI("Secret nickname"),
+		"SecretNation":   self.mI("Secret nation"),
 	})
 }
 
@@ -134,7 +139,7 @@ func (self *HTTPContext) Variants() string {
 func (self *HTTPContext) VariantMap() string {
 	result := map[string]Variant{}
 	for _, variant := range Variants {
-		variant.Translation = self.I(variant.Name)
+		variant.Translation = self.mI(variant.Name)
 		result[variant.Id] = variant
 	}
 	return gosubs.Prettify(result)
@@ -179,7 +184,7 @@ func (self *HTTPContext) ChatFlagOptions() (result []ChatFlagOption) {
 	for _, option := range ChatFlagOptions {
 		result = append(result, ChatFlagOption{
 			Id:          option.Id,
-			Translation: self.I(option.Name),
+			Translation: self.mI(option.Name),
 		})
 	}
 	return
@@ -193,15 +198,19 @@ func (self *HTTPContext) Abs(path string) string {
 	return url.QueryEscape(fmt.Sprintf("http://%v%v", self.request.Host, path))
 }
 
-func (self *HTTPContext) I(phrase string, args ...string) string {
+func (self *HTTPContext) I(phrase string, args ...interface{}) (result string, err error) {
 	pattern, ok := self.translations[phrase]
 	if !ok {
-		panic(fmt.Errorf("Found no translation for %v", phrase))
+		err = fmt.Errorf("Found no translation for %v", phrase)
+		result = err.Error()
+		return
 	}
 	if len(args) > 0 {
-		return fmt.Sprintf(pattern, args)
+		result = fmt.Sprintf(pattern, args...)
+		return
 	}
-	return pattern
+	result = pattern
+	return
 }
 
 func (self *HTTPContext) LogLevel() int {
