@@ -54,6 +54,7 @@ type Web struct {
 	jsViewTemplates       *template.Template
 	gmailAccount          string
 	gmailPassword         string
+	router                *Router
 }
 
 func NewWeb() (result *Web) {
@@ -71,7 +72,24 @@ func NewWeb() (result *Web) {
 		db:                    kol.Must("diplicity"),
 		sessionStore:          sessions.NewCookieStore([]byte(gosubs.Secret)),
 	}
+	result.router = newRouter(result)
 	return
+}
+
+func (self *Web) Router() *Router {
+	return self.router
+}
+
+func (self *Web) Env() string {
+	return self.env
+}
+
+func (self *Web) IsSubscribing(principal, uri string) bool {
+	return self.router.IsSubscribing(principal, uri)
+}
+
+func (self *Web) MailAddress() string {
+	return self.gmailAccount
 }
 
 func (self *Web) Start() (err error) {
@@ -86,34 +104,27 @@ func (self *Web) Start() (err error) {
 }
 
 func (self *Web) IncomingMail(msg *enmime.MIMEBody) error {
-	self.Infof("Incoming mail: %v", msg)
+	if match := gmail.AddrReg.FindString(msg.GetHeader("To")); match != "" {
+		lines := []string{}
+		for _, line := range strings.Split(msg.Text, "\n") {
+			if !strings.Contains(line, self.gmailAccount) && strings.Index(line, ">") != 0 {
+				lines = append(lines, line)
+			}
+		}
+		for len(lines) > 0 && strings.TrimSpace(lines[0]) == "" {
+			lines = lines[1:]
+		}
+		for len(lines) > 0 && strings.TrimSpace(lines[len(lines)-1]) == "" {
+			lines = lines[:len(lines)-1]
+		}
+		if len(lines) > 0 {
+			self.Infof("Incoming mail: %v\n%v", match, strings.Join(lines, "\n"))
+		}
+	}
 	return nil
 }
 
-type skinnyWeb struct {
-	*Web
-	db *kol.DB
-}
-
-func (self skinnyWeb) BetweenTransactions(f func(c SkinnyContext)) {
-	self.db.BetweenTransactions(func(d *kol.DB) {
-		self.db = d
-		f(self)
-	})
-}
-
-func (self skinnyWeb) Transact(f func(c SkinnyContext) error) error {
-	return self.db.Transact(func(d *kol.DB) error {
-		self.db = d
-		return f(self)
-	})
-}
-
-func (self skinnyWeb) DB() *kol.DB {
-	return self.db
-}
-
-func (self *Web) SkinnyContext() SkinnyContext {
+func (self *Web) Diet() SkinnyContext {
 	return skinnyWeb{
 		Web: self,
 		db:  self.DB(),

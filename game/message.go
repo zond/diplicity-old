@@ -85,7 +85,7 @@ func DecodeMailTag(s string) (result *MailTag, err error) {
 	return
 }
 
-func (self *Message) EmailTo(c common.WSContext, sender, recip *Member, recipUser *user.User, subject string) {
+func (self *Message) EmailTo(c common.SkinnyContext, sender, recip *Member, recipUser *user.User, subject string) {
 	tag := &MailTag{
 		M: self.Id,
 		R: recip.Id,
@@ -112,4 +112,92 @@ func (self *Message) EmailTo(c common.WSContext, sender, recip *Member, recipUse
 			c.Errorf("Unable to send %#v/%#v from %#v to %#v: %v", subject, self.Body, from, to, err)
 		}
 	}
+}
+
+func SendMessage(c common.SkinnyContext, game *Game, sender *Member, message *Message) (err error) {
+	// make sure the sender is correct
+	message.SenderId = sender.Id
+
+	// make sure the sender is one of the recipients
+	message.Recipients[sender.Nation] = true
+
+	phaseDescription := ""
+	phaseDescriptionParams := []string{}
+	var phaseType dip.PhaseType
+	switch game.State {
+	case common.GameStateCreated:
+		phaseType = common.BeforeGamePhaseType
+		phaseDescription = "%v"
+		phaseDescriptionParams = []string{string(phaseType)}
+	case common.GameStateStarted:
+		var phase *Phase
+		if phase, err = game.LastPhase(c.DB()); err != nil {
+			return
+		}
+		phaseType = phase.Type
+		phaseDescription = fmt.Sprintf("%%v %v, %%v", phase.Year)
+		phaseDescriptionParams = []string{string(phase.Season), string(phase.Type)}
+	case common.GameStateEnded:
+		phaseType = common.AfterGamePhaseType
+		phaseDescription = "%v"
+		phaseDescriptionParams = []string{string(phaseType)}
+	default:
+		err = fmt.Errorf("Unknown game state for %+v", game)
+		return
+	}
+
+	allowedFlags := game.ChatFlags[phaseType]
+
+	recipients := len(message.Recipients)
+	if recipients == 2 {
+		if (allowedFlags & common.ChatPrivate) == 0 {
+			err = fmt.Errorf("%+v does not allow %+v during %+v (%v)", game, message, phaseType, common.ChatPrivate)
+			return
+		}
+	} else if recipients == len(common.VariantMap[game.Variant].Nations) {
+		if (allowedFlags & common.ChatConference) == 0 {
+			err = fmt.Errorf("%+v does not allow %+v during %+v", game, message, phaseType)
+			return
+		}
+	} else if recipients > 2 {
+		if (allowedFlags & common.ChatGroup) == 0 {
+			err = fmt.Errorf("%+v does not allow %+v during %+v", game, message, phaseType)
+			return
+		}
+	} else {
+		err = fmt.Errorf("%+v doesn't have any recipients", message)
+		return
+	}
+
+	members, err := game.Members(c.DB())
+	if err != nil {
+		return
+	}
+	if err = c.DB().Set(&message); err != nil {
+		return
+	}
+	if c.MailAddress() != "" {
+		for recip, _ := range message.Recipients {
+			for _, member := range members {
+				if recip == member.Nation && !message.SenderId.Equals(member.Id) {
+					user := &user.User{Id: member.UserId}
+					if err = c.DB().Get(user); err != nil {
+						return
+					}
+					if !user.MessageEmailDisabled && !c.IsSubscribing(user.Email, fmt.Sprintf("/games/%v/messages", game.Id)) {
+						memberCopy := member
+						parts := make([]interface{}, len(phaseDescriptionParams))
+						for i, param := range phaseDescriptionParams {
+							if parts[i], err = user.I(param); err != nil {
+								return
+							}
+						}
+						go message.EmailTo(c, sender, &memberCopy, user, fmt.Sprintf(phaseDescription, parts...))
+					}
+				}
+			}
+		}
+	}
+
+	return
 }

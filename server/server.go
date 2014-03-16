@@ -46,7 +46,7 @@ func main() {
 	server.Handle(router.Path("/token"), user.Token)
 
 	// Resource routes for the WebSocket
-	wsRouter := common.NewRouter(server)
+	wsRouter := server.Router()
 	if *env == "development" {
 		wsRouter.DevMode = true
 	}
@@ -94,10 +94,10 @@ func main() {
 	if err := server.Start(); err != nil {
 		panic(err)
 	}
-	if err := epoch.Start(server.SkinnyContext()); err != nil {
+	if err := epoch.Start(server.Diet()); err != nil {
 		panic(err)
 	}
-	if err := game.ScheduleUnresolvedPhases(server.SkinnyContext()); err != nil {
+	if err := game.ScheduleUnresolvedPhases(server.Diet()); err != nil {
 		panic(err)
 	}
 	server.Infof("Listening to %v  (env=%#v, appcache=%#v, gmail_account=%#v)", addr, *env, *appcache, *gmailAccount)

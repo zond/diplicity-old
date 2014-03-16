@@ -9,7 +9,6 @@ import (
 	dip "github.com/zond/godip/common"
 	"github.com/zond/godip/state"
 	"github.com/zond/kcwraps/kol"
-	"github.com/zond/kcwraps/subs"
 )
 
 func UncommitPhase(c common.WSContext) (result interface{}, err error) {
@@ -27,7 +26,7 @@ func setPhaseCommitted(c common.WSContext, commit bool) (err error) {
 	if err != nil {
 		return
 	}
-	return c.Transact(func(c subs.Context) (err error) {
+	return c.Transact(func(c common.WSContext) (err error) {
 		phase := &Phase{Id: phaseId}
 		if err = c.DB().Get(phase); err != nil {
 			return
@@ -53,7 +52,7 @@ func setPhaseCommitted(c common.WSContext, commit bool) (err error) {
 				return fmt.Errorf("Unknown variant %v", game.Variant)
 			}
 			if count == len(variant.Nations) {
-				if err = game.resolve(common.Diet(c), phase); err != nil {
+				if err = game.resolve(c.Diet(), phase); err != nil {
 					return
 				}
 				c.Infof("Resolved %v", game.Id)

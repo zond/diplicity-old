@@ -8,12 +8,19 @@ import (
 	"github.com/zond/wsubs/gosubs"
 )
 
-type WSContext interface {
-	subs.Context
+type Mailer interface {
 	SendMail(from, subject, message string, recips ...string) error
 	MailAddress() string
+}
+
+type WSContext interface {
+	subs.SubContext
+	BetweenTransactions(func(c WSContext))
+	Transact(func(c WSContext) error) error
+	Mailer
 	I(phrase string, args ...interface{}) (string, error)
 	Env() string
+	Diet() SkinnyContext
 }
 
 func NewWSContext(c subs.Context, web *Web) WSContext {
@@ -28,6 +35,24 @@ type defaultWSContext struct {
 	subs.Context
 	web          *Web
 	translations map[string]string
+}
+
+func (self *defaultWSContext) Diet() SkinnyContext {
+	return skinnyWSContext{WSContext: self}
+}
+
+func (self defaultWSContext) BetweenTransactions(f func(c WSContext)) {
+	self.Context.BetweenTransactions(func(c subs.Context) {
+		self.Context = c
+		f(&self)
+	})
+}
+
+func (self defaultWSContext) Transact(f func(c WSContext) error) error {
+	return self.Context.Transact(func(c subs.Context) error {
+		self.Context = c
+		return f(&self)
+	})
 }
 
 func (self *defaultWSContext) Env() string {
@@ -62,7 +87,7 @@ type Router struct {
 	web *Web
 }
 
-func NewRouter(web *Web) (result *Router) {
+func newRouter(web *Web) (result *Router) {
 	result = &Router{
 		Router: subs.NewRouter(web.DB()),
 		web:    web,

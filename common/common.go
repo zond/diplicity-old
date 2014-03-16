@@ -14,35 +14,56 @@ import (
 	dip "github.com/zond/godip/common"
 	"github.com/zond/godip/graph"
 	"github.com/zond/kcwraps/kol"
-	"github.com/zond/kcwraps/subs"
 	"github.com/zond/wsubs/gosubs"
 )
 
 type SkinnyContext interface {
 	gosubs.Logger
+	gosubs.SubscriptionManager
+	Mailer
 	DB() *kol.DB
 	BetweenTransactions(func(c SkinnyContext))
 	Transact(func(c SkinnyContext) error) error
+	Env() string
 }
 
-type skinnyContext struct {
-	subs.Context
+type skinnyWeb struct {
+	*Web
+	db *kol.DB
 }
 
-func (self skinnyContext) BetweenTransactions(f func(c SkinnyContext)) {
-	self.Context.BetweenTransactions(func(c subs.Context) {
-		f(Diet(c))
+func (self skinnyWeb) BetweenTransactions(f func(c SkinnyContext)) {
+	self.db.BetweenTransactions(func(d *kol.DB) {
+		self.db = d
+		f(self)
 	})
 }
 
-func (self skinnyContext) Transact(f func(c SkinnyContext) error) error {
-	return self.Context.Transact(func(c subs.Context) error {
-		return f(Diet(c))
+func (self skinnyWeb) Transact(f func(c SkinnyContext) error) error {
+	return self.db.Transact(func(d *kol.DB) error {
+		self.db = d
+		return f(self)
 	})
 }
 
-func Diet(c subs.Context) SkinnyContext {
-	return skinnyContext{c}
+func (self skinnyWeb) DB() *kol.DB {
+	return self.db
+}
+
+type skinnyWSContext struct {
+	WSContext
+}
+
+func (self skinnyWSContext) BetweenTransactions(f func(c SkinnyContext)) {
+	self.WSContext.BetweenTransactions(func(c WSContext) {
+		f(skinnyWSContext{c})
+	})
+}
+
+func (self skinnyWSContext) Transact(f func(c SkinnyContext) error) error {
+	return self.WSContext.Transact(func(c WSContext) error {
+		return f(skinnyWSContext{c})
+	})
 }
 
 func GetLanguage(r *http.Request) string {

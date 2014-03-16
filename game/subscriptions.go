@@ -161,7 +161,7 @@ func SubscribeOpen(c common.WSContext) error {
 		games := i.([]*Game)
 		states := GameStates{}
 		isMember := false
-		me, err := user.EnsureUser(c.DB(), c.Principal())
+		me, err := user.EnsureUser(c.DB(), c.Principal(), common.GetLanguage(c.Conn().Request()))
 		if err != nil {
 			return err
 		}

@@ -93,8 +93,8 @@ func (self *Member) ToState(d *kol.DB, g *Game, email string) (result *MemberSta
 		result.Member.Nation = self.Nation
 	}
 	if allowed || !secretEmail || !secretNickname {
-		var foundUser *user.User
-		if foundUser, err = user.EnsureUser(d, string(self.UserId)); err != nil {
+		foundUser := &user.User{Id: self.UserId}
+		if err = d.Get(foundUser); err != nil {
 			return
 		}
 		if allowed || !secretEmail {

@@ -18,7 +18,7 @@ func Openid(c *common.HTTPContext) (err error) {
 	}
 	if ok {
 		c.Session().Values[common.SessionEmail] = strings.ToLower(email)
-		EnsureUser(c.DB(), email)
+		EnsureUser(c.DB(), email, common.GetLanguage(c.Req()))
 	} else {
 		delete(c.Session().Values, common.SessionEmail)
 	}

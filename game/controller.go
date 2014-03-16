@@ -9,7 +9,6 @@ import (
 	"github.com/zond/diplicity/common"
 	"github.com/zond/diplicity/user"
 	"github.com/zond/kcwraps/kol"
-	"github.com/zond/kcwraps/subs"
 )
 
 type AdminGameState struct {
@@ -49,8 +48,8 @@ func AdminGetGame(c *common.HTTPContext) (err error) {
 
 func CreateMessage(c common.WSContext) (err error) {
 	// load the  message provided by the client
-	var message Message
-	c.Data().Overwrite(&message)
+	message := &Message{}
+	c.Data().Overwrite(message)
 	if message.Recipients == nil {
 		message.Recipients = map[dip.Nation]bool{}
 	}
@@ -70,89 +69,11 @@ func CreateMessage(c common.WSContext) (err error) {
 		return
 	}
 
-	// make sure the sender is correct
-	message.SenderId = sender.Id
-
-	// make sure the sender is one of the recipients
-	message.Recipients[sender.Nation] = true
-
-	phaseDescription := ""
-	var phaseType dip.PhaseType
-	switch game.State {
-	case common.GameStateCreated:
-		phaseType = common.BeforeGamePhaseType
-		if phaseDescription, err = c.I(string(phaseType)); err != nil {
-			return
-		}
-	case common.GameStateStarted:
-		var phase *Phase
-		if phase, err = game.LastPhase(c.DB()); err != nil {
-			return
-		}
-		phaseDescription = phase.ShortString()
-		phaseType = phase.Type
-	case common.GameStateEnded:
-		phaseType = common.AfterGamePhaseType
-		if phaseDescription, err = c.I(string(phaseType)); err != nil {
-			return
-		}
-	default:
-		err = fmt.Errorf("Unknown game state for %+v", game)
-		return
-	}
-
-	allowedFlags := game.ChatFlags[phaseType]
-
-	recipients := len(message.Recipients)
-	if recipients == 2 {
-		if (allowedFlags & common.ChatPrivate) == 0 {
-			err = fmt.Errorf("%+v does not allow %+v during %+v (%v)", game, message, phaseType, common.ChatPrivate)
-			return
-		}
-	} else if recipients == len(common.VariantMap[game.Variant].Nations) {
-		if (allowedFlags & common.ChatConference) == 0 {
-			err = fmt.Errorf("%+v does not allow %+v during %+v", game, message, phaseType)
-			return
-		}
-	} else if recipients > 2 {
-		if (allowedFlags & common.ChatGroup) == 0 {
-			err = fmt.Errorf("%+v does not allow %+v during %+v", game, message, phaseType)
-			return
-		}
-	} else {
-		err = fmt.Errorf("%+v doesn't have any recipients", message)
-		return
-	}
-
-	members, err := game.Members(c.DB())
-	if err != nil {
-		return
-	}
-	if err = c.DB().Set(&message); err != nil {
-		return
-	}
-	if c.MailAddress() != "" {
-		for recip, _ := range message.Recipients {
-			for _, member := range members {
-				if recip == member.Nation && !message.SenderId.Equals(member.Id) {
-					user := &user.User{Id: member.UserId}
-					if err = c.DB().Get(user); err != nil {
-						return
-					}
-					if !user.MessageEmailDisabled && !c.IsSubscribing(user.Email, fmt.Sprintf("/games/%v/messages", game.Id)) {
-						memberCopy := member
-						go message.EmailTo(c, sender, &memberCopy, user, phaseDescription)
-					}
-				}
-			}
-		}
-	}
-
-	return
+	return SendMessage(c.Diet(), game, sender, message)
 }
 
 func DeleteMember(c common.WSContext) error {
-	return c.Transact(func(c subs.Context) error {
+	return c.Transact(func(c common.WSContext) error {
 		decodedId, err := kol.DecodeId(c.Match()[1])
 		if err != nil {
 			return err
@@ -187,7 +108,7 @@ func DeleteMember(c common.WSContext) error {
 func AddMember(c common.WSContext) error {
 	var state GameState
 	c.Data().Overwrite(&state)
-	return c.Transact(func(c subs.Context) error {
+	return c.Transact(func(c common.WSContext) error {
 		game := Game{Id: state.Game.Id}
 		if err := c.DB().Get(&game); err != nil {
 			return fmt.Errorf("Game not found")
@@ -204,7 +125,7 @@ func AddMember(c common.WSContext) error {
 		} else if alreadyMember != nil {
 			return fmt.Errorf("%+v is already member of %v", alreadyMember, game.Id)
 		}
-		me, err := user.EnsureUser(c.DB(), c.Principal())
+		me, err := user.EnsureUser(c.DB(), c.Principal(), common.GetLanguage(c.Conn().Request()))
 		if err != nil {
 			return err
 		}
@@ -230,7 +151,7 @@ func AddMember(c common.WSContext) error {
 				return err
 			}
 			if len(already) == len(variant.Nations)-1 {
-				if err := game.start(common.Diet(c)); err != nil {
+				if err := game.start(c.Diet()); err != nil {
 					return err
 				}
 				c.Infof("Started %v", game.Id)
@@ -268,7 +189,7 @@ func Create(c common.WSContext) error {
 		UserId:           kol.Id(c.Principal()),
 		PreferredNations: state.Members[0].PreferredNations,
 	}
-	return c.Transact(func(c subs.Context) error {
+	return c.Transact(func(c common.WSContext) error {
 		if err := c.DB().Set(game); err != nil {
 			return err
 		}

@@ -99,6 +99,8 @@ var en = map[string]string{
 	"seasons":         "{'Spring': 'Spring', 'Fall': 'Fall'}",
 	"phase_types":     "{'AfterGame': 'After game', 'BeforeGame': 'Before game', 'Movement': 'Movement', 'Retreat': 'Retreat', 'Adjustment': 'Adjustment'}",
 	"England":         "England",
+	"BeforeGame":      "Before game",
+	"AfterGame":       "After game",
 	"After":           "After",
 	"From %v to %v":   "From %v to %v",
 	"During":          "During",
