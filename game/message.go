@@ -114,6 +114,15 @@ func (self *Message) EmailTo(c common.SkinnyContext, sender, recip *Member, reci
 	}
 }
 
+type IllegalMessageError struct {
+	Description string
+	Phrase      string
+}
+
+func (self IllegalMessageError) Error() string {
+	return self.Description
+}
+
 func SendMessage(c common.SkinnyContext, game *Game, sender *Member, message *Message) (err error) {
 	// make sure the sender is correct
 	message.SenderId = sender.Id
@@ -151,17 +160,26 @@ func SendMessage(c common.SkinnyContext, game *Game, sender *Member, message *Me
 	recipients := len(message.Recipients)
 	if recipients == 2 {
 		if (allowedFlags & common.ChatPrivate) == 0 {
-			err = fmt.Errorf("%+v does not allow %+v during %+v (%v)", game, message, phaseType, common.ChatPrivate)
+			err = IllegalMessageError{
+				Description: fmt.Sprintf("%+v does not allow %+v during %+v", game, message, phaseType),
+				Phrase:      "This kind of message is not allowed at this stage of the game",
+			}
 			return
 		}
 	} else if recipients == len(common.VariantMap[game.Variant].Nations) {
 		if (allowedFlags & common.ChatConference) == 0 {
-			err = fmt.Errorf("%+v does not allow %+v during %+v", game, message, phaseType)
+			err = IllegalMessageError{
+				Description: fmt.Sprintf("%+v does not allow %+v during %+v", game, message, phaseType),
+				Phrase:      "This kind of message is not allowed at this stage of the game",
+			}
 			return
 		}
 	} else if recipients > 2 {
 		if (allowedFlags & common.ChatGroup) == 0 {
-			err = fmt.Errorf("%+v does not allow %+v during %+v", game, message, phaseType)
+			err = IllegalMessageError{
+				Description: fmt.Sprintf("%+v does not allow %+v during %+v", game, message, phaseType),
+				Phrase:      "This kind of message is not allowed at this stage of the game",
+			}
 			return
 		}
 	} else {

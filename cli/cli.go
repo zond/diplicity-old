@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -13,6 +14,7 @@ import (
 	"code.google.com/p/go.net/websocket"
 	"github.com/zond/diplicity/common"
 	"github.com/zond/diplicity/game"
+	"github.com/zond/kcwraps/kol"
 	"github.com/zond/wsubs/gosubs"
 )
 
@@ -65,7 +67,18 @@ func (self *cli) send(email string, mess gosubs.Message) (err error) {
 	return
 }
 
-func (self *cli) req(path string) (result io.ReadCloser, err error) {
+func (self *cli) post(path string, obj interface{}) (err error) {
+	token, err := self.token(common.Admin)
+	cli := &http.Client{}
+	buf := &bytes.Buffer{}
+	if err = json.NewEncoder(buf).Encode(obj); err != nil {
+		return
+	}
+	_, err = cli.Post(fmt.Sprintf("http://%v:%v%v?token=%v", self.host, self.port, path, token), "application/json", buf)
+	return
+}
+
+func (self *cli) get(path string) (result io.ReadCloser, err error) {
 	token, err := self.token(common.Admin)
 	cli := &http.Client{}
 	resp, err := cli.Get(fmt.Sprintf("http://%v:%v%v?token=%v", self.host, self.port, path, token))
@@ -76,14 +89,15 @@ func (self *cli) req(path string) (result io.ReadCloser, err error) {
 	return
 }
 
-func (self *cli) get(path string) (result interface{}, err error) {
-	bod, err := self.req(path)
-	err = json.NewDecoder(bod).Decode(&result)
-	return
+func (self *cli) createUser(email string) (err error) {
+	return self.post("/admin/users", map[string]interface{}{
+		"Email": email,
+		"Id":    kol.Id(email),
+	})
 }
 
 func (self *cli) game(id string) (result game.AdminGameState, err error) {
-	bod, err := self.req("/admin/games/" + id)
+	bod, err := self.get("/admin/games/" + id)
 	err = json.NewDecoder(bod).Decode(&result)
 	return
 }
@@ -139,7 +153,7 @@ func main() {
 	}
 
 	if *url != "" {
-		bod, err := cli.req(*url)
+		bod, err := cli.get(*url)
 		if err != nil {
 			panic(err)
 		}
@@ -167,6 +181,9 @@ func main() {
 				panic(err)
 			}
 			for ; *joinX > 0; *joinX-- {
+				if err := cli.createUser(*email); err != nil {
+					panic(err)
+				}
 				if err := cli.send(*email, gosubs.Message{
 					Type: gosubs.UpdateType,
 					Object: &gosubs.Object{

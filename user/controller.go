@@ -1,6 +1,7 @@
 package user
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"strings"
@@ -8,8 +9,18 @@ import (
 
 	"github.com/zond/diplicity/common"
 	"github.com/zond/gopenid"
+	"github.com/zond/kcwraps/kol"
 	"github.com/zond/wsubs/gosubs"
 )
+
+func AdminCreateUser(c *common.HTTPContext) (err error) {
+	user := &User{}
+	if err = json.NewDecoder(c.Req().Body).Decode(user); err != nil {
+		return
+	}
+	err = c.DB().Set(user)
+	return
+}
 
 func Openid(c *common.HTTPContext) (err error) {
 	redirect, email, ok, err := gopenid.VerifyAuth(c.Req())
@@ -18,7 +29,12 @@ func Openid(c *common.HTTPContext) (err error) {
 	}
 	if ok {
 		c.Session().Values[common.SessionEmail] = strings.ToLower(email)
-		EnsureUser(c.DB(), email, common.GetLanguage(c.Req()))
+		u := &User{Id: kol.Id(email)}
+		if err = c.DB().Get(u); err == kol.NotFound {
+			u.Email = email
+			u.Language = common.GetLanguage(c.Req())
+			err = c.DB().Set(u)
+		}
 	} else {
 		delete(c.Session().Values, common.SessionEmail)
 	}

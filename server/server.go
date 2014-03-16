@@ -84,7 +84,8 @@ func main() {
 	server.HandleStatic(router, "static")
 
 	// Admin
-	server.AdminHandle(router.Path("/admin/games/{game_id}"), game.AdminGetGame)
+	server.AdminHandle(router.Path("/admin/games/{game_id}").Methods("GET"), game.AdminGetGame)
+	server.AdminHandle(router.Path("/admin/users").Methods("POST"), user.AdminCreateUser)
 
 	// Everything else HTMLy
 	server.Handle(router.MatcherFunc(wantsHTML), server.Index)

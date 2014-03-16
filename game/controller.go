@@ -125,8 +125,8 @@ func AddMember(c common.WSContext) error {
 		} else if alreadyMember != nil {
 			return fmt.Errorf("%+v is already member of %v", alreadyMember, game.Id)
 		}
-		me, err := user.EnsureUser(c.DB(), c.Principal(), common.GetLanguage(c.Conn().Request()))
-		if err != nil {
+		me := &user.User{Id: kol.Id(c.Principal())}
+		if err := c.DB().Get(me); err != nil {
 			return err
 		}
 		if game.Disallows(me) {

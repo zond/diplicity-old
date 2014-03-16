@@ -96,13 +96,3 @@ func Update(c common.WSContext) (err error) {
 	err = c.DB().Set(current)
 	return
 }
-
-func EnsureUser(db *kol.DB, email, language string) (result *User, err error) {
-	result = &User{Id: kol.Id(email)}
-	if err = db.Get(result); err == kol.NotFound {
-		result.Email = email
-		result.Language = language
-		err = db.Set(result)
-	}
-	return
-}
