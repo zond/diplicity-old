@@ -17,6 +17,11 @@ import (
 	"github.com/zond/wsubs/gosubs"
 )
 
+type Mailer interface {
+	SendMail(from, subject, message string, recips ...string) error
+	MailAddress() string
+}
+
 type SkinnyContext interface {
 	gosubs.Logger
 	gosubs.SubscriptionManager
