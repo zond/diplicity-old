@@ -127,20 +127,20 @@ func SendMessage(c common.SkinnyContext, game *Game, sender *Member, message *Me
 	switch game.State {
 	case common.GameStateCreated:
 		phaseType = common.BeforeGamePhaseType
-		phaseDescription = "%v"
-		phaseDescriptionParams = []string{string(phaseType)}
+		phaseDescription = string(phaseType)
+		phaseDescriptionParams = []string{}
 	case common.GameStateStarted:
 		var phase *Phase
 		if phase, err = game.LastPhase(c.DB()); err != nil {
 			return
 		}
 		phaseType = phase.Type
-		phaseDescription = fmt.Sprintf("%%v %v, %%v", phase.Year)
+		phaseDescription = "game_phase_description"
 		phaseDescriptionParams = []string{string(phase.Season), string(phase.Type)}
 	case common.GameStateEnded:
 		phaseType = common.AfterGamePhaseType
-		phaseDescription = "%v"
-		phaseDescriptionParams = []string{string(phaseType)}
+		phaseDescription = string(phaseType)
+		phaseDescriptionParams = []string{}
 	default:
 		err = fmt.Errorf("Unknown game state for %+v", game)
 		return
@@ -192,7 +192,11 @@ func SendMessage(c common.SkinnyContext, game *Game, sender *Member, message *Me
 								return
 							}
 						}
-						go message.EmailTo(c, sender, &memberCopy, user, fmt.Sprintf(phaseDescription, parts...))
+						desc := ""
+						if desc, err = user.I(phaseDescription); err != nil {
+							return
+						}
+						go message.EmailTo(c, sender, &memberCopy, user, fmt.Sprintf(desc, parts...))
 					}
 				}
 			}

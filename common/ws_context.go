@@ -92,7 +92,6 @@ func newRouter(web *Web) (result *Router) {
 		Router: subs.NewRouter(web.DB()),
 		web:    web,
 	}
-	result.Router.LogLevel = web.logLevel
 	return
 }
 

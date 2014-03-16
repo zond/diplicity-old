@@ -142,6 +142,7 @@ func (self *Web) SetEnv(env string) *Web {
 	} else {
 		self.logLevel = Debug
 	}
+	self.router.LogLevel = self.logLevel
 	return self
 }
 
