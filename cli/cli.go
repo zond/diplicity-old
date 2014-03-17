@@ -25,12 +25,11 @@ type cli struct {
 }
 
 func (self *cli) token(email string) (result string, err error) {
-	gosubs.Secret = self.secret
 	token := &gosubs.Token{
 		Principal: email,
 		Timeout:   time.Now().Add(time.Second * 10),
 	}
-	if err = token.Encode(); err != nil {
+	if err = token.Encode(self.secret); err != nil {
 		return
 	}
 	result = token.Encoded
@@ -137,7 +136,7 @@ func main() {
 	host := flag.String("host", "localhost", "The host to connect to.")
 	port := flag.Int("port", 8080, "The port to connect to.")
 	email := flag.String("email", "", "The email to fake authenticating as. Mandatory unless url is provided.")
-	secret := flag.String("secret", gosubs.Secret, "The token secret of the server.")
+	secret := flag.String("secret", common.DefaultSecret, "The token secret of the server.")
 	join := flag.String("join", "", "A game to join as the provided email.")
 	url := flag.String("url", "", "A url to fetch authenticated as Admin.")
 	commit := flag.String("commit", "", "A game to commit the latest phase as the provided email.")

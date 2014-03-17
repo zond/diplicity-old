@@ -17,6 +17,10 @@ import (
 	"github.com/zond/wsubs/gosubs"
 )
 
+const (
+	DefaultSecret = "something very very secret"
+)
+
 type Mailer interface {
 	SendMail(from, subject, message string, recips ...string) error
 	MailAddress() string

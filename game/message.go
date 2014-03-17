@@ -130,6 +130,7 @@ func (self IllegalMessageError) Error() string {
 }
 
 func IncomingMail(c common.SkinnyContext, msg *enmime.MIMEBody) (err error) {
+	c.Infof("Incoming mail to %#v\n%v", msg.GetHeader("To"), msg.Text)
 	if match := gmail.AddrReg.FindString(msg.GetHeader("To")); match != "" {
 		lines := []string{}
 		for _, line := range strings.Split(msg.Text, "\n") {
@@ -179,13 +180,13 @@ func SendMessage(c common.SkinnyContext, game *Game, sender *Member, message *Me
 	// make sure the sender is one of the recipients
 	message.Recipients[sender.Nation] = true
 
-	phaseDescription := ""
+	var phaseDescription func(u *user.User) string
 	phaseDescriptionParams := []string{}
 	var phaseType dip.PhaseType
 	switch game.State {
 	case common.GameStateCreated:
 		phaseType = common.BeforeGamePhaseType
-		phaseDescription = string(phaseType)
+		phaseDescription = func(u *user.User) string { return string(phaseType) }
 		phaseDescriptionParams = []string{}
 	case common.GameStateStarted:
 		var phase *Phase
@@ -193,11 +194,14 @@ func SendMessage(c common.SkinnyContext, game *Game, sender *Member, message *Me
 			return
 		}
 		phaseType = phase.Type
-		phaseDescription = "game_phase_description"
+		phaseDescription = func(u *user.User) (result string) {
+			result, _ = u.I("game_phase_description", fmt.Sprint(phase.Year))
+			return
+		}
 		phaseDescriptionParams = []string{string(phase.Season), string(phase.Type)}
 	case common.GameStateEnded:
 		phaseType = common.AfterGamePhaseType
-		phaseDescription = string(phaseType)
+		phaseDescription = func(u *user.User) string { return string(phaseType) }
 		phaseDescriptionParams = []string{}
 	default:
 		err = fmt.Errorf("Unknown game state for %+v", game)
@@ -240,7 +244,7 @@ func SendMessage(c common.SkinnyContext, game *Game, sender *Member, message *Me
 	if err != nil {
 		return
 	}
-	if err = c.DB().Set(&message); err != nil {
+	if err = c.DB().Set(message); err != nil {
 		return
 	}
 
@@ -260,11 +264,7 @@ func SendMessage(c common.SkinnyContext, game *Game, sender *Member, message *Me
 								return
 							}
 						}
-						desc := ""
-						if desc, err = user.I(phaseDescription); err != nil {
-							return
-						}
-						go message.EmailTo(c, sender, &memberCopy, user, fmt.Sprintf(desc, parts...))
+						go message.EmailTo(c, sender, &memberCopy, user, fmt.Sprintf(phaseDescription(user), parts...))
 					}
 				}
 			}

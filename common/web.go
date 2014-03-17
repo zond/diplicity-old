@@ -102,7 +102,7 @@ func (self *Web) MailAddress() string {
 
 func (self *Web) Start() (err error) {
 	if self.gmailAccount != "" {
-		if _, err = gmail.New(self.gmailAccount, self.gmailPassword).MailHandler(self.IncomingMail).ErrorHandler(func(e error) {
+		if self.gmail, err = gmail.New(self.gmailAccount, self.gmailPassword).MailHandler(self.IncomingMail).ErrorHandler(func(e error) {
 			self.Fatalf("Mail handler: %v", e)
 		}).Start(); err != nil {
 			return
