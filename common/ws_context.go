@@ -16,6 +16,7 @@ type WSContext interface {
 	I(phrase string, args ...interface{}) (string, error)
 	Env() string
 	Diet() SkinnyContext
+	Secret() string
 }
 
 func NewWSContext(c subs.Context, web *Web) WSContext {
@@ -30,6 +31,10 @@ type defaultWSContext struct {
 	subs.Context
 	web          *Web
 	translations map[string]string
+}
+
+func (self *defaultWSContext) Secret() string {
+	return self.web.secret
 }
 
 func (self *defaultWSContext) Diet() SkinnyContext {

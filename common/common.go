@@ -30,6 +30,7 @@ type SkinnyContext interface {
 	BetweenTransactions(func(c SkinnyContext))
 	Transact(func(c SkinnyContext) error) error
 	Env() string
+	Secret() string
 }
 
 type skinnyWeb struct {

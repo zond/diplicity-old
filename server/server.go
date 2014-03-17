@@ -21,9 +21,13 @@ func wantsHTML(r *http.Request, m *mux.RouteMatch) bool {
 	return common.MostAccepted(r, "text/html", "Accept") == "text/html"
 }
 
+const (
+	defaultSecret = "something very very secret"
+)
+
 func main() {
 	port := flag.Int("port", 8080, "The port to listen on")
-	secret := flag.String("secret", gosubs.Secret, "The cookie store secret")
+	secret := flag.String("secret", defaultSecret, "The cookie store secret")
 	gmailAccount := flag.String("gmail_account", "", "The GMail account to use for sending and receiving message email")
 	gmailPassword := flag.String("gmail_password", "", "The GMail account password")
 	env := flag.String("env", "development", "What environment to run")
@@ -31,11 +35,11 @@ func main() {
 
 	flag.Parse()
 
-	if *env != "development" && *secret == gosubs.Secret {
+	if *env != "development" && *secret == defaultSecret {
 		panic("Only development env can run with the default secret")
 	}
 
-	server := common.NewWeb().SetEnv(*env).SetAppcache(*appcache).SetGMail(*gmailAccount, *gmailPassword)
+	server := common.NewWeb(*secret).SetEnv(*env).SetAppcache(*appcache).SetGMail(*gmailAccount, *gmailPassword, game.IncomingMail)
 
 	router := mux.NewRouter()
 

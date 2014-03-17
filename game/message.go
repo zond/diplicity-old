@@ -7,14 +7,63 @@ import (
 	"encoding/base64"
 	"encoding/gob"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
+	"github.com/jhillyerd/go.enmime"
 	"github.com/zond/diplicity/common"
 	"github.com/zond/diplicity/user"
+	"github.com/zond/gmail"
 	dip "github.com/zond/godip/common"
 	"github.com/zond/kcwraps/kol"
 )
+
+var emailPlusReg = regexp.MustCompile("^.+\\+(.+)@.+$")
+
+type MailTag struct {
+	M kol.Id
+	R kol.Id
+	H []byte
+}
+
+func (self *MailTag) Hash(secret string) []byte {
+	h := sha1.New()
+	h.Write(self.M)
+	h.Write(self.R)
+	h.Write([]byte(secret))
+	return h.Sum(nil)
+}
+
+func (self *MailTag) Encode() (result string, err error) {
+	buf := &bytes.Buffer{}
+	baseEnc := base64.NewEncoder(base64.URLEncoding, buf)
+	gobEnc := gob.NewEncoder(baseEnc)
+	if err = gobEnc.Encode(self); err != nil {
+		return
+	}
+	if err = baseEnc.Close(); err != nil {
+		return
+	}
+	result = buf.String()
+	return
+}
+
+func DecodeMailTag(secret string, s string) (result *MailTag, err error) {
+	buf := bytes.NewBufferString(s)
+	dec := gob.NewDecoder(base64.NewDecoder(base64.URLEncoding, buf))
+	tag := &MailTag{}
+	if err = dec.Decode(tag); err != nil {
+		return
+	}
+	wanted := tag.Hash(secret)
+	if len(wanted) != len(tag.H) || subtle.ConstantTimeCompare(wanted, tag.H) != 1 {
+		err = fmt.Errorf("%+v has wrong hash, wanted %v", tag, wanted)
+		return
+	}
+	result = tag
+	return
+}
 
 type Messages []Message
 
@@ -42,55 +91,12 @@ type Message struct {
 	UpdatedAt time.Time
 }
 
-type MailTag struct {
-	M kol.Id
-	R kol.Id
-	H []byte
-}
-
-func (self *MailTag) Hash() []byte {
-	h := sha1.New()
-	h.Write(self.M)
-	h.Write(self.R)
-	return h.Sum(nil)
-}
-
-func (self *MailTag) Encode() (result string, err error) {
-	buf := &bytes.Buffer{}
-	baseEnc := base64.NewEncoder(base64.URLEncoding, buf)
-	gobEnc := gob.NewEncoder(baseEnc)
-	if err = gobEnc.Encode(self); err != nil {
-		return
-	}
-	if err = baseEnc.Close(); err != nil {
-		return
-	}
-	result = buf.String()
-	return
-}
-
-func DecodeMailTag(s string) (result *MailTag, err error) {
-	buf := bytes.NewBufferString(s)
-	dec := gob.NewDecoder(base64.NewDecoder(base64.URLEncoding, buf))
-	tag := &MailTag{}
-	if err = dec.Decode(tag); err != nil {
-		return
-	}
-	wanted := tag.Hash()
-	if len(wanted) != len(tag.H) || subtle.ConstantTimeCompare(wanted, tag.H) != 1 {
-		err = fmt.Errorf("%+v has wrong hash, wanted %v", tag, wanted)
-		return
-	}
-	result = tag
-	return
-}
-
 func (self *Message) EmailTo(c common.SkinnyContext, sender, recip *Member, recipUser *user.User, subject string) {
 	tag := &MailTag{
 		M: self.Id,
 		R: recip.Id,
 	}
-	tag.H = tag.Hash()
+	tag.H = tag.Hash(c.Secret())
 	encoded, err := tag.Encode()
 	if err != nil {
 		c.Errorf("Failed to encode %+v: %v", tag, err)
@@ -121,6 +127,49 @@ type IllegalMessageError struct {
 
 func (self IllegalMessageError) Error() string {
 	return self.Description
+}
+
+func IncomingMail(c common.SkinnyContext, msg *enmime.MIMEBody) (err error) {
+	if match := gmail.AddrReg.FindString(msg.GetHeader("To")); match != "" {
+		lines := []string{}
+		for _, line := range strings.Split(msg.Text, "\n") {
+			if !strings.Contains(line, c.MailAddress()) && strings.Index(line, ">") != 0 {
+				lines = append(lines, line)
+			}
+		}
+		for len(lines) > 0 && strings.TrimSpace(lines[0]) == "" {
+			lines = lines[1:]
+		}
+		for len(lines) > 0 && strings.TrimSpace(lines[len(lines)-1]) == "" {
+			lines = lines[:len(lines)-1]
+		}
+		if len(lines) > 0 {
+			if match2 := emailPlusReg.FindStringSubmatch(match); match2 != nil {
+				var tag *MailTag
+				if tag, err = DecodeMailTag(c.Secret(), match2[1]); err == nil {
+					sender := &Member{Id: tag.R}
+					if err = c.DB().Get(sender); err != nil {
+						return
+					}
+					parent := &Message{Id: tag.M}
+					if err = c.DB().Get(parent); err != nil {
+						return
+					}
+					game := &Game{Id: parent.GameId}
+					if err = c.DB().Get(game); err != nil {
+						return
+					}
+					message := &Message{
+						Body:       strings.Join(lines, "\n"),
+						GameId:     game.Id,
+						Recipients: parent.Recipients,
+					}
+					return SendMessage(c, game, sender, message)
+				}
+			}
+		}
+	}
+	return nil
 }
 
 func SendMessage(c common.SkinnyContext, game *Game, sender *Member, message *Message) (err error) {
@@ -194,6 +243,7 @@ func SendMessage(c common.SkinnyContext, game *Game, sender *Member, message *Me
 	if err = c.DB().Set(&message); err != nil {
 		return
 	}
+
 	if c.MailAddress() != "" {
 		for recip, _ := range message.Recipients {
 			for _, member := range members {

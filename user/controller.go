@@ -51,7 +51,7 @@ func Token(c *common.HTTPContext) (err error) {
 			Principal: fmt.Sprint(emailIf),
 			Timeout:   time.Now().Add(time.Second * 10),
 		}
-		if err = token.Encode(); err != nil {
+		if err = token.Encode(c.Secret()); err != nil {
 			return
 		}
 		err = c.RenderJSON(token)

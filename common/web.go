@@ -54,11 +54,14 @@ type Web struct {
 	jsViewTemplates       *template.Template
 	gmailAccount          string
 	gmailPassword         string
+	mailHandler           func(c SkinnyContext, msg *enmime.MIMEBody) error
 	router                *Router
+	secret                string
 }
 
-func NewWeb() (result *Web) {
+func NewWeb(secret string) (result *Web) {
 	result = &Web{
+		secret:                secret,
 		appcache:              true,
 		svgTemplates:          template.Must(template.New("svgTemplates").ParseGlob("templates/svg/*.svg")),
 		htmlTemplates:         template.Must(template.New("htmlTemplates").ParseGlob("templates/html/*.html")),
@@ -70,9 +73,10 @@ func NewWeb() (result *Web) {
 		_Templates:            template.Must(template.New("_Templates").ParseGlob("templates/_/*.html")),
 		jsViewTemplates:       template.Must(template.New("jsViewTemplates").ParseGlob("templates/js/views/*.js")),
 		db:                    kol.Must("diplicity"),
-		sessionStore:          sessions.NewCookieStore([]byte(gosubs.Secret)),
+		sessionStore:          sessions.NewCookieStore([]byte(secret)),
 	}
 	result.router = newRouter(result)
+	result.router.Secret = secret
 	return
 }
 
@@ -88,13 +92,17 @@ func (self *Web) IsSubscribing(principal, uri string) bool {
 	return self.router.IsSubscribing(principal, uri)
 }
 
+func (self *Web) Secret() string {
+	return self.secret
+}
+
 func (self *Web) MailAddress() string {
 	return self.gmailAccount
 }
 
 func (self *Web) Start() (err error) {
 	if self.gmailAccount != "" {
-		if self.gmail, err = gmail.New(self.gmailAccount, self.gmailPassword).MailHandler(self.IncomingMail).ErrorHandler(func(e error) {
+		if _, err = gmail.New(self.gmailAccount, self.gmailPassword).MailHandler(self.IncomingMail).ErrorHandler(func(e error) {
 			self.Fatalf("Mail handler: %v", e)
 		}).Start(); err != nil {
 			return
@@ -104,24 +112,7 @@ func (self *Web) Start() (err error) {
 }
 
 func (self *Web) IncomingMail(msg *enmime.MIMEBody) error {
-	if match := gmail.AddrReg.FindString(msg.GetHeader("To")); match != "" {
-		lines := []string{}
-		for _, line := range strings.Split(msg.Text, "\n") {
-			if !strings.Contains(line, self.gmailAccount) && strings.Index(line, ">") != 0 {
-				lines = append(lines, line)
-			}
-		}
-		for len(lines) > 0 && strings.TrimSpace(lines[0]) == "" {
-			lines = lines[1:]
-		}
-		for len(lines) > 0 && strings.TrimSpace(lines[len(lines)-1]) == "" {
-			lines = lines[:len(lines)-1]
-		}
-		if len(lines) > 0 {
-			self.Infof("Incoming mail: %v\n%v", match, strings.Join(lines, "\n"))
-		}
-	}
-	return nil
+	return self.mailHandler(self.Diet(), msg)
 }
 
 func (self *Web) Diet() SkinnyContext {
@@ -162,8 +153,8 @@ func (self *Web) GetContext(w http.ResponseWriter, r *http.Request) (result *HTT
 	return
 }
 
-func (self *Web) SetGMail(account, password string) *Web {
-	self.gmailAccount, self.gmailPassword = account, password
+func (self *Web) SetGMail(account, password string, handler func(c SkinnyContext, msg *enmime.MIMEBody) error) *Web {
+	self.gmailAccount, self.gmailPassword, self.mailHandler = account, password, handler
 	return self
 }
 
@@ -179,7 +170,7 @@ func (self *Web) AdminHandle(r *mux.Route, f func(c *HTTPContext) error) {
 			err = fmt.Errorf("Missing token")
 			return
 		}
-		token, err := gosubs.DecodeToken(tokenStr)
+		token, err := gosubs.DecodeToken(self.secret, tokenStr)
 		if err != nil {
 			return
 		}

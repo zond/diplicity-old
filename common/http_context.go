@@ -29,6 +29,10 @@ func (self *HTTPContext) DB() *kol.DB {
 	return self.web.db
 }
 
+func (self *HTTPContext) Secret() string {
+	return self.web.secret
+}
+
 func (self *HTTPContext) Session() *sessions.Session {
 	return self.session
 }
