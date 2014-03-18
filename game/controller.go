@@ -12,6 +12,23 @@ import (
 	"github.com/zond/kcwraps/kol"
 )
 
+func UnsubscribeMessageEmails(c *common.HTTPContext) (err error) {
+	unsubTag, err := DecodeUnsubscribeTag(c.Secret(), c.Vars()["unsubscribe_tag"])
+	if err != nil {
+		return
+	}
+	u := &user.User{Id: unsubTag.U}
+	if err = c.DB().Get(u); err != nil {
+		return
+	}
+	u.MessageEmailDisabled = true
+	if err = c.DB().Set(u); err != nil {
+		return
+	}
+	fmt.Fprintf(c.Resp(), "%v has successfully been unsubscribed from message emails.", u.Email)
+	return
+}
+
 type AdminGameState struct {
 	Game    *Game
 	Phases  Phases

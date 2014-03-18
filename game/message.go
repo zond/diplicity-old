@@ -23,10 +23,53 @@ import (
 const (
 	messageEmail = `%v
 ----
-To see this message in context: http://%v/games/%v/messages/%v`
+%v
+%v`
 )
 
 var emailPlusReg = regexp.MustCompile("^.+\\+(.+)@.+$")
+
+type UnsubscribeTag struct {
+	U kol.Id
+	H []byte
+}
+
+func (self *UnsubscribeTag) Hash(secret string) []byte {
+	h := sha1.New()
+	h.Write(self.U)
+	h.Write([]byte(secret))
+	return h.Sum(nil)
+}
+
+func (self *UnsubscribeTag) Encode() (result string, err error) {
+	buf := &bytes.Buffer{}
+	baseEnc := base64.NewEncoder(base64.URLEncoding, buf)
+	gobEnc := gob.NewEncoder(baseEnc)
+	if err = gobEnc.Encode(self); err != nil {
+		return
+	}
+	if err = baseEnc.Close(); err != nil {
+		return
+	}
+	result = buf.String()
+	return
+}
+
+func DecodeUnsubscribeTag(secret string, s string) (result *UnsubscribeTag, err error) {
+	buf := bytes.NewBufferString(s)
+	dec := gob.NewDecoder(base64.NewDecoder(base64.URLEncoding, buf))
+	tag := &UnsubscribeTag{}
+	if err = dec.Decode(tag); err != nil {
+		return
+	}
+	wanted := tag.Hash(secret)
+	if len(wanted) != len(tag.H) || subtle.ConstantTimeCompare(wanted, tag.H) != 1 {
+		err = fmt.Errorf("%+v has wrong hash, wanted %v", tag, wanted)
+		return
+	}
+	result = tag
+	return
+}
 
 type MailTag struct {
 	M kol.Id
@@ -99,36 +142,56 @@ type Message struct {
 }
 
 func (self *Message) EmailTo(c common.SkinnyContext, sender, recip *Member, recipUser *user.User, subject string) {
-	tag := &MailTag{
+	mailTag := &MailTag{
 		M: self.Id,
 		R: recip.Id,
 	}
-	tag.H = tag.Hash(c.Secret())
-	encoded, err := tag.Encode()
+	mailTag.H = mailTag.Hash(c.Secret())
+	encodedMailTag, err := mailTag.Encode()
 	if err != nil {
-		c.Errorf("Failed to encode %+v: %v", tag, err)
+		c.Errorf("Failed to encode %+v: %v", mailTag, err)
 		return
 	}
+
+	unsubTag := &UnsubscribeTag{
+		U: recipUser.Id,
+	}
+	unsubTag.H = unsubTag.Hash(c.Secret())
+	encodedUnsubTag, err := unsubTag.Encode()
+	if err != nil {
+		c.Errorf("Failed to encode %+v: %v", unsubTag, err)
+	}
+
 	parts := strings.Split(c.MailAddress(), "@")
 	if len(parts) != 2 {
 		c.Errorf("Failed parsing %#v as an email address", c.MailAddress())
 		return
 	}
-	from := fmt.Sprintf("%v <%v+%v@%v>", sender.Nation, parts[0], encoded, parts[1])
+	from := fmt.Sprintf("%v <%v+%v@%v>", sender.Nation, parts[0], encodedMailTag, parts[1])
 	to := fmt.Sprintf("%v <%v>", recip.Nation, recipUser.Email)
 	nations := []string{}
 	for nat, _ := range self.Recipients {
 		nations = append(nations, string(nat))
 	}
 	sort.Sort(sort.StringSlice(nations))
-	body := fmt.Sprintf(messageEmail, self.Body, recipUser.DiplicityHost, self.GameId, strings.Join(nations, "-"))
+	contextLink, err := recipUser.I("To see this message in context: http://%v/games/%v/messages/%v", recipUser.DiplicityHost, self.GameId, strings.Join(nations, "-"))
+	if err != nil {
+		c.Errorf("Failed translating context link: %v", err)
+		return
+	}
+	unsubLink, err := recipUser.I("To unsubscribe: http://%v/unsubscribe/%v", recipUser.DiplicityHost, encodedUnsubTag)
+	if err != nil {
+		c.Errorf("Failed translating unsubscribe link: %v", err)
+		return
+	}
+	body := fmt.Sprintf(messageEmail, self.Body, contextLink, unsubLink)
 	if c.Env() == "development" {
 		c.Infof("Would have sent\nFrom: %#v\nTo: %#v\nSubject: %#v\n%v", from, to, subject, body)
 	} else {
-		if err := c.SendMail(from, subject, self.Body, to); err == nil {
-			c.Infof("Sent\nFrom: %#v\nTo: %#v\nSubject: %#v\n%v", from, to, subject, self.Body)
+		if err := c.SendMail(from, subject, body, to); err == nil {
+			c.Infof("Sent\nFrom: %#v\nTo: %#v\nSubject: %#v\n%v", from, to, subject, body)
 		} else {
-			c.Errorf("Unable to send %#v/%#v from %#v to %#v: %v", subject, self.Body, from, to, err)
+			c.Errorf("Unable to send %#v/%#v from %#v to %#v: %v", subject, body, from, to, err)
 		}
 	}
 }

@@ -4,5 +4,7 @@ window.ChatMessages = Backbone.Collection.extend({
 
 	model: ChatMessage,
 
+  comparator: 'CreatedAt',
+
 });
 

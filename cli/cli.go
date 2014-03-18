@@ -90,8 +90,9 @@ func (self *cli) get(path string) (result io.ReadCloser, err error) {
 
 func (self *cli) createUser(email string) (err error) {
 	return self.post("/admin/users", map[string]interface{}{
-		"Email": email,
-		"Id":    kol.Id(email),
+		"Email":         email,
+		"Id":            kol.Id(email),
+		"DiplicityHost": fmt.Sprintf("%v:%v", self.host, self.port),
 	})
 }
 

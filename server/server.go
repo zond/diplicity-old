@@ -87,6 +87,9 @@ func main() {
 	server.AdminHandle(router.Path("/admin/games/{game_id}").Methods("GET"), game.AdminGetGame)
 	server.AdminHandle(router.Path("/admin/users").Methods("POST"), user.AdminCreateUser)
 
+	// Unsubscribe
+	server.Handle(router.Path("/unsubscribe/{unsubscribe_tag}").Methods("GET"), game.UnsubscribeMessageEmails)
+
 	// Everything else HTMLy
 	server.Handle(router.MatcherFunc(wantsHTML), server.Index)
 
