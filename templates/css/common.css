@@ -1,3 +1,12 @@
+.game-chat-container {
+	display: none;
+}
+.game-results-container {
+	display: none;
+}
+.game-orders-container {
+	display: none;
+}
 .game-controls-right {
 	float: right;
 }
