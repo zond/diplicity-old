@@ -13,6 +13,7 @@ window.GameControlsView = BaseView.extend({
 	},
 
 	initialize: function(options) {
+	  this.chatParticipants = options.chatParticipants;
 		this.parentId = options.parentId;
 		this.chatMessages = options.chatMessages;
 		_.bindAll(this, 'update');
@@ -51,10 +52,12 @@ window.GameControlsView = BaseView.extend({
 		  ev.preventDefault();
 			if (this.currentView != view) {
 				ev.stopPropagation();
-				this.$('.game-controls').collapse('show')
-				this.currentView = view;
 			}
 		}
+		this.$('.game-controls-container').hide();
+    this.$('.game-' + view + '-container').show();
+		this.$('.game-controls').collapse('show')
+		this.currentView = view;
 	},
 
   viewChat: function(ev) {
@@ -84,6 +87,14 @@ window.GameControlsView = BaseView.extend({
 	update: function() {
 	  var that = this;
 		if (that.model.get('Phase') != null) {
+		  if (that.chatParticipants != null) {
+				that.renderWithin(function() {
+					that.gameChatView.doRender();
+				});
+				that.$('.game-controls').collapse('show')
+				that.currentView = 'chat';
+				that.chatParticipants = null;
+			}
 			var me = that.model.me();
 			if (me != null) {
 				if (that.model.get('Phase').Committed[me.Nation]) {
@@ -103,17 +114,18 @@ window.GameControlsView = BaseView.extend({
 		  parentId: that.parentId,
 			model: that.model,
 		}));
-		this.gameChatView = new GameChatView({
-			model: this.model,
-			collection: this.chatMessages,
-			el: this.$('.game-controls .panel-body'),
+		that.gameChatView = new GameChatView({
+		  chatParticipants: that.chatParticipants,
+			model: that.model,
+			collection: that.chatMessages,
+			el: that.$('.game-chat-container'),
 		});
-		this.gameResultsView = new GameResultsView({
-			el: this.$('.game-controls .panel-body'),
+		that.gameResultsView = new GameResultsView({
+			el: that.$('.game-results-container'),
 		});
-		this.gameOrdersView = new GameOrdersView({
-			el: this.$('.game-controls .panel-body'),
-		  model: this.model,
+		that.gameOrdersView = new GameOrdersView({
+			el: that.$('.game-orders-container'),
+		  model: that.model,
 		});
     return that;
 	},

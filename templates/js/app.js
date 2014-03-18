@@ -31,13 +31,13 @@ $(window).load(function() {
 			}).doRender();
 		},
 
-		chat: function(game_id, participants) {
+		chat: function(gameId, participants) {
 		  new GameView({
 			  model: new GameState({
-				  Id: id,
+				  Id: gameId,
 				}),
 				el: $('#content'),
-				chat_participants: participants,
+				chatParticipants: participants,
 			}).doRender();
 		},
 

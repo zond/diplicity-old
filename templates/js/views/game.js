@@ -19,10 +19,8 @@ window.GameView = BaseView.extend({
 			editable: false,
 			model: this.model,
 		});
-		if (!this.model.isNew()) {
-			this.chatMessages = new ChatMessages([], { url: '/games/' + this.model.get('Id') + '/messages' });
-			this.fetch(this.chatMessages);
-		}
+		this.chatMessages = new ChatMessages([], { url: '/games/' + this.model.get('Id') + '/messages' });
+		this.fetch(this.chatMessages);
 		this.lastPhaseOrdinal = 0;
 		if (this.model.get('Phase') != null) {
 		  this.lastPhaseOrdinal = this.model.get('Phase').Ordinal;
@@ -31,6 +29,7 @@ window.GameView = BaseView.extend({
 		  parentId: 'current-game',
 			model: this.model,
 			chatMessages: this.chatMessages,
+			chatParticipants: options.chatParticipants,
 		}).doRender();
 		this.fetch(this.model);
 		this.decision = null;

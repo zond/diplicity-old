@@ -5,7 +5,7 @@ window.GameChatView = BaseView.extend({
 	events: {
 	  "click .create-channel-button": "createChannel",
 		"hide.bs.collapse .channel": "channelHide",
-		"show.bs.collapse .channel": "channelShow",
+		"shown.bs.collapse .channel": "channelShow",
 	},
 
 	initialize: function() {
@@ -15,11 +15,11 @@ window.GameChatView = BaseView.extend({
 	},
 
 	channelHide: function(ev) {
-    console.log('hide', $(ev.target).attr('data-participants'));
+		window.session.router.navigate('/games/' + this.model.get('Id'), { trigger: false });
 	},
 
 	channelShow: function(ev) {
-	  console.log('show', $(ev.target).attr('data-participants'));
+		window.session.router.navigate('/games/' + this.model.get('Id') + '/messages/' + $(ev.target).attr('data-participants'), { trigger: false });
 	},
 
 	loadMessages: function() {

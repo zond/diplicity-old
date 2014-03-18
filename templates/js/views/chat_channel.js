@@ -16,10 +16,10 @@ window.ChatChannelView = BaseView.extend({
 		that.name = _.map(that.members, function(x, nat) {
 		  that.nMembers++;
 		  return nat;
-		}).join("-");
+		}).sort().join("-");
 		that.title = _.map(that.members, function(x, nat) {
 		  return nat;
-		}).join(", ");
+		}).sort().join(", ");
 	},
 
   keyup: function(ev) {
