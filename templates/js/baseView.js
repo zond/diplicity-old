@@ -43,9 +43,7 @@ window.BaseView = Backbone.View.extend({
 			that.chain[that.chain.length - 1].addChild(that);
 		} else if (that.el != null) {
 		  if (that.el.CurrentBaseView != null) {
-			  if (that.el.CurrentBaseView.cid == that.cid) {
-				  that.cleanChildren();
-				} else {
+			  if (that.el.CurrentBaseView.cid != that.cid) {
 					that.el.CurrentBaseView.clean();
 				}
 			}

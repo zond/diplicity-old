@@ -4,12 +4,22 @@ window.GameChatView = BaseView.extend({
 
 	events: {
 	  "click .create-channel-button": "createChannel",
+		"hide.bs.collapse .channel": "channelHide",
+		"show.bs.collapse .channel": "channelShow",
 	},
 
 	initialize: function() {
 	  this.channels = {};
 	  this.listenTo(this.collection, 'add', this.addMessage);
 	  this.listenTo(this.collection, 'reset', this.loadMessages);
+	},
+
+	channelHide: function(ev) {
+    console.log('hide', $(ev.target).attr('data-participants'));
+	},
+
+	channelShow: function(ev) {
+	  console.log('show', $(ev.target).attr('data-participants'));
 	},
 
 	loadMessages: function() {
@@ -98,6 +108,7 @@ window.GameChatView = BaseView.extend({
 
   render: function() {
 	  var that = this;
+	  that.channels = {};
     that.$el.html(that.template({
 		}));
 		var me = that.model.me();

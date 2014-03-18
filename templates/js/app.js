@@ -11,7 +11,8 @@ $(window).load(function() {
 			"": "currentGames",
 			"open": "openGames",
 			"create": "createGame",
-			"games/:id": "games",
+			"games/:id": "game",
+			"games/:id/messages/:participants": "chat",
 			"settings": "settings",
 		},
 
@@ -21,12 +22,22 @@ $(window).load(function() {
 			}).doRender();
 		},
 
-		games: function(id) {
+		game: function(id) {
 			new GameView({
 				model: new GameState({
 					Id: id,
 				}),
 				el: $('#content'),
+			}).doRender();
+		},
+
+		chat: function(game_id, participants) {
+		  new GameView({
+			  model: new GameState({
+				  Id: id,
+				}),
+				el: $('#content'),
+				chat_participants: participants,
 			}).doRender();
 		},
 

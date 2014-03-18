@@ -46,14 +46,6 @@ window.GameControlsView = BaseView.extend({
 		});
 	},
 
-  viewChat: function(ev) {
-		this.$('.game-controls .panel-body').html(new GameChatView({
-		  model: this.model,
-			collection: this.chatMessages,
-		}).render().el);
-		this.handleClick(ev, 'chat');
-	},
-
 	handleClick: function(ev, view) {
 		if (ev != null) {
 		  ev.preventDefault();
@@ -65,16 +57,28 @@ window.GameControlsView = BaseView.extend({
 		}
 	},
 
+  viewChat: function(ev) {
+	  var that = this;
+	  that.renderWithin(function() {
+			that.gameChatView.doRender();
+		});
+		that.handleClick(ev, 'chat');
+	},
+
   viewResults: function(ev) {
-		this.$('.game-controls .panel-body').html(new GameResultsView().render().el);
-		this.handleClick(ev, 'results');
+	  var that = this;
+		that.renderWithin(function() {
+		  that.gameResultsView.doRender();
+		});
+		that.handleClick(ev, 'results');
 	},
 
   viewOrders: function(ev) {
-		this.$('.game-controls .panel-body').html(new GameOrdersView({
-		  model: this.model,
-		}).render().el);
-		this.handleClick(ev, 'orders');
+	  var that = this;
+		that.renderWithin(function() {
+			that.gameOrdersView.doRender();
+		});
+		that.handleClick(ev, 'orders');
 	},
 
 	update: function() {
@@ -99,6 +103,18 @@ window.GameControlsView = BaseView.extend({
 		  parentId: that.parentId,
 			model: that.model,
 		}));
+		this.gameChatView = new GameChatView({
+			model: this.model,
+			collection: this.chatMessages,
+			el: this.$('.game-controls .panel-body'),
+		});
+		this.gameResultsView = new GameResultsView({
+			el: this.$('.game-controls .panel-body'),
+		});
+		this.gameOrdersView = new GameOrdersView({
+			el: this.$('.game-controls .panel-body'),
+		  model: this.model,
+		});
     return that;
 	},
 });
