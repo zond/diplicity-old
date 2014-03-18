@@ -43,11 +43,13 @@ window.GameOrdersView = BaseView.extend({
 		}));
 		var me = that.model.me();
 		if (me != null) {
-			_.each(that.model.get('Phase').Orders, function(orders, nation) {
-			  _.each(orders, function(order, source) {
-					that.$('.orders').append(that.showOrder(nation, source, order) + '\n');
+		  if (that.model.get('Phase') != null) {
+				_.each(that.model.get('Phase').Orders, function(orders, nation) {
+					_.each(orders, function(order, source) {
+						that.$('.orders').append(that.showOrder(nation, source, order) + '\n');
+					});
 				});
-			});
+			}
 		}
 		return that;
 	},
