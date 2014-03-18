@@ -26,7 +26,9 @@ window.GameChatView = BaseView.extend({
 	  var that = this;
 		that.$('#chat-channels').empty();
 		that.collection.each(function(message) {
-		  that.addMessage(message);
+		  if (message.get('SenderId') != null) {
+				that.addMessage(message);
+			}
 		});
 	},
 
@@ -132,7 +134,9 @@ window.GameChatView = BaseView.extend({
 			};
 			that.$('.new-channel-nations').multiselect(opts);
 		}
-		this.loadMessages();
+		if (this.model.get('Phase') != null) {
+			this.loadMessages();
+		}
 		return that;
 	},
 

@@ -143,7 +143,7 @@ func (self IllegalMessageError) Error() string {
 }
 
 func IncomingMail(c common.SkinnyContext, msg *enmime.MIMEBody) (err error) {
-	c.Infof("Incoming mail to %#v\n%v", msg.GetHeader("To"), msg.Text)
+	c.Debugf("Incoming mail to %#v\n%v", msg.GetHeader("To"), msg.Text)
 	if match := gmail.AddrReg.FindString(msg.GetHeader("To")); match != "" {
 		lines := []string{}
 		for _, line := range strings.Split(msg.Text, "\n") {
@@ -178,6 +178,7 @@ func IncomingMail(c common.SkinnyContext, msg *enmime.MIMEBody) (err error) {
 						GameId:     game.Id,
 						Recipients: parent.Recipients,
 					}
+					c.Infof("Mail resulted in %+v from %+v", message, sender)
 					return SendMessage(c, game, sender, message)
 				}
 			}
