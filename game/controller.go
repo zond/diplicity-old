@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"sort"
+	"strings"
 	dip "github.com/zond/godip/common"
 
 	"github.com/zond/diplicity/common"
@@ -54,6 +55,7 @@ func CreateMessage(c common.WSContext) (err error) {
 		message.Recipients = map[dip.Nation]bool{}
 	}
 
+	message.Body = strings.TrimSpace(message.Body)
 	if message.Body == "" {
 		return
 	}

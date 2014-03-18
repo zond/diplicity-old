@@ -28,11 +28,18 @@ func Openid(c *common.HTTPContext) (err error) {
 		return
 	}
 	if ok {
-		c.Session().Values[common.SessionEmail] = strings.ToLower(email)
+		email = strings.ToLower(email)
+		c.Session().Values[common.SessionEmail] = email
 		u := &User{Id: kol.Id(email)}
-		if err = c.DB().Get(u); err == kol.NotFound {
+		err = c.DB().Get(u)
+		if err == kol.NotFound {
+			err = nil
 			u.Email = email
+		}
+		if err == nil {
 			u.Language = common.GetLanguage(c.Req())
+			u.DiplicityHost = c.Req().Host
+			u.LastLoginAt = time.Now()
 			err = c.DB().Set(u)
 		}
 	} else {

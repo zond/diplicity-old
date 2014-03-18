@@ -22,9 +22,11 @@ type User struct {
 	HeldDeadlines        int
 	Ranking              float64
 	Language             string
+	DiplicityHost        string
 
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	LastLoginAt time.Time
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 }
 
 func (self *User) I(phrase string, args ...interface{}) (result string, err error) {

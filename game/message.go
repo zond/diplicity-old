@@ -8,6 +8,7 @@ import (
 	"encoding/gob"
 	"fmt"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 
@@ -17,6 +18,12 @@ import (
 	"github.com/zond/gmail"
 	dip "github.com/zond/godip/common"
 	"github.com/zond/kcwraps/kol"
+)
+
+const (
+	messageEmail = `%v
+----
+To see this message in context: http://%v/games/%v/messages/%v`
 )
 
 var emailPlusReg = regexp.MustCompile("^.+\\+(.+)@.+$")
@@ -109,8 +116,14 @@ func (self *Message) EmailTo(c common.SkinnyContext, sender, recip *Member, reci
 	}
 	from := fmt.Sprintf("%v <%v+%v@%v>", sender.Nation, parts[0], encoded, parts[1])
 	to := fmt.Sprintf("%v <%v>", recip.Nation, recipUser.Email)
+	nations := []string{}
+	for nat, _ := range self.Recipients {
+		nations = append(nations, string(nat))
+	}
+	sort.Sort(sort.StringSlice(nations))
+	body := fmt.Sprintf(messageEmail, self.Body, recipUser.DiplicityHost, self.GameId, strings.Join(nations, "-"))
 	if c.Env() == "development" {
-		c.Infof("Would have sent\nFrom: %#v\nTo: %#v\nSubject: %#v\n%v", from, to, subject, self.Body)
+		c.Infof("Would have sent\nFrom: %#v\nTo: %#v\nSubject: %#v\n%v", from, to, subject, body)
 	} else {
 		if err := c.SendMail(from, subject, self.Body, to); err == nil {
 			c.Infof("Sent\nFrom: %#v\nTo: %#v\nSubject: %#v\n%v", from, to, subject, self.Body)
@@ -161,7 +174,7 @@ func IncomingMail(c common.SkinnyContext, msg *enmime.MIMEBody) (err error) {
 						return
 					}
 					message := &Message{
-						Body:       strings.Join(lines, "\n"),
+						Body:       strings.TrimSpace(strings.Join(lines, "\n")),
 						GameId:     game.Id,
 						Recipients: parent.Recipients,
 					}
