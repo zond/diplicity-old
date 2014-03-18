@@ -3,7 +3,7 @@
 		<%- title %>
 	</h4>
 </div>
-<div id="game_<%- model.cid %>_channel_<%- name %>" data-participants="<%- name %>" class="channel collapse">
+<div id="game_<%- model.cid %>_channel_<%- name %>" data-participants="<%- name %>" class="channel collapse channel-<%- name %>">
 	<div class="panel-body">
 		<form class="form-horizontal create-message-form" role="form">
 			<button type="button" class="btn btn-primary create-message-button">{{.I "Send"}}</button>

@@ -88,11 +88,13 @@ window.GameControlsView = BaseView.extend({
 	  var that = this;
 		if (that.model.get('Phase') != null) {
 		  if (that.chatParticipants != null) {
-				that.renderWithin(function() {
-					that.gameChatView.doRender();
-				});
-				that.$('.game-controls').collapse('show')
-				that.currentView = 'chat';
+			  console.log('rendering chat first time');
+				that.viewChat();
+				that.gameChatView.ensureChannel(_.inject(that.chatParticipants.split("-"), function(sum, nat) {
+				  sum[nat] = true;
+					return sum
+				}, {}));
+				that.gameChatView.$('.channel-' + that.chatParticipants).collapse('show');
 				that.chatParticipants = null;
 			}
 			var me = that.model.me();

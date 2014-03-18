@@ -61,6 +61,12 @@ window.GameState = Backbone.Model.extend({
 		}));
 	},
 
+	memberByNation: function(nation) {
+	  return this.decorateMember(_.find(this.get('Members'), function(member) {
+		  return member.Nation == nation;
+		}));
+	},
+
 	conferenceChannel: function() {
 		var result = {};
 		_.each(variantNations(this.get('Variant')), function(nation) {
