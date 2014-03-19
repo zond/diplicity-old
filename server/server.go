@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -11,6 +12,7 @@ import (
 	"github.com/zond/diplicity/game"
 	"github.com/zond/diplicity/user"
 	"github.com/zond/wsubs/gosubs"
+	"github.com/zond/ziprot"
 )
 
 func wantsJSON(r *http.Request, m *mux.RouteMatch) bool {
@@ -28,8 +30,17 @@ func main() {
 	gmailPassword := flag.String("gmail_password", "", "The GMail account password")
 	env := flag.String("env", "development", "What environment to run")
 	appcache := flag.Bool("appcache", true, "Whether to enable appcache")
+	logOutput := flag.String("log", "-", "Where to send the log output")
 
 	flag.Parse()
+
+	if *logOutput != "-" {
+		z, err := ziprot.New(*logOutput)
+		if err != nil {
+			panic(err)
+		}
+		log.SetOutput(z.MaxFiles(10).MaxSize(1024 * 1024 * 256))
+	}
 
 	if *env != "development" && *secret == common.DefaultSecret {
 		panic("Only development env can run with the default secret")
