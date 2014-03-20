@@ -29,6 +29,7 @@ func main() {
 	gmailAccount := flag.String("gmail_account", "", "The GMail account to use for sending and receiving message email")
 	gmailPassword := flag.String("gmail_password", "", "The GMail account password")
 	env := flag.String("env", common.Development, "What environment to run")
+	db := flag.String("db", "diplicity", "The path to the database file to use")
 	appcache := flag.Bool("appcache", true, "Whether to enable appcache")
 	logOutput := flag.String("log", "-", "Where to send the log output")
 
@@ -42,7 +43,7 @@ func main() {
 		log.SetOutput(z.MaxFiles(10).MaxSize(1024 * 1024 * 256))
 	}
 
-	server, err := common.NewWeb(*secret, *env)
+	server, err := common.NewWeb(*secret, *env, *db)
 	if err != nil {
 		panic(err)
 	}

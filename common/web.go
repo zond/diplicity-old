@@ -60,13 +60,15 @@ type Web struct {
 	secret                string
 }
 
-func NewWeb(secret, env string) (self *Web, err error) {
+func NewWeb(secret, env, db string) (self *Web, err error) {
 	self = &Web{
 		secret:       secret,
 		appcache:     true,
 		env:          env,
-		db:           kol.Must("diplicity"),
 		sessionStore: sessions.NewCookieStore([]byte(secret)),
+	}
+	if self.db, err = kol.New(db); err != nil {
+		return
 	}
 	self.router = newRouter(self)
 	self.router.Secret = secret
