@@ -82,31 +82,31 @@ func NewWeb(secret, env string) (self *Web, err error) {
 		self.logLevel = Debug
 	}
 	self.router.LogLevel = self.logLevel
-	if self.svgTemplates, err = templar.GetMatching(env == Development, "svgTemplates", "^templates/svg/[^/]*\\.svg$"); err != nil {
+	if self.svgTemplates, err = templar.GetMatchingTemplates(env == Development, "svgTemplates", "^templates/svg/[^/]*\\.svg$"); err != nil {
 		return
 	}
-	if self.textTemplates, err = templar.GetMatching(env == Development, "textTemplates", "^templates/text/[^/]*$"); err != nil {
+	if self.textTemplates, err = templar.GetMatchingTemplates(env == Development, "textTemplates", "^templates/text/[^/]*$"); err != nil {
 		return
 	}
-	if self.jsModelTemplates, err = templar.GetMatching(env == Development, "jsCollectionTemplates", "^templates/js/models/[^/]*\\.js$"); err != nil {
+	if self.jsModelTemplates, err = templar.GetMatchingTemplates(env == Development, "jsCollectionTemplates", "^templates/js/models/[^/]*\\.js$"); err != nil {
 		return
 	}
-	if self.jsCollectionTemplates, err = templar.GetMatching(env == Development, "jsModelTemplates", "^templates/js/collections/[^/]*\\.js$"); err != nil {
+	if self.jsCollectionTemplates, err = templar.GetMatchingTemplates(env == Development, "jsModelTemplates", "^templates/js/collections/[^/]*\\.js$"); err != nil {
 		return
 	}
-	if self.jsTemplates, err = templar.GetMatching(env == Development, "jsTemplates", "^templates/js/[^/]*\\.js$"); err != nil {
+	if self.jsTemplates, err = templar.GetMatchingTemplates(env == Development, "jsTemplates", "^templates/js/[^/]*\\.js$"); err != nil {
 		return
 	}
-	if self.cssTemplates, err = templar.GetMatching(env == Development, "cssTemplates", "^templates/css/[^/]*\\.css$"); err != nil {
+	if self.cssTemplates, err = templar.GetMatchingTemplates(env == Development, "cssTemplates", "^templates/css/[^/]*\\.css$"); err != nil {
 		return
 	}
-	if self._Templates, err = templar.GetMatching(env == Development, "_Templates", "^templates/_/[^/]*\\.html$"); err != nil {
+	if self._Templates, err = templar.GetMatchingTemplates(env == Development, "_Templates", "^templates/_/[^/]*\\.html$"); err != nil {
 		return
 	}
-	if self.jsViewTemplates, err = templar.GetMatching(env == Development, "jsViewTemplates", "^templates/js/views/[^/]*\\.js$"); err != nil {
+	if self.jsViewTemplates, err = templar.GetMatchingTemplates(env == Development, "jsViewTemplates", "^templates/js/views/[^/]*\\.js$"); err != nil {
 		return
 	}
-	if self.htmlTemplates, err = templar.GetMatching(env == Development, "htmlTemplates", "^templates/html/[^/]*\\.html$"); err != nil {
+	if self.htmlTemplates, err = templar.GetMatchingTemplates(env == Development, "htmlTemplates", "^templates/html/[^/]*\\.html$"); err != nil {
 		return
 	}
 	return
@@ -316,7 +316,7 @@ func (self *Web) HandleStatic(router *mux.Router, dir string) {
 			} else {
 				c.SetContentType("application/octet-stream", true)
 			}
-			in, err := os.Open(filepath.Join("static", cpy))
+			in, err := templar.GetBlob(self.env == Development, filepath.Join("static", cpy))
 			if err != nil {
 				self.Errorf("%v", err)
 				c.Resp().WriteHeader(500)

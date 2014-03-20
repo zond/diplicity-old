@@ -26,3 +26,4 @@ _testmain.go
 tags
 *.log*
 common/templates.go
+common/blobs.go
