@@ -27,3 +27,4 @@ tags
 *.log*
 common/templates.go
 common/blobs.go
+diplicity/diplicity
