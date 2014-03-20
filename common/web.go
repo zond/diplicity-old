@@ -71,7 +71,7 @@ func NewWeb(secret, env string) (self *Web, err error) {
 	}
 	self.router = newRouter(self)
 	self.router.Secret = secret
-	if env == Development {
+	if env != Development {
 		if secret == DefaultSecret {
 			err = fmt.Errorf("Only development env can run with the default secret")
 			return
