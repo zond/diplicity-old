@@ -28,7 +28,7 @@ func main() {
 	secret := flag.String("secret", common.DefaultSecret, "The cookie store secret")
 	gmailAccount := flag.String("gmail_account", "", "The GMail account to use for sending and receiving message email")
 	gmailPassword := flag.String("gmail_password", "", "The GMail account password")
-	env := flag.String("env", "development", "What environment to run")
+	env := flag.String("env", common.Development, "What environment to run")
 	appcache := flag.Bool("appcache", true, "Whether to enable appcache")
 	logOutput := flag.String("log", "-", "Where to send the log output")
 
@@ -42,11 +42,11 @@ func main() {
 		log.SetOutput(z.MaxFiles(10).MaxSize(1024 * 1024 * 256))
 	}
 
-	if *env != "development" && *secret == common.DefaultSecret {
-		panic("Only development env can run with the default secret")
+	server, err := common.NewWeb(*secret, *env)
+	if err != nil {
+		panic(err)
 	}
-
-	server := common.NewWeb(*secret).SetEnv(*env).SetAppcache(*appcache).SetGMail(*gmailAccount, *gmailPassword, game.IncomingMail)
+	server.SetAppcache(*appcache).SetGMail(*gmailAccount, *gmailPassword, game.IncomingMail)
 
 	router := mux.NewRouter()
 
@@ -58,9 +58,6 @@ func main() {
 
 	// Resource routes for the WebSocket
 	wsRouter := server.Router()
-	if *env == "development" {
-		wsRouter.DevMode = true
-	}
 	wsRouter.Resource("^/games/current$").
 		Handle(gosubs.SubscribeType, game.SubscribeCurrent).Auth()
 	wsRouter.Resource("^/games/open$").

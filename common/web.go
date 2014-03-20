@@ -19,6 +19,7 @@ import (
 	"github.com/zond/diplicity/translation"
 	"github.com/zond/gmail"
 	"github.com/zond/kcwraps/kol"
+	"github.com/zond/templar"
 	"github.com/zond/wsubs/gosubs"
 )
 
@@ -26,6 +27,7 @@ const (
 	SessionEmail = "email"
 	SessionName  = "diplicity_session"
 	Admin        = "Admin"
+	Development  = "development"
 )
 
 const (
@@ -59,24 +61,54 @@ type Web struct {
 	secret                string
 }
 
-func NewWeb(secret string) (result *Web) {
-	result = &Web{
-		secret:                secret,
-		appcache:              true,
-		svgTemplates:          template.Must(template.New("svgTemplates").ParseGlob("templates/svg/*.svg")),
-		htmlTemplates:         template.Must(template.New("htmlTemplates").ParseGlob("templates/html/*.html")),
-		textTemplates:         template.Must(template.New("textTemplates").ParseGlob("templates/text/*")),
-		jsModelTemplates:      template.Must(template.New("jsCollectionTemplates").ParseGlob("templates/js/models/*.js")),
-		jsCollectionTemplates: template.Must(template.New("jsModelTemplates").ParseGlob("templates/js/collections/*.js")),
-		jsTemplates:           template.Must(template.New("jsTemplates").ParseGlob("templates/js/*.js")),
-		cssTemplates:          template.Must(template.New("cssTemplates").ParseGlob("templates/css/*.css")),
-		_Templates:            template.Must(template.New("_Templates").ParseGlob("templates/_/*.html")),
-		jsViewTemplates:       template.Must(template.New("jsViewTemplates").ParseGlob("templates/js/views/*.js")),
-		db:                    kol.Must("diplicity"),
-		sessionStore:          sessions.NewCookieStore([]byte(secret)),
+func NewWeb(secret, env string) (self *Web, err error) {
+	self = &Web{
+		secret:       secret,
+		appcache:     true,
+		env:          env,
+		db:           kol.Must("diplicity"),
+		sessionStore: sessions.NewCookieStore([]byte(secret)),
 	}
-	result.router = newRouter(result)
-	result.router.Secret = secret
+	self.router = newRouter(self)
+	self.router.Secret = secret
+	if env == Development {
+		if secret == DefaultSecret {
+			err = fmt.Errorf("Only development env can run with the default secret")
+			return
+		}
+		self.logLevel = Trace
+		self.router.DevMode = true
+	} else {
+		self.logLevel = Debug
+	}
+	self.router.LogLevel = self.logLevel
+	if self.svgTemplates, err = templar.GetMatching(env == Development, "svgTemplates", "^templates/svg/[^/]*\\.svg$"); err != nil {
+		return
+	}
+	if self.textTemplates, err = templar.GetMatching(env == Development, "textTemplates", "^templates/text/[^/]*$"); err != nil {
+		return
+	}
+	if self.jsModelTemplates, err = templar.GetMatching(env == Development, "jsCollectionTemplates", "^templates/js/models/[^/]*\\.js$"); err != nil {
+		return
+	}
+	if self.jsCollectionTemplates, err = templar.GetMatching(env == Development, "jsModelTemplates", "^templates/js/collections/[^/]*\\.js$"); err != nil {
+		return
+	}
+	if self.jsTemplates, err = templar.GetMatching(env == Development, "jsTemplates", "^templates/js/[^/]*\\.js$"); err != nil {
+		return
+	}
+	if self.cssTemplates, err = templar.GetMatching(env == Development, "cssTemplates", "^templates/css/[^/]*\\.css$"); err != nil {
+		return
+	}
+	if self._Templates, err = templar.GetMatching(env == Development, "_Templates", "^templates/_/[^/]*\\.html$"); err != nil {
+		return
+	}
+	if self.jsViewTemplates, err = templar.GetMatching(env == Development, "jsViewTemplates", "^templates/js/views/[^/]*\\.js$"); err != nil {
+		return
+	}
+	if self.htmlTemplates, err = templar.GetMatching(env == Development, "htmlTemplates", "^templates/html/[^/]*\\.html$"); err != nil {
+		return
+	}
 	return
 }
 
@@ -124,17 +156,6 @@ func (self *Web) Diet() SkinnyContext {
 
 func (self *Web) SendMail(from, subject, message string, recips ...string) (err error) {
 	return self.gmail.Send(from, subject, message, recips...)
-}
-
-func (self *Web) SetEnv(env string) *Web {
-	self.env = env
-	if env == "development" {
-		self.logLevel = 100
-	} else {
-		self.logLevel = Debug
-	}
-	self.router.LogLevel = self.logLevel
-	return self
 }
 
 func (self *Web) DB() *kol.DB {

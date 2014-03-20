@@ -25,3 +25,4 @@ _testmain.go
 *.kct.wal
 tags
 *.log*
+common/templates.go
