@@ -89,7 +89,9 @@ func main() {
 	server.Handle(router.Path("/js/{ver}/all"), server.AllJs)
 	server.Handle(router.Path("/css/{ver}/all"), server.AllCss)
 	server.Handle(router.Path("/diplicity.appcache"), server.AppCache)
-	server.HandleStatic(router, "static")
+	if err := server.HandleStatic(router, "static"); err != nil {
+		panic(err)
+	}
 
 	// Admin
 	server.AdminHandle(router.Path("/admin/games/{game_id}").Methods("GET"), game.AdminGetGame)

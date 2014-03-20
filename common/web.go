@@ -6,7 +6,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"os"
 	"path/filepath"
 	"strings"
 	"sync/atomic"
@@ -287,19 +286,15 @@ func (self *Web) render_Templates(data *HTTPContext) {
 	fmt.Fprintln(data.response, "})();")
 }
 
-func (self *Web) HandleStatic(router *mux.Router, dir string) {
-	static, err := os.Open(dir)
+func (self *Web) HandleStatic(router *mux.Router, dir string) (err error) {
+	children, err := templar.GetMatchingBlobNames(self.env == Development, "^static/.*")
 	if err != nil {
-		panic(err)
-	}
-	children, err := static.Readdirnames(-1)
-	if err != nil {
-		panic(err)
+		return
 	}
 	for _, fil := range children {
 		cpy := fil
 		self.Handle(router.MatcherFunc(func(r *http.Request, rm *mux.RouteMatch) bool {
-			return strings.HasSuffix(r.URL.Path, cpy)
+			return strings.HasSuffix(r.URL.Path, filepath.Base(cpy))
 		}), func(c *HTTPContext) (err error) {
 			if strings.HasSuffix(c.Req().URL.Path, ".css") {
 				c.SetContentType("text/css; charset=UTF-8", true)
@@ -316,7 +311,7 @@ func (self *Web) HandleStatic(router *mux.Router, dir string) {
 			} else {
 				c.SetContentType("application/octet-stream", true)
 			}
-			in, err := templar.GetBlob(self.env == Development, filepath.Join("static", cpy))
+			in, err := templar.GetBlob(self.env == Development, cpy)
 			if err != nil {
 				self.Errorf("%v", err)
 				c.Resp().WriteHeader(500)
@@ -330,4 +325,5 @@ func (self *Web) HandleStatic(router *mux.Router, dir string) {
 			return
 		})
 	}
+	return
 }
