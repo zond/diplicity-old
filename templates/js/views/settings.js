@@ -6,6 +6,7 @@ window.SettingsView = BaseView.extend({
 	  "change .user-nickname": "changeNickname",
 	  "click .save-button": "saveSettings",
 		"click .user-message-email-disabled": "toggleMessageEmailDisabled",
+		"click .user-phase-email-disabled": "togglePhaseEmailDisabled",
 	},
 
 	initialize: function(options) {
@@ -15,6 +16,11 @@ window.SettingsView = BaseView.extend({
   toggleMessageEmailDisabled: function(ev) {
 	  ev.preventDefault();
 		window.session.user.set('MessageEmailDisabled', !window.session.user.get('MessageEmailDisabled'));
+	},
+
+  togglePhaseEmailDisabled: function(ev) {
+	  ev.preventDefault();
+		window.session.user.set('PhaseEmailDisabled', !window.session.user.get('PhaseEmailDisabled'));
 	},
 
 	changeNickname: function(ev) {

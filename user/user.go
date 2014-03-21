@@ -18,6 +18,7 @@ type User struct {
 	Email                string
 	Nickname             string
 	MessageEmailDisabled bool
+	PhaseEmailDisabled   bool
 	MissedDeadlines      int
 	HeldDeadlines        int
 	Ranking              float64
@@ -95,6 +96,7 @@ func Update(c common.WSContext) (err error) {
 	}
 	current.Nickname = user.Nickname
 	current.MessageEmailDisabled = user.MessageEmailDisabled
+	current.PhaseEmailDisabled = user.PhaseEmailDisabled
 	err = c.DB().Set(current)
 	return
 }

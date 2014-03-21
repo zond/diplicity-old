@@ -6,6 +6,7 @@ import (
 
 	"github.com/zond/diplicity/common"
 	"github.com/zond/diplicity/epoch"
+	"github.com/zond/diplicity/user"
 	"github.com/zond/godip/classical"
 	"github.com/zond/godip/classical/orders"
 	dip "github.com/zond/godip/common"
@@ -86,6 +87,61 @@ func (self *Phase) Schedule(c common.SkinnyContext) (err error) {
 		})
 	}
 	return
+}
+
+func (self *Phase) SendScheduleEmails(c common.SkinnyContext, game *Game) {
+	from := fmt.Sprintf("diplicity <%v>", c.MailAddress())
+
+	members, err := game.Members(c.DB())
+	for _, member := range members {
+		user := &user.User{Id: member.UserId}
+		if err = c.DB().Get(user); err != nil {
+			return
+		}
+		to := fmt.Sprintf("%v <%v>", member.Nation, user.Email)
+		if !user.PhaseEmailDisabled && !c.IsSubscribing(user.Email, fmt.Sprintf("/games/%v", game.Id)) {
+			unsubTag := &common.UnsubscribeTag{
+				T: common.UnsubscribePhaseEmail,
+				U: user.Id,
+			}
+			unsubTag.H = unsubTag.Hash(c.Secret())
+			encodedUnsubTag, err := unsubTag.Encode()
+			if err != nil {
+				c.Errorf("Failed to encode %+v: %v", unsubTag, err)
+				return
+			}
+			contextLink, err := user.I("To see this in context: http://%v/games/%v", user.DiplicityHost, self.GameId)
+			if err != nil {
+				c.Errorf("Failed translating context link: %v", err)
+				return
+			}
+			unsubLink, err := user.I("To unsubscribe: http://%v/unsubscribe/%v", user.DiplicityHost, encodedUnsubTag)
+			if err != nil {
+				c.Errorf("Failed translating unsubscribe link: %v", err)
+				return
+			}
+			text, err := user.I("A new phase has been created")
+			if err != nil {
+				c.Errorf("Failed translating: %v", err)
+				return
+			}
+			subject, err := game.Describe(c, user)
+			if err != nil {
+				c.Errorf("Failed describing: %v", err)
+				return
+			}
+			body := fmt.Sprintf(common.EmailTemplate, text, contextLink, unsubLink)
+			if c.Env() == "development" {
+				c.Infof("Would have sent\nFrom: %#v\nTo: %#v\nSubject: %#v\n%v", from, to, subject, body)
+			} else {
+				if err := c.SendMail(from, subject, body, to); err == nil {
+					c.Infof("Sent\nFrom: %#v\nTo: %#v\nSubject: %#v\n%v", from, to, subject, body)
+				} else {
+					c.Errorf("Unable to send %#v/%#v from %#v to %#v: %v", subject, body, from, to, err)
+				}
+			}
+		}
+	}
 }
 
 func (self *Phase) Game(d *kol.DB) (result *Game, err error) {

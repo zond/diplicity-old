@@ -159,10 +159,36 @@ func (self *Game) resolve(c common.SkinnyContext, phase *Phase) (err error) {
 			if err = nextPhase.Schedule(c); err != nil {
 				return
 			}
+			nextPhase.SendScheduleEmails(c, self)
 			break
 		}
 		phase = nextPhase
 	}
+	return
+}
+
+func (self *Game) Describe(c common.SkinnyContext, trans common.Translator) (result string, err error) {
+	switch self.State {
+	case common.GameStateCreated:
+		return trans.I(string(common.BeforeGamePhaseType))
+	case common.GameStateStarted:
+		var phase *Phase
+		if phase, err = self.LastPhase(c.DB()); err != nil {
+			return
+		}
+		season := ""
+		if season, err = trans.I(string(phase.Season)); err != nil {
+			return
+		}
+		typ := ""
+		if typ, err = trans.I(string(phase.Type)); err != nil {
+			return
+		}
+		return trans.I("game_phase_description", season, phase.Year, typ)
+	case common.GameStateEnded:
+		return trans.I(string(common.AfterGamePhaseType))
+	}
+	err = fmt.Errorf("Unknown game state for %+v", self)
 	return
 }
 
@@ -209,6 +235,7 @@ func (self *Game) start(c common.SkinnyContext) (err error) {
 	if err = phase.Schedule(c); err != nil {
 		return
 	}
+	phase.SendScheduleEmails(c, self)
 	return
 }
 

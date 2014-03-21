@@ -20,56 +20,7 @@ import (
 	"github.com/zond/kcwraps/kol"
 )
 
-const (
-	messageEmail = `%v
-----
-%v
-%v`
-)
-
 var emailPlusReg = regexp.MustCompile("^.+\\+(.+)@.+$")
-
-type UnsubscribeTag struct {
-	U kol.Id
-	H []byte
-}
-
-func (self *UnsubscribeTag) Hash(secret string) []byte {
-	h := sha1.New()
-	h.Write(self.U)
-	h.Write([]byte(secret))
-	return h.Sum(nil)
-}
-
-func (self *UnsubscribeTag) Encode() (result string, err error) {
-	buf := &bytes.Buffer{}
-	baseEnc := base64.NewEncoder(base64.URLEncoding, buf)
-	gobEnc := gob.NewEncoder(baseEnc)
-	if err = gobEnc.Encode(self); err != nil {
-		return
-	}
-	if err = baseEnc.Close(); err != nil {
-		return
-	}
-	result = buf.String()
-	return
-}
-
-func DecodeUnsubscribeTag(secret string, s string) (result *UnsubscribeTag, err error) {
-	buf := bytes.NewBufferString(s)
-	dec := gob.NewDecoder(base64.NewDecoder(base64.URLEncoding, buf))
-	tag := &UnsubscribeTag{}
-	if err = dec.Decode(tag); err != nil {
-		return
-	}
-	wanted := tag.Hash(secret)
-	if len(wanted) != len(tag.H) || subtle.ConstantTimeCompare(wanted, tag.H) != 1 {
-		err = fmt.Errorf("%+v has wrong hash, wanted %v", tag, wanted)
-		return
-	}
-	result = tag
-	return
-}
 
 type MailTag struct {
 	M kol.Id
@@ -153,7 +104,8 @@ func (self *Message) EmailTo(c common.SkinnyContext, sender, recip *Member, reci
 		return
 	}
 
-	unsubTag := &UnsubscribeTag{
+	unsubTag := &common.UnsubscribeTag{
+		T: common.UnsubscribeMessageEmail,
 		U: recipUser.Id,
 	}
 	unsubTag.H = unsubTag.Hash(c.Secret())
@@ -164,8 +116,12 @@ func (self *Message) EmailTo(c common.SkinnyContext, sender, recip *Member, reci
 
 	parts := strings.Split(c.MailAddress(), "@")
 	if len(parts) != 2 {
-		c.Errorf("Failed parsing %#v as an email address", c.MailAddress())
-		return
+		if c.Env() == common.Development {
+			parts = []string{"user", "host.tld"}
+		} else {
+			c.Errorf("Failed parsing %#v as an email address", c.MailAddress())
+			return
+		}
 	}
 	from := fmt.Sprintf("%v <%v+%v@%v>", sender.Nation, parts[0], encodedMailTag, parts[1])
 	to := fmt.Sprintf("%v <%v>", recip.Nation, recipUser.Email)
@@ -184,8 +140,8 @@ func (self *Message) EmailTo(c common.SkinnyContext, sender, recip *Member, reci
 		c.Errorf("Failed translating unsubscribe link: %v", err)
 		return
 	}
-	body := fmt.Sprintf(messageEmail, self.Body, contextLink, unsubLink)
-	if c.Env() == "development" {
+	body := fmt.Sprintf(common.EmailTemplate, self.Body, contextLink, unsubLink)
+	if c.Env() == common.Development {
 		c.Infof("Would have sent\nFrom: %#v\nTo: %#v\nSubject: %#v\n%v", from, to, subject, body)
 	} else {
 		if err := c.SendMail(from, subject, body, to); err == nil {
@@ -242,7 +198,7 @@ func IncomingMail(c common.SkinnyContext, msg *enmime.MIMEBody) (err error) {
 						Recipients: parent.Recipients,
 					}
 					c.Infof("Mail resulted in %+v from %+v", message, sender)
-					return SendMessage(c, game, sender, message)
+					return message.Send(c, game, sender)
 				}
 			}
 		}
@@ -250,48 +206,40 @@ func IncomingMail(c common.SkinnyContext, msg *enmime.MIMEBody) (err error) {
 	return nil
 }
 
-func SendMessage(c common.SkinnyContext, game *Game, sender *Member, message *Message) (err error) {
+func (self *Message) Send(c common.SkinnyContext, game *Game, sender *Member) (err error) {
 	// make sure the sender is correct
-	message.SenderId = sender.Id
+	self.SenderId = sender.Id
 
 	// make sure the sender is one of the recipients
-	message.Recipients[sender.Nation] = true
+	self.Recipients[sender.Nation] = true
 
-	var phaseDescription func(u *user.User) string
-	phaseDescriptionParams := []string{}
+	// See what phase type the game is in
 	var phaseType dip.PhaseType
 	switch game.State {
 	case common.GameStateCreated:
 		phaseType = common.BeforeGamePhaseType
-		phaseDescription = func(u *user.User) string { return string(phaseType) }
-		phaseDescriptionParams = []string{}
 	case common.GameStateStarted:
 		var phase *Phase
 		if phase, err = game.LastPhase(c.DB()); err != nil {
 			return
 		}
 		phaseType = phase.Type
-		phaseDescription = func(u *user.User) (result string) {
-			result, _ = u.I("game_phase_description", fmt.Sprint(phase.Year))
-			return
-		}
-		phaseDescriptionParams = []string{string(phase.Season), string(phase.Type)}
 	case common.GameStateEnded:
 		phaseType = common.AfterGamePhaseType
-		phaseDescription = func(u *user.User) string { return string(phaseType) }
-		phaseDescriptionParams = []string{}
 	default:
 		err = fmt.Errorf("Unknown game state for %+v", game)
 		return
 	}
 
+	// Find what chats are allowed during this phase type
 	allowedFlags := game.ChatFlags[phaseType]
 
-	recipients := len(message.Recipients)
+	// See if the recipient count is allowed
+	recipients := len(self.Recipients)
 	if recipients == 2 {
 		if (allowedFlags & common.ChatPrivate) == 0 {
 			err = IllegalMessageError{
-				Description: fmt.Sprintf("%+v does not allow %+v during %+v", game, message, phaseType),
+				Description: fmt.Sprintf("%+v does not allow %+v during %+v", game, self, phaseType),
 				Phrase:      "This kind of message is not allowed at this stage of the game",
 			}
 			return
@@ -299,7 +247,7 @@ func SendMessage(c common.SkinnyContext, game *Game, sender *Member, message *Me
 	} else if recipients == len(common.VariantMap[game.Variant].Nations) {
 		if (allowedFlags & common.ChatConference) == 0 {
 			err = IllegalMessageError{
-				Description: fmt.Sprintf("%+v does not allow %+v during %+v", game, message, phaseType),
+				Description: fmt.Sprintf("%+v does not allow %+v during %+v", game, self, phaseType),
 				Phrase:      "This kind of message is not allowed at this stage of the game",
 			}
 			return
@@ -307,13 +255,13 @@ func SendMessage(c common.SkinnyContext, game *Game, sender *Member, message *Me
 	} else if recipients > 2 {
 		if (allowedFlags & common.ChatGroup) == 0 {
 			err = IllegalMessageError{
-				Description: fmt.Sprintf("%+v does not allow %+v during %+v", game, message, phaseType),
+				Description: fmt.Sprintf("%+v does not allow %+v during %+v", game, self, phaseType),
 				Phrase:      "This kind of message is not allowed at this stage of the game",
 			}
 			return
 		}
 	} else {
-		err = fmt.Errorf("%+v doesn't have any recipients", message)
+		err = fmt.Errorf("%+v doesn't have any recipients", self)
 		return
 	}
 
@@ -321,28 +269,24 @@ func SendMessage(c common.SkinnyContext, game *Game, sender *Member, message *Me
 	if err != nil {
 		return
 	}
-	if err = c.DB().Set(message); err != nil {
+	if err = c.DB().Set(self); err != nil {
 		return
 	}
 
-	if c.MailAddress() != "" {
-		for recip, _ := range message.Recipients {
-			for _, member := range members {
-				if recip == member.Nation && !message.SenderId.Equals(member.Id) {
-					user := &user.User{Id: member.UserId}
-					if err = c.DB().Get(user); err != nil {
+	for recip, _ := range self.Recipients {
+		for _, member := range members {
+			if recip == member.Nation && !self.SenderId.Equals(member.Id) {
+				user := &user.User{Id: member.UserId}
+				if err = c.DB().Get(user); err != nil {
+					return
+				}
+				if !user.MessageEmailDisabled && !c.IsSubscribing(user.Email, fmt.Sprintf("/games/%v/messages", game.Id)) {
+					memberCopy := member
+					gameDescription := ""
+					if gameDescription, err = game.Describe(c, user); err != nil {
 						return
 					}
-					if !user.MessageEmailDisabled && !c.IsSubscribing(user.Email, fmt.Sprintf("/games/%v/messages", game.Id)) {
-						memberCopy := member
-						parts := make([]interface{}, len(phaseDescriptionParams))
-						for i, param := range phaseDescriptionParams {
-							if parts[i], err = user.I(param); err != nil {
-								return
-							}
-						}
-						go message.EmailTo(c, sender, &memberCopy, user, fmt.Sprintf(phaseDescription(user), parts...))
-					}
+					go self.EmailTo(c, sender, &memberCopy, user, gameDescription)
 				}
 			}
 		}

@@ -12,8 +12,8 @@ import (
 	"github.com/zond/kcwraps/kol"
 )
 
-func UnsubscribeMessageEmails(c *common.HTTPContext) (err error) {
-	unsubTag, err := DecodeUnsubscribeTag(c.Secret(), c.Vars()["unsubscribe_tag"])
+func UnsubscribeEmails(c *common.HTTPContext) (err error) {
+	unsubTag, err := common.DecodeUnsubscribeTag(c.Secret(), c.Vars()["unsubscribe_tag"])
 	if err != nil {
 		return
 	}
@@ -21,11 +21,21 @@ func UnsubscribeMessageEmails(c *common.HTTPContext) (err error) {
 	if err = c.DB().Get(u); err != nil {
 		return
 	}
-	u.MessageEmailDisabled = true
+	switch unsubTag.T {
+	case common.UnsubscribeMessageEmail:
+		u.MessageEmailDisabled = true
+	case common.UnsubscribePhaseEmail:
+		u.MessageEmailDisabled = true
+	}
 	if err = c.DB().Set(u); err != nil {
 		return
 	}
-	fmt.Fprintf(c.Resp(), "%v has successfully been unsubscribed from message emails.", u.Email)
+	switch unsubTag.T {
+	case common.UnsubscribeMessageEmail:
+		fmt.Fprintf(c.Resp(), "%v has successfully been unsubscribed from message emails.", u.Email)
+	case common.UnsubscribePhaseEmail:
+		fmt.Fprintf(c.Resp(), "%v has successfully been unsubscribed from phase emails.", u.Email)
+	}
 	return
 }
 
@@ -88,7 +98,7 @@ func CreateMessage(c common.WSContext) (err error) {
 		return
 	}
 
-	return SendMessage(c.Diet(), game, sender, message)
+	return message.Send(c.Diet(), game, sender)
 }
 
 func DeleteMember(c common.WSContext) error {

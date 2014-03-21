@@ -182,6 +182,10 @@ window.GameView = BaseView.extend({
 			var unit = phase.Units[prov];
 			that.map.addUnit(variant + 'Unit' + unit.Type, prov, variantColor(variant, unit.Nation));
 		}
+		for (var prov in phase.Dislodgeds) {
+			var unit = phase.Dislodgeds[prov];
+			that.map.addUnit(variant + 'Unit' + unit.Type, prov, variantColor(variant, unit.Nation), true);
+		}
 		for (var nation in phase.Orders) {
 			for (var source in phase.Orders[nation]) {
 				that.map.addOrder([source].concat(phase.Orders[nation][source]), variant, nation);

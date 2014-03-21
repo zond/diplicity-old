@@ -19,5 +19,9 @@
 		<label for="user-message-email-disabled">{{.I "Disable message emails" }}</label>
 		<input type="checkbox" class="form-control user-message-email-disabled" id="user-message-email-disabled"<%= model.get('MessageEmailDisabled') ? ' checked="checked"' : '' %>>
 	</div>
+	<div class="form-group">
+		<label for="user-phase-email-disabled">{{.I "Disable phase emails" }}</label>
+		<input type="checkbox" class="form-control user-phase-email-disabled" id="user-phase-email-disabled"<%= model.get('PhaseEmailDisabled') ? ' checked="checked"' : '' %>>
+	</div>
 	<button type="submit" class="save-button btn btn-default">{{.I "Update" }}</button>
 </form>
