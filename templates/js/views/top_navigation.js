@@ -7,24 +7,11 @@ window.TopNavigationView = BaseView.extend({
 		this.online = false;
 	},
 
-	online: function(online) {
-	  this.online = online;
-		this.updateOfflineTag();
-	},
-
-  updateOfflineTag: function() {
-		if (this.online) {
-			this.$('.offline-tag').hide();
-		} else {
-			this.$('.offline-tag').show();
-		}
-	},
-
   render: function() {
 	  var that = this;
     that.$el.html(that.template({
 		}));
-		that.updateOfflineTag();
+		window.session.updateOnlineTag();
 		return that;
 	},
 

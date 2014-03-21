@@ -1,6 +1,20 @@
 
 window.session = {};
 
+window.session.online = false;
+window.session.updateOnlineTag = function() {
+	if (window.session.online) {
+		$('.offline-tag').hide();
+	} else {
+		$('.offline-tag').show();
+	}
+};
+window.session.setOnline = function(online) {
+  window.session.online = online;
+	window.session.updateOnlineTag();
+};
+
+
 Backbone.Model.prototype.idAttribute = "Id";
 
 $(window).load(function() {
@@ -69,6 +83,8 @@ $(window).load(function() {
 		window.session.user.fetch();
 		window.session.active_url = null;
 
+		window.session.online = false;
+
 		window.session.top_navigation = new TopNavigationView({
 			el: $('#top-navigation'),
 		}).doRender();
@@ -90,7 +106,7 @@ $(window).load(function() {
 
 	wsBackbone({
 	  state_handler: function(state) {
-			window.session.top_navigation.online(state.open);
+		  window.session.setOnline(state.open);
 		},
 	  url: url, 
 		start: start,
