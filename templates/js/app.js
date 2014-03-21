@@ -69,7 +69,7 @@ $(window).load(function() {
 		window.session.user.fetch();
 		window.session.active_url = null;
 
-		new TopNavigationView({
+		window.session.top_navigation = new TopNavigationView({
 			el: $('#top-navigation'),
 		}).doRender();
 
@@ -90,13 +90,7 @@ $(window).load(function() {
 
 	wsBackbone({
 	  state_handler: function(state) {
-		  if (state.open) {
-			  console.log("Online!");
-				$('.offline-tag').hide();
-			} else {
-				console.log("Offline!", state);
-				$('.offline-tag').show();
-			}
+			window.session.top_navigation.online(state.open);
 		},
 	  url: url, 
 		start: start,
