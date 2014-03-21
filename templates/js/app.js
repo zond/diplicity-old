@@ -91,8 +91,10 @@ $(window).load(function() {
 	wsBackbone({
 	  state_handler: function(state) {
 		  if (state.open) {
+			  console.log("Online!");
 				$('.offline-tag').hide();
 			} else {
+				console.log("Offline!");
 				$('.offline-tag').show();
 			}
 		},
