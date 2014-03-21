@@ -94,7 +94,7 @@ $(window).load(function() {
 			  console.log("Online!");
 				$('.offline-tag').hide();
 			} else {
-				console.log("Offline!");
+				console.log("Offline!", state);
 				$('.offline-tag').show();
 			}
 		},
