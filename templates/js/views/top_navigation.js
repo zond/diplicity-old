@@ -7,7 +7,7 @@ window.TopNavigationView = BaseView.extend({
 		this.online = false;
 	},
 
-	state: function(online) {
+	online: function(online) {
 	  this.online = online;
 		this.updateOfflineTag();
 	},
