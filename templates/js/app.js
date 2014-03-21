@@ -89,6 +89,13 @@ $(window).load(function() {
 	var url = "ws://" + match[1] + "/ws";
 
 	wsBackbone({
+	  state_handler: function(state) {
+		  if (state.open) {
+				$('.offline-tag').hide();
+			} else {
+				$('.offline-tag').show();
+			}
+		},
 	  url: url, 
 		start: start,
 		token_producer: function(opts) {

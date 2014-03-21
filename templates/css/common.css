@@ -1,3 +1,8 @@
+.offline-tag {
+	font-size: small;
+	float: right;
+	color: red;
+}
 .game-chat-container {
 	display: none;
 }
