@@ -129,6 +129,9 @@ func SubscribeMessages(c common.WSContext) (err error) {
 	if err != nil {
 		return
 	}
+	if member == nil {
+		return
+	}
 	s := c.Pack().New(c.Match()[0])
 	s.Query = s.DB().Query().Where(kol.Equals{"GameId", base64DecodedId})
 	s.Call = func(i interface{}, op string) (err error) {

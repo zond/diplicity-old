@@ -20,7 +20,8 @@ func wantsJSON(r *http.Request, m *mux.RouteMatch) bool {
 }
 
 func wantsHTML(r *http.Request, m *mux.RouteMatch) bool {
-	return common.MostAccepted(r, "text/html", "Accept") == "text/html"
+	mostAccepted := common.MostAccepted(r, "text/html", "Accept")
+	return mostAccepted == "text/html" || mostAccepted == "*/*"
 }
 
 func main() {
