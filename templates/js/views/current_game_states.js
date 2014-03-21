@@ -26,7 +26,7 @@ window.CurrentGameStatesView = BaseView.extend({
 			}).doRender().el);
 		});
 		if (window.session.user.loggedIn() && that.collection.length == 0) {
-			that.$el.append('<a href="/create" class="btn btn-primary btn-lg btn-block">{{.I "Not member of any games right now, why not create one?" }}</a>');
+			that.$el.append('<a href="/open" class="btn btn-primary btn-lg btn-block">{{.I "Not member of any games right now, why not join one?" }}</a>');
 		}
 		return that;
 	},

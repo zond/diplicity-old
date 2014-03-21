@@ -84,6 +84,7 @@ var en = map[string]string{
 	"View":                                                   "View",
 	"Settings":                                               "Settings",
 	"No open games, why not create one?":                     "No open games, why not create one?",
+	"No open games, why not join one?":                     "No open games, why not join one?",
 	"Not member of any games right now, why not create one?": "Not member of any games right now, why not create one?",
 	"Public":                 "Public",
 	"Public email":           "Public email",
