@@ -273,6 +273,14 @@ func (self *Game) Members(d *kol.DB) (result Members, err error) {
 	return
 }
 
+func (self *Game) Messages(d *kol.DB) (result Messages, err error) {
+	if err = d.Query().Where(kol.Equals{"GameId", self.Id}).All(&result); err != nil {
+		return
+	}
+	sort.Sort(result)
+	return
+}
+
 func (self *Game) Member(d *kol.DB, email string) (result *Member, err error) {
 	var member Member
 	var found bool
