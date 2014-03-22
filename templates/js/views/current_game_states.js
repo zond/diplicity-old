@@ -2,13 +2,8 @@ window.CurrentGameStatesView = BaseView.extend({
 
   template: _.template($('#current_game_states_underscore').html()),
 
-	events: {
-	  'click .filter-button': 'changeFilter',
-	},
-
 	initialize: function(options) {
-		this.filter_label = options.filter_label || 'Running';
-		this.filter_state = options.filter_state || '{{.GameState "Started" }}';
+	  this.filter_state = options.filter_state || {{.GameState "Started"}};
 		this.listenTo(window.session.user, 'change', this.doRender);
 		this.collection = new GameStates([], { url: '/games/current' });
 		this.listenTo(this.collection, "sync", this.doRender);
@@ -18,22 +13,66 @@ window.CurrentGameStatesView = BaseView.extend({
 		this.fetch(this.collection);
 	},
 
-	changeFilter: function(ev) {
-	  ev.preventDefault();
-		this.filter_state = $(ev.target).attr('data-state');
-		this.filter_label = $(ev.target).text();
-    navigate($(ev.target).attr('href'), true);
-		this.doRender();
-	},
-
   render: function() {
 	  var that = this;
-		navLinks(mainButtons);
+		var nav = [
+			[
+				{
+					url: '/',
+					label: '{{.I "Running" }}',
+					click: function(ev) {
+					  ev.preventDefault();
+					  navigate('/', true);
+						that.filter_state = {{.GameState "Started"}};
+						that.doRender();
+					},
+					activate: function() {
+						return that.filter_state == {{.GameState "Started"}};
+					},
+				},
+				{
+					url: '/forming',
+					label: '{{.I "Forming" }}',
+					click: function(ev) {
+					  ev.preventDefault();
+					  navigate('/forming', true);
+						that.filter_state = {{.GameState "Created"}};
+						that.doRender();
+					},
+					activate: function() {
+						return that.filter_state == {{.GameState "Created"}};
+					},
+				},
+				{
+					url: '/finished',
+					label: '{{.I "Finished" }}',
+					click: function(ev) {
+					  ev.preventDefault();
+					  navigate('/finished', true);
+						that.filter_state = {{.GameState "Ended"}};
+						that.doRender();
+					},
+					activate: function() {
+						return that.filter_state == {{.GameState "Ended"}};
+					},
+				},
+			],
+			[
+				{
+					url: mainButtons[0][0].url,
+					label: mainButtons[0][0].label,
+					activate: function() {
+					  return ['', '/', '/forming', '/finished'].indexOf(window.session.active_url) != -1;
+					},
+				},
+				mainButtons[0][1],
+				mainButtons[0][2],
+			],
+		];
+		navLinks(nav);
 		that.$el.html(that.template({
 		  user: window.session.user,
 		}));
-		that.$('.filter-button').removeClass('btn-primary');
-		that.$('.filter-' + that.filter_label).addClass('btn-primary');
 		that.collection.forEach(function(model) {
 		  if (model.get('State') == that.filter_state) {
 				that.$('#current-games').append(new GameStateView({ 

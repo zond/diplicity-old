@@ -80,16 +80,14 @@ $(window).load(function() {
 		finishedGames: function() {
 			new CurrentGameStatesView({ 
 				el: $('#content'),
-				filter_state: '{{.GameState "Started" }}',
-				filter_label: "Finished",
+				filter_state: {{.GameState "Started" }},
 			}).doRender();
 		},
 
 		formingGames: function() {
 			new CurrentGameStatesView({ 
 				el: $('#content'),
-				filter_state: '{{.GameState "Created" }}',
-				filter_label: "Forming",
+				filter_state: {{.GameState "Created" }},
 			}).doRender();
 		},
 

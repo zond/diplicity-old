@@ -131,19 +131,23 @@ function deadlineName(value) {
 	}
 };
 
+var currentButton = {
+	url: '/',
+	label: '{{.I "Games" }}',
+};
+
 var mainButtons = [
-	{
-	  url: '/',
-		label: '{{.I "Games" }}',
-	},
-	{
-	  url: '/open',
-		label: '{{.I "Join" }}',
-	},
-	{
-	  url: '/create',
-		label: '{{.I "Create" }}',
-	},
+  [
+		currentButton,
+		{
+			url: '/open',
+			label: '{{.I "Join" }}',
+		},
+		{
+			url: '/create',
+			label: '{{.I "Create" }}',
+		},
+	],
 ];
 
 function navLinks(buttons) {
