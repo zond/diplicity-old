@@ -88,6 +88,7 @@ window.GameControlsView = BaseView.extend({
 					return sum
 				}, {}));
 				that.gameChatView.$('.channel-' + that.chatParticipants).collapse('show');
+				that.gameChatView.$('.chevron-' + that.chatParticipants).removeClass('glyphicon-chevron-right').addClass('glyphicon-chevron-down');
 				that.chatParticipants = null;
 			}
 			var me = that.model.me();
