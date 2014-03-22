@@ -68,10 +68,10 @@ func main() {
 		Handle(gosubs.SubscribeType, user.SubscribeEmail).
 		Handle(gosubs.UpdateType, user.Update).Auth()
 	wsRouter.Resource("^/games/(.*)/messages$").
-		Handle(gosubs.SubscribeType, game.SubscribeMessages).Auth().
+		Handle(gosubs.SubscribeType, game.SubscribeMessages).
 		Handle(gosubs.CreateType, game.CreateMessage).Auth()
 	wsRouter.Resource("^/games/(.*)$").
-		Handle(gosubs.SubscribeType, game.SubscribeGame).Auth().
+		Handle(gosubs.SubscribeType, game.SubscribeGame).
 		Handle(gosubs.DeleteType, game.DeleteMember).Auth().
 		Handle(gosubs.UpdateType, game.AddMember).Auth()
 	wsRouter.Resource("^/games$").

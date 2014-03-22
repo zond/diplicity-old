@@ -123,6 +123,10 @@ window.GameControlsView = BaseView.extend({
 			el: that.$('.game-orders-container'),
 		  model: that.model,
 		});
+		var me = that.model.me();
+		if (me == null) {
+		  that.$('.commit-button').hide();
+		}
     return that;
 	},
 });

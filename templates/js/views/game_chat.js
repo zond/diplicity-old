@@ -110,7 +110,9 @@ window.GameChatView = BaseView.extend({
     that.$el.html(that.template({
 		}));
 		var me = that.model.me();
-		if (me != null) {
+		if (me == null) {
+		  that.$('.create-channel-container').hide();
+		} else {
 			_.each(that.model.members(), function(member) {
 			  if (member.Id != me.Id) {
 					var opt = $('<option value="' + member.Nation + '"></option>');

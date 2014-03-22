@@ -7,7 +7,7 @@ window.GameState = Backbone.Model.extend({
 	},
 	
 	me: function() {
-	  if (window.session.user.get('Email') == null) {
+	  if (window.session.user.get('Email') == null || window.session.user.get('Email') == "") {
 		  return null;
 		}
 	  return _.find(this.get('Members'), function(member) {

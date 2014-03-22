@@ -2,6 +2,7 @@ package game
 
 import (
 	"encoding/base64"
+	"fmt"
 	"sort"
 
 	"github.com/zond/diplicity/common"
@@ -125,14 +126,19 @@ func SubscribeMessages(c common.WSContext) (err error) {
 	if err = c.DB().Get(game); err != nil {
 		return
 	}
+	variant, found := common.VariantMap[game.Variant]
+	if !found {
+		err = fmt.Errorf("Unknown variant for %+v", game)
+		return
+	}
 	member, err := game.Member(c.DB(), c.Principal())
-	if err != nil || member == nil {
+	if err != nil {
 		return
 	}
 	s := c.Pack().New(c.Match()[0])
 	s.Query = s.DB().Query().Where(kol.Equals{"GameId", base64DecodedId})
 	s.Call = func(i interface{}, op string) (err error) {
-		if member.Nation == "" {
+		if member != nil && member.Nation == "" {
 			member, err = game.Member(c.DB(), c.Principal())
 			if err != nil {
 				return
@@ -141,7 +147,7 @@ func SubscribeMessages(c common.WSContext) (err error) {
 		messages := i.([]*Message)
 		result := Messages{}
 		for _, message := range messages {
-			if message.Recipients[member.Nation] {
+			if len(message.Recipients) == len(variant.Nations) || (member != nil && message.Recipients[member.Nation]) {
 				result = append(result, *message)
 			}
 		}

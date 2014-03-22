@@ -214,7 +214,8 @@ window.GameView = BaseView.extend({
 				that.$('#current-game').append(that.controlsView.el);
 			}
 			if (that.model.get('Phase') != null) {
-				if (that.possibleSources == null) {
+			  var me = that.model.me();
+				if (me != null && that.possibleSources == null) {
 					RPC('GetPossibleSources', {
 						GameId: that.model.get('Id'),
 					}, function(data) {

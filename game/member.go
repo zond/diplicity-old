@@ -56,9 +56,16 @@ func (self Members) Contains(email string) bool {
 
 func (self Members) ToStates(d *kol.DB, g *Game, email string) (result []MemberState, err error) {
 	result = make([]MemberState, len(self))
+	isMember := false
+	for _, member := range self {
+		if member.UserId.Equals(kol.Id(email)) {
+			isMember = true
+			break
+		}
+	}
 	for index, member := range self {
 		var state *MemberState
-		if state, err = member.ToState(d, g, email); err != nil {
+		if state, err = member.ToState(d, g, email, isMember); err != nil {
 			return
 		}
 		result[index] = *state
@@ -66,7 +73,7 @@ func (self Members) ToStates(d *kol.DB, g *Game, email string) (result []MemberS
 	return
 }
 
-func (self *Member) ToState(d *kol.DB, g *Game, email string) (result *MemberState, err error) {
+func (self *Member) ToState(d *kol.DB, g *Game, email string, isMember bool) (result *MemberState, err error) {
 	result = &MemberState{
 		Member: &Member{
 			Id: self.Id,
@@ -88,19 +95,19 @@ func (self *Member) ToState(d *kol.DB, g *Game, email string) (result *MemberSta
 		panic(fmt.Errorf("Unknown game state for %+v", g))
 	}
 	secretNation, secretEmail, secretNickname = g.SecretNation&flag == flag, g.SecretEmail&flag == flag, g.SecretNickname&flag == flag
-	allowed := email == "" || string(self.UserId) == email
-	if allowed || !secretNation {
+	isMe := string(self.UserId) == email
+	if isMe || !secretNation {
 		result.Member.Nation = self.Nation
 	}
-	if allowed || !secretEmail || !secretNickname {
+	if isMe || !secretEmail || !secretNickname {
 		foundUser := &user.User{Id: self.UserId}
 		if err = d.Get(foundUser); err != nil {
 			return
 		}
-		if allowed || !secretEmail {
+		if isMember && (isMe || !secretEmail) {
 			result.User.Email = foundUser.Email
 		}
-		if allowed || !secretNickname {
+		if isMe || !secretNickname {
 			result.User.Nickname = foundUser.Nickname
 		}
 	}
