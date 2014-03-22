@@ -19,6 +19,14 @@ Backbone.Model.prototype.idAttribute = "Id";
 
 $(window).load(function() {
 
+  $(window).on('hide.bs.collapse', function(ev) {
+		$('div[href=#' + $(ev.target).attr('id') + ']').find('.glyphicon-chevron-down').removeClass('glyphicon-chevron-down').addClass('glyphicon-chevron-right');
+	});
+
+  $(window).on('show.bs.collapse', function(ev) {
+		$('div[href=#' + $(ev.target).attr('id') + ']').find('.glyphicon-chevron-right').removeClass('glyphicon-chevron-right').addClass('glyphicon-chevron-down');
+	});
+
 	var AppRouter = Backbone.Router.extend({
 
 		routes: {
