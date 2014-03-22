@@ -150,9 +150,9 @@ function navLinks(buttons) {
   window.session.bottom_navigation.navLinks(buttons);
 };
 
-function navigate(to) {
+function navigate(to, notrigger) {
 	window.session.active_url = to;
-	window.session.router.navigate(to, { trigger: true });
+	window.session.router.navigate(to, { trigger: !!!notrigger });
 	window.session.bottom_navigation.update();
 }
 

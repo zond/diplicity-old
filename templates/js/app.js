@@ -31,6 +31,8 @@ $(window).load(function() {
 
 		routes: {
 			"": "currentGames",
+			"forming": "formingGames",
+			"finished": "finishedGames",
 			"open": "openGames",
 			"create": "createGame",
 			"games/:id": "game",
@@ -72,6 +74,22 @@ $(window).load(function() {
 		currentGames: function() {
 			new CurrentGameStatesView({ 
 				el: $('#content'),
+			}).doRender();
+		},
+
+		finishedGames: function() {
+			new CurrentGameStatesView({ 
+				el: $('#content'),
+				filter_state: '{{.GameState "Started" }}',
+				filter_label: "Finished",
+			}).doRender();
+		},
+
+		formingGames: function() {
+			new CurrentGameStatesView({ 
+				el: $('#content'),
+				filter_state: '{{.GameState "Created" }}',
+				filter_label: "Forming",
 			}).doRender();
 		},
 

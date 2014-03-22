@@ -7,8 +7,8 @@ window.CurrentGameStatesView = BaseView.extend({
 	},
 
 	initialize: function(options) {
-		this.filter_label = 'Running';
-		this.filter_state = '{{.GameState "Started" }}';
+		this.filter_label = options.filter_label || 'Running';
+		this.filter_state = options.filter_state || '{{.GameState "Started" }}';
 		this.listenTo(window.session.user, 'change', this.doRender);
 		this.collection = new GameStates([], { url: '/games/current' });
 		this.listenTo(this.collection, "sync", this.doRender);
@@ -22,6 +22,7 @@ window.CurrentGameStatesView = BaseView.extend({
 	  ev.preventDefault();
 		this.filter_state = $(ev.target).attr('data-state');
 		this.filter_label = $(ev.target).text();
+    navigate($(ev.target).attr('href'), true);
 		this.doRender();
 	},
 
