@@ -221,16 +221,20 @@ func (self *HTTPContext) LogLevel() int {
 	return self.web.logLevel
 }
 
-func (self *HTTPContext) GameState(s string) GameState {
+func (self *HTTPContext) GameState(s string) (result GameState, err error) {
 	switch s {
 	case "Created":
-		return GameStateCreated
+		result = GameStateCreated
+		return
 	case "Started":
-		return GameStateStarted
+		result = GameStateStarted
+		return
 	case "Ended":
-		return GameStateEnded
+		result = GameStateEnded
+		return
 	}
-	panic(fmt.Errorf("Unknown game state %v", s))
+	err = fmt.Errorf("Unknown game state %v", s)
+	return
 }
 
 func (self *HTTPContext) SecretFlagMap() string {

@@ -15,6 +15,10 @@
 .game-controls-right {
 	float: right;
 }
+.bottom-aligned {
+	position: absolute;
+	bottom: 0;
+}
 .channel .panel-body {
 	padding: 0px;
 }
@@ -71,6 +75,7 @@
 	width: 100%;
 	overflow: auto;
 	height: 100%;
+	position: relative;
 }
 .prioritize {
 	text-align: left;
