@@ -26,24 +26,12 @@ window.BaseView = Backbone.View.extend({
 		});	
 	},
 
-	renderWithin: function(f) {
-	  if (this.chain.length > 0 && this.chain[this.chain.length - 1].cid == this.cid) {
-		  f();
-		} else {
-			this.chain.push(this);
-			f();
-			this.chain.pop();
-		}
-	},
-
 	doRender: function() {
 	  var that = this;
 		if (that.el != null && that.el.CurrentBaseView != null && that.el.CurrentBaseView.cid != that.cid) {
 			that.el.CurrentBaseView.clean();
 		}
-		that.renderWithin(function() {
-			that.render();
-		});
+		that.render();
 		that.el.CurrentBaseView = that;
 		that.$el.parents().each(function(x, el) {
 		  if (el.CurrentBaseView != null) {

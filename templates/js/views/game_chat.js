@@ -36,15 +36,13 @@ window.GameChatView = BaseView.extend({
 	  var that = this;
 		var channelId = ChatMessage.channelIdFor(members);
 		if (that.channels[channelId] == null) {
-		  that.renderWithin(function() {
-				var newChannelView = new ChatChannelView({
-					collection: that.collection,
-					model: that.model,
-					members: members,
-				}).doRender();
-				that.channels[channelId] = newChannelView;
-				that.$('#chat-channels').append(newChannelView.el);
-			});
+			var newChannelView = new ChatChannelView({
+				collection: that.collection,
+				model: that.model,
+				members: members,
+			}).doRender();
+			that.channels[channelId] = newChannelView;
+			that.$('#chat-channels').append(newChannelView.el);
 		}
 		return channelId;
 	},
@@ -52,12 +50,10 @@ window.GameChatView = BaseView.extend({
 	addMessage: function(message) {
 		var that = this;
 		var channelId = that.ensureChannel(message.get('Recipients'));
-		that.renderWithin(function() {
-			that.channels[channelId].$('.chat-messages').prepend(new ChatMessageView({
-				model: message,
-				game: that.model,
-			}).doRender().el);
-		});
+		that.channels[channelId].$('.chat-messages').prepend(new ChatMessageView({
+			model: message,
+			game: that.model,
+		}).doRender().el);
 	},
 
 	createChannel: function() {

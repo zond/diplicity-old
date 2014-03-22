@@ -62,25 +62,19 @@ window.GameControlsView = BaseView.extend({
 
   viewChat: function(ev) {
 	  var that = this;
-	  that.renderWithin(function() {
-			that.gameChatView.doRender();
-		});
+		that.gameChatView.doRender();
 		that.handleClick(ev, 'chat');
 	},
 
   viewResults: function(ev) {
 	  var that = this;
-		that.renderWithin(function() {
-		  that.gameResultsView.doRender();
-		});
+		that.gameResultsView.doRender();
 		that.handleClick(ev, 'results');
 	},
 
   viewOrders: function(ev) {
 	  var that = this;
-		that.renderWithin(function() {
-			that.gameOrdersView.doRender();
-		});
+		that.gameOrdersView.doRender();
 		that.handleClick(ev, 'orders');
 	},
 

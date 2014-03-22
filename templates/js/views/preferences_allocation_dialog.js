@@ -49,25 +49,23 @@ window.PreferencesAllocationDialogView = BaseView.extend({
 		var update_list = null;
 		update_list = function() {
 			that.cleanChildren(true);
-			that.renderWithin(function() {
-				_.each(that.nations, function(nation) {
-					that.$('.preferences-list').append(new PreferredNationView({
-						nation: nation,
-						action: function() {
-							for (var i = 0; i < that.nations.length; i++) {
-								var found = that.nations[i];
-								if (found == nation) {
-									if (i > 0) {
-										that.nations[i] = that.nations[i - 1];
-										that.nations[i - 1] = found;
-									}
-									break;
+			_.each(that.nations, function(nation) {
+				that.$('.preferences-list').append(new PreferredNationView({
+					nation: nation,
+					action: function() {
+						for (var i = 0; i < that.nations.length; i++) {
+							var found = that.nations[i];
+							if (found == nation) {
+								if (i > 0) {
+									that.nations[i] = that.nations[i - 1];
+									that.nations[i - 1] = found;
 								}
+								break;
 							}
-							update_list();
-						},
-					}).doRender().el);
-				});
+						}
+						update_list();
+					},
+				}).doRender().el);
 			});
 		};
 		update_list();
