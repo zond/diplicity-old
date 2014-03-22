@@ -38,19 +38,17 @@ window.BaseView = Backbone.View.extend({
 
 	doRender: function() {
 	  var that = this;
-		that.cleanChildren();
-		if (that.chain.length > 0) {
-			that.chain[that.chain.length - 1].addChild(that);
-		} else if (that.el != null) {
-		  if (that.el.CurrentBaseView != null) {
-			  if (that.el.CurrentBaseView.cid != that.cid) {
-					that.el.CurrentBaseView.clean();
-				}
-			}
-			that.el.CurrentBaseView = that;
+		if (that.el != null && that.el.CurrentBaseView != null && that.el.CurrentBaseView.cid != that.cid) {
+			that.el.CurrentBaseView.clean();
 		}
 		that.renderWithin(function() {
 			that.render();
+		});
+		that.el.CurrentBaseView = that;
+		that.$el.parents().each(function(x, el) {
+		  if (el.CurrentBaseView != null) {
+			  el.CurrentBaseView.addChild(that);
+			}
 		});
 		that.fixNavigateLinks();
 		if (that.rendered) {
@@ -64,6 +62,7 @@ window.BaseView = Backbone.View.extend({
 		if (typeof(this.onClose) == 'function') {
 			this.onClose();
 		}
+		this.undelegateEvents();
 		this.cleanChildren(remove);
 		this.stopSubscribing();
 		if (remove) {
