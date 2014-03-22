@@ -126,10 +126,7 @@ func SubscribeMessages(c common.WSContext) (err error) {
 		return
 	}
 	member, err := game.Member(c.DB(), c.Principal())
-	if err != nil {
-		return
-	}
-	if member == nil {
+	if err != nil || member == nil {
 		return
 	}
 	s := c.Pack().New(c.Match()[0])
