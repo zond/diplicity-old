@@ -17,6 +17,7 @@ window.ChatChannelView = BaseView.extend({
 		  that.nMembers++;
 			return id;
 		}).sort().join(".");
+		that.nameId = that.name.replace(/\./g, "_");
 		that.title = _.map(that.members, function(x, id) {
 		  var memb = that.model.member(id);
 			if (memb == null) {
@@ -41,9 +42,9 @@ window.ChatChannelView = BaseView.extend({
 		ev.preventDefault();
 		if (that.model.allowChatMembers(that.nMembers)) {
 			// i have NO IDEA AT ALL why i have to use this clunky id scheme to find the body, but that.$('.new-message-body').val() never produced anything but ''
-			var body = $('#new-message-' + that.name).val();
+			var body = $('#new-message-' + that.nameId).val();
 			if (body != '') {
-				$('#new-message-' + that.name).val('');
+				$('#new-message-' + that.nameId).val('');
 				that.collection.create({
 					RecipientIds: that.members,
 					Body: body,
@@ -65,6 +66,7 @@ window.ChatChannelView = BaseView.extend({
 		that.$el.html(that.template({
 			model: that.model,
 			name: that.name,
+			nameId: that.nameId,
 			title: that.title,
 		}));
 		return that;

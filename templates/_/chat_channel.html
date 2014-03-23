@@ -1,14 +1,14 @@
-<div class="panel-heading accordion-toggle" data-toggle="collapse" data-parent="#chat-channels" href="#game_<%- model.cid %>_channel_<%- name %>">
+<div class="panel-heading accordion-toggle" data-toggle="collapse" data-parent="#chat-channels" href="#game_<%- model.cid %>_channel_<%- nameId %>">
 	<h4 class="panel-title">
-		<span class="collapse-chevron glyphicon glyphicon-chevron-right chevron-<%- name %>"></span> <%- title %>
+		<span class="collapse-chevron glyphicon glyphicon-chevron-right chevron-<%- nameId %>"></span> <%- title %>
 	</h4>
 </div>
-<div id="game_<%- model.cid %>_channel_<%- name %>" data-participants="<%- name %>" class="channel collapse channel-<%- name %>">
+<div id="game_<%- model.cid %>_channel_<%- nameId %>" data-participants="<%- name %>" class="channel collapse channel-<%- nameId %>">
 	<div class="panel-body">
 		<form class="form-horizontal create-message-form" role="form">
 			<button type="button" class="btn btn-primary create-message-button">{{.I "Send"}}</button>
 			<div class="new-message-container">
-				<textarea class="new-message-body" id="new-message-<%- name %>"></textarea>
+				<textarea class="new-message-body" id="new-message-<%- nameId %>"></textarea>
 			</div>
 		</form>
 		<table class="table condensed chat-messages">

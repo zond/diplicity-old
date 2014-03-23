@@ -92,13 +92,14 @@ window.GameControlsView = BaseView.extend({
 	  var that = this;
 		if (that.model.get('Members') != null) {
 			if (that.chatParticipants != null) {
+			  console.log('chatparts', that.chatParticipants);
 				that.viewChat();
 				that.gameChatView.ensureChannel(_.inject(that.chatParticipants.split("."), function(sum, nat) {
 					sum[nat] = true;
 					return sum
 				}, {}));
-				that.gameChatView.$('.channel-' + that.chatParticipants).collapse('show');
-				that.gameChatView.$('.chevron-' + that.chatParticipants).removeClass('glyphicon-chevron-right').addClass('glyphicon-chevron-down');
+				that.gameChatView.$('.channel-' + that.chatParticipants.replace(/\./g, "_")).collapse('show');
+				that.gameChatView.$('.chevron-' + that.chatParticipants.replace(/\./g, "_")).removeClass('glyphicon-chevron-right').addClass('glyphicon-chevron-down');
 				that.chatParticipants = null;
 			}
 		}
