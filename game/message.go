@@ -126,7 +126,6 @@ type Message struct {
 	Id           kol.Id
 	GameId       kol.Id `kol:"index"`
 	SenderId     kol.Id
-	Recipients   map[dip.Nation]bool
 	RecipientIds map[string]bool
 
 	Body string
