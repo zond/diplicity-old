@@ -81,6 +81,8 @@ window.GameControlsView = BaseView.extend({
 	update: function() {
 	  var that = this;
 		if (that.model.get('Phase') != null) {
+			that.$('.view-orders').css('visibility', 'visible');
+			that.$('.view-results').css('visibility', 'visible');
 		  if (that.chatParticipants != null) {
 				that.viewChat();
 				that.gameChatView.ensureChannel(_.inject(that.chatParticipants.split("-"), function(sum, nat) {
@@ -93,6 +95,7 @@ window.GameControlsView = BaseView.extend({
 			}
 			var me = that.model.me();
 			if (me != null) {
+				that.$('.commit-button').css('visibility', 'visible');
 				if (that.model.get('Phase').Committed[me.Nation]) {
 					that.$('a.commit-button').removeClass('commit-phase').addClass('uncommit-phase').attr('title', '{{.I "Uncommit" }}');
 					that.$('span.commit-button').removeClass('glyphicon-ok').addClass('glyphicon-remove');
@@ -100,7 +103,13 @@ window.GameControlsView = BaseView.extend({
 					that.$('a.commit-button').removeClass('uncommit-phase').addClass('commit-phase').attr('title', '{{.I "Commit" }}');
 					that.$('span.commit-button').removeClass('glyphicon-remove').addClass('glyphicon-ok');
 				}
+			} else {
+				that.$('.commit-button').css('visibility', 'hidden');
 			}
+		} else {
+			that.$('.commit-button').css('visibility', 'hidden');
+			that.$('.view-orders').css('visibility', 'hidden');
+			that.$('.view-results').css('visibility', 'hidden');
 		}
 	},
 
@@ -123,10 +132,6 @@ window.GameControlsView = BaseView.extend({
 			el: that.$('.game-orders-container'),
 		  model: that.model,
 		});
-		var me = that.model.me();
-		if (me == null) {
-		  that.$('.commit-button').hide();
-		}
     return that;
 	},
 });
