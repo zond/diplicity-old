@@ -109,6 +109,9 @@ func (self *HTTPContext) Close() {
 }
 
 func (self *HTTPContext) Appcache() bool {
+	if self.Req().URL.Path != "" && self.Req().URL.Path != "/" {
+		return false
+	}
 	return self.web.appcache
 }
 
