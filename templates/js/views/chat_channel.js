@@ -19,6 +19,9 @@ window.ChatChannelView = BaseView.extend({
 		}).sort().join("-");
 		that.title = _.map(that.members, function(x, id) {
 		  var memb = that.model.member(id);
+			if (memb == null) {
+			  return '{{.I "Anonymous" }}';
+			}
 			if (that.model.get('State') == {{.GameState "Created"}}) {
 				return memb.describe();
 			} else {
