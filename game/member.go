@@ -2,6 +2,7 @@ package game
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/zond/diplicity/common"
@@ -112,6 +113,19 @@ func (self *Member) ToState(d *kol.DB, g *Game, email string, isMember bool) (re
 		}
 	}
 	return
+}
+
+func (self *Member) ShortName(game *Game, user *user.User) string {
+	if game.State == common.GameStateCreated {
+		if user.Nickname != "" && game.SecretNickname&common.SecretBeforeGame == 0 {
+			return user.Nickname
+		}
+		if user.Email != "" && game.SecretEmail&common.SecretBeforeGame == 0 {
+			return strings.Split(user.Email, "@")[0]
+		}
+		return "Anonymous"
+	}
+	return string(self.Nation)
 }
 
 func (self *Member) Deleted(d *kol.DB) {

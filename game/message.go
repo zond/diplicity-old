@@ -92,7 +92,7 @@ type Message struct {
 	UpdatedAt time.Time
 }
 
-func (self *Message) EmailTo(c common.SkinnyContext, sender, recip *Member, recipUser *user.User, subject string) {
+func (self *Message) EmailTo(c common.SkinnyContext, game *Game, sender *Member, senderUser *user.User, recip *Member, recipUser *user.User, subject string) {
 	mailTag := &MailTag{
 		M: self.Id,
 		R: recip.Id,
@@ -123,7 +123,8 @@ func (self *Message) EmailTo(c common.SkinnyContext, sender, recip *Member, reci
 			return
 		}
 	}
-	from := fmt.Sprintf("%v <%v+%v@%v>", sender.Nation, parts[0], encodedMailTag, parts[1])
+	senderName := sender.ShortName(game, senderUser)
+	from := fmt.Sprintf("%v <%v+%v@%v>", senderName, parts[0], encodedMailTag, parts[1])
 	to := fmt.Sprintf("%v <%v>", recip.Nation, recipUser.Email)
 	memberIds := []string{}
 	for memberId, _ := range self.RecipientIds {
@@ -210,6 +211,11 @@ func (self *Message) Send(c common.SkinnyContext, game *Game, sender *Member) (e
 	// make sure the sender is correct
 	self.SenderId = sender.Id
 
+	senderUser := &user.User{Id: sender.UserId}
+	if err = c.DB().Get(senderUser); err != nil {
+		return
+	}
+
 	// make sure the sender is one of the recipients
 	self.RecipientIds[sender.Id.String()] = true
 
@@ -286,7 +292,7 @@ func (self *Message) Send(c common.SkinnyContext, game *Game, sender *Member) (e
 					if gameDescription, err = game.Describe(c, user); err != nil {
 						return
 					}
-					go self.EmailTo(c, sender, &memberCopy, user, gameDescription)
+					go self.EmailTo(c, game, sender, senderUser, &memberCopy, user, gameDescription)
 				}
 			}
 		}
