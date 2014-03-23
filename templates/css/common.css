@@ -1,6 +1,9 @@
 .chat-sender {
 	font-size: smaller;
 }
+table.chat-messages {
+	margin-bottom: 0px;
+}
 .offline-tag {
 	font-size: small;
 	float: right;
@@ -34,11 +37,11 @@
 }
 .chat-messages tbody tr td {
 	padding: 0px;
-	padding-left: 9px;
+	padding-left: 3px;
 }
 .chat-messages pre {
 	padding: 0px;
-	margin
+	margin-bottom: 0px;
 }
 .new-message-container {
 	margin-right: 60px;
