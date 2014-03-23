@@ -10,6 +10,7 @@ window.GameControlsView = BaseView.extend({
     "click .view-results": "viewResults",
 		"click .commit-phase": "commitPhase",
 		"click .uncommit-phase": "uncommitPhase",
+		"hide.bs.collapse .game-controls": "hideControls",
 	},
 
 	initialize: function(options) {
@@ -19,6 +20,15 @@ window.GameControlsView = BaseView.extend({
 		_.bindAll(this, 'update');
 		this.listenTo(this.model, 'change', this.update);
 		this.listenTo(this.model, 'reset', this.update);
+	},
+
+	hideControls: function(ev) {
+		window.session.router.navigate('/games/' + this.model.get('Id'), { trigger: false });
+	  if ($(ev.target).hasClass('game-controls')) {
+			this.$('.channel').each(function(x, el) {
+				$(el).collapse('hide');
+			});
+		}
 	},
 
 	commitPhase: function(ev) {
@@ -80,19 +90,24 @@ window.GameControlsView = BaseView.extend({
 
 	update: function() {
 	  var that = this;
-		if (that.model.get('Phase') != null) {
-		  if (that.chatParticipants != null) {
+		if (that.model.get('Members') != null) {
+			if (that.chatParticipants != null) {
 				that.viewChat();
 				that.gameChatView.ensureChannel(_.inject(that.chatParticipants.split("-"), function(sum, nat) {
-				  sum[nat] = true;
+					sum[nat] = true;
 					return sum
 				}, {}));
 				that.gameChatView.$('.channel-' + that.chatParticipants).collapse('show');
 				that.gameChatView.$('.chevron-' + that.chatParticipants).removeClass('glyphicon-chevron-right').addClass('glyphicon-chevron-down');
 				that.chatParticipants = null;
 			}
+		}
+		if (that.model.get('Phase') != null) {
+			that.$('.view-orders').css('visibility', 'visible');
+			that.$('.view-results').css('visibility', 'visible');
 			var me = that.model.me();
 			if (me != null) {
+				that.$('.commit-button').css('visibility', 'visible');
 				if (that.model.get('Phase').Committed[me.Nation]) {
 					that.$('a.commit-button').removeClass('commit-phase').addClass('uncommit-phase').attr('title', '{{.I "Uncommit" }}');
 					that.$('span.commit-button').removeClass('glyphicon-ok').addClass('glyphicon-remove');
@@ -100,7 +115,13 @@ window.GameControlsView = BaseView.extend({
 					that.$('a.commit-button').removeClass('uncommit-phase').addClass('commit-phase').attr('title', '{{.I "Commit" }}');
 					that.$('span.commit-button').removeClass('glyphicon-remove').addClass('glyphicon-ok');
 				}
+			} else {
+				that.$('.commit-button').css('visibility', 'hidden');
 			}
+		} else {
+			that.$('.commit-button').css('visibility', 'hidden');
+			that.$('.view-orders').css('visibility', 'hidden');
+			that.$('.view-results').css('visibility', 'hidden');
 		}
 	},
 
@@ -123,10 +144,6 @@ window.GameControlsView = BaseView.extend({
 			el: that.$('.game-orders-container'),
 		  model: that.model,
 		});
-		var me = that.model.me();
-		if (me == null) {
-		  that.$('.commit-button').hide();
-		}
     return that;
 	},
 });

@@ -49,6 +49,26 @@ func (self *HTTPContext) SetContentType(t string, cache bool) {
 	}
 }
 
+func (self *HTTPContext) Fatalf(format string, args ...interface{}) {
+	self.web.Fatalf(format, args...)
+}
+
+func (self *HTTPContext) Errorf(format string, args ...interface{}) {
+	self.web.Errorf(format, args...)
+}
+
+func (self *HTTPContext) Infof(format string, args ...interface{}) {
+	self.web.Infof(format, args...)
+}
+
+func (self *HTTPContext) Debugf(format string, args ...interface{}) {
+	self.web.Debugf(format, args...)
+}
+
+func (self *HTTPContext) Tracef(format string, args ...interface{}) {
+	self.web.Tracef(format, args...)
+}
+
 func (self *HTTPContext) RenderJSON(i interface{}) (err error) {
 	b, err := json.MarshalIndent(i, "", "  ")
 	if err != nil {

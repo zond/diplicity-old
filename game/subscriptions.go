@@ -132,22 +132,20 @@ func SubscribeMessages(c common.WSContext) (err error) {
 		return
 	}
 	member, err := game.Member(c.DB(), c.Principal())
-	if err != nil {
+	if err != nil && err != kol.NotFound {
 		return
+	}
+	memberId := ""
+	if member != nil {
+		memberId = member.Id.String()
 	}
 	s := c.Pack().New(c.Match()[0])
 	s.Query = s.DB().Query().Where(kol.Equals{"GameId", base64DecodedId})
 	s.Call = func(i interface{}, op string) (err error) {
-		if member != nil && member.Nation == "" {
-			member, err = game.Member(c.DB(), c.Principal())
-			if err != nil {
-				return
-			}
-		}
 		messages := i.([]*Message)
 		result := Messages{}
 		for _, message := range messages {
-			if len(message.Recipients) == len(variant.Nations) || (member != nil && message.Recipients[member.Nation]) {
+			if len(message.RecipientIds) == len(variant.Nations) || message.RecipientIds[memberId] {
 				result = append(result, *message)
 			}
 		}

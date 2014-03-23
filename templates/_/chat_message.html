@@ -1,5 +1,5 @@
 <td class="chat-sender">
-	<%- sender.Nation %>
+	<%- game.get('State') == {{.GameState "Created" }} ? sender.describe() : sender.Nation %>
 </td>
 <td class="chat-body">
 	<pre><%- model.get('Body') %></pre>

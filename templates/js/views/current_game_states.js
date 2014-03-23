@@ -3,7 +3,7 @@ window.CurrentGameStatesView = BaseView.extend({
   template: _.template($('#current_game_states_underscore').html()),
 
 	initialize: function(options) {
-	  this.filter_state = options.filter_state || {{.GameState "Started"}};
+	  this.filter_state = options.filter_state;
 		this.listenTo(window.session.user, 'change', this.doRender);
 		this.collection = new GameStates([], { url: '/games/current' });
 		this.listenTo(this.collection, "sync", this.doRender);
@@ -57,17 +57,7 @@ window.CurrentGameStatesView = BaseView.extend({
 					},
 				},
 			],
-			[
-				{
-					url: mainButtons[0][0].url,
-					label: mainButtons[0][0].label,
-					activate: function() {
-					  return ['', '/', '/forming', '/finished'].indexOf(window.session.active_url) != -1;
-					},
-				},
-				mainButtons[0][1],
-				mainButtons[0][2],
-			],
+			mainButtons[0],
 		];
 		navLinks(nav);
 		that.$el.html(that.template({

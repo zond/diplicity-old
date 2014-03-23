@@ -131,14 +131,15 @@ function deadlineName(value) {
 	}
 };
 
-var currentButton = {
-	url: '/',
-	label: '{{.I "Games" }}',
-};
-
 var mainButtons = [
   [
-		currentButton,
+		{
+			label: '{{.I "Games" }}',
+			url: '/',
+			activate: function() {
+				return ['', 'forming', 'finished'].indexOf(window.session.active_url) != -1;
+			},
+		},
 		{
 			url: '/open',
 			label: '{{.I "Join" }}',
@@ -155,7 +156,7 @@ function navLinks(buttons) {
 };
 
 function navigate(to, notrigger) {
-	window.session.active_url = to;
+	window.session.active_url = /^\/?(.*)$/.exec(to)[1];
 	window.session.router.navigate(to, { trigger: !!!notrigger });
 	window.session.bottom_navigation.update();
 }

@@ -13,12 +13,17 @@ window.ChatChannelView = BaseView.extend({
 	  var that = this;
 	  that.members = options.members;
 		that.nMembers = 0;
-		that.name = _.map(that.members, function(x, nat) {
+		that.name = _.map(that.members, function(x, id) {
 		  that.nMembers++;
-		  return nat;
+			return id;
 		}).sort().join("-");
-		that.title = _.map(that.members, function(x, nat) {
-		  return nat;
+		that.title = _.map(that.members, function(x, id) {
+		  var memb = that.model.member(id);
+			if (that.model.get('State') == {{.GameState "Created"}}) {
+				return memb.describe();
+			} else {
+				return memb.Nation;
+			}
 		}).sort().join(", ");
 	},
 
@@ -37,7 +42,7 @@ window.ChatChannelView = BaseView.extend({
 			if (body != '') {
 				$('#new-message-' + that.name).val('');
 				that.collection.create({
-					Recipients: that.members,
+					RecipientIds: that.members,
 					Body: body,
 					GameId: that.model.get('Id'),
 				}, { silent: true });

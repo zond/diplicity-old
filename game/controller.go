@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"sort"
 	"strings"
-	dip "github.com/zond/godip/common"
 
 	"github.com/zond/diplicity/common"
 	"github.com/zond/diplicity/user"
@@ -78,8 +77,8 @@ func CreateMessage(c common.WSContext) (err error) {
 	// load the  message provided by the client
 	message := &Message{}
 	c.Data().Overwrite(message)
-	if message.Recipients == nil {
-		message.Recipients = map[dip.Nation]bool{}
+	if message.RecipientIds == nil {
+		message.RecipientIds = map[string]bool{}
 	}
 
 	message.Body = strings.TrimSpace(message.Body)

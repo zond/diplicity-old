@@ -74,13 +74,14 @@ $(window).load(function() {
 		currentGames: function() {
 			new CurrentGameStatesView({ 
 				el: $('#content'),
+				filter_state: {{.GameState "Started" }},
 			}).doRender();
 		},
 
 		finishedGames: function() {
 			new CurrentGameStatesView({ 
 				el: $('#content'),
-				filter_state: {{.GameState "Started" }},
+				filter_state: {{.GameState "Ended" }},
 			}).doRender();
 		},
 
