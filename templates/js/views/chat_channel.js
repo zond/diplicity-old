@@ -16,7 +16,7 @@ window.ChatChannelView = BaseView.extend({
 		that.name = _.map(that.members, function(x, id) {
 		  that.nMembers++;
 			return id;
-		}).sort().join("-");
+		}).sort().join(".");
 		that.title = _.map(that.members, function(x, id) {
 		  var memb = that.model.member(id);
 			if (memb == null) {

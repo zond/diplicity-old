@@ -93,7 +93,7 @@ window.GameControlsView = BaseView.extend({
 		if (that.model.get('Members') != null) {
 			if (that.chatParticipants != null) {
 				that.viewChat();
-				that.gameChatView.ensureChannel(_.inject(that.chatParticipants.split("-"), function(sum, nat) {
+				that.gameChatView.ensureChannel(_.inject(that.chatParticipants.split("."), function(sum, nat) {
 					sum[nat] = true;
 					return sum
 				}, {}));

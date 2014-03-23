@@ -7,5 +7,5 @@ window.ChatMessage = Backbone.Model.extend({
 window.ChatMessage.channelIdFor = function(members) {
   return _.collect(members, function(x, id) {
 	  return id;
-	}).sort().join("-");
+	}).sort().join(".");
 };
