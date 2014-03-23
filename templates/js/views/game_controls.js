@@ -10,6 +10,7 @@ window.GameControlsView = BaseView.extend({
     "click .view-results": "viewResults",
 		"click .commit-phase": "commitPhase",
 		"click .uncommit-phase": "uncommitPhase",
+		"hide.bs.collapse .game-controls": "hideControls",
 	},
 
 	initialize: function(options) {
@@ -19,6 +20,15 @@ window.GameControlsView = BaseView.extend({
 		_.bindAll(this, 'update');
 		this.listenTo(this.model, 'change', this.update);
 		this.listenTo(this.model, 'reset', this.update);
+	},
+
+	hideControls: function(ev) {
+		window.session.router.navigate('/games/' + this.model.get('Id'), { trigger: false });
+	  if ($(ev.target).hasClass('game-controls')) {
+			this.$('.channel').each(function(x, el) {
+				$(el).collapse('hide');
+			});
+		}
 	},
 
 	commitPhase: function(ev) {

@@ -50,6 +50,8 @@ func main() {
 	}
 	server.SetAppcache(*appcache).SetGMail(*gmailAccount, *gmailPassword, game.IncomingMail)
 
+	game.MigrateMessages(server.Diet())
+
 	router := mux.NewRouter()
 
 	// Login/logout

@@ -4,7 +4,6 @@ window.GameChatView = BaseView.extend({
 
 	events: {
 	  "click .create-channel-button": "createChannel",
-		"hide.bs.collapse .channel": "channelHide",
 		"shown.bs.collapse .channel": "channelShow",
 	},
 
@@ -12,10 +11,6 @@ window.GameChatView = BaseView.extend({
 	  this.channels = {};
 	  this.listenTo(this.collection, 'add', this.addMessage);
 	  this.listenTo(this.collection, 'reset', this.loadMessages);
-	},
-
-	channelHide: function(ev) {
-		window.session.router.navigate('/games/' + this.model.get('Id'), { trigger: false });
 	},
 
 	channelShow: function(ev) {

@@ -80,12 +80,54 @@ func (self Messages) Swap(i, j int) {
 	self[i], self[j] = self[j], self[i]
 }
 
+func MigrateMessages(c common.SkinnyContext) (err error) {
+	messages := Messages{}
+	if err = c.DB().Query().All(&messages); err != nil {
+		return
+	}
+	for _, message := range messages {
+		message.migrate(c)
+	}
+	return
+}
+
+func (self *Message) migrate(c common.SkinnyContext) (err error) {
+	return c.Transact(func(c common.SkinnyContext) (err error) {
+		if err = c.DB().Get(self); err != nil {
+			return
+		}
+		if len(self.Recipients) > 0 && len(self.RecipientIds) == 0 {
+			game := &Game{Id: self.GameId}
+			if err = c.DB().Get(game); err != nil {
+				return
+			}
+			members := Members{}
+			members, err = game.Members(c.DB())
+			if err != nil {
+				return
+			}
+			self.RecipientIds = make(map[string]bool)
+			for _, memb := range members {
+				if self.Recipients[memb.Nation] {
+					self.RecipientIds[memb.Id.String()] = true
+				}
+			}
+			self.Recipients = nil
+			if err = c.DB().Set(self); err != nil {
+				return
+			}
+			c.Infof("Migrated %v", self.Id)
+		}
+		return
+	})
+}
+
 type Message struct {
-	Id         kol.Id
-	GameId     kol.Id `kol:"index"`
-	SenderId   kol.Id
-	Recipients map[dip.Nation]bool
-	SeenBy     map[dip.Nation]bool
+	Id           kol.Id
+	GameId       kol.Id `kol:"index"`
+	SenderId     kol.Id
+	Recipients   map[dip.Nation]bool
+	RecipientIds map[string]bool
 
 	Body string
 
