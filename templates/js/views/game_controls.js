@@ -90,19 +90,21 @@ window.GameControlsView = BaseView.extend({
 
 	update: function() {
 	  var that = this;
-		if (that.model.get('Phase') != null) {
-			that.$('.view-orders').css('visibility', 'visible');
-			that.$('.view-results').css('visibility', 'visible');
-		  if (that.chatParticipants != null) {
+		if (that.model.get('Members') != null) {
+			if (that.chatParticipants != null) {
 				that.viewChat();
 				that.gameChatView.ensureChannel(_.inject(that.chatParticipants.split("-"), function(sum, nat) {
-				  sum[nat] = true;
+					sum[nat] = true;
 					return sum
 				}, {}));
 				that.gameChatView.$('.channel-' + that.chatParticipants).collapse('show');
 				that.gameChatView.$('.chevron-' + that.chatParticipants).removeClass('glyphicon-chevron-right').addClass('glyphicon-chevron-down');
 				that.chatParticipants = null;
 			}
+		}
+		if (that.model.get('Phase') != null) {
+			that.$('.view-orders').css('visibility', 'visible');
+			that.$('.view-results').css('visibility', 'visible');
 			var me = that.model.me();
 			if (me != null) {
 				that.$('.commit-button').css('visibility', 'visible');

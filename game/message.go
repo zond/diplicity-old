@@ -168,12 +168,12 @@ func (self *Message) EmailTo(c common.SkinnyContext, sender, recip *Member, reci
 	}
 	from := fmt.Sprintf("%v <%v+%v@%v>", sender.Nation, parts[0], encodedMailTag, parts[1])
 	to := fmt.Sprintf("%v <%v>", recip.Nation, recipUser.Email)
-	nations := []string{}
-	for nat, _ := range self.Recipients {
-		nations = append(nations, string(nat))
+	memberIds := []string{}
+	for memberId, _ := range self.RecipientIds {
+		memberIds = append(memberIds, memberId)
 	}
-	sort.Sort(sort.StringSlice(nations))
-	contextLink, err := recipUser.I("To see this message in context: http://%v/games/%v/messages/%v", recipUser.DiplicityHost, self.GameId, strings.Join(nations, "-"))
+	sort.Sort(sort.StringSlice(memberIds))
+	contextLink, err := recipUser.I("To see this message in context: http://%v/games/%v/messages/%v", recipUser.DiplicityHost, self.GameId, strings.Join(memberIds, "-"))
 	if err != nil {
 		c.Errorf("Failed translating context link: %v", err)
 		return
@@ -236,9 +236,9 @@ func IncomingMail(c common.SkinnyContext, msg *enmime.MIMEBody) (err error) {
 						return
 					}
 					message := &Message{
-						Body:       strings.TrimSpace(strings.Join(lines, "\n")),
-						GameId:     game.Id,
-						Recipients: parent.Recipients,
+						Body:         strings.TrimSpace(strings.Join(lines, "\n")),
+						GameId:       game.Id,
+						RecipientIds: parent.RecipientIds,
 					}
 					c.Infof("Mail resulted in %+v from %+v", message, sender)
 					return message.Send(c, game, sender)
@@ -254,7 +254,7 @@ func (self *Message) Send(c common.SkinnyContext, game *Game, sender *Member) (e
 	self.SenderId = sender.Id
 
 	// make sure the sender is one of the recipients
-	self.Recipients[sender.Nation] = true
+	self.RecipientIds[sender.Id.String()] = true
 
 	// See what phase type the game is in
 	var phaseType dip.PhaseType
@@ -278,7 +278,7 @@ func (self *Message) Send(c common.SkinnyContext, game *Game, sender *Member) (e
 	allowedFlags := game.ChatFlags[phaseType]
 
 	// See if the recipient count is allowed
-	recipients := len(self.Recipients)
+	recipients := len(self.RecipientIds)
 	if recipients == 2 {
 		if (allowedFlags & common.ChatPrivate) == 0 {
 			err = IllegalMessageError{
@@ -316,9 +316,9 @@ func (self *Message) Send(c common.SkinnyContext, game *Game, sender *Member) (e
 		return
 	}
 
-	for recip, _ := range self.Recipients {
+	for memberId, _ := range self.RecipientIds {
 		for _, member := range members {
-			if recip == member.Nation && !self.SenderId.Equals(member.Id) {
+			if memberId == member.Id.String() && self.SenderId.String() != memberId {
 				user := &user.User{Id: member.UserId}
 				if err = c.DB().Get(user); err != nil {
 					return

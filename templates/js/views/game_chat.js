@@ -44,7 +44,7 @@ window.GameChatView = BaseView.extend({
 
 	addMessage: function(message) {
 		var that = this;
-		var channelId = that.ensureChannel(message.get('Recipients'));
+		var channelId = that.ensureChannel(message.get('RecipientIds'));
 		that.channels[channelId].$('.chat-messages').prepend(new ChatMessageView({
 			model: message,
 			game: that.model,
@@ -53,11 +53,11 @@ window.GameChatView = BaseView.extend({
 
 	createChannel: function() {
 	  var that = this;
-	  var memberNations = that.$('.new-channel-nations').val().sort();
-		memberNations.push(that.model.me().Nation);
-		if (that.model.allowChatMembers(memberNations.length)) {
-		  members = _.inject(memberNations, function(sum, nat) {
-			  sum[nat] = true;
+	  var memberIds = that.$('.new-channel-members').val().sort();
+		memberIds.push(that.model.me().Id);
+		if (that.model.allowChatMembers(memberIds.length)) {
+		  members = _.inject(memberIds, function(sum, id) {
+			  sum[id] = true;
 				return sum;
 			}, {});
 			that.ensureChannel(members);
@@ -73,7 +73,7 @@ window.GameChatView = BaseView.extend({
 
 	disableSelector: function() {
 	  var that = this;
-		var sel = that.$('.new-channel-nations');
+		var sel = that.$('.new-channel-members');
 		var selectedOptions = sel.find('option:selected');
 		var nonSelectedOptions = sel.find('option').filter(function() {
 			return !$(this).is(':selected');
@@ -89,7 +89,7 @@ window.GameChatView = BaseView.extend({
 
 	enableSelector: function() {
 		var that = this;
-		var sel = that.$('.new-channel-nations');
+		var sel = that.$('.new-channel-members');
 		var dropdown = sel.parent().find('.multiselect-container');
 
 		sel.find('option').each(function() {
@@ -110,9 +110,13 @@ window.GameChatView = BaseView.extend({
 		} else {
 			_.each(that.model.members(), function(member) {
 			  if (member.Id != me.Id) {
-					var opt = $('<option value="' + member.Nation + '"></option>');
-					opt.text(member.Nation);
-					that.$('.new-channel-nations').append(opt);
+					var opt = $('<option value="' + member.Id + '"></option>');
+					if (that.model.get('State') == {{.GameState "Created"}}) {
+					  opt.text(member.describe());
+					} else {
+					  opt.text(member.Nation);
+					}
+					that.$('.new-channel-members').append(opt);
 				}
 			});
       var opts = {
@@ -125,11 +129,9 @@ window.GameChatView = BaseView.extend({
 					el.css('margin-bottom', el.find('.multiselect-container').height());
 				},
 			};
-			that.$('.new-channel-nations').multiselect(opts);
+			that.$('.new-channel-members').multiselect(opts);
 		}
-		if (this.model.get('Phase') != null) {
-			this.loadMessages();
-		}
+		this.loadMessages();
 		return that;
 	},
 
