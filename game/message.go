@@ -93,6 +93,14 @@ type Message struct {
 	UpdatedAt time.Time
 }
 
+func (self *Message) Updated(d *kol.DB, old *Message) {
+	g := Game{Id: self.GameId}
+	if err := d.Get(&g); err != nil {
+		panic(err)
+	}
+	d.EmitUpdate(&g)
+}
+
 func (self *Message) EmailTo(c common.SkinnyContext, game *Game, sender *Member, senderUser *user.User, recip *Member, recipUser *user.User, subject string) {
 	mailTag := &MailTag{
 		M: self.Id,

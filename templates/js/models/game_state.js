@@ -16,6 +16,18 @@ window.GameState = Backbone.Model.extend({
 	},
 
 	decorateMember: function(member) {
+		member.shortDescribe = function(withNation) {
+			if (withNation && member.Nation != "") {
+				return member.Nation;
+			}
+			if (member.User.Nickname != "") {
+			  return member.User.Nickname;
+			}
+			if (member.User.Email != "") {
+			  return member.User.Email.split("@")[0];
+			}
+			return '{{.I "Anonymous" }}';
+		};
 		member.describe = function(withNation) {
 			var nation = "";
 			if (withNation && member.Nation != "") {

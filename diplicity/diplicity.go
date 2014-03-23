@@ -83,6 +83,7 @@ func main() {
 	wsRouter.RPC("SetOrder", game.SetOrder).Auth()
 	wsRouter.RPC("Commit", game.CommitPhase).Auth()
 	wsRouter.RPC("Uncommit", game.UncommitPhase).Auth()
+	wsRouter.RPC("See", game.SeeMessage).Auth()
 
 	// The websocket
 	router.Path("/ws").Handler(wsRouter)

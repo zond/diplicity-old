@@ -16,6 +16,35 @@ func UncommitPhase(c common.WSContext) (result interface{}, err error) {
 	return
 }
 
+func SeeMessage(c common.WSContext) (result interface{}, err error) {
+	messageId, err := base64.URLEncoding.DecodeString(c.Data().GetString("MessageId"))
+	if err != nil {
+		return
+	}
+	err = c.Transact(func(c common.WSContext) (err error) {
+		message := &Message{Id: messageId}
+		if err = c.DB().Get(message); err != nil {
+			return
+		}
+		game := &Game{Id: message.GameId}
+		if err = c.DB().Get(game); err != nil {
+			return
+		}
+		var member *Member
+		if member, err = game.Member(c.DB(), c.Principal()); err != nil {
+			return
+		}
+		if !message.SeenBy[member.Id.String()] {
+			message.SeenBy[member.Id.String()] = true
+			if err = c.DB().Set(message); err != nil {
+				return
+			}
+		}
+		return
+	})
+	return
+}
+
 func CommitPhase(c common.WSContext) (result interface{}, err error) {
 	err = setPhaseCommitted(c, true)
 	return

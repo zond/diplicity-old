@@ -1,3 +1,6 @@
+.chat-sender {
+	font-size: smaller;
+}
 .offline-tag {
 	font-size: small;
 	float: right;
