@@ -54,11 +54,7 @@ window.BottomNavigationView = BaseView.extend({
 			});
 		});
 		that.update();
-		if (that.buttons.length == 0) {
-		  $('body').removeClass('bottom-lift');
-		} else {
-		  $('body').addClass('bottom-lift');
-		}
+		$('body').css('margin-bottom', that.$el.height());
 		return that;
 	},
 
