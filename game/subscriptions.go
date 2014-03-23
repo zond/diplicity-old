@@ -18,8 +18,9 @@ type MemberState struct {
 
 type GameState struct {
 	*Game
-	Members []MemberState
-	Phase   *Phase
+	Members        []MemberState
+	UnseenMessages int
+	Phase          *Phase
 }
 
 type GameStates []GameState
@@ -53,23 +54,15 @@ func SubscribeCurrent(c common.WSContext) error {
 				if err := s.DB().Get(game); err != nil {
 					return err
 				}
-				phase, err := game.LastPhase(c.DB())
-				if err != nil {
-					return err
-				}
 				members, err := game.Members(c.DB())
 				if err != nil {
 					return err
 				}
-				memberStates, err := members.ToStates(c.DB(), game, c.Principal())
+				state, err := game.ToState(c.DB(), members, member)
 				if err != nil {
 					return err
 				}
-				states = append(states, GameState{
-					Game:    game,
-					Members: memberStates,
-					Phase:   phase.redact(member),
-				})
+				states = append(states, state)
 			}
 		}
 		if op == gosubs.FetchType || len(states) > 0 {
@@ -96,19 +89,11 @@ func SubscribeGame(c common.WSContext) error {
 		member := members.Get(c.Principal())
 		isMember := member != nil
 		if !game.Private || isMember {
-			phase, err := game.LastPhase(c.DB())
+			state, err := game.ToState(c.DB(), members, member)
 			if err != nil {
 				return err
 			}
-			memberStates, err := members.ToStates(c.DB(), game, c.Principal())
-			if err != nil {
-				return err
-			}
-			return s.Send(GameState{
-				Game:    game,
-				Members: memberStates,
-				Phase:   phase.redact(member),
-			}, op)
+			return s.Send(state, op)
 		} else if op == gosubs.FetchType {
 			return s.Send(GameState{}, op)
 		}
@@ -184,19 +169,11 @@ func SubscribeOpen(c common.WSContext) error {
 			}
 			isMember = members.Contains(c.Principal())
 			if !isMember {
-				phase, err := game.LastPhase(c.DB())
+				state, err := game.ToState(c.DB(), members, nil)
 				if err != nil {
 					return err
 				}
-				memberStates, err := members.ToStates(c.DB(), game, c.Principal())
-				if err != nil {
-					return err
-				}
-				states = append(states, GameState{
-					Game:    game,
-					Members: memberStates,
-					Phase:   phase.redact(nil),
-				})
+				states = append(states, state)
 			}
 		}
 		if op == gosubs.FetchType || len(states) > 0 {

@@ -273,6 +273,47 @@ func (self *Game) Members(d *kol.DB) (result Members, err error) {
 	return
 }
 
+func (self *Game) UnseenMessages(d *kol.DB, principal string) (result int, err error) {
+	msgs, err := self.Messages(d)
+	if err != nil {
+		return
+	}
+	for _, msg := range msgs {
+		if !msg.SeenBy[kol.Id(principal).String()] {
+			result++
+		}
+	}
+	return
+}
+
+func (self *Game) ToState(d *kol.DB, members Members, member *Member) (result GameState, err error) {
+	email := ""
+	if member != nil {
+		email = string(member.UserId)
+	}
+	memberStates, err := members.ToStates(d, self, email)
+	if err != nil {
+		return
+	}
+	phase, err := self.LastPhase(d)
+	if err != nil {
+		return
+	}
+	unseen := 0
+	if email != "" {
+		if unseen, err = self.UnseenMessages(d, email); err != nil {
+			return
+		}
+	}
+	result = GameState{
+		Game:           self,
+		UnseenMessages: unseen,
+		Members:        memberStates,
+		Phase:          phase.redact(member),
+	}
+	return
+}
+
 func (self *Game) Messages(d *kol.DB) (result Messages, err error) {
 	if err = d.Query().Where(kol.Equals{"GameId", self.Id}).All(&result); err != nil {
 		return

@@ -85,6 +85,7 @@ type Message struct {
 	GameId       kol.Id `kol:"index"`
 	SenderId     kol.Id
 	RecipientIds map[string]bool
+	SeenBy       map[string]bool
 
 	Body string
 
