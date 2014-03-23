@@ -204,46 +204,45 @@ window.GameView = BaseView.extend({
 
 	update: function() {
 	  var that = this;
-		if (that.model.get('Phase') != null && that.model.get('Phase').Ordinal != that.lastPhaseOrdinal) {
-			that.lastPhaseOrdinal = that.model.get('Phase').Ordinal;
-		  that.possibleSources = null;
-		}
-		if (that.model.get('Members') != null) {
-		  if (that.$('#current-game').children().length == 0) {
-				that.$('#current-game').append(that.stateView.el);
-				that.$('#current-game').append(that.controlsView.el);
+		if (that.map != null) {
+			if (that.model.get('Phase') != null && that.model.get('Phase').Ordinal != that.lastPhaseOrdinal) {
+				that.lastPhaseOrdinal = that.model.get('Phase').Ordinal;
+				that.possibleSources = null;
 			}
-			if (that.model.get('Phase') != null) {
-			  var me = that.model.me();
-				if (me != null && that.possibleSources == null) {
-					RPC('GetPossibleSources', {
-						GameId: that.model.get('Id'),
-					}, function(data) {
-						that.possibleSources = data;
-						that.addClickableProvinces();
-					});
+			if (that.model.get('Members') != null) {
+				if (that.$('#current-game').children().length == 0) {
+					that.$('#current-game').append(that.stateView.el);
+					that.$('#current-game').append(that.controlsView.el);
 				}
-				if (that.$('.map').length > 0) {
-					var hadMap = true;
-					if (that.map == null) {
-						hadMap = false;
-						that.map = dippyMap(that.$('.map'));
+				if (that.model.get('Phase') != null) {
+					var me = that.model.me();
+					if (me != null && that.possibleSources == null) {
+						RPC('GetPossibleSources', {
+							GameId: that.model.get('Id'),
+						}, function(data) {
+							that.possibleSources = data;
+							that.addClickableProvinces();
+						});
 					}
-					that.renderMap();
-					if (!hadMap) {
-						panZoom('.map');
+					if (that.$('.map').length > 0) {
+						that.renderMap();
 					}
+				} else {
+					var variant = that.model.get('Variant');
+					that.map.copySVG(variant + 'Map');
 				}
 			}
+			resizeMap();
 		}
-		resizeMap();
 	},
 
   render: function() {
 		var that = this;
 		navLinks([]);
 		that.$el.html(that.template({}));
+		that.map = dippyMap(that.$('.map'));
 		that.update();
+		panZoom('.map');
 		return that;
 	},
 
