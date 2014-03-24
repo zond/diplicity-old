@@ -19,7 +19,7 @@ type MemberState struct {
 type GameState struct {
 	*Game
 	Members        []MemberState
-	UnseenMessages int
+	UnseenMessages map[string]int
 	Phase          *Phase
 }
 

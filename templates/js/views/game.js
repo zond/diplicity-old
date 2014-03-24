@@ -27,10 +27,6 @@ window.GameView = BaseView.extend({
 		  that.lastPhaseOrdinal = that.model.get('Phase').Ordinal;
 		}
 		that.controlsView = new GameControlsView({
-		  unseenCounterDecrement: function() {
-			  that.stateView.unseenMessages--;
-				that.stateView.updateUnseenMessages();
-			},
 		  parentId: 'current-game',
 			model: that.model,
 			chatMessages: that.chatMessages,

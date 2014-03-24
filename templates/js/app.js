@@ -14,6 +14,7 @@ window.applicationCache.addEventListener('progress', function(event) {
 }, false);
 
 window.applicationCache.addEventListener('updateready', function(event) {
+	window.localStorage.clear();
   if (window.session != null && window.session.bottom_navigation != null) {
 	  window.session.bottom_navigation.showPercent(100);
 	}

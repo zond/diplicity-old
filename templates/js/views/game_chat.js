@@ -9,7 +9,6 @@ window.GameChatView = BaseView.extend({
 
 	initialize: function(options) {
 	  this.channels = {};
-		this.unseenCounterDecrement = options.unseenCounterDecrement;
 	  this.listenTo(this.collection, 'add', this.addMessage);
 	  this.listenTo(this.collection, 'reset', this.loadMessages);
 	},
@@ -28,14 +27,6 @@ window.GameChatView = BaseView.extend({
 					}, function(error) {
 						if (error != null && error != '') {
 							logError('While seeing', message, error);
-						} else {
-						  if (that.unseenCounterDecrement != null) {
-							  that.unseenCounterDecrement();
-							}
-						  var channel = that.channels[channelId];
-							if (channel != null) {
-							  channel.removeUnseen();
-							}
 						}
 					});
 				}

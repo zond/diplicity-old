@@ -93,6 +93,23 @@ type Message struct {
 	UpdatedAt time.Time
 }
 
+func (self *Message) ChannelId() string {
+	recips := make(sort.StringSlice, 0, len(self.RecipientIds))
+	for recipientId, _ := range self.RecipientIds {
+		recips = append(recips, recipientId)
+	}
+	sort.Sort(recips)
+	return strings.Join(recips, ".")
+}
+
+func (self *Message) Updated(d *kol.DB, old *Message) {
+	g := Game{Id: self.GameId}
+	if err := d.Get(&g); err != nil {
+		panic(err)
+	}
+	d.EmitUpdate(&g)
+}
+
 func (self *Message) Created(d *kol.DB) {
 	g := Game{Id: self.GameId}
 	if err := d.Get(&g); err != nil {

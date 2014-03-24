@@ -13,7 +13,7 @@
 		<% } %>
 	</div>
 	<h4 class="panel-title game-description-container">
-		<span class="unseen-messages"></span>
+		<span class="unseen-messages"><%- unseenMessages %></span>
 		<a class="game-description">
 			<%= editable ? '' : '<span class="glyphicon glyphicon-chevron-right"></span> ' %><%- model.describe() %>
 		</a>

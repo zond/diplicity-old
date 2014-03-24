@@ -29,30 +29,23 @@ window.ChatChannelView = BaseView.extend({
 				return memb.Nation;
 			}
 		}).sort().join(", ");
-		that.unseenMessages = 0;
+		that.listenTo(that.model, 'change', that.updateUnseen);
+		that.listenTo(that.model, 'reset', that.updateUnseen);
 	},
 
-	removeUnseen: function() {
+	updateUnseen: function(ev) {
 	  var that = this;
-		that.unseenMessages--;
-		that.$('.chat-channel-title-container .unseen-messages').text(that.unseenMessages);
-		if (that.unseenMessages == 0) {
-			that.$('.chat-channel-title-container .unseen-messages').hide();
-		} else {
+	  var unseen = this.model.get('UnseenMessages')[this.name];
+		if (unseen > 0) {
+			that.$('.chat-channel-title-container .unseen-messages').text(unseen);
 			that.$('.chat-channel-title-container .unseen-messages').show();
+		} else {
+			that.$('.chat-channel-title-container .unseen-messages').hide();
 		}
 	},
 
 	addMessage: function(message) {
 	  var that = this;
-	  var me = that.model.me();
-		if (me != null) {
-		  if (message.get('SeenBy') == null || !message.get('SeenBy')[me.Id]) {
-			  that.unseenMessages++;
-				that.$('.chat-channel-title-container .unseen-messages').show();
-				that.$('.chat-channel-title-container .unseen-messages').text(that.unseenMessages);
-			}
-		}
 		that.$('.chat-messages').prepend(new ChatMessageView({
 			model: message,
 			game: that.model,
@@ -97,6 +90,7 @@ window.ChatChannelView = BaseView.extend({
 			nameId: that.nameId,
 			title: that.title,
 		}));
+		that.updateUnseen();
 		return that;
 	},
 

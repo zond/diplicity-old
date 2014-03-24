@@ -14,7 +14,6 @@ window.GameControlsView = BaseView.extend({
 	},
 
 	initialize: function(options) {
-	  this.unseenCounterDecrement = options.unseenCounterDecrement;
 	  this.chatParticipants = options.chatParticipants;
 		this.parentId = options.parentId;
 		this.chatMessages = options.chatMessages;
@@ -23,7 +22,6 @@ window.GameControlsView = BaseView.extend({
 		this.listenTo(this.chatMessages, 'reset', this.update);
 		this.listenTo(this.model, 'change', this.update);
 		this.listenTo(this.model, 'reset', this.update);
-		this.unseenMessages = 0;
 	},
 
 	hideControls: function(ev) {
@@ -92,31 +90,18 @@ window.GameControlsView = BaseView.extend({
 		that.handleClick(ev, 'orders');
 	},
 
-	updateUnseenMessages: function() {
-	  var that = this;
-		if (that.unseenMessages == 0) {
-			that.$('.game-controls-left .unseen-messages').hide();
-		} else {
-			that.$('.game-controls-left .unseen-messages').text(that.unseenMessages);
-			that.$('.game-controls-left .unseen-messages').show();
-		}
-	},
-
 	update: function() {
 	  var that = this;
 		if (that.model.get('Members') != null) {
-		  var me = that.model.me();
-			that.unseenMessages = 0;
-			if (me != null) {
-				that.chatMessages.each(function(msg) {
-				  if (msg.get('SenderId') != null) {
-						if (msg.get('SeenBy') == null || !msg.get('SeenBy')[me.Id]) {
-							that.unseenMessages++;
-						}
-					}
-				});
+			var unseen = _.inject(that.model.get('UnseenMessages') || {}, function(sum, num, x) {
+				return sum + num;
+			}, 0);
+			if (unseen > 0) {
+			  that.$('.game-controls-left .unseen-messages').text(unseen);
+			  that.$('.game-controls-left .unseen-messages').show();
+			} else {
+			  that.$('.game-controls-left .unseen-messages').hide();
 			}
-			that.updateUnseenMessages();
 			if (that.chatParticipants != null) {
 				that.viewChat();
 				that.gameChatView.ensureChannel(_.inject(that.chatParticipants.split("."), function(sum, nat) {
@@ -160,13 +145,6 @@ window.GameControlsView = BaseView.extend({
 		that.gameChatView = new GameChatView({
 		  chatParticipants: that.chatParticipants,
 			model: that.model,
-			unseenCounterDecrement: function() {
-			  that.unseenMessages--;
-			  that.updateUnseenMessages();
-				if (that.unseenCounterDecrement != null) {
-				  that.unseenCounterDecrement();
-				}
-			},
 			collection: that.chatMessages,
 			el: that.$('.game-chat-container'),
 		});
