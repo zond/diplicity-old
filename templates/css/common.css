@@ -1,6 +1,13 @@
 .chat-sender {
 	font-size: smaller;
 }
+.appcache-progress {
+	display: none;
+}
+.progress {
+	margin-bottom: 0px;
+	height: 1px;
+}
 table.chat-messages {
 	margin-bottom: 0px;
 }

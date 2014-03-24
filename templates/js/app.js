@@ -1,4 +1,27 @@
 
+window.applicationCache.addEventListener('downloading', function(event) {
+  if (window.session != null && window.session.bottom_navigation != null) {
+	  window.session.bottom_navigation.showPercent(0);
+	}
+}, false);
+
+
+window.applicationCache.addEventListener('progress', function(event) {
+  if (window.session != null && window.session.bottom_navigation != null) {
+	  window.session.bottom_navigation.showPercent(parseInt(event.loaded / event.total));
+	}
+}, false);
+
+window.applicationCache.addEventListener('noupdate', function(event) {
+    console.log("No changes.");
+}, false);
+
+window.applicationCache.addEventListener('updateready', function(event) {
+  if (window.session != null && window.session.bottom_navigation != null) {
+	  window.session.bottom_navigation.showPercent(100);
+	}
+}, false);
+
 window.session = {};
 
 window.session.online = false;

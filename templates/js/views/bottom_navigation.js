@@ -4,13 +4,19 @@ window.BottomNavigationView = BaseView.extend({
 
 	initialize: function(options) {
 		this.buttons = options.buttons;
+		this.percent = 100;
 	},
 
 	navLinks: function(b) {
 	  this.buttons = b;
 		this.doRender();
 	},
-	
+
+	showPercent: function(num) {
+	  this.percent = num;
+		this.doRender();
+	},
+
 	update: function() {
 	  var that = this;
 	  _.each(that.buttons, function(row) {
@@ -32,11 +38,17 @@ window.BottomNavigationView = BaseView.extend({
 				}
 			});
 		});
+		if (that.percent < 100) {
+      that.$('.appcache-progress').show();
+		} else {
+      that.$('.appcache-progress').hide();
+		}
 	},
 
   render: function() {
 	  var that = this;
     that.$el.html(that.template({
+		  percent: that.percent,
 		}));
 		_.each(that.buttons, function(row) {
 		  var rowEl = $('<div></div>');
