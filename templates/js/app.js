@@ -7,7 +7,6 @@ window.applicationCache.addEventListener('downloading', function(event) {
 
 
 window.applicationCache.addEventListener('progress', function(event) {
-  console.log('progress',window.session, window.session.bottom_navigation);
   if (window.session != null && window.session.bottom_navigation != null) {
 	  window.session.bottom_navigation.showPercent(parseInt(100.0 * (parseFloat(event.loaded) / parseFloat(event.total))));
 	}
