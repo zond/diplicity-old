@@ -13,7 +13,6 @@ window.BottomNavigationView = BaseView.extend({
 	},
 
 	showPercent: function(num) {
-	  console.log('appcache percent', num);
 	  this.percent = num;
 		this.doRender();
 	},
