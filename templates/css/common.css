@@ -1,3 +1,7 @@
+.commit-button {
+	position: relative;
+	z-index: 100;
+}
 .unseen-messages {
 	position: absolute;
 	font-size: x-small !important;
