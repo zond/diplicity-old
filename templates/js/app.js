@@ -7,13 +7,10 @@ window.applicationCache.addEventListener('downloading', function(event) {
 
 
 window.applicationCache.addEventListener('progress', function(event) {
+  console.log('progress',window.session, window.session.bottom_navigation);
   if (window.session != null && window.session.bottom_navigation != null) {
 	  window.session.bottom_navigation.showPercent(parseInt(event.loaded / event.total));
 	}
-}, false);
-
-window.applicationCache.addEventListener('noupdate', function(event) {
-    console.log("No changes.");
 }, false);
 
 window.applicationCache.addEventListener('updateready', function(event) {
