@@ -25,6 +25,7 @@ window.GameStateView = BaseView.extend({
 		this.phaseTypeViews = {};
 		this.memberViews = {};
 		this.listenTo(this.model, 'change', this.doRender);
+		this.unseenMessages = 0;
 	},
 
 	changeSecretFlag: function(ev) {
@@ -132,6 +133,16 @@ window.GameStateView = BaseView.extend({
 		}
 	},
 
+	updateUnseenMessages: function() {
+	  var that = this;
+		if (that.unseenMessages > 0) {
+		  that.$('.game-description-container .unseen-messages').text(that.unseenMessages);
+		  that.$('.game-description-container .unseen-messages').show();
+		} else {
+		  that.$('.game-description-container .unseen-messages').hide();
+		}
+	},
+
   render: function() {
 	  var that = this;
 		var classes = [];
@@ -151,6 +162,8 @@ window.GameStateView = BaseView.extend({
 			editable: that.editable,
 			button_text: that.buttonText(),
 		}));
+		that.unseenMessages = that.model.get('UnseenMessages');
+		that.updateUnseenMessages();
 		_.each(variants, function(variant) {
 			that.$('.game-variant').append('<option value="{0}">{1}</option>'.format(variant, variantMap[variant].Name));
 		});

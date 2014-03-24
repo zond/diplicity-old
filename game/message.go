@@ -93,7 +93,7 @@ type Message struct {
 	UpdatedAt time.Time
 }
 
-func (self *Message) Updated(d *kol.DB, old *Message) {
+func (self *Message) Created(d *kol.DB) {
 	g := Game{Id: self.GameId}
 	if err := d.Get(&g); err != nil {
 		panic(err)
@@ -228,6 +228,11 @@ func (self *Message) Send(c common.SkinnyContext, game *Game, sender *Member) (e
 
 	// make sure the sender is one of the recipients
 	self.RecipientIds[sender.Id.String()] = true
+
+	// The sender but nobody else saw it...
+	self.SeenBy = map[string]bool{
+		sender.Id.String(): true,
+	}
 
 	// See what phase type the game is in
 	var phaseType dip.PhaseType

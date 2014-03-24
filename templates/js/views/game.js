@@ -11,32 +11,37 @@ window.GameView = BaseView.extend({
   template: _.template($('#game_underscore').html()),
 
 	initialize: function(options) {
-		this.listenTo(this.model, 'change', this.update);
-		this.listenTo(window.session.user, 'change', this.doRender);
-		this.stateView = new GameStateView({ 
+	  var that = this;
+		that.listenTo(that.model, 'change', that.update);
+		that.listenTo(window.session.user, 'change', that.doRender);
+		that.stateView = new GameStateView({ 
 			parentId: 'current-game',
 			play_state: true,
 			editable: false,
-			model: this.model,
+			model: that.model,
 		});
-		this.chatMessages = new ChatMessages([], { url: '/games/' + this.model.get('Id') + '/messages' });
-		this.fetch(this.chatMessages);
-		this.lastPhaseOrdinal = 0;
-		if (this.model.get('Phase') != null) {
-		  this.lastPhaseOrdinal = this.model.get('Phase').Ordinal;
+		that.chatMessages = new ChatMessages([], { url: '/games/' + that.model.get('Id') + '/messages' });
+		that.fetch(that.chatMessages);
+		that.lastPhaseOrdinal = 0;
+		if (that.model.get('Phase') != null) {
+		  that.lastPhaseOrdinal = that.model.get('Phase').Ordinal;
 		}
-		this.controlsView = new GameControlsView({
+		that.controlsView = new GameControlsView({
+		  unseenCounterDecrement: function() {
+			  that.stateView.unseenMessages--;
+				that.stateView.updateUnseenMessages();
+			},
 		  parentId: 'current-game',
-			model: this.model,
-			chatMessages: this.chatMessages,
+			model: that.model,
+			chatMessages: that.chatMessages,
 			chatParticipants: options.chatParticipants,
 		}).doRender();
-		this.fetch(this.model);
-		this.decision = null;
-		this.decisionFor = null;
-		this.decisionCleaners = null;
-		this.map = null;
-		this.possibleSources = null;
+		that.fetch(that.model);
+		that.decision = null;
+		that.decisionFor = null;
+		that.decisionCleaners = null;
+		that.map = null;
+		that.possibleSources = null;
 	},
 
 	decide: function(raw) {

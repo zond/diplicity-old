@@ -1,3 +1,27 @@
+.unseen-messages {
+	position: absolute;
+	font-size: x-small !important;
+	left: 1.5em;
+	top: -0.5em;
+	background-color: rgba(255, 0, 0, 0.8);
+	border-radius: 50%;
+	padding: 2px;
+}
+.chat-channel-title-container .unseen-messages {
+	display: none;
+}
+.game-controls-left .unseen-messages {
+	left: 0px;
+}
+.chat-channel-title-container {
+	position: relative;
+}
+.game-controls-left {
+	position: relative;
+}
+.game-description-container {
+	position: relative;
+}
 .chat-sender {
 	font-size: smaller;
 }
@@ -126,6 +150,8 @@ body {
 	margin-top: -3px;
 }
 .view-game a {
+	position: relative;
+	z-index: 100;
 	zoom: 0.9;
 }
 .view-game span {

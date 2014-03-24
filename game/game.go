@@ -273,13 +273,13 @@ func (self *Game) Members(d *kol.DB) (result Members, err error) {
 	return
 }
 
-func (self *Game) UnseenMessages(d *kol.DB, principal string) (result int, err error) {
+func (self *Game) UnseenMessages(d *kol.DB, viewer kol.Id) (result int, err error) {
 	msgs, err := self.Messages(d)
 	if err != nil {
 		return
 	}
 	for _, msg := range msgs {
-		if !msg.SeenBy[kol.Id(principal).String()] {
+		if msg.RecipientIds[viewer.String()] && !msg.SeenBy[viewer.String()] {
 			result++
 		}
 	}
@@ -301,7 +301,7 @@ func (self *Game) ToState(d *kol.DB, members Members, member *Member) (result Ga
 	}
 	unseen := 0
 	if email != "" {
-		if unseen, err = self.UnseenMessages(d, email); err != nil {
+		if unseen, err = self.UnseenMessages(d, member.Id); err != nil {
 			return
 		}
 	}

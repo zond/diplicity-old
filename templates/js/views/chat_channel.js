@@ -29,6 +29,34 @@ window.ChatChannelView = BaseView.extend({
 				return memb.Nation;
 			}
 		}).sort().join(", ");
+		that.unseenMessages = 0;
+	},
+
+	removeUnseen: function() {
+	  var that = this;
+		that.unseenMessages--;
+		that.$('.chat-channel-title-container .unseen-messages').text(that.unseenMessages);
+		if (that.unseenMessages == 0) {
+			that.$('.chat-channel-title-container .unseen-messages').hide();
+		} else {
+			that.$('.chat-channel-title-container .unseen-messages').show();
+		}
+	},
+
+	addMessage: function(message) {
+	  var that = this;
+	  var me = that.model.me();
+		if (me != null) {
+		  if (message.get('SeenBy') == null || !message.get('SeenBy')[me.Id]) {
+			  that.unseenMessages++;
+				that.$('.chat-channel-title-container .unseen-messages').show();
+				that.$('.chat-channel-title-container .unseen-messages').text(that.unseenMessages);
+			}
+		}
+		that.$('.chat-messages').prepend(new ChatMessageView({
+			model: message,
+			game: that.model,
+		}).doRender().el);
 	},
 
   keyup: function(ev) {

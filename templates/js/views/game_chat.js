@@ -7,14 +7,40 @@ window.GameChatView = BaseView.extend({
 		"shown.bs.collapse .channel": "channelShow",
 	},
 
-	initialize: function() {
+	initialize: function(options) {
 	  this.channels = {};
+		this.unseenCounterDecrement = options.unseenCounterDecrement;
 	  this.listenTo(this.collection, 'add', this.addMessage);
 	  this.listenTo(this.collection, 'reset', this.loadMessages);
 	},
 
 	channelShow: function(ev) {
-		window.session.router.navigate('/games/' + this.model.get('Id') + '/messages/' + $(ev.target).attr('data-participants'), { trigger: false });
+	  var that = this;
+		var channelId = $(ev.target).attr('data-participants');
+		window.session.router.navigate('/games/' + that.model.get('Id') + '/messages/' + channelId, { trigger: false });
+		var me = that.model.me();
+		if (me != null) {
+			that.collection.each(function(message) {
+				var messageChannelId = ChatMessage.channelIdFor(message.get('RecipientIds'));
+	      if (channelId == messageChannelId && (message.get('SeenBy') == null || !message.get('SeenBy')[me.Id])) {
+					RPC('See', {
+						MessageId: message.get('Id'),
+					}, function(error) {
+						if (error != null && error != '') {
+							logError('While seeing', message, error);
+						} else {
+						  if (that.unseenCounterDecrement != null) {
+							  that.unseenCounterDecrement();
+							}
+						  var channel = that.channels[channelId];
+							if (channel != null) {
+							  channel.removeUnseen();
+							}
+						}
+					});
+				}
+			});
+		}
 	},
 
 	loadMessages: function() {
@@ -45,10 +71,7 @@ window.GameChatView = BaseView.extend({
 	addMessage: function(message) {
 		var that = this;
 		var channelId = that.ensureChannel(message.get('RecipientIds'));
-		that.channels[channelId].$('.chat-messages').prepend(new ChatMessageView({
-			model: message,
-			game: that.model,
-		}).doRender().el);
+		that.channels[channelId].addMessage(message);
 	},
 
 	createChannel: function() {
