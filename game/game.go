@@ -300,9 +300,12 @@ func (self *Game) ToState(d *kol.DB, members Members, member *Member) (result Ga
 	if err != nil {
 		return
 	}
-	unseen, err := self.UnseenMessages(d, member.Id)
-	if err != nil {
-		return
+	unseen := map[string]int{}
+	if member != nil {
+		unseen, err = self.UnseenMessages(d, member.Id)
+		if err != nil {
+			return
+		}
 	}
 	result = GameState{
 		Game:           self,
