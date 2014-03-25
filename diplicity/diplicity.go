@@ -61,9 +61,9 @@ func main() {
 	// Resource routes for the WebSocket
 	wsRouter := server.Router()
 	wsRouter.Resource("^/games/current$").
-		Handle(gosubs.SubscribeType, game.SubscribeCurrent).Auth()
+		Handle(gosubs.SubscribeType, game.SubscribeCurrent)
 	wsRouter.Resource("^/games/open$").
-		Handle(gosubs.SubscribeType, game.SubscribeOpen).Auth()
+		Handle(gosubs.SubscribeType, game.SubscribeOpen)
 	wsRouter.Resource("^/user$").
 		Handle(gosubs.SubscribeType, user.SubscribeEmail).
 		Handle(gosubs.UpdateType, user.Update).Auth()

@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"sort"
+	"code.google.com/p/go.net/websocket"
 
 	"github.com/zond/diplicity/common"
 	"github.com/zond/diplicity/user"
@@ -38,6 +39,14 @@ func (self GameStates) Swap(i, j int) {
 }
 
 func SubscribeCurrent(c common.WSContext) error {
+	if c.Principal() == "" {
+		return websocket.JSON.Send(c.Conn(), gosubs.Message{
+			Type: gosubs.FetchType,
+			Object: &gosubs.Object{
+				URI: c.Match()[0],
+			},
+		})
+	}
 	s := c.Pack().New(c.Match()[0])
 	s.Query = s.DB().Query().Where(kol.Equals{"UserId", kol.Id(c.Principal())})
 	s.Call = func(i interface{}, op string) error {
@@ -144,6 +153,14 @@ func SubscribeMessages(c common.WSContext) (err error) {
 }
 
 func SubscribeOpen(c common.WSContext) error {
+	if c.Principal() == "" {
+		return websocket.JSON.Send(c.Conn(), gosubs.Message{
+			Type: gosubs.FetchType,
+			Object: &gosubs.Object{
+				URI: c.Match()[0],
+			},
+		})
+	}
 	s := c.Pack().New(c.Match()[0])
 	s.Query = s.DB().Query().Where(kol.And{kol.Equals{"Closed", false}, kol.Equals{"Private", false}})
 	s.Call = func(i interface{}, op string) error {
