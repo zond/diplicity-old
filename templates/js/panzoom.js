@@ -1,6 +1,10 @@
 function panZoom(selector) {
 	var MAX_ZOOM = 4;
   $(selector).each(function(ind, el) {
+	  if (el._isPanZoomed) {
+		  return
+		}
+		el._isPanZoomed = true;
 	  var element = $(el);
 		var scale = 1;
 		var zoom = 1;
