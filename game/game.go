@@ -204,7 +204,7 @@ func (self *Game) Describe(c common.SkinnyContext, trans common.Translator) (res
 		return trans.I(string(common.BeforeGamePhaseType))
 	case common.GameStateStarted:
 		var phase *Phase
-		if phase, err = self.LastPhase(c.DB()); err != nil {
+		if _, phase, err = self.Phase(c.DB(), 0); err != nil {
 			return
 		}
 		season := ""
@@ -284,14 +284,18 @@ func (self *Game) Phases(d *kol.DB) (result Phases, err error) {
 	return
 }
 
-func (self *Game) LastPhase(d *kol.DB) (result *Phase, err error) {
+func (self *Game) Phase(d *kol.DB, ordinal int) (result, last *Phase, err error) {
 	phases, err := self.Phases(d)
 	if err != nil {
 		return
 	}
-	if len(phases) > 0 {
-		sort.Sort(phases)
-		result = &phases[0]
+	for index, _ := range phases {
+		if last == nil || phases[index].Ordinal > last.Ordinal {
+			last = &phases[index]
+		}
+		if phases[index].Ordinal == ordinal {
+			result = &phases[index]
+		}
 	}
 	return
 }
@@ -319,15 +323,38 @@ func (self *Game) UnseenMessages(d *kol.DB, viewer kol.Id) (result map[string]in
 }
 
 func (self *Game) ToState(d *kol.DB, members Members, member *Member) (result GameState, err error) {
+	_, phase, err := self.Phase(d, 0)
+	if err != nil {
+		return
+	}
+	ordinal := 0
+	if phase != nil {
+		ordinal = phase.Ordinal
+	}
+	return self.toStateWithPhase(d, members, member, phase.redact(member), ordinal)
+}
+
+func (self *Game) ToStateWithPhaseOrdinal(d *kol.DB, members Members, member *Member, ordinal int) (result GameState, err error) {
+	phase, last, err := self.Phase(d, ordinal)
+	if err != nil {
+		return
+	}
+	if phase == nil {
+		err = fmt.Errorf("No phase with ordinal %v in %v", ordinal, self)
+		return
+	}
+	if last == phase {
+		phase = phase.redact(member)
+	}
+	return self.toStateWithPhase(d, members, member, phase, last.Ordinal)
+}
+
+func (self *Game) toStateWithPhase(d *kol.DB, members Members, member *Member, phase *Phase, phases int) (result GameState, err error) {
 	email := ""
 	if member != nil {
 		email = string(member.UserId)
 	}
 	memberStates, err := members.ToStates(d, self, email)
-	if err != nil {
-		return
-	}
-	phase, err := self.LastPhase(d)
 	if err != nil {
 		return
 	}
@@ -351,7 +378,8 @@ func (self *Game) ToState(d *kol.DB, members Members, member *Member) (result Ga
 		UnseenMessages: unseen,
 		Members:        memberStates,
 		TimeLeft:       timeLeft,
-		Phase:          phase.redact(member),
+		Phase:          phase,
+		Phases:         phases,
 	}
 	return
 }

@@ -258,7 +258,7 @@ func (self *Message) Send(c common.SkinnyContext, game *Game, sender *Member) (e
 		phaseType = common.BeforeGamePhaseType
 	case common.GameStateStarted:
 		var phase *Phase
-		if phase, err = game.LastPhase(c.DB()); err != nil {
+		if _, phase, err = game.Phase(c.DB(), 0); err != nil {
 			return
 		}
 		phaseType = phase.Type

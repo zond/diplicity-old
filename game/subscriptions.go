@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"sort"
+	"strconv"
 	"time"
 	"code.google.com/p/go.net/websocket"
 
@@ -24,6 +25,7 @@ type GameState struct {
 	UnseenMessages map[string]int
 	TimeLeft       time.Duration
 	Phase          *Phase
+	Phases         int
 }
 
 type GameStates []GameState
@@ -111,6 +113,41 @@ func SubscribeGame(c common.WSContext) error {
 		return nil
 	}
 	return s.Subscribe(&Game{Id: base64DecodedId})
+}
+
+func SubscribeGamePhase(c common.WSContext) error {
+	base64DecodedId, err := base64.URLEncoding.DecodeString(c.Match()[1])
+	if err != nil {
+		return err
+	}
+	game := &Game{Id: base64DecodedId}
+	if err = c.DB().Get(game); err != nil {
+		return err
+	}
+	phaseOrdinal, err := strconv.Atoi(c.Match()[2])
+	if err != nil {
+		return err
+	}
+	members, err := game.Members(c.DB())
+	if err != nil {
+		return err
+	}
+	member := members.Get(c.Principal())
+	isMember := member != nil
+	if !game.Private || isMember {
+		state, err := game.ToStateWithPhaseOrdinal(c.DB(), members, member, phaseOrdinal)
+		if err != nil {
+			return err
+		}
+		return websocket.JSON.Send(c.Conn(), gosubs.Message{
+			Type: gosubs.FetchType,
+			Object: &gosubs.Object{
+				URI:  c.Match()[0],
+				Data: state,
+			},
+		})
+	}
+	return nil
 }
 
 func SubscribeMessages(c common.WSContext) (err error) {

@@ -111,7 +111,7 @@ func SetOrder(c common.WSContext) (result interface{}, err error) {
 			return
 		}
 		var phase *Phase
-		if phase, err = game.LastPhase(d); err != nil {
+		if _, phase, err = game.Phase(d, 0); err != nil {
 			return
 		}
 		if phase == nil {
@@ -166,7 +166,7 @@ func GetPossibleSources(c common.WSContext) (result interface{}, err error) {
 		return
 	}
 	var phase *Phase
-	if phase, err = game.LastPhase(c.DB()); err != nil {
+	if _, phase, err = game.Phase(c.DB(), 0); err != nil {
 		return
 	}
 	if phase == nil {
@@ -193,7 +193,7 @@ func GetValidOrders(c common.WSContext) (result interface{}, err error) {
 		return
 	}
 	var phase *Phase
-	if phase, err = game.LastPhase(c.DB()); err != nil {
+	if _, phase, err = game.Phase(c.DB(), 0); err != nil {
 		return
 	}
 	if phase == nil {
