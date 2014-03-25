@@ -1,6 +1,6 @@
 
 function resizeMap() {
-	$('.map-container').height($(window).height() - 51);
+	$('.map-container').height($(window).height() - 35);
 }
 
 $(window).on('orientationchange', resizeMap);

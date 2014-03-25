@@ -70,6 +70,15 @@ table.chat-messages {
 	width: 60px;
 	float: right;
 }
+.create-message-form {
+	margin: 0px;
+}
+.game .panel-body {
+	padding: 0px;
+}
+.create-message-form textarea {
+	height: 35px;
+}
 .chat-messages tbody tr td {
 	padding: 0px;
 	padding-left: 3px;
@@ -121,6 +130,16 @@ table.chat-messages {
 .prioritize {
 	text-align: left;
 }
+.navbar-toggle {
+	margin: 0px;
+}
+.navbar-header .menu-dropdown {
+	font-size: medium;
+}
+.navbar {
+	margin-bottom: 0px;
+	min-height: 35px;
+}
 .prioritize .glyphicon {
 	margin-left: 6px;
 }
@@ -129,15 +148,21 @@ table.chat-messages {
 	z-index: 100;
 }
 .game-controls-buttons {
-	margin-top: -7px;
-	margin-bottom: -7px;
+	margin-top: -2px;
+	margin-bottom: -2px;
+}
+.btn-sm, .btn-xs {
+	padding: 2px 5px;
 }
 .game-controls-buttons span {
-	font-size: large;
+	font-size: small;
 	margin-bottom: 5px;
 }
 #current-game .panel {
 	margin-top: 0px;
+}
+.panel-heading {
+	padding: 3px 3px;
 }
 #bottom-navigation {
 	min-height: 0px;
@@ -146,12 +171,15 @@ table.chat-messages {
 	white-space: nowrap;
 }
 body {
-	margin-top: 51px;
+	margin-top: 35;
+	font-size: smaller;
+}
+table {
+	font-size: smaller;
 }
 .view-game {
 	float: right;
-	margin-bottom: -7px;
-	margin-top: -3px;
+	margin-top: -1px;
 }
 .view-game a {
 	position: relative;
@@ -159,13 +187,22 @@ body {
 	zoom: 0.9;
 }
 .view-game span {
-	font-size: large;
+	font-size: small;
 	margin-bottom: 5px;
 }
 .navbar-brand {
 	padding: 0px;
 	font-weight: bold;
 	font-size: x-large;
+}
+.navbar-brand img {
+	height: 35px;
+}
+.panel-group .panel {
+	margin-bottom: -5px;
+}
+.nav li a {
+	padding: 0px 15px;
 }
 .panel-group {
 	margin-bottom: 4px;

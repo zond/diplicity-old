@@ -21,6 +21,7 @@ window.BaseView = Backbone.View.extend({
 		this.$('a.navigate').each(function(ind, el) {
 			$(el).bind('click', function(ev) {
 				ev.preventDefault();
+				ev.stopPropagation();
 				navigate($(el).attr('href'));
 			});
 		});	

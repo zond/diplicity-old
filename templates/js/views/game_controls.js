@@ -9,6 +9,9 @@ window.GameControlsView = BaseView.extend({
 		"click .commit-phase": "commitPhase",
 		"click .uncommit-phase": "uncommitPhase",
 		"hide.bs.collapse .game-controls": "hideControls",
+		"click .previous-phase": "phaseBack",
+		"click .next-phase": "phaseForward",
+		"click .last-phase": "lastPhase",
 	},
 
 	initialize: function(options) {
@@ -21,6 +24,21 @@ window.GameControlsView = BaseView.extend({
 		this.listenTo(this.model, 'change', this.update);
 		this.listenTo(this.model, 'reset', this.update);
 		this.timeLeftInterval = null;
+	},
+
+	phaseForward: function(ev) {
+	  ev.preventDefault();
+		ev.stopPropagation();
+	},
+
+	lastPhase: function(ev) {
+	  ev.preventDefault();
+		ev.stopPropagation();
+	},
+
+	phaseBack: function(ev) {
+	  ev.preventDefault();
+		ev.stopPropagation();
 	},
 
 	hideControls: function(ev) {
