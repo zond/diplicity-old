@@ -57,7 +57,7 @@ window.GameStateView = BaseView.extend({
 		var save_call = function() {
 			that.model.save(null, {
 				success: function() {
-					navigate('/forming');
+					navigate('/mine/forming');
 				},
 			});
 		};

@@ -134,15 +134,18 @@ function deadlineName(value) {
 var mainButtons = [
   [
 		{
-			label: '{{.I "Games" }}',
+			label: '{{.I "Mine" }}',
 			url: '/',
 			activate: function() {
-				return ['', 'forming', 'finished'].indexOf(window.session.active_url) != -1;
+				return ['', 'mine/forming', 'mine/finished'].indexOf(window.session.active_url) != -1;
 			},
 		},
 		{
 			url: '/open',
-			label: '{{.I "Join" }}',
+			label: '{{.I "Others" }}',
+			activate: function() {
+				return ['open', 'closed', 'finished'].indexOf(window.session.active_url) != -1;
+			},
 		},
 		{
 			url: '/create',

@@ -40,7 +40,7 @@ func (self GameStates) Swap(i, j int) {
 	self[i], self[j] = self[j], self[i]
 }
 
-func SubscribeCurrent(c common.WSContext) error {
+func SubscribeMine(c common.WSContext) error {
 	if c.Principal() == "" {
 		return websocket.JSON.Send(c.Conn(), gosubs.Message{
 			Type: gosubs.FetchType,
@@ -154,7 +154,7 @@ func SubscribeMessages(c common.WSContext) (err error) {
 	return s.Subscribe(&Message{})
 }
 
-func SubscribeOpen(c common.WSContext) error {
+func subscribeOthers(c common.WSContext, filter kol.QFilter, limiter func(source Games) (result Games)) error {
 	if c.Principal() == "" {
 		return websocket.JSON.Send(c.Conn(), gosubs.Message{
 			Type: gosubs.FetchType,
@@ -164,9 +164,12 @@ func SubscribeOpen(c common.WSContext) error {
 		})
 	}
 	s := c.Pack().New(c.Match()[0])
-	s.Query = s.DB().Query().Where(kol.And{kol.Equals{"Closed", false}, kol.Equals{"Private", false}})
+	s.Query = s.DB().Query().Where(filter)
 	s.Call = func(i interface{}, op string) error {
 		games := i.([]*Game)
+		if limiter != nil {
+			games = ([]*Game)(limiter(Games(games)))
+		}
 		states := GameStates{}
 		isMember := false
 		me := &user.User{Id: kol.Id(c.Principal())}
@@ -202,4 +205,20 @@ func SubscribeOpen(c common.WSContext) error {
 		return nil
 	}
 	return s.Subscribe(&Game{})
+}
+
+func SubscribeOthersOpen(c common.WSContext) error {
+	return subscribeOthers(c, kol.And{kol.Equals{"Closed", false}, kol.Equals{"Private", false}}, nil)
+}
+
+func SubscribeOthersClosed(c common.WSContext) error {
+	return subscribeOthers(c, kol.And{kol.Equals{"State", common.GameStateStarted}, kol.Equals{"Closed", true}, kol.Equals{"Private", false}}, nil)
+}
+
+func SubscribeOthersFinished(c common.WSContext) error {
+	return subscribeOthers(c, kol.And{kol.Equals{"State", common.GameStateEnded}, kol.Equals{"Private", false}}, func(source Games) (result Games) {
+		return source.SortAndLimit(func(a, b *Game) bool {
+			return a.UpdatedAt.Before(b.UpdatedAt)
+		}, 128)
+	})
 }

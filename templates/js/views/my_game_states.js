@@ -1,11 +1,11 @@
-window.CurrentGameStatesView = BaseView.extend({
+window.MyGameStatesView = BaseView.extend({
 
-  template: _.template($('#current_game_states_underscore').html()),
+  template: _.template($('#my_game_states_underscore').html()),
 
 	initialize: function(options) {
 	  this.filter_state = options.filter_state;
 		this.listenTo(window.session.user, 'change', this.doRender);
-		this.collection = new GameStates([], { url: '/games/current' });
+		this.collection = new GameStates([], { url: '/games/mine' });
 		this.listenTo(this.collection, "sync", this.doRender);
 		this.listenTo(this.collection, "reset", this.doRender);
 		this.listenTo(this.collection, "add", this.doRender);
@@ -31,11 +31,11 @@ window.CurrentGameStatesView = BaseView.extend({
 					},
 				},
 				{
-					url: '/forming',
+					url: '/mine/forming',
 					label: '{{.I "Forming" }}',
 					click: function(ev) {
 					  ev.preventDefault();
-					  navigate('/forming', true);
+					  navigate('/mine/forming', true);
 						that.filter_state = {{.GameState "Created"}};
 						that.doRender();
 					},
@@ -44,11 +44,11 @@ window.CurrentGameStatesView = BaseView.extend({
 					},
 				},
 				{
-					url: '/finished',
+					url: '/mine/finished',
 					label: '{{.I "Finished" }}',
 					click: function(ev) {
 					  ev.preventDefault();
-					  navigate('/finished', true);
+					  navigate('/mine/finished', true);
 						that.filter_state = {{.GameState "Ended"}};
 						that.doRender();
 					},
@@ -65,9 +65,9 @@ window.CurrentGameStatesView = BaseView.extend({
 		}));
 		that.collection.forEach(function(model) {
 		  if (model.get('State') == that.filter_state) {
-				that.$('#current-games').append(new GameStateView({ 
+				that.$('#my-games').append(new GameStateView({ 
 					model: model,
-					parentId: "current-games",
+					parentId: "my-games",
 					editable: false,
 				}).doRender().el);
 			}

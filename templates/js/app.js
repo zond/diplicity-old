@@ -50,10 +50,12 @@ $(window).load(function() {
 	var AppRouter = Backbone.Router.extend({
 
 		routes: {
-			"": "currentGames",
-			"forming": "formingGames",
-			"finished": "finishedGames",
-			"open": "openGames",
+			"": "myRunning",
+			"mine/forming": "myForming",
+			"mine/finished": "myFinished",
+			"open": "open",
+			"closed": "closed",
+			"finished": "finished",
 			"create": "createGame",
 			"games/:id": "game",
 			"games/:id/messages/:participants": "chat",
@@ -91,30 +93,45 @@ $(window).load(function() {
 			}).doRender();
 		},
 
-		currentGames: function() {
-			new CurrentGameStatesView({ 
+		myRunning: function() {
+			new MyGameStatesView({ 
 				el: $('#content'),
 				filter_state: {{.GameState "Started" }},
 			}).doRender();
 		},
 
-		finishedGames: function() {
-			new CurrentGameStatesView({ 
+		myFinished: function() {
+			new MyGameStatesView({ 
 				el: $('#content'),
 				filter_state: {{.GameState "Ended" }},
 			}).doRender();
 		},
 
-		formingGames: function() {
-			new CurrentGameStatesView({ 
+		myForming: function() {
+			new MyGameStatesView({ 
 				el: $('#content'),
 				filter_state: {{.GameState "Created" }},
 			}).doRender();
 		},
 
-		openGames: function() {
-			new OpenGameStatesView({ 
+		open: function() {
+			new OthersGameStatesView({ 
 				el: $('#content'),
+				path: 'open',
+			}).doRender();
+		},
+
+		closed: function() {
+			new OthersGameStatesView({ 
+				el: $('#content'),
+				path: 'closed',
+			}).doRender();
+		},
+
+		finished: function() {
+			new OthersGameStatesView({ 
+				el: $('#content'),
+				path: 'finished',
 			}).doRender();
 		},
 	});

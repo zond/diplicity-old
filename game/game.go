@@ -21,10 +21,42 @@ func init() {
 
 type Minutes int
 
+type Games []*Game
+
+func (self Games) SortAndLimit(f func(a, b *Game) bool, limit int) Games {
+	sorted := SortedGames{
+		Games:    self,
+		LessFunc: f,
+	}
+	sort.Sort(sorted)
+	if len(sorted.Games) > limit {
+		return sorted.Games[:limit]
+	}
+	return sorted.Games
+}
+
+type SortedGames struct {
+	Games    []*Game
+	LessFunc func(a, b *Game) bool
+}
+
+func (self SortedGames) Len() int {
+	return len(self.Games)
+}
+
+func (self SortedGames) Less(i, j int) bool {
+	return self.LessFunc(self.Games[i], self.Games[j])
+}
+
+func (self SortedGames) Swap(i, j int) {
+	self.Games[j], self.Games[i] = self.Games[i], self.Games[j]
+}
+
 type Game struct {
 	Id kol.Id
 
 	Closed             bool `kol:"index"`
+	Private            bool `kol:"index"`
 	State              common.GameState
 	Variant            string
 	AllocationMethod   string
@@ -35,7 +67,6 @@ type Game struct {
 	MinimumRanking     float64
 	MaximumRanking     float64
 	MinimumReliability float64
-	Private            bool `kol:"index"`
 
 	Deadlines map[dip.PhaseType]Minutes
 
