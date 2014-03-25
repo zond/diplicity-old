@@ -139,7 +139,7 @@ func main() {
 	email := flag.String("email", "", "The email to fake authenticating as. Mandatory unless url is provided.")
 	secret := flag.String("secret", common.DefaultSecret, "The token secret of the server.")
 	join := flag.String("join", "", "A game to join as the provided email.")
-	url := flag.String("url", "", "A url to fetch authenticated as Admin.")
+	path := flag.String("path", "", "A path to fetch from the host authenticated as Admin.")
 	commit := flag.String("commit", "", "A game to commit the latest phase as the provided email.")
 	commitAll := flag.String("commit_all", "", "A game to commit the latest phase as all members.")
 	joinX := flag.Int("join_x", 0, "A number of members to join automatically to the game defined by -join.")
@@ -152,8 +152,8 @@ func main() {
 		secret: *secret,
 	}
 
-	if *url != "" {
-		bod, err := cli.get(*url)
+	if *path != "" {
+		bod, err := cli.get(*path)
 		if err != nil {
 			panic(err)
 		}
