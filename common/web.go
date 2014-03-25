@@ -2,6 +2,7 @@ package common
 
 import (
 	"bytes"
+	"compress/gzip"
 	"fmt"
 	"io"
 	"log"
@@ -206,27 +207,35 @@ func (self *Web) AdminHandle(r *mux.Route, f func(c *HTTPContext) error) {
 
 func (self *Web) Handle(r *mux.Route, f func(c *HTTPContext) error) {
 	r.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		lw := &loggingResponseWriter{
+		rw := &responseWriter{
 			ResponseWriter: w,
 			request:        r,
 			start:          time.Now(),
 			status:         200,
 			web:            self,
 		}
+		for _, encoding := range strings.Split(r.Header.Get("Accept-Encoding"), ",") {
+			if strings.TrimSpace(encoding) == "gzip" {
+				rw.gzipWriter = gzip.NewWriter(rw.ResponseWriter)
+				rw.ResponseWriter.Header().Set("Content-Encoding", "gzip")
+				defer rw.Close()
+				break
+			}
+		}
 		var i int64
 		defer func() {
 			atomic.StoreInt64(&i, 1)
-			lw.log(recover())
+			rw.log(recover())
 		}()
 		go func() {
 			time.Sleep(time.Second)
 			if atomic.CompareAndSwapInt64(&i, 0, 1) {
-				lw.inc()
+				rw.inc()
 			}
 		}()
-		if err := f(self.GetContext(w, r)); err != nil {
-			lw.WriteHeader(500)
-			fmt.Fprintln(lw, err)
+		if err := f(self.GetContext(rw, r)); err != nil {
+			rw.WriteHeader(500)
+			fmt.Fprintln(rw, err)
 			self.Errorf("%v", err)
 		}
 		return
