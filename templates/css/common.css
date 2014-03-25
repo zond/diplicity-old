@@ -1,6 +1,12 @@
-.commit-button {
+.game-controls-right .btn {
 	position: relative;
 	z-index: 100;
+}
+.game-controls form {
+	margin-bottom: 0px;
+}
+.game-controls pre {
+	margin: 0px;
 }
 .unseen-messages {
 	position: absolute;
