@@ -2,8 +2,6 @@ window.GameControlsView = BaseView.extend({
 
   template: _.template($('#game_controls_underscore').html()),
 
-	className: "panel panel-default",
-
 	events: {
     "click .view-chat": "viewChat",
     "click .view-orders": "viewOrders",

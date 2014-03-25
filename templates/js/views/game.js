@@ -12,32 +12,22 @@ window.GameView = BaseView.extend({
 
 	initialize: function(options) {
 	  var that = this;
+		that.chatParticipants = options.chatParticipants;
 		that.listenTo(that.model, 'change', that.update);
 		that.listenTo(window.session.user, 'change', that.doRender);
-		that.stateView = new GameStateView({ 
-			parentId: 'current-game',
-			play_state: true,
-			editable: false,
-			model: that.model,
-		});
 		that.chatMessages = new ChatMessages([], { url: '/games/' + that.model.get('Id') + '/messages' });
 		that.fetch(that.chatMessages);
 		that.lastPhaseOrdinal = 0;
 		if (that.model.get('Phase') != null) {
 		  that.lastPhaseOrdinal = that.model.get('Phase').Ordinal;
 		}
-		that.controlsView = new GameControlsView({
-		  parentId: 'current-game',
-			model: that.model,
-			chatMessages: that.chatMessages,
-			chatParticipants: options.chatParticipants,
-		}).doRender();
 		that.fetch(that.model);
 		that.decision = null;
 		that.decisionFor = null;
 		that.decisionCleaners = null;
 		that.map = null;
 		that.possibleSources = null;
+		that.renderedChildren = false;
 	},
 
 	decide: function(raw) {
@@ -212,9 +202,22 @@ window.GameView = BaseView.extend({
 				that.possibleSources = null;
 			}
 			if (that.model.get('Members') != null) {
-				if (that.$('#current-game').children().length == 0) {
-					that.$('#current-game').append(that.stateView.el);
-					that.$('#current-game').append(that.controlsView.el);
+			  if (!that.renderedChildren) {
+					that.stateView = new GameStateView({ 
+						parentId: 'current-game',
+						play_state: true,
+						editable: false,
+						model: that.model,
+						el: that.$('.game-state-container'),
+					}).doRender();
+					that.controlsView = new GameControlsView({
+						parentId: 'current-game',
+						model: that.model,
+						chatMessages: that.chatMessages,
+						chatParticipants: that.chatParticipants,
+						el: that.$('.game-controls-container'),
+					}).doRender();
+					that.renderedChildren = true;
 				}
 				if (that.model.get('Phase') != null) {
 					var me = that.model.me();
