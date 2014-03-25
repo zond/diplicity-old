@@ -179,6 +179,7 @@ window.GameView = BaseView.extend({
 		var variant = that.model.get('Variant');
 
 		that.map.copySVG(variant + 'Map');
+		panZoom('.map');
 		for (var prov in phase.Units) {
 			var unit = phase.Units[prov];
 			that.map.addUnit(variant + 'Unit' + unit.Type, prov, variantColor(variant, unit.Nation));
@@ -231,6 +232,7 @@ window.GameView = BaseView.extend({
 				} else {
 					var variant = that.model.get('Variant');
 					that.map.copySVG(variant + 'Map');
+					panZoom('.map');
 				}
 			}
 			resizeMap();
@@ -243,7 +245,6 @@ window.GameView = BaseView.extend({
 		that.$el.html(that.template({}));
 		that.map = dippyMap(that.$('.map'));
 		that.update();
-		panZoom('.map');
 		return that;
 	},
 
