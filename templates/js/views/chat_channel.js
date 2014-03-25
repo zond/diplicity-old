@@ -35,12 +35,14 @@ window.ChatChannelView = BaseView.extend({
 
 	updateUnseen: function(ev) {
 	  var that = this;
-	  var unseen = this.model.get('UnseenMessages')[this.name];
-		if (unseen > 0) {
-			that.$('.chat-channel-title-container .unseen-messages').text(unseen);
-			that.$('.chat-channel-title-container .unseen-messages').show();
-		} else {
-			that.$('.chat-channel-title-container .unseen-messages').hide();
+		if (that.model.get('UnseenMessages') != null) {
+			var unseen = that.model.get('UnseenMessages')[that.name];
+			if (unseen > 0) {
+				that.$('.chat-channel-title-container .unseen-messages').text(unseen);
+				that.$('.chat-channel-title-container .unseen-messages').show();
+			} else {
+				that.$('.chat-channel-title-container .unseen-messages').hide();
+			}
 		}
 	},
 
