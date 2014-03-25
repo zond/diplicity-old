@@ -69,6 +69,10 @@ var en = map[string]string{
 	"1 week":            "1 week",
 	"10 days":           "10 days",
 	"2 weeks":           "2 weeks",
+	"{0}d":              "{0}d",
+	"{0}h":              "{0}h",
+	"{0}m":              "{0}m",
+	"{0}s":              "{0}s",
 	"Diplicity Welcome": "Welcome to Diplicity! <br /> What would you like to do?",
 
 	"Log in to see your games": "Log in to see your games",

@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"sort"
+	"time"
 	"code.google.com/p/go.net/websocket"
 
 	"github.com/zond/diplicity/common"
@@ -21,6 +22,7 @@ type GameState struct {
 	*Game
 	Members        []MemberState
 	UnseenMessages map[string]int
+	TimeLeft       time.Duration
 	Phase          *Phase
 }
 

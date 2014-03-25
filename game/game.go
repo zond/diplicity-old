@@ -307,10 +307,19 @@ func (self *Game) ToState(d *kol.DB, members Members, member *Member) (result Ga
 			return
 		}
 	}
+	var timeLeft time.Duration
+	if phase != nil {
+		timeLeft, err = epoch.Get(d)
+		if err != nil {
+			return
+		}
+		timeLeft = phase.Deadline - timeLeft
+	}
 	result = GameState{
 		Game:           self,
 		UnseenMessages: unseen,
 		Members:        memberStates,
+		TimeLeft:       timeLeft,
 		Phase:          phase.redact(member),
 	}
 	return
