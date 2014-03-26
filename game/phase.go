@@ -192,16 +192,40 @@ func (self *Phase) State() (result *state.State, err error) {
 	if err != nil {
 		return
 	}
+	units := map[dip.Province]dip.Unit{}
+	for prov, unit := range self.Units {
+		units[prov] = unit
+	}
+	orders := map[dip.Nation]map[dip.Province][]string{}
+	for nat, ord := range self.Orders {
+		orders[nat] = ord
+	}
+	supplyCenters := map[dip.Province]dip.Nation{}
+	for prov, nat := range self.SupplyCenters {
+		supplyCenters[prov] = nat
+	}
+	dislodgeds := map[dip.Province]dip.Unit{}
+	for prov, unit := range self.Dislodgeds {
+		dislodgeds[prov] = unit
+	}
+	dislodgers := map[dip.Province]dip.Province{}
+	for k, v := range self.Dislodgers {
+		dislodgers[k] = v
+	}
+	bounces := map[dip.Province]map[dip.Province]bool{}
+	for prov, b := range self.Bounces {
+		bounces[prov] = b
+	}
 	result = classical.Blank(classical.Phase(
 		self.Year,
 		self.Season,
 		self.Type,
 	)).Load(
-		self.Units,
-		self.SupplyCenters,
-		self.Dislodgeds,
-		self.Dislodgers,
-		self.Bounces,
+		units,
+		supplyCenters,
+		dislodgeds,
+		dislodgers,
+		bounces,
 		parsedOrders,
 	)
 	return

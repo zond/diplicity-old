@@ -354,7 +354,7 @@ func (self *Game) toStateWithPhase(d *kol.DB, members Members, member *Member, p
 	if member != nil {
 		email = string(member.UserId)
 	}
-	memberStates, err := members.ToStates(d, self, email)
+	memberStates, err := members.ToStates(d, self, email, false)
 	if err != nil {
 		return
 	}

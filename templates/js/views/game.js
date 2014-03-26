@@ -12,8 +12,9 @@ window.GameView = BaseView.extend({
 
 	initialize: function(options) {
 	  var that = this;
+		that.originalModel = that.model;
 		that.chatParticipants = options.chatParticipants;
-		that.listenTo(that.model, 'change', that.update);
+		that.sub();
 		that.listenTo(window.session.user, 'change', that.doRender);
 		that.chatMessages = new ChatMessages([], { url: '/games/' + that.model.get('Id') + '/messages' });
 		that.fetch(that.chatMessages);
@@ -28,6 +29,55 @@ window.GameView = BaseView.extend({
 		that.map = null;
 		that.possibleSources = null;
 		that.renderedChildren = false;
+	},
+
+	phaseForward: function(ev) {
+	  ev.preventDefault();
+		ev.stopPropagation();
+		this.unsub();
+		this.model = new GameState({
+			Id: this.originalModel.get('Id'),
+		}, {
+		  url: '/games/' + this.originalModel.get('Id') + '/' + (this.lastPhaseOrdinal + 1),
+		});
+		this.sub();
+	},
+
+	unsub: function() {
+    if (this.model != null) {
+		  if (this.model != this.originalModel) {
+				this.model.close();
+			}
+			this.stopListening(this.model);
+		}
+	},
+
+	sub: function() {
+		this.listenTo(this.model, 'change', this.update);
+		this.listenTo(this.model, 'reset', this.update);
+	  if (this.model != this.originalModel) {
+		  this.model.fetch();
+		}
+	},
+
+	lastPhase: function(ev) {
+	  ev.preventDefault();
+		ev.stopPropagation();
+		this.unsub();
+		this.model = this.originalModel;
+		this.sub();
+	},
+
+	phaseBack: function(ev) {
+	  ev.preventDefault();
+		ev.stopPropagation();
+		this.unsub();
+		this.model = new GameState({
+			Id: this.originalModel.get('Id'),
+		}, {
+		  url: '/games/' + this.originalModel.get('Id') + '/' + (this.lastPhaseOrdinal - 1),
+		});
+		this.sub();
 	},
 
 	decide: function(raw) {
@@ -216,18 +266,21 @@ window.GameView = BaseView.extend({
 						chatMessages: that.chatMessages,
 						chatParticipants: that.chatParticipants,
 						el: that.$('.game-controls-container'),
+						gameView: that,
 					}).doRender();
 					that.renderedChildren = true;
 				}
 				if (that.model.get('Phase') != null) {
-					var me = that.model.me();
-					if (me != null && that.possibleSources == null) {
-						RPC('GetPossibleSources', {
-							GameId: that.model.get('Id'),
-						}, function(data) {
-							that.possibleSources = data;
-							that.addClickableProvinces();
-						});
+				  if (that.model.get('Phase').Ordinal == that.model.get('Phases')) {
+						var me = that.model.me();
+						if (me != null && that.possibleSources == null) {
+							RPC('GetPossibleSources', {
+								GameId: that.model.get('Id'),
+							}, function(data) {
+								that.possibleSources = data;
+								that.addClickableProvinces();
+							});
+						}
 					}
 					if (that.$('.map').length > 0) {
 						that.renderMap();

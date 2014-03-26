@@ -38,6 +38,9 @@ func (self *cli) token(email string) (result string, err error) {
 
 func (self *cli) connect(email string) (ws *websocket.Conn, receiver chan gosubs.Message, err error) {
 	token, err := self.token(email)
+	if err != nil {
+		return
+	}
 	if ws, err = websocket.Dial(fmt.Sprintf("ws://%v:%v/ws?token=%v", self.host, self.port, token), "tcp", "http://localhost/"); err != nil {
 		return
 	}

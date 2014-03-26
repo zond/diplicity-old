@@ -57,7 +57,7 @@ func AdminGetGame(c *common.HTTPContext) (err error) {
 	if err != nil {
 		return
 	}
-	memberStates, err := members.ToStates(c.DB(), g, "")
+	memberStates, err := members.ToStates(c.DB(), g, "", true)
 	if err != nil {
 		return
 	}

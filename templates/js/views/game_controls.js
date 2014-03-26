@@ -15,60 +15,28 @@ window.GameControlsView = BaseView.extend({
 	},
 
 	initialize: function(options) {
-		this.originalModel = this.model;
+	  this.gameView = options.gameView;
 	  this.chatParticipants = options.chatParticipants;
 		this.parentId = options.parentId;
 		this.chatMessages = options.chatMessages;
 		_.bindAll(this, 'update');
 		this.listenTo(this.chatMessages, 'add', this.update);
 		this.listenTo(this.chatMessages, 'reset', this.update);
-		this.sub();
+		this.listenTo(this.model, 'change', this.update);
+		this.listenTo(this.model, 'reset', this.update);
 		this.timeLeftInterval = null;
 	},
 
-	phaseForward: function(ev) {
-	  ev.preventDefault();
-		ev.stopPropagation();
-		this.unsub();
-		this.model = new GameState({
-			Id: this.originalModel.get('Id'),
-		});
-		this.sub();
-	},
-
-	unsub: function() {
-    if (this.model != null) {
-		  if (this.model != this.originalModel) {
-				this.model.close();
-			}
-			this.stopListening(this.model);
-		}
-	},
-
-	sub: function() {
-	  if (this.model != this.originalModel) {
-		  this.model.fetch();
-		}
-		this.listenTo(this.model, 'change', this.update);
-		this.listenTo(this.model, 'reset', this.update);
-	},
-
 	lastPhase: function(ev) {
-	  ev.preventDefault();
-		ev.stopPropagation();
-		this.unsub();
-		this.model = this.originalModel;
-		this.sub();
+	  this.gameView.lastPhase(ev);
+	},
+
+	phaseForward: function(ev) {
+	  this.gameView.phaseForward(ev);
 	},
 
 	phaseBack: function(ev) {
-	  ev.preventDefault();
-		ev.stopPropagation();
-		this.unsub();
-		this.model = new GameState({
-			Id: this.originalModel.get('Id'),
-		});
-		this.sub();
+	  this.gameView.phaseBack(ev);
 	},
 
 	hideControls: function(ev) {
