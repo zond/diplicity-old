@@ -34,13 +34,40 @@ window.GameView = BaseView.extend({
 	phaseForward: function(ev) {
 	  ev.preventDefault();
 		ev.stopPropagation();
-		this.unsub();
-		this.model = new GameState({
-			Id: this.originalModel.get('Id'),
-		}, {
-		  url: '/games/' + this.originalModel.get('Id') + '/' + (this.lastPhaseOrdinal + 1),
-		});
-		this.sub();
+		if (this.lastPhaseOrdinal < this.model.get('Phases')) {
+			this.unsub();
+			this.model = new GameState({
+				Id: this.originalModel.get('Id'),
+			}, {
+				url: '/games/' + this.originalModel.get('Id') + '/' + (this.lastPhaseOrdinal + 1),
+			});
+			this.sub();
+		}
+	},
+
+	lastPhase: function(ev) {
+	  ev.preventDefault();
+		ev.stopPropagation();
+		if (this.lastPhaseOrdinal != this.model.get('Phases')) {
+			this.unsub();
+			this.model = this.originalModel;
+			this.sub();
+			this.model.trigger('reset');
+		}
+	},
+
+	phaseBack: function(ev) {
+	  ev.preventDefault();
+		ev.stopPropagation();
+		if (this.lastPhaseOrdinal > 0) {
+			this.unsub();
+			this.model = new GameState({
+				Id: this.originalModel.get('Id'),
+			}, {
+				url: '/games/' + this.originalModel.get('Id') + '/' + (this.lastPhaseOrdinal - 1),
+			});
+			this.sub();
+		}
 	},
 
 	unsub: function() {
@@ -58,26 +85,6 @@ window.GameView = BaseView.extend({
 	  if (this.model != this.originalModel) {
 		  this.model.fetch();
 		}
-	},
-
-	lastPhase: function(ev) {
-	  ev.preventDefault();
-		ev.stopPropagation();
-		this.unsub();
-		this.model = this.originalModel;
-		this.sub();
-	},
-
-	phaseBack: function(ev) {
-	  ev.preventDefault();
-		ev.stopPropagation();
-		this.unsub();
-		this.model = new GameState({
-			Id: this.originalModel.get('Id'),
-		}, {
-		  url: '/games/' + this.originalModel.get('Id') + '/' + (this.lastPhaseOrdinal - 1),
-		});
-		this.sub();
 	},
 
 	decide: function(raw) {
@@ -247,10 +254,6 @@ window.GameView = BaseView.extend({
 	update: function() {
 	  var that = this;
 		if (that.map != null) {
-			if (that.model.get('Phase') != null && that.model.get('Phase').Ordinal != that.lastPhaseOrdinal) {
-				that.lastPhaseOrdinal = that.model.get('Phase').Ordinal;
-				that.possibleSources = null;
-			}
 			if (that.model.get('Members') != null) {
 			  if (!that.renderedChildren) {
 					that.stateView = new GameStateView({ 
@@ -271,6 +274,20 @@ window.GameView = BaseView.extend({
 					that.renderedChildren = true;
 				}
 				if (that.model.get('Phase') != null) {
+					if (that.model.get('Phase').Ordinal != that.lastPhaseOrdinal) {
+						that.lastPhaseOrdinal = that.model.get('Phase').Ordinal;
+						that.possibleSources = null;
+					}
+					if (that.model.get('Phase').Ordinal < that.model.get('Phases')) {
+					  that.controlsView.$('.later-phase').removeAttr('disabled');
+					} else {
+					  that.controlsView.$('.later-phase').attr('disabled', 'disabled');
+					}
+					if (that.model.get('Phase').Ordinal > 0) {
+					  that.controlsView.$('.previous-phase').removeAttr('disabled');
+					} else {
+					  that.controlsView.$('.previous-phase').attr('disabled', 'disabled');
+					}
 				  if (that.model.get('Phase').Ordinal == that.model.get('Phases')) {
 						var me = that.model.me();
 						if (me != null && that.possibleSources == null) {

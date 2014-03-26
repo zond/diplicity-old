@@ -1,3 +1,15 @@
+.commit-button {
+	visibility: hidden;
+}
+.view-orders {
+	visibility: hidden;
+}
+.view-results {
+	visibility: hidden;
+}
+.phase-step {
+	visibility: hidden;
+}
 .game-controls-right .btn {
 	position: relative;
 	z-index: 100;

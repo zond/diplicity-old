@@ -149,6 +149,7 @@ window.GameControlsView = BaseView.extend({
 			}
 		}
 		if (that.model.get('Phase') != null) {
+			that.$('.phase-step').css('visibility', 'visible');
 			that.updateTimeLeft();
 		  if (that.timeLeftInterval != null) {
 			  window.clearInterval(that.timeLeftInterval);
@@ -173,6 +174,7 @@ window.GameControlsView = BaseView.extend({
 			}
 		} else {
 			that.$('.commit-button').css('visibility', 'hidden');
+			that.$('.phase-step').css('visibility', 'hidden');
 			that.$('.view-orders').css('visibility', 'hidden');
 			that.$('.view-results').css('visibility', 'hidden');
 		}

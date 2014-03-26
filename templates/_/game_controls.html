@@ -3,13 +3,13 @@
 		<h4 class="panel-title">
 			<div class="game-controls-right">
 				<span class="time-left"></span>
-				<a class="btn btn-primary btn-sm previous-phase" title="{{.I "Back" }}" href="#">
+				<a class="btn btn-primary btn-sm phase-step previous-phase" disabled="disabled" title="{{.I "Back" }}" href="#">
 					<span class="glyphicon glyphicon-step-backward"></span>
 				</a>
-				<a class="btn btn-primary btn-sm next-phase" title="{{.I "Forward" }}" href="#">
+				<a class="btn btn-primary btn-sm phase-step later-phase next-phase" disabled="disabled" title="{{.I "Forward" }}" href="#">
 					<span class="glyphicon glyphicon-step-forward"></span>
 				</a>
-				<a class="btn btn-primary btn-sm last-phase" title="{{.I "Last" }}" href="#">
+				<a class="btn btn-primary btn-sm phase-step later-phase last-phase" disabled="disabled" title="{{.I "Last" }}" href="#">
 					<span class="glyphicon glyphicon-fast-forward"></span>
 				</a>
 				<a class="btn btn-primary btn-sm commit-phase commit-button" title="{{.I "Commit" }}" href="#">
