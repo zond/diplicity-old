@@ -79,9 +79,9 @@ func NewWeb(secret, env, db string) (self *Web, err error) {
 			return
 		}
 		self.logLevel = Trace
-		self.router.DevMode = true
 	} else {
 		self.logLevel = Debug
+		self.router.DevMode = true
 	}
 	self.router.LogLevel = self.logLevel
 	if self.svgTemplates, err = templar.GetMatchingTemplates(env == Development, "svgTemplates", "^templates/svg/[^/]*\\.svg$"); err != nil {
