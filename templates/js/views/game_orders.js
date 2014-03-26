@@ -3,53 +3,30 @@ window.GameOrdersView = BaseView.extend({
   template: _.template($('#game_orders_underscore').html()),
 
 	initialize: function() {
-	  this.listenTo(this.model, 'change', this.render);
+	  this.reloadModel(this.model);
 	},
 
-	shorten: function(part) {
-		if (part == "Move") {
-			return "M";
-		} else if (part == "Hold") {
-			return "H";
-		} else if (part == "Support") {
-			return "S";
-		} else if (part == "Convoy") {
-			return "C";
-		} else if (part == "Army") {
-			return "A";
-		} else if (part == "Fleet") {
-			return "F";
-		} else {
-			return part;
-		}
-	},
-
-	showOrder: function(nation, source) {
-	  var that = this;
-
-	  var unit = that.model.get('Phase').Units[source];
-	  var order = _.collect(that.model.get('Phase').Orders[nation][source], that.shorten);
-
-    if (unit == null) {
-			return nation + ': ' + source + ' ' + order.join(' ');
-		} else {
-		  return nation + ': ' + that.shorten(unit.Type) + ' ' + source + ' ' + order.join(' ');
-		}
+	reloadModel: function(model) {
+	  this.stopListening();
+		this.model = model;
+		this.listenTo(this.model, 'change', this.doRender);
+		this.listenTo(this.model, 'reset', this.doRender);
+		this.doRender();
 	},
 
   render: function() {
 	  var that = this;
     that.$el.html(that.template({
 		}));
-		var me = that.model.me();
-		if (me != null) {
-		  if (that.model.get('Phase') != null) {
-				_.each(that.model.get('Phase').Orders, function(orders, nation) {
-					_.each(orders, function(order, source) {
-						that.$('.orders').append(that.showOrder(nation, source, order) + '\n');
-					});
+		if (that.model.get('Phase') != null) {
+		  var lines = [];
+			_.each(that.model.get('Phase').Orders, function(orders, nation) {
+				_.each(orders, function(order, source) {
+					lines.push(that.model.showOrder(source));
 				});
-			}
+			});
+			lines.sort();
+			that.$('.orders').text(lines.join('\n'));
 		}
 		return that;
 	},

@@ -187,5 +187,47 @@ window.GameState = Backbone.Model.extend({
 		});
 		return info.join(", ");
 	},
+
+	shorten: function(part) {
+		if (part == "Move") {
+			return "M";
+		} else if (part == "Hold") {
+			return "H";
+		} else if (part == "Support") {
+			return "S";
+		} else if (part == "Convoy") {
+			return "C";
+		} else if (part == "Army") {
+			return "A";
+		} else if (part == "Fleet") {
+			return "F";
+		} else {
+			return part;
+		}
+	},
+
+	showOrder: function(source) {
+	  var that = this;
+
+	  var unit = that.get('Phase').Units[source];
+		var nation = null;
+		var order = null;
+		_.each(that.get('Phase').Orders, function(orders, n) {
+		  _.each(orders, function(o, s) {
+			  if (source == s) {
+				  nation = n;
+					order = o;
+				}
+			});
+		});
+
+    if (unit == null) {
+			return nation + ': ' + source + ' ' + _.map(order, that.shorten).join(' ');
+		} else {
+		  return nation + ': ' + that.shorten(unit.Type) + ' ' + source + ' ' + _.map(order, that.shorten).join(' ');
+		}
+	},
+
+
 });
 

@@ -180,6 +180,11 @@ window.GameControlsView = BaseView.extend({
 		}
 	},
 
+	reloadOrdersAndResults: function(model) {
+		this.gameOrdersView.reloadModel(model);
+		this.gameResultsView.reloadModel(model);
+	},
+
   render: function() {
 	  var that = this;
 		that.$el.html(that.template({
@@ -194,11 +199,12 @@ window.GameControlsView = BaseView.extend({
 		});
 		that.gameResultsView = new GameResultsView({
 			el: that.$('.game-results-container'),
+			model: that.model,
 		});
 		that.gameOrdersView = new GameOrdersView({
 			el: that.$('.game-orders-container'),
-		  model: that.model,
+			model: that.model,
 		});
-    return that;
+		return that;
 	},
 });
