@@ -118,7 +118,7 @@ func (self *Message) Created(d *kol.DB) {
 	d.EmitUpdate(&g)
 }
 
-func (self *Message) EmailTo(c common.SkinnyContext, game *Game, sender *Member, senderUser *user.User, recip *Member, recipUser *user.User, subject string) {
+func (self *Message) EmailTo(c common.SkinnyContext, game *Game, sender *Member, senderUser *user.User, recip *Member, recipUser *user.User, subject, recipName string) {
 	mailTag := &MailTag{
 		M: self.Id,
 		R: recip.Id,
@@ -151,13 +151,13 @@ func (self *Message) EmailTo(c common.SkinnyContext, game *Game, sender *Member,
 	}
 	senderName := sender.ShortName(game, senderUser)
 	from := fmt.Sprintf("%v <%v+%v@%v>", senderName, parts[0], encodedMailTag, parts[1])
-	to := fmt.Sprintf("%v <%v>", recip.Nation, recipUser.Email)
+	to := fmt.Sprintf("%v <%v>", recipName, recipUser.Email)
 	memberIds := []string{}
 	for memberId, _ := range self.RecipientIds {
 		memberIds = append(memberIds, memberId)
 	}
 	sort.Sort(sort.StringSlice(memberIds))
-	contextLink, err := recipUser.I("To see this message in context: http://%v/games/%v/messages/%v", recipUser.DiplicityHost, self.GameId, strings.Join(memberIds, "-"))
+	contextLink, err := recipUser.I("To see this message in context: http://%v/games/%v/messages/%v", recipUser.DiplicityHost, self.GameId, self.ChannelId)
 	if err != nil {
 		c.Errorf("Failed translating context link: %v", err)
 		return
@@ -311,6 +311,18 @@ func (self *Message) Send(c common.SkinnyContext, game *Game, sender *Member) (e
 		return
 	}
 
+	recipNations := sort.StringSlice{}
+	for memberId, _ := range self.RecipientIds {
+		for _, member := range members {
+			if memberId == member.Id.String() {
+				if member.Nation != "" {
+					recipNations = append(recipNations, string(member.Nation))
+				}
+			}
+		}
+	}
+	sort.Sort(recipNations)
+	recipName := strings.Join(recipNations, ", ")
 	for memberId, _ := range self.RecipientIds {
 		for _, member := range members {
 			if memberId == member.Id.String() && self.SenderId.String() != memberId {
@@ -324,7 +336,7 @@ func (self *Message) Send(c common.SkinnyContext, game *Game, sender *Member) (e
 					if gameDescription, err = game.Describe(c, user); err != nil {
 						return
 					}
-					go self.EmailTo(c, game, sender, senderUser, &memberCopy, user, gameDescription)
+					go self.EmailTo(c, game, sender, senderUser, &memberCopy, user, gameDescription, recipName)
 				}
 			}
 		}
