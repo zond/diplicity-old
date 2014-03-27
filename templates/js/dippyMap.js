@@ -212,7 +212,7 @@ function dippyMap(container) {
 		  addCross(order[0], color);
 		} else if (order[1] == 'Convoy') {
 			addBox(order[0], 5, color);
-			addArrow([order[3], order[0], order[3]], color);
+			addArrow([order[2], order[0], order[3]], color);
 		} else if (order[1] == 'Support') {
 		  if (order.length == 3) {
 			  addBox(order[0], 3, color);
