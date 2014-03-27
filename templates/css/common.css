@@ -190,10 +190,9 @@ table.chat-messages {
 }
 body {
 	margin-top: 35;
-	font-size: smaller;
 }
 table {
-	font-size: smaller;
+	font-size: small;
 }
 .view-game {
 	float: right;
