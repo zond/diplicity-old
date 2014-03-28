@@ -172,17 +172,17 @@ func (self *Game) resolve(c common.SkinnyContext, phase *Phase) (err error) {
 		}
 		// Commit everyone that doesn't have any orders to give
 		nrCommitted := 0
-		for _, member := range members {
+		for index, _ := range members {
 			opts := dip.Options{}
-			if opts, err = nextPhase.Options(member.Nation); err != nil {
+			if opts, err = nextPhase.Options(members[index].Nation); err != nil {
 				return
 			}
-			member.Options = opts
+			members[index].Options = opts
 			if len(opts) == 0 {
-				member.Committed = true
+				members[index].Committed = true
 				nrCommitted++
 			}
-			if err = c.DB().Set(member); err != nil {
+			if err = c.DB().Set(&members[index]); err != nil {
 				return
 			}
 		}
