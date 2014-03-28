@@ -101,6 +101,7 @@ func main() {
 	}
 
 	// Admin
+	server.AdminHandle(router.Path("/admin/games/{game_id}/rollback/{until}").Methods("POST"), game.AdminRollback)
 	server.AdminHandle(router.Path("/admin/games/{game_id}").Methods("GET"), game.AdminGetGame)
 	server.AdminHandle(router.Path("/admin/users").Methods("POST"), user.AdminCreateUser)
 

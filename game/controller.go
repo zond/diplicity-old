@@ -4,10 +4,14 @@ import (
 	"encoding/base64"
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/zond/diplicity/common"
+	"github.com/zond/diplicity/epoch"
 	"github.com/zond/diplicity/user"
+	dip "github.com/zond/godip/common"
 	"github.com/zond/kcwraps/kol"
 )
 
@@ -34,6 +38,61 @@ func UnsubscribeEmails(c *common.HTTPContext) (err error) {
 		fmt.Fprintf(c.Resp(), "%v has successfully been unsubscribed from message emails.", u.Email)
 	case common.UnsubscribePhaseEmail:
 		fmt.Fprintf(c.Resp(), "%v has successfully been unsubscribed from phase emails.", u.Email)
+	}
+	return
+}
+
+func AdminRollback(c *common.HTTPContext) (err error) {
+	gameId, err := base64.URLEncoding.DecodeString(c.Vars()["game_id"])
+	if err != nil {
+		return
+	}
+	epoch, err := epoch.Get(c.DB())
+	if err != nil {
+		return
+	}
+	g := &Game{Id: gameId}
+	if err = c.DB().Get(g); err != nil {
+		return
+	}
+	ordinal, err := strconv.Atoi(c.Vars()["until"])
+	if err != nil {
+		return
+	}
+	members, err := g.Members(c.DB())
+	if err != nil {
+		return
+	}
+	phases, err := g.Phases(c.DB())
+	if err != nil {
+		return
+	}
+	sort.Sort(phases)
+	for index, _ := range phases {
+		phase := &phases[index]
+		if phase.Ordinal == ordinal {
+			phase.Resolutions = map[dip.Province]string{}
+			phase.Resolved = false
+			phase.Deadline = epoch + (time.Minute * time.Duration(g.Deadlines[phase.Type]))
+			for index, _ := range members {
+				opts := dip.Options{}
+				if opts, err = phase.Options(members[index].Nation); err != nil {
+					return
+				}
+				members[index].Options = opts
+				members[index].Committed = false
+				if err = c.DB().Set(&members[index]); err != nil {
+					return
+				}
+			}
+			if err = c.DB().Set(phase); err != nil {
+				return
+			}
+		} else if phase.Ordinal > ordinal {
+			if err = c.DB().Del(phase); err != nil {
+				return
+			}
+		}
 	}
 	return
 }

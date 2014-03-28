@@ -146,6 +146,8 @@ func main() {
 	commit := flag.String("commit", "", "A game to commit the latest phase as the provided email.")
 	commitAll := flag.String("commit_all", "", "A game to commit the latest phase as all members.")
 	joinX := flag.Int("join_x", 0, "A number of members to join automatically to the game defined by -join.")
+	rollback := flag.String("rollback", "", "A game to rollback.")
+	until := flag.Int("until", 100000, "A phase ordinal to roll back to. This will be the unresolved phase.")
 
 	flag.Parse()
 
@@ -162,9 +164,15 @@ func main() {
 		}
 		io.Copy(os.Stdout, bod)
 	} else {
-		if *join == "" && *commitAll == "" && *commit == "" {
+		if *join == "" && *commitAll == "" && *commit == "" && *rollback == "" {
 			flag.Usage()
 			return
+		}
+
+		if *rollback != "" {
+			if err := cli.post(fmt.Sprintf("/admin/games/%v/rollback/%v", *rollback, *until), map[string]interface{}{}); err != nil {
+				panic(err)
+			}
 		}
 
 		if *join != "" {
