@@ -20,26 +20,6 @@ func ScheduleUnresolvedPhases(c common.SkinnyContext) (err error) {
 		return
 	}
 	for _, phase := range unresolved {
-		g := &Game{Id: phase.GameId}
-		if err = c.DB().Get(g); err != nil {
-			return
-		}
-		members := Members{}
-		if members, err = g.Members(c.DB()); err != nil {
-			return
-		}
-		for index, _ := range members {
-			member := &members[index]
-			opts := dip.Options{}
-			if opts, err = phase.Options(member.Nation); err != nil {
-				return
-			}
-			member.Options = opts
-			if err = c.DB().Set(member); err != nil {
-				return
-			}
-			c.Infof("### created options for %v", member.Nation)
-		}
 		phase.Schedule(c)
 	}
 	return
