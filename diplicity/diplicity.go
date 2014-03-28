@@ -1,21 +1,16 @@
 package main
 
 import (
-	"encoding/base64"
 	"flag"
 	"fmt"
 	"log"
 	"net/http"
-	"os"
-	"runtime/pprof"
 
 	"github.com/gorilla/mux"
 	"github.com/zond/diplicity/common"
 	"github.com/zond/diplicity/epoch"
 	"github.com/zond/diplicity/game"
 	"github.com/zond/diplicity/user"
-	cla "github.com/zond/godip/classical/common"
-	dip "github.com/zond/godip/common"
 	"github.com/zond/wsubs/gosubs"
 	"github.com/zond/ziprot"
 )
@@ -38,7 +33,6 @@ func main() {
 	db := flag.String("db", "diplicity", "The path to the database file to use")
 	appcache := flag.Bool("appcache", true, "Whether to enable appcache")
 	logOutput := flag.String("log", "-", "Where to send the log output")
-	profile := flag.String("profile", "", "Where to store profiling information")
 
 	flag.Parse()
 
@@ -51,39 +45,6 @@ func main() {
 	}
 
 	server, err := common.NewWeb(*secret, *env, *db)
-	if *profile != "" {
-		f, err := os.Create(*profile)
-		if err != nil {
-			panic(err)
-		}
-		base64DecodedId, err := base64.URLEncoding.DecodeString("T2Nnb-by55H0Z0vtLPxhWlDT1BbPLZn4")
-		if err != nil {
-			panic(err)
-		}
-		g := &game.Game{Id: base64DecodedId}
-		if err = server.DB().Get(g); err != nil {
-			panic(err)
-		}
-		_, last, err := g.Phase(server.DB(), 0)
-		if err != nil {
-			panic(err)
-		}
-		sta, err := last.State()
-		if err != nil {
-			panic(err)
-		}
-		ptrs := []*dip.Options{}
-		pprof.StartCPUProfile(f)
-		for i := 0; i < 100; i++ {
-			opts := sta.Phase().Options(sta, cla.Italy)
-			ptrs = append(ptrs, &opts)
-			fmt.Println(len(ptrs))
-		}
-		pprof.StopCPUProfile()
-		f.Close()
-		fmt.Println("created profile")
-		return
-	}
 	if err != nil {
 		panic(err)
 	}
