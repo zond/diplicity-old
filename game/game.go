@@ -109,6 +109,8 @@ func (self *Game) allocate(d *kol.DB, phase *Phase) (err error) {
 		members[index].Options = opts
 		if len(opts) == 0 {
 			members[index].Committed = true
+		} else {
+			members[index].Committed = false
 		}
 		if err = d.Set(&members[index]); err != nil {
 			return
@@ -181,6 +183,8 @@ func (self *Game) resolve(c common.SkinnyContext, phase *Phase) (err error) {
 			if len(opts) == 0 {
 				members[index].Committed = true
 				nrCommitted++
+			} else {
+				members[index].Committed = false
 			}
 			if err = c.DB().Set(&members[index]); err != nil {
 				return
