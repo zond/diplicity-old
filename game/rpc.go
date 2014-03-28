@@ -67,23 +67,27 @@ func setPhaseCommitted(c common.WSContext, commit bool) (err error) {
 		if err != nil {
 			return
 		}
-		member, err := game.Member(c.DB(), c.Principal())
+		members, err := game.Members(c.DB())
 		if err != nil {
 			return
 		}
-		phase.Committed[member.Nation] = commit
+		member := members.Get(c.Principal())
+		if member == nil {
+			err = fmt.Errorf("Not member of game")
+			return
+		}
+		member.Committed = commit
+		if err = c.DB().Set(member); err != nil {
+			return
+		}
 		if !phase.Resolved {
 			count := 0
-			for _, com := range phase.Committed {
-				if com {
+			for _, m := range members {
+				if m.Committed {
 					count++
 				}
 			}
-			variant, found := common.VariantMap[game.Variant]
-			if !found {
-				return fmt.Errorf("Unknown variant %v", game.Variant)
-			}
-			if count == len(variant.Nations) {
+			if count == len(members) {
 				if err = game.resolve(c.Diet(), phase); err != nil {
 					return
 				}

@@ -20,6 +20,26 @@ func ScheduleUnresolvedPhases(c common.SkinnyContext) (err error) {
 		return
 	}
 	for _, phase := range unresolved {
+		g := &Game{Id: phase.GameId}
+		if err = c.DB().Get(g); err != nil {
+			return
+		}
+		members := Members{}
+		if members, err = g.Members(c.DB()); err != nil {
+			return
+		}
+		for index, _ := range members {
+			member := &members[index]
+			opts := dip.Options{}
+			if opts, err = phase.Options(member.Nation); err != nil {
+				return
+			}
+			member.Options = opts
+			if err = c.DB().Set(member); err != nil {
+				return
+			}
+			c.Infof("### created options for %v", member.Nation)
+		}
 		phase.Schedule(c)
 	}
 	return
@@ -42,8 +62,6 @@ type Phase struct {
 	Dislodgers    map[dip.Province]dip.Province
 	Bounces       map[dip.Province]map[dip.Province]bool
 	Resolutions   map[dip.Province]string
-
-	Committed map[dip.Nation]bool
 
 	Deadline time.Duration
 
@@ -163,11 +181,6 @@ func (self *Phase) redact(member *Member) *Phase {
 		return nil
 	}
 	result := *self
-	for nat, _ := range self.Committed {
-		if member == nil || member.Nation != nat {
-			delete(result.Committed, nat)
-		}
-	}
 	if !self.Resolved {
 		for nat, _ := range self.Orders {
 			if member == nil || member.Nation != nat {

@@ -19,6 +19,10 @@ type Member struct {
 	Nation           dip.Nation
 	PreferredNations []dip.Nation
 
+	Options interface{}
+
+	Committed bool
+
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
@@ -111,6 +115,10 @@ func (self *Member) ToState(d *kol.DB, g *Game, email string, isMember bool, isA
 		if isAdmin || (isMe || !secretNickname) {
 			result.User.Nickname = foundUser.Nickname
 		}
+		if isAdmin || isMe {
+			result.Member.Committed = self.Committed
+			result.Member.Options = self.Options
+		}
 	}
 	return
 }
@@ -134,6 +142,16 @@ func (self *Member) Deleted(d *kol.DB) {
 		d.EmitUpdate(&g)
 	} else if err != kol.NotFound {
 		panic(err)
+	}
+}
+
+func (self *Member) Updated(d *kol.DB, old *Member) {
+	if old != self {
+		g := Game{Id: self.GameId}
+		if err := d.Get(&g); err != nil {
+			panic(err)
+		}
+		d.EmitUpdate(&g)
 	}
 }
 

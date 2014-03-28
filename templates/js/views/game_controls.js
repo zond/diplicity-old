@@ -163,7 +163,7 @@ window.GameControlsView = BaseView.extend({
 			var me = that.model.me();
 			if (me != null) {
 				that.$('.commit-button').css('visibility', 'visible');
-				if (that.model.get('Phase').Committed[me.Nation]) {
+				if (me.Committed) {
 					that.$('a.commit-button').removeClass('commit-phase').addClass('uncommit-phase').attr('title', '{{.I "Uncommit" }}');
 					that.$('span.commit-button').removeClass('glyphicon-ok').addClass('glyphicon-remove');
 				} else {

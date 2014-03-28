@@ -80,20 +80,16 @@ func (self *Game) Disallows(u *user.User) bool {
 	return u.Ranking < self.MinimumRanking || u.Ranking > self.MaximumRanking || u.Reliability() < self.MinimumReliability
 }
 
-func (self *Game) allocate(d *kol.DB) error {
+func (self *Game) allocate(d *kol.DB, phase *Phase) (err error) {
 	members, err := self.Members(d)
 	if err != nil {
-		return err
+		return
 	}
 	switch self.AllocationMethod {
 	case common.RandomString:
 		for memberIndex, nationIndex := range rand.Perm(len(members)) {
 			members[memberIndex].Nation = common.VariantMap[self.Variant].Nations[nationIndex]
-			if err := d.Set(&members[memberIndex]); err != nil {
-				return err
-			}
 		}
-		return nil
 	case common.PreferencesString:
 		prefs := make([][]dip.Nation, len(members))
 		for index, member := range members {
@@ -101,13 +97,24 @@ func (self *Game) allocate(d *kol.DB) error {
 		}
 		for index, nation := range optimizePreferences(prefs) {
 			members[index].Nation = nation
-			if err := d.Set(&members[index]); err != nil {
-				return err
-			}
 		}
-		return nil
+	default:
+		return fmt.Errorf("Unknown allocation method %v", self.AllocationMethod)
 	}
-	return fmt.Errorf("Unknown allocation method %v", self.AllocationMethod)
+	for index, _ := range members {
+		opts := dip.Options{}
+		if opts, err = phase.Options(members[index].Nation); err != nil {
+			return
+		}
+		members[index].Options = opts
+		if len(opts) == 0 {
+			members[index].Committed = true
+		}
+		if err = d.Set(&members[index]); err != nil {
+			return
+		}
+	}
+	return
 }
 
 func (self *Game) resolve(c common.SkinnyContext, phase *Phase) (err error) {
@@ -116,10 +123,9 @@ func (self *Game) resolve(c common.SkinnyContext, phase *Phase) (err error) {
 		err = fmt.Errorf("%+v is not started", self)
 		return
 	}
-	// Check that we have a valid variant
-	variant, found := common.VariantMap[self.Variant]
-	if !found {
-		err = fmt.Errorf("Unrecognized variant for %+v", self)
+	// Load our members
+	members, err := self.Members(c.DB())
+	if err != nil {
 		return
 	}
 	// Load the godip state for the phase
@@ -132,7 +138,6 @@ func (self *Game) resolve(c common.SkinnyContext, phase *Phase) (err error) {
 	if err != nil {
 		return
 	}
-	options := dip.Options{}
 	// Just to limit runaway resolution to 100 phases.
 	for i := 0; i < 100; i++ {
 		// Resolve the phase!
@@ -145,7 +150,6 @@ func (self *Game) resolve(c common.SkinnyContext, phase *Phase) (err error) {
 		nextPhase := &Phase{
 			GameId:      self.Id,
 			Ordinal:     phase.Ordinal + 1,
-			Committed:   map[dip.Nation]bool{},
 			Orders:      map[dip.Nation]map[dip.Province][]string{},
 			Resolutions: map[dip.Province]string{},
 			Season:      nextDipPhase.Season(),
@@ -167,13 +171,19 @@ func (self *Game) resolve(c common.SkinnyContext, phase *Phase) (err error) {
 			}
 		}
 		// Commit everyone that doesn't have any orders to give
-		for _, nation := range variant.Nations {
-			options, err = nextPhase.Options(nation)
-			if err != nil {
+		nrCommitted := 0
+		for _, member := range members {
+			opts := dip.Options{}
+			if opts, err = nextPhase.Options(member.Nation); err != nil {
 				return
 			}
-			if len(options) == 0 {
-				nextPhase.Committed[nation] = true
+			member.Options = opts
+			if len(opts) == 0 {
+				member.Committed = true
+				nrCommitted++
+			}
+			if err = c.DB().Set(member); err != nil {
+				return
 			}
 		}
 		// Store the new phase
@@ -186,7 +196,7 @@ func (self *Game) resolve(c common.SkinnyContext, phase *Phase) (err error) {
 			return
 		}
 		// If everyone in the new phase isn't commited, schedule an auto resolve and break here.
-		if len(nextPhase.Committed) < len(variant.Nations) {
+		if nrCommitted < len(members) {
 			if err = nextPhase.Schedule(c); err != nil {
 				return
 			}
@@ -233,9 +243,6 @@ func (self *Game) start(c common.SkinnyContext) (err error) {
 	if err = c.DB().Set(self); err != nil {
 		return
 	}
-	if err = self.allocate(c.DB()); err != nil {
-		return
-	}
 	var startState *state.State
 	if self.Variant == common.ClassicalString {
 		startState = classical.Start()
@@ -251,7 +258,6 @@ func (self *Game) start(c common.SkinnyContext) (err error) {
 	phase := &Phase{
 		GameId:      self.Id,
 		Ordinal:     0,
-		Committed:   map[dip.Nation]bool{},
 		Orders:      map[dip.Nation]map[dip.Province][]string{},
 		Resolutions: map[dip.Province]string{},
 		Season:      startPhase.Season(),
@@ -263,6 +269,9 @@ func (self *Game) start(c common.SkinnyContext) (err error) {
 	if err = c.DB().Set(phase); err != nil {
 		return
 	}
+	if err = self.allocate(c.DB(), phase); err != nil {
+		return
+	}
 	if err = phase.Schedule(c); err != nil {
 		return
 	}
@@ -271,10 +280,12 @@ func (self *Game) start(c common.SkinnyContext) (err error) {
 }
 
 func (self *Game) Updated(d *kol.DB, old *Game) {
-	members, err := self.Members(d)
-	if err == nil {
-		for _, member := range members {
-			d.EmitUpdate(&member)
+	if old != self {
+		members, err := self.Members(d)
+		if err == nil {
+			for _, member := range members {
+				d.EmitUpdate(&member)
+			}
 		}
 	}
 }
@@ -322,7 +333,7 @@ func (self *Game) UnseenMessages(d *kol.DB, viewer kol.Id) (result map[string]in
 	return
 }
 
-func (self *Game) ToState(d *kol.DB, members Members, member *Member, withOptions bool) (result GameState, err error) {
+func (self *Game) ToState(d *kol.DB, members Members, member *Member) (result GameState, err error) {
 	_, phase, err := self.Phase(d, 0)
 	if err != nil {
 		return
@@ -331,7 +342,7 @@ func (self *Game) ToState(d *kol.DB, members Members, member *Member, withOption
 	if phase != nil {
 		ordinal = phase.Ordinal
 	}
-	return self.toStateWithPhase(d, members, member, phase.redact(member), ordinal, withOptions)
+	return self.toStateWithPhase(d, members, member, phase.redact(member), ordinal)
 }
 
 func (self *Game) ToStateWithPhaseOrdinal(d *kol.DB, members Members, member *Member, ordinal int) (result GameState, err error) {
@@ -346,10 +357,10 @@ func (self *Game) ToStateWithPhaseOrdinal(d *kol.DB, members Members, member *Me
 	if last == phase {
 		phase = phase.redact(member)
 	}
-	return self.toStateWithPhase(d, members, member, phase, last.Ordinal, false)
+	return self.toStateWithPhase(d, members, member, phase, last.Ordinal)
 }
 
-func (self *Game) toStateWithPhase(d *kol.DB, members Members, member *Member, phase *Phase, phases int, withOptions bool) (result GameState, err error) {
+func (self *Game) toStateWithPhase(d *kol.DB, members Members, member *Member, phase *Phase, phases int) (result GameState, err error) {
 	email := ""
 	if member != nil {
 		email = string(member.UserId)
@@ -380,14 +391,6 @@ func (self *Game) toStateWithPhase(d *kol.DB, members Members, member *Member, p
 		TimeLeft:       timeLeft,
 		Phase:          phase,
 		Phases:         phases,
-	}
-	if member != nil && withOptions {
-		options := dip.Options{}
-		options, err = phase.Options(member.Nation)
-		if err != nil {
-			return
-		}
-		result.Options = &options
 	}
 	return
 }

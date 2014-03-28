@@ -291,7 +291,10 @@ window.GameView = BaseView.extend({
 
 	resetDecision: function() {
 		this.decision = [];
-	  this.decide(this.model.get('Options'));
+		var me = this.model.me();
+		if (me != null) {
+			this.decide(me.Options);
+		}
 	},
 
   render: function() {

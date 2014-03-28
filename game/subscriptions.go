@@ -10,7 +10,6 @@ import (
 
 	"github.com/zond/diplicity/common"
 	"github.com/zond/diplicity/user"
-	dip "github.com/zond/godip/common"
 	"github.com/zond/kcwraps/kol"
 	"github.com/zond/wsubs/gosubs"
 )
@@ -27,7 +26,6 @@ type GameState struct {
 	TimeLeft       time.Duration
 	Phase          *Phase
 	Phases         int
-	Options        *dip.Options
 }
 
 type GameStates []GameState
@@ -73,7 +71,7 @@ func SubscribeMine(c common.WSContext) error {
 				if err != nil {
 					return err
 				}
-				state, err := game.ToState(c.DB(), members, member, false)
+				state, err := game.ToState(c.DB(), members, member)
 				if err != nil {
 					return err
 				}
@@ -104,7 +102,7 @@ func SubscribeGame(c common.WSContext) error {
 		member := members.Get(c.Principal())
 		isMember := member != nil
 		if !game.Private || isMember {
-			state, err := game.ToState(c.DB(), members, member, true)
+			state, err := game.ToState(c.DB(), members, member)
 			if err != nil {
 				return err
 			}
@@ -230,7 +228,7 @@ func subscribeOthers(c common.WSContext, filter kol.QFilter, limiter func(source
 			}
 			isMember = members.Contains(c.Principal())
 			if !isMember {
-				state, err := game.ToState(c.DB(), members, nil, false)
+				state, err := game.ToState(c.DB(), members, nil)
 				if err != nil {
 					return err
 				}
