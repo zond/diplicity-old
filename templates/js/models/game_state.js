@@ -5,6 +5,12 @@ window.GameState = Backbone.Model.extend({
   localStorage: function() {
 	  return this.get('Id') != null;
 	},
+
+	storageFilter: function() {
+	  var filtered = JSON.parse(JSON.stringify(this));
+    delete(filtered.Options);
+		return filtered;
+	},
 	
 	me: function() {
 	  if (window.session.user.get('Email') == null || window.session.user.get('Email') == "") {

@@ -24,10 +24,9 @@ window.GameView = BaseView.extend({
 		}
 		that.fetch(that.model);
 		that.decision = null;
-		that.decisionFor = null;
+		that.lastProvinceClicked = null;
 		that.decisionCleaners = null;
 		that.map = null;
-		that.possibleSources = null;
 		that.renderedChildren = false;
 	},
 
@@ -122,8 +121,8 @@ window.GameView = BaseView.extend({
 					options: dialogOptions,
 					selected: function(alternative) {
 					  if (alternative == '{{.I "Cancel" }}') {
-						  var toCancel = [that.decisionFor];
-              var split = that.decisionFor.split("/");
+						  var toCancel = [that.lastProvinceClicked];
+              var split = that.lastProvinceClicked.split("/");
 							if (split.length == 2) {
 							  toCancel.push(split[0])
 							}
@@ -138,7 +137,7 @@ window.GameView = BaseView.extend({
 									toCancel.pop();
 									if (toCancel.length == 0) {
 										that.decision = null;
-										that.addClickableProvinces();
+										that.resetDecision();
 									}
 								});
 							});
@@ -148,7 +147,7 @@ window.GameView = BaseView.extend({
 						}
 					},
 					cancelled: function() {
-					  that.addClickableProvinces();
+					  that.resetDecision();
 					},
 				}).display();
 			} else if (types[0] == "UnitType") {
@@ -166,13 +165,16 @@ window.GameView = BaseView.extend({
 					  that.decide(raw[alternative].Next);
 					},
 					cancelled: function() {
-					  that.addClickableProvinces();
+					  that.resetDecision();
 					},
 				}).display();
 			} else if (types[0] == "Province") {
 			  _.each(opts, function(prov) {
 					that.decisionCleaners.push(that.map.addClickListener(prov, function(ev) {
-					  that.decision.push(prov);
+					  if (that.decision.length > 0) {
+							that.decision.push(prov);
+						}
+						that.lastProvinceClicked = prov;
 						that.decide(raw[prov].Next);
 					}));
 				});
@@ -182,7 +184,7 @@ window.GameView = BaseView.extend({
 			} else {
 			  logError("Don't know how to handle options of type", types[0]);
 			}
-		} else {
+		} else if (that.decision.length > 0) {
 		  var decision = that.decision;
 			RPC('SetOrder', {
 				GameId: that.model.get('Id'),
@@ -193,7 +195,7 @@ window.GameView = BaseView.extend({
 				}
 			});
 			that.decision = null;
-			that.addClickableProvinces();
+			that.resetDecision();
 		}
 	},
 
@@ -205,24 +207,6 @@ window.GameView = BaseView.extend({
 		that.decisionCleaners = [];
 	},
 	
-	addClickableProvinces: function() {
-	  var that = this;
-		var variant = that.model.get('Variant');
-		that.cleanDecision();
-		_.each(that.possibleSources, function(prov) {
-			that.decisionCleaners.push(that.map.addClickListener(prov, function(ev) {
-				RPC('GetValidOrders', {
-					GameId: that.model.get('Id'),
-					Province: prov,
-				}, function(result) {
-					that.decision = [];
-					that.decisionFor = prov;
-					that.decide(result);
-				});
-			}));
-		});
-	},
-
 	renderMap: function() {
 		var that = this;
 		var phase = that.model.get('Phase');
@@ -250,7 +234,6 @@ window.GameView = BaseView.extend({
 				that.map.colorProvince(prov, variantColor(variant, phase.SupplyCenters[prov]));
 			}
 		});
-		that.addClickableProvinces();
 		that.map.showProvinces();
 	},
 
@@ -279,7 +262,6 @@ window.GameView = BaseView.extend({
 				if (that.model.get('Phase') != null) {
 					if (that.model.get('Phase').Ordinal != that.lastPhaseOrdinal) {
 						that.lastPhaseOrdinal = that.model.get('Phase').Ordinal;
-						that.possibleSources = null;
 					}
 					if (that.model.get('Phase').Ordinal < that.model.get('Phases')) {
 					  that.controlsView.$('.later-phase').removeAttr('disabled');
@@ -291,19 +273,11 @@ window.GameView = BaseView.extend({
 					} else {
 					  that.controlsView.$('.previous-phase').attr('disabled', 'disabled');
 					}
-				  if (that.model.get('Phase').Ordinal == that.model.get('Phases')) {
-						var me = that.model.me();
-						if (me != null && that.possibleSources == null) {
-							RPC('GetPossibleSources', {
-								GameId: that.model.get('Id'),
-							}, function(data) {
-								that.possibleSources = data;
-								that.addClickableProvinces();
-							});
-						}
-					}
 					if (that.$('.map').length > 0) {
 						that.renderMap();
+					}
+				  if (that.model.get('Phase').Ordinal == that.model.get('Phases')) {
+						that.resetDecision();
 					}
 				} else {
 					var variant = that.model.get('Variant');
@@ -313,6 +287,11 @@ window.GameView = BaseView.extend({
 			}
 			resizeMap();
 		}
+	},
+
+	resetDecision: function() {
+		this.decision = [];
+	  this.decide(this.model.get('Options'));
 	},
 
   render: function() {

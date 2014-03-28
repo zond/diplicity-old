@@ -178,12 +178,12 @@ func (self *Phase) redact(member *Member) *Phase {
 	return &result
 }
 
-func (self *Phase) PossibleSources(nation dip.Nation) (result []dip.Province, err error) {
+func (self *Phase) Options(nation dip.Nation) (result dip.Options, err error) {
 	state, err := self.State()
 	if err != nil {
 		return
 	}
-	result = state.Phase().PossibleSources(state, nation)
+	result = state.Phase().Options(state, nation)
 	return
 }
 

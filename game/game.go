@@ -122,7 +122,6 @@ func (self *Game) resolve(c common.SkinnyContext, phase *Phase) (err error) {
 		err = fmt.Errorf("Unrecognized variant for %+v", self)
 		return
 	}
-	var possibleSources []dip.Province
 	// Load the godip state for the phase
 	state, err := phase.State()
 	if err != nil {
@@ -133,6 +132,7 @@ func (self *Game) resolve(c common.SkinnyContext, phase *Phase) (err error) {
 	if err != nil {
 		return
 	}
+	options := dip.Options{}
 	// Just to limit runaway resolution to 100 phases.
 	for i := 0; i < 100; i++ {
 		// Resolve the phase!
@@ -168,11 +168,11 @@ func (self *Game) resolve(c common.SkinnyContext, phase *Phase) (err error) {
 		}
 		// Commit everyone that doesn't have any orders to give
 		for _, nation := range variant.Nations {
-			possibleSources, err = nextPhase.PossibleSources(nation)
+			options, err = nextPhase.Options(nation)
 			if err != nil {
 				return
 			}
-			if len(possibleSources) == 0 {
+			if len(options) == 0 {
 				nextPhase.Committed[nation] = true
 			}
 		}
@@ -322,7 +322,7 @@ func (self *Game) UnseenMessages(d *kol.DB, viewer kol.Id) (result map[string]in
 	return
 }
 
-func (self *Game) ToState(d *kol.DB, members Members, member *Member) (result GameState, err error) {
+func (self *Game) ToState(d *kol.DB, members Members, member *Member, withOptions bool) (result GameState, err error) {
 	_, phase, err := self.Phase(d, 0)
 	if err != nil {
 		return
@@ -331,7 +331,7 @@ func (self *Game) ToState(d *kol.DB, members Members, member *Member) (result Ga
 	if phase != nil {
 		ordinal = phase.Ordinal
 	}
-	return self.toStateWithPhase(d, members, member, phase.redact(member), ordinal)
+	return self.toStateWithPhase(d, members, member, phase.redact(member), ordinal, withOptions)
 }
 
 func (self *Game) ToStateWithPhaseOrdinal(d *kol.DB, members Members, member *Member, ordinal int) (result GameState, err error) {
@@ -346,10 +346,10 @@ func (self *Game) ToStateWithPhaseOrdinal(d *kol.DB, members Members, member *Me
 	if last == phase {
 		phase = phase.redact(member)
 	}
-	return self.toStateWithPhase(d, members, member, phase, last.Ordinal)
+	return self.toStateWithPhase(d, members, member, phase, last.Ordinal, false)
 }
 
-func (self *Game) toStateWithPhase(d *kol.DB, members Members, member *Member, phase *Phase, phases int) (result GameState, err error) {
+func (self *Game) toStateWithPhase(d *kol.DB, members Members, member *Member, phase *Phase, phases int, withOptions bool) (result GameState, err error) {
 	email := ""
 	if member != nil {
 		email = string(member.UserId)
@@ -380,6 +380,14 @@ func (self *Game) toStateWithPhase(d *kol.DB, members Members, member *Member, p
 		TimeLeft:       timeLeft,
 		Phase:          phase,
 		Phases:         phases,
+	}
+	if member != nil && withOptions {
+		options := dip.Options{}
+		options, err = phase.Options(member.Nation)
+		if err != nil {
+			return
+		}
+		result.Options = &options
 	}
 	return
 }
