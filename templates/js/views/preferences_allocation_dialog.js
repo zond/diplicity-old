@@ -50,7 +50,7 @@ window.PreferencesAllocationDialogView = BaseView.extend({
 		update_list = function() {
 			that.cleanChildren(true);
 			_.each(that.nations, function(nation) {
-				that.$('.preferences-list').append(new PreferredNationView({
+				var nationView = new PreferredNationView({
 					nation: nation,
 					action: function() {
 						for (var i = 0; i < that.nations.length; i++) {
@@ -65,7 +65,9 @@ window.PreferencesAllocationDialogView = BaseView.extend({
 						}
 						update_list();
 					},
-				}).doRender().el);
+				}).doRender();
+				that.$('.preferences-list').append(nationView.el);
+				nationView.findParent();
 			});
 		};
 		update_list();

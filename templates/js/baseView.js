@@ -27,18 +27,23 @@ window.BaseView = Backbone.View.extend({
 		});	
 	},
 
+	findParent: function() {
+	  var that = this;
+		that.$el.parents().each(function(x, el) {
+			if (el.CurrentBaseView != null) {
+			  el.CurrentBaseView.addChild(that);
+			}
+		});
+	},
+
 	doRender: function() {
 	  var that = this;
 		if (that.el != null && that.el.CurrentBaseView != null && that.el.CurrentBaseView.cid != that.cid) {
 			that.el.CurrentBaseView.clean();
 		}
-		that.render();
 		that.el.CurrentBaseView = that;
-		that.$el.parents().each(function(x, el) {
-		  if (el.CurrentBaseView != null) {
-			  el.CurrentBaseView.addChild(that);
-			}
-		});
+		that.findParent();
+		that.render();
 		that.fixNavigateLinks();
 		if (that.rendered) {
 		  that.delegateEvents();
