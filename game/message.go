@@ -225,7 +225,7 @@ func IncomingMail(c common.SkinnyContext, msg *enmime.MIMEBody) (err error) {
 						GameId:       game.Id,
 						RecipientIds: parent.RecipientIds,
 					}
-					c.Infof("Mail resulted in %+v from %+v", message, sender)
+					c.Infof("Mail resulted in %+v from %+v", message, sender.Nation)
 					return message.Send(c, game, sender)
 				}
 			}
