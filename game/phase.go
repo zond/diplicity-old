@@ -53,40 +53,53 @@ func (self *Phase) ShortString() string {
 	return fmt.Sprintf("%v %v, %v", self.Season, self.Year, self.Type)
 }
 
-func (self *Phase) Schedule(c common.SkinnyContext) (err error) {
-	if !self.Resolved {
-		var ep time.Duration
-		ep, err = epoch.Get(c.DB())
-		if err != nil {
+func (self *Phase) timeoutResolve(c common.SkinnyContext) (err error) {
+	c.Infof("Auto resolving %v due to timeout", self.GameId)
+	if err = c.Transact(func(c common.SkinnyContext) (err error) {
+		if err = c.DB().Get(self); err != nil {
+			err = fmt.Errorf("While trying to load %+v: %v", self, err)
 			return
+		}
+		if self.Resolved {
+			err = fmt.Errorf("%+v was already resolved", self)
+			return
+		}
+		game := &Game{Id: self.GameId}
+		if err = c.DB().Get(game); err != nil {
+			err = fmt.Errorf("While trying to load %+v's game: %v", self, err)
+			return
+		}
+		return game.resolve(c, self)
+	}); err != nil {
+		return
+	}
+	return
+}
+
+func (self *Phase) Schedule(c common.SkinnyContext) error {
+	if !self.Resolved {
+		ep, err := epoch.Get(c.DB())
+		if err != nil {
+			return err
 		}
 		timeout := self.Deadline - ep
 		c.BetweenTransactions(func(c common.SkinnyContext) {
-			time.AfterFunc(timeout, func() {
-				c.Infof("Auto resolving %v due to timeout", self.GameId)
-				if err := c.Transact(func(c common.SkinnyContext) (err error) {
-					if err = c.DB().Get(self); err != nil {
-						c.Errorf("Failed resolving %v, while trying to load it: %v", err)
-						return
+			if timeout > 0 {
+				time.AfterFunc(timeout, func() {
+					if err := self.timeoutResolve(c); err != nil {
+						c.Errorf("Failed resolving %+v after %v: %v", self, timeout, err)
 					}
-					if self.Resolved {
-						c.Errorf("%v was already resolved, skipping", self.Id)
-						return
-					}
-					game := &Game{Id: self.GameId}
-					if err = c.DB().Get(game); err != nil {
-						c.Errorf("Failed resolving %v, while trying to load the game: %v", err)
-						return
-					}
-					return game.resolve(c, self)
-				}); err != nil {
-					c.Errorf("Failed resolving %v, while trying to commit the transaction: %v", self.Id, err)
+				})
+				c.Infof("Scheduled resolution of %v in %v at %v", self.GameId, timeout, time.Now().Add(timeout))
+			} else {
+				c.Infof("Resolving %+v immediately, it is %v overdue", self, -timeout)
+				if err := self.timeoutResolve(c); err != nil {
+					c.Errorf("Failed resolving %+v immediately: %v", self, err)
 				}
-			})
-			c.Infof("Scheduled resolution of %v at %v", self.GameId, time.Now().Add(timeout))
+			}
 		})
 	}
-	return
+	return nil
 }
 
 func (self *Phase) SendScheduleEmails(c common.SkinnyContext, game *Game) {
