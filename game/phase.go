@@ -66,22 +66,24 @@ func (self *Phase) Schedule(c common.SkinnyContext) (err error) {
 				c.Infof("Auto resolving %v due to timeout", self.GameId)
 				if err := c.Transact(func(c common.SkinnyContext) (err error) {
 					if err = c.DB().Get(self); err != nil {
+						c.Errorf("Failed resolving %v, while trying to load it: %v", err)
 						return
 					}
 					if self.Resolved {
-						c.Infof("%v was already resolved, skipping", self.Id)
+						c.Errorf("%v was already resolved, skipping", self.Id)
 						return
 					}
 					game := &Game{Id: self.GameId}
 					if err = c.DB().Get(game); err != nil {
+						c.Errorf("Failed resolving %v, while trying to load the game: %v", err)
 						return
 					}
 					return game.resolve(c, self)
 				}); err != nil {
-					c.Errorf("Unable to resolve %+v: %v", self, err)
+					c.Errorf("Failed resolving %v, while trying to commit the transaction: %v", self.Id, err)
 				}
 			})
-			c.Infof("Scheduled resolution of %v in %v", self.GameId, timeout)
+			c.Infof("Scheduled resolution of %v at %v", self.GameId, time.Now().Add(timeout))
 		})
 	}
 	return
