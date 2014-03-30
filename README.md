@@ -3,6 +3,18 @@ diplicity
 
 Next generation Droidippy.
 
+## Run locally
+
+* Install Go: https://code.google.com/p/go/downloads/list
+* Create a Go workspace: `mkdir $HOME/go`
+* Set a GOPATH: `export GOPATH=$HOME/go`
+* Prepare the workspace for the diplicity project: `mkdir $GOPATH/src/github.com/zond`
+* Check out the project: `cd $GOPATH/src/github.com/zond && git clone git@github.com:zond/diplicity.git`
+* Install the dependencies: `cd $GOPATH/src/github.com/zond/diplicity && go get -u -v ./...`
+* Run the server locally and without appcache: `cd $GOPATH/src/github.com/zond/diplicity && go run diplicity/diplicity.go -appcache=false`
+
+If you want to know other options when running locally: `cd $GOPATH/src/github.com/zond/diplicity && go run diplicity/diplicity.go -h`
+
 ## Fundamental ideas
 
 * Mobile first
