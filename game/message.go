@@ -171,7 +171,7 @@ func (self *Message) EmailTo(c common.SkinnyContext, game *Game, sender *Member,
 	if c.Env() == common.Development {
 		c.Infof("Would have sent\nFrom: %#v\nTo: %#v\nSubject: %#v\n%v", from, to, subject, body)
 	} else {
-		c.Infof("Will try to send From: %#v\nTo: %#v\nSubject: %#v", from, to, subject)
+		c.Infof("Will try to send From: %#v, To: %#v, Subject: %#v", from, to, subject)
 		if err := c.SendMail(from, subject, body, to); err == nil {
 			c.Infof("Sent\nFrom: %#v\nTo: %#v\nSubject: %#v\n%v", from, to, subject, body)
 		} else {
