@@ -225,8 +225,10 @@ func main() {
 				panic(err)
 			}
 			for _, memb := range g.Members {
-				if err := cli.commit(memb.User.Email, g.Phases[0].Id); err != nil {
-					panic(err)
+				if !memb.NoOrders {
+					if err := cli.commit(memb.User.Email, g.Phases[0].Id); err != nil {
+						panic(err)
+					}
 				}
 			}
 		}

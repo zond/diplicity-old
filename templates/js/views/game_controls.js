@@ -53,26 +53,32 @@ window.GameControlsView = BaseView.extend({
 	  ev.preventDefault();
 		ev.stopPropagation();
 		var that = this;
-		RPC('Commit', {
-			PhaseId: that.model.get('Phase').Id,
-		}, function(error) {
-			if (error != null && error != '') {
-				logError('While committing', error);
-			}
-		});
+		var me = that.model.me();
+		if (me != null && !me.NoOrders) {
+			RPC('Commit', {
+				PhaseId: that.model.get('Phase').Id,
+			}, function(error) {
+				if (error != null && error != '') {
+					logError('While committing', error);
+				}
+			});
+		}
 	},
 
 	uncommitPhase: function(ev) {
 	  ev.preventDefault();
 		ev.stopPropagation();
 		var that = this;
-		RPC('Uncommit', {
-			PhaseId: that.model.get('Phase').Id,
-		}, function(error) {
-			if (error != null && error != '') {
-				logError('While uncommitting', error);
-			}
-		});
+		var me = that.model.me();
+		if (me != null && !me.NoOrders) {
+			RPC('Uncommit', {
+				PhaseId: that.model.get('Phase').Id,
+			}, function(error) {
+				if (error != null && error != '') {
+					logError('While uncommitting', error);
+				}
+			});
+		}
 	},
 
 	handleClick: function(ev, view) {
@@ -169,6 +175,11 @@ window.GameControlsView = BaseView.extend({
 				} else {
 					that.$('a.commit-button').removeClass('uncommit-phase').addClass('commit-phase').attr('title', '{{.I "Commit" }}');
 					that.$('span.commit-button').removeClass('glyphicon-remove').addClass('glyphicon-ok');
+				}
+				if (me.NoOrders) {
+				  that.$('a.commit-button').attr('disabled', 'disabled');
+				} else {
+				  that.$('a.commit-button').removeAttr('disabled');
 				}
 			} else {
 				that.$('.commit-button').css('visibility', 'hidden');

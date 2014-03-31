@@ -80,7 +80,13 @@ func AdminRollback(c *common.HTTPContext) (err error) {
 					return
 				}
 				members[index].Options = opts
-				members[index].Committed = false
+				if len(opts) == 0 {
+					members[index].Committed = true
+					members[index].NoOrders = true
+				} else {
+					members[index].Committed = false
+					members[index].NoOrders = false
+				}
 				if err = c.DB().Set(&members[index]); err != nil {
 					return
 				}

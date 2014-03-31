@@ -22,6 +22,7 @@ type Member struct {
 	Options interface{}
 
 	Committed bool
+	NoOrders  bool
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -42,9 +43,9 @@ func (self Members) Swap(i, j int) {
 }
 
 func (self Members) Get(email string) *Member {
-	for _, member := range self {
-		if string(member.UserId) == email {
-			return &member
+	for index, _ := range self {
+		if string(self[index].UserId) == email {
+			return &self[index]
 		}
 	}
 	return nil
@@ -118,6 +119,7 @@ func (self *Member) ToState(d *kol.DB, g *Game, email string, isMember bool, isA
 		if isAdmin || isMe {
 			result.Member.Committed = self.Committed
 			result.Member.Options = self.Options
+			result.Member.NoOrders = self.NoOrders
 		}
 	}
 	return

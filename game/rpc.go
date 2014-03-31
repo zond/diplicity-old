@@ -76,6 +76,11 @@ func setPhaseCommitted(c common.WSContext, commit bool) (err error) {
 			err = fmt.Errorf("Not member of game")
 			return
 		}
+		if member.NoOrders {
+			c.Infof("%+v has no orders to give", member)
+			err = fmt.Errorf("No orders to give")
+			return
+		}
 		member.Committed = commit
 		if err = c.DB().Set(member); err != nil {
 			return
