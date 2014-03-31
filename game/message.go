@@ -157,7 +157,7 @@ func (self *Message) EmailTo(c common.SkinnyContext, game *Game, sender *Member,
 		memberIds = append(memberIds, memberId)
 	}
 	sort.Sort(sort.StringSlice(memberIds))
-	contextLink, err := recipUser.I("To see this message in context: http://%v/games/%v/messages/%v", recipUser.DiplicityHost, self.GameId, self.ChannelId)
+	contextLink, err := recipUser.I("To see this message in context: http://%v/games/%v/messages/%v", recipUser.DiplicityHost, self.GameId, self.ChannelId())
 	if err != nil {
 		c.Errorf("Failed translating context link: %v", err)
 		return
