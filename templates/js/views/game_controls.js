@@ -25,7 +25,6 @@ window.GameControlsView = BaseView.extend({
 		this.listenTo(this.model, 'change', this.update);
 		this.listenTo(this.model, 'reset', this.update);
 		this.timeLeftInterval = null;
-		this.update();
 	},
 
 	lastPhase: function(ev) {
@@ -217,6 +216,7 @@ window.GameControlsView = BaseView.extend({
 			el: that.$('.game-orders-container'),
 			model: that.model,
 		});
+		that.update();
 		return that;
 	},
 });
