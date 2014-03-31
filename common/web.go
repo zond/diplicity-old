@@ -136,9 +136,10 @@ func (self *Web) MailAddress() string {
 
 func (self *Web) Start() (err error) {
 	if self.gmailAccount != "" {
-		if self.gmail, err = gmail.New(self.gmailAccount, self.gmailPassword).MailHandler(self.IncomingMail).ErrorHandler(func(e error) {
+		self.gmail = gmail.New(self.gmailAccount, self.gmailPassword).MailHandler(self.IncomingMail).ErrorHandler(func(e error) {
 			self.Fatalf("Mail handler: %v", e)
-		}).Start(); err != nil {
+		})
+		if _, err = self.gmail.Start(); err != nil {
 			return
 		}
 		self.Infof("Listening to incoming mail from %#v", self.gmailAccount)
