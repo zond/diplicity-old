@@ -141,6 +141,7 @@ func (self *Web) Start() (err error) {
 		}).Start(); err != nil {
 			return
 		}
+		self.Infof("Listening to incoming mail from %#v", self.gmailAccount)
 	}
 	return
 }
