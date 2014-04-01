@@ -25,6 +25,10 @@ type HTTPContext struct {
 	web          *Web
 }
 
+func (self *HTTPContext) Env() string {
+	return self.web.Env()
+}
+
 func (self *HTTPContext) DB() *kol.DB {
 	return self.web.db
 }

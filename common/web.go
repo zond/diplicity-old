@@ -188,6 +188,16 @@ func (self *Web) SetAppcache(appcache bool) *Web {
 	return self
 }
 
+func (self *Web) DevHandle(r *mux.Route, f func(c *HTTPContext) error) {
+	self.Handle(r, func(c *HTTPContext) (err error) {
+		if c.Env() == Development {
+			return f(c)
+		}
+		c.Resp().WriteHeader(403)
+		return
+	})
+}
+
 func (self *Web) AdminHandle(r *mux.Route, f func(c *HTTPContext) error) {
 	self.Handle(r, func(c *HTTPContext) (err error) {
 		tokenStr := c.Req().FormValue("token")

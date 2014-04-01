@@ -13,6 +13,15 @@ import (
 	"github.com/zond/wsubs/gosubs"
 )
 
+func AdminBecome(c *common.HTTPContext) (err error) {
+	c.Session().Values[common.SessionEmail] = c.Req().FormValue("become")
+	c.Close()
+	c.Resp().Header().Set("Location", "/")
+	c.Resp().WriteHeader(302)
+	fmt.Fprintln(c.Resp(), "/")
+	return
+}
+
 func AdminCreateUser(c *common.HTTPContext) (err error) {
 	user := &User{}
 	if err = json.NewDecoder(c.Req().Body).Decode(user); err != nil {

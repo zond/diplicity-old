@@ -104,6 +104,7 @@ func main() {
 	server.AdminHandle(router.Path("/admin/games/{game_id}/rollback/{until}").Methods("POST"), game.AdminRollback)
 	server.AdminHandle(router.Path("/admin/games/{game_id}").Methods("GET"), game.AdminGetGame)
 	server.AdminHandle(router.Path("/admin/users").Methods("POST"), user.AdminCreateUser)
+	server.DevHandle(router.Path("/admin/become").Methods("POST"), user.AdminBecome)
 
 	// Unsubscribe
 	server.Handle(router.Path("/unsubscribe/{unsubscribe_tag}").Methods("GET"), game.UnsubscribeEmails)

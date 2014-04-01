@@ -25,3 +25,11 @@
 	</div>
 	<button type="submit" class="save-button btn btn-default">{{.I "Update" }}</button>
 </form>
+<% if ('{{.Env}}' == 'development') { %>
+<form role="form" action="/admin/become" method="post">
+	<div class="form-group">
+		<label for="become">{{.I "Become" }}</label>
+		<input type="text" class="form-control become" name="become" id="become" value="" placeholder="{{.I "Become" }}">
+	</div>
+</form>
+<% } %>

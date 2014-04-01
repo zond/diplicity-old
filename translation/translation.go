@@ -25,6 +25,7 @@ var en = map[string]string{
 	"Finished":  "Finished",
 	"Mine":      "Mine",
 	"Others":    "Others",
+	"Become":    "Become",
 	"Deadline":  "Deadline",
 	"Yes":       "Yes",
 	"Back":      "Back",
