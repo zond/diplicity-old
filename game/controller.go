@@ -42,6 +42,63 @@ func UnsubscribeEmails(c *common.HTTPContext) (err error) {
 	return
 }
 
+func AdminGetOptions(c *common.HTTPContext) (err error) {
+	gameId, err := base64.URLEncoding.DecodeString(c.Vars()["game_id"])
+	if err != nil {
+		return
+	}
+	game := &Game{Id: gameId}
+	if err = c.DB().Get(game); err != nil {
+		return
+	}
+	_, last, err := game.Phase(c.DB(), 0)
+	if err != nil {
+		return
+	}
+	opts, err := last.Options(dip.Nation(c.Vars()["nation"]))
+	if err != nil {
+		return
+	}
+	return c.RenderJSON(opts)
+}
+
+func AdminRecalcOptions(c *common.HTTPContext) (err error) {
+	gameId, err := base64.URLEncoding.DecodeString(c.Vars()["game_id"])
+	if err != nil {
+		return
+	}
+	g := &Game{Id: gameId}
+	if err = c.DB().Get(g); err != nil {
+		return
+	}
+	_, last, err := g.Phase(c.DB(), 0)
+	if err != nil {
+		return
+	}
+	members, err := g.Members(c.DB())
+	if err != nil {
+		return
+	}
+	for index, _ := range members {
+		opts := dip.Options{}
+		if opts, err = last.Options(members[index].Nation); err != nil {
+			return
+		}
+		members[index].Options = opts
+		if len(opts) == 0 {
+			members[index].Committed = true
+			members[index].NoOrders = true
+		} else {
+			members[index].Committed = false
+			members[index].NoOrders = false
+		}
+		if err = c.DB().Set(&members[index]); err != nil {
+			return
+		}
+	}
+	return
+}
+
 func AdminRollback(c *common.HTTPContext) (err error) {
 	gameId, err := base64.URLEncoding.DecodeString(c.Vars()["game_id"])
 	if err != nil {

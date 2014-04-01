@@ -103,7 +103,9 @@ func main() {
 	// Admin
 	server.AdminHandle(router.Path("/admin/games/{game_id}/rollback/{until}").Methods("POST"), game.AdminRollback)
 	server.AdminHandle(router.Path("/admin/games/{game_id}").Methods("GET"), game.AdminGetGame)
+	server.AdminHandle(router.Path("/admin/games/{game_id}/nations/{nation}/options").Methods("GET"), game.AdminGetOptions)
 	server.AdminHandle(router.Path("/admin/users").Methods("POST"), user.AdminCreateUser)
+	server.AdminHandle(router.Path("/admin/games/{game_id}/recalc").Methods("POST"), game.AdminRecalcOptions)
 	server.DevHandle(router.Path("/admin/become").Methods("POST"), user.AdminBecome)
 
 	// Unsubscribe
