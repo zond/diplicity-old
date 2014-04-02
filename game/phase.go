@@ -19,8 +19,8 @@ func ScheduleUnresolvedPhases(c common.SkinnyContext) (err error) {
 	if err = c.DB().Query().Where(kol.Equals{"Resolved", false}).All(&unresolved); err != nil {
 		return
 	}
-	for _, phase := range unresolved {
-		phase.Schedule(c)
+	for index, _ := range unresolved {
+		(&unresolved[index]).Schedule(c)
 	}
 	return
 }
@@ -54,7 +54,7 @@ func (self *Phase) ShortString() string {
 }
 
 func (self *Phase) autoResolve(c common.SkinnyContext) (err error) {
-	c.Infof("Auto resolving %v/%v due to timeout", self.Id, self.GameId)
+	c.Infof("Auto resolving %v/%v due to timeout", self.GameId, self.Id)
 	if err = c.Transact(func(c common.SkinnyContext) (err error) {
 		if err = c.DB().Get(self); err != nil {
 			err = fmt.Errorf("While trying to load %+v: %v", self, err)
@@ -90,9 +90,9 @@ func (self *Phase) Schedule(c common.SkinnyContext) error {
 						c.Errorf("Failed resolving %+v after %v: %v", self, timeout, err)
 					}
 				})
-				c.Debugf("Scheduled resolution of %v/%v in %v at %v", self.Id, self.GameId, timeout, time.Now().Add(timeout))
+				c.Debugf("Scheduled resolution of %v/%v in %v at %v", self.GameId, self.Id, timeout, time.Now().Add(timeout))
 			} else {
-				c.Debugf("Resolving %v/%v immediately, it is %v overdue", self.Id, self.GameId, -timeout)
+				c.Debugf("Resolving %v/%v immediately, it is %v overdue", self.GameId, self.Id, -timeout)
 				if err := self.autoResolve(c); err != nil {
 					c.Errorf("Failed resolving %+v immediately: %v", self, err)
 				}

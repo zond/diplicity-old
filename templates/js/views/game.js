@@ -42,6 +42,7 @@ window.GameView = BaseView.extend({
 			});
 			this.sub();
 			this.controlsView.reloadOrdersAndResults(this.model);
+			this.stateView.reloadModel(this.model);
 		}
 	},
 
@@ -54,6 +55,7 @@ window.GameView = BaseView.extend({
 			this.sub();
 			this.model.trigger('reset');
 			this.controlsView.reloadOrdersAndResults(this.model);
+			this.stateView.reloadModel(this.model);
 		}
 	},
 
@@ -69,6 +71,7 @@ window.GameView = BaseView.extend({
 			});
 			this.sub();
 			this.controlsView.reloadOrdersAndResults(this.model);
+			this.stateView.reloadModel(this.model);
 		}
 	},
 

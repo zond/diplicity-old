@@ -25,6 +25,11 @@ window.GameControlsView = BaseView.extend({
 		this.listenTo(this.model, 'change', this.update);
 		this.listenTo(this.model, 'reset', this.update);
 		this.timeLeftInterval = null;
+		this.lastPhaseOrdinal = 0;
+		if (this.model.get('Phase') != null) {
+		  this.lastPhaseOrdinal = this.model.get('Phase').Ordinal;
+		}
+		this.deadline = null;
 	},
 
 	lastPhase: function(ev) {
@@ -113,11 +118,14 @@ window.GameControlsView = BaseView.extend({
 
 	updateTimeLeft: function() {
 	  var that = this;
-		var left = that.model.get('TimeLeft');
+		if (that.deadline == null) {
+			that.deadline = new Date(new Date().getTime() + that.model.get('TimeLeft') / 1000000);
+		}
+		var left = that.deadline.getTime() - new Date().getTime();
 		if (left < 0) {
 		  that.$('.time-left').hide();
 		} else {
-		  var secs = left / 1000000000;
+		  var secs = left / 1000;
 			if (secs > 3600 * 24) {
 			  that.$('.time-left').text('{{.I "{0}d" }}'.format(parseInt(secs / (3600 * 24))));
 			} else if (secs > 3600) {
@@ -155,6 +163,10 @@ window.GameControlsView = BaseView.extend({
 			}
 		}
 		if (that.model.get('Phase') != null) {
+			if (that.model.get('Phase').Ordinal != that.lastPhaseOrdinal) {
+				that.lastPhaseOrdinal = that.model.get('Phase').Ordinal;
+				that.deadline = null;
+			}
 			that.$('.phase-step').css('visibility', 'visible');
 			that.updateTimeLeft();
 		  if (that.timeLeftInterval != null) {

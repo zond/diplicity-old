@@ -24,7 +24,15 @@ window.GameStateView = BaseView.extend({
 		this.parentId = options.parentId;
 		this.phaseTypeViews = {};
 		this.memberViews = {};
+		this.reloadModel(this.model);
+	},
+
+	reloadModel: function(model) {
+	  this.stopListening();
+		this.model = model;
 		this.listenTo(this.model, 'change', this.doRender);
+		this.listenTo(this.model, 'reset', this.doRender);
+		this.doRender();
 	},
 
 	changeSecretFlag: function(ev) {
