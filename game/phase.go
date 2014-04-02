@@ -53,8 +53,8 @@ func (self *Phase) ShortString() string {
 	return fmt.Sprintf("%v %v, %v", self.Season, self.Year, self.Type)
 }
 
-func (self *Phase) timeoutResolve(c common.SkinnyContext) (err error) {
-	c.Infof("Auto resolving %v due to timeout", self.GameId)
+func (self *Phase) autoResolve(c common.SkinnyContext) (err error) {
+	c.Infof("Auto resolving %v/%v due to timeout", self.Id, self.GameId)
 	if err = c.Transact(func(c common.SkinnyContext) (err error) {
 		if err = c.DB().Get(self); err != nil {
 			err = fmt.Errorf("While trying to load %+v: %v", self, err)
@@ -86,14 +86,14 @@ func (self *Phase) Schedule(c common.SkinnyContext) error {
 		c.BetweenTransactions(func(c common.SkinnyContext) {
 			if timeout > 0 {
 				time.AfterFunc(timeout, func() {
-					if err := self.timeoutResolve(c); err != nil {
+					if err := self.autoResolve(c); err != nil {
 						c.Errorf("Failed resolving %+v after %v: %v", self, timeout, err)
 					}
 				})
-				c.Infof("Scheduled resolution of %v in %v at %v", self.GameId, timeout, time.Now().Add(timeout))
+				c.Debugf("Scheduled resolution of %v/%v in %v at %v", self.Id, self.GameId, timeout, time.Now().Add(timeout))
 			} else {
-				c.Infof("Resolving %+v immediately, it is %v overdue", self, -timeout)
-				if err := self.timeoutResolve(c); err != nil {
+				c.Debugf("Resolving %v/%v immediately, it is %v overdue", self.Id, self.GameId, -timeout)
+				if err := self.autoResolve(c); err != nil {
 					c.Errorf("Failed resolving %+v immediately: %v", self, err)
 				}
 			}
