@@ -19,6 +19,7 @@ func UncommitPhase(c common.WSContext) (result interface{}, err error) {
 func SeeMessage(c common.WSContext) (result interface{}, err error) {
 	messageId, err := base64.URLEncoding.DecodeString(c.Data().GetString("MessageId"))
 	if err != nil {
+		err = fmt.Errorf("Error trying to decode %#v: %v", c.Data().GetString("MessageId"), err)
 		return
 	}
 	err = c.Transact(func(c common.WSContext) (err error) {

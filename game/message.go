@@ -138,6 +138,7 @@ func (self *Message) EmailTo(c common.SkinnyContext, game *Game, sender *Member,
 	encodedUnsubTag, err := unsubTag.Encode()
 	if err != nil {
 		c.Errorf("Failed to encode %+v: %v", unsubTag, err)
+		return
 	}
 
 	parts := strings.Split(c.MailAddress(), "@")
@@ -236,6 +237,7 @@ func IncomingMail(c common.SkinnyContext, msg *enmime.MIMEBody) (err error) {
 }
 
 func (self *Message) Send(c common.SkinnyContext, game *Game, sender *Member) (err error) {
+	c.Debugf("Sending %#v from %#v in %#v", self.Body, sender.Nation, game.Id.String())
 	// make sure the sender is correct
 	self.SenderId = sender.Id
 
@@ -324,20 +326,29 @@ func (self *Message) Send(c common.SkinnyContext, game *Game, sender *Member) (e
 	}
 	sort.Sort(recipNations)
 	recipName := strings.Join(recipNations, ", ")
+	subKey := fmt.Sprintf("/games/%v/messages", game.Id)
 	for memberId, _ := range self.RecipientIds {
 		for _, member := range members {
 			if memberId == member.Id.String() && self.SenderId.String() != memberId {
 				user := &user.User{Id: member.UserId}
-				if err = c.DB().Get(user); err != nil {
-					return
-				}
-				if !user.MessageEmailDisabled && !c.IsSubscribing(user.Email, fmt.Sprintf("/games/%v/messages", game.Id)) {
-					memberCopy := member
-					gameDescription := ""
-					if gameDescription, err = game.Describe(c, user); err != nil {
-						return
+				if err = c.DB().Get(user); err == nil {
+					if !user.MessageEmailDisabled {
+						if !c.IsSubscribing(user.Email, subKey) {
+							memberCopy := member
+							gameDescription := ""
+							if gameDescription, err = game.Describe(c, user); err == nil {
+								go self.EmailTo(c, game, sender, senderUser, &memberCopy, user, gameDescription, recipName)
+							} else {
+								c.Errorf("Trying to describe %+v to %+v: %v", game, user, err)
+							}
+						} else {
+							c.Infof("Not sending to %#v, already subscribing to %#v", user.Id.String(), subKey)
+						}
+					} else {
+						c.Infof("Not sending to %#v, message email disabled", user.Id.String())
 					}
-					go self.EmailTo(c, game, sender, senderUser, &memberCopy, user, gameDescription, recipName)
+				} else {
+					c.Errorf("Trying to load user %#v: %v", member.UserId.String(), err)
 				}
 			}
 		}
