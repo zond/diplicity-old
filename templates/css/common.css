@@ -1,3 +1,6 @@
+.game-state-container {
+	padding-bottom: 3px;
+}
 .commit-button {
 	visibility: hidden;
 }
@@ -151,9 +154,6 @@ table.chat-messages {
 .navbar-toggle {
 	margin: 0px;
 }
-.navbar-header .menu-dropdown {
-	font-size: medium;
-}
 .navbar {
 	margin-bottom: 0px;
 	min-height: 35px;
@@ -173,14 +173,14 @@ table.chat-messages {
 	padding: 2px 5px;
 }
 .game-controls-buttons span {
-	font-size: small;
+	font-size: large;
 	margin-bottom: 5px;
 }
 #current-game .panel {
 	margin-top: 0px;
 }
 .panel-heading {
-	padding: 3px 3px;
+	padding: 3px 3px 6px;
 }
 #bottom-navigation {
 	min-height: 0px;
@@ -190,9 +190,6 @@ table.chat-messages {
 }
 body {
 	margin-top: 35;
-}
-table {
-	font-size: small;
 }
 .view-game {
 	float: right;
@@ -204,7 +201,7 @@ table {
 	zoom: 0.9;
 }
 .view-game span {
-	font-size: small;
+	font-size: large;
 	margin-bottom: 5px;
 }
 .navbar-brand {
