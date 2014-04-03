@@ -176,6 +176,13 @@ func (self *HTTPContext) VariantMap() string {
 	return gosubs.Prettify(result)
 }
 
+func (self *HTTPContext) ConsequenceMap() string {
+	return gosubs.Prettify(map[string]int{
+		"ReliabilityHit": ReliabilityHit,
+		"NoWait":         NoWait,
+	})
+}
+
 func (self *HTTPContext) ChatFlagMap() string {
 	return gosubs.Prettify(map[string]int{
 		"ChatPrivate":    ChatPrivate,
@@ -209,6 +216,16 @@ func (self *HTTPContext) VariantMainProvincesMap() string {
 		}
 	}
 	return gosubs.Prettify(result)
+}
+
+func (self *HTTPContext) ConsequenceOptions() (result []ConsequenceOption) {
+	for _, option := range ConsequenceOptions {
+		result = append(result, ConsequenceOption{
+			Id:          option.Id,
+			Translation: self.mI(option.Name),
+		})
+	}
+	return
 }
 
 func (self *HTTPContext) ChatFlagOptions() (result []ChatFlagOption) {
@@ -270,6 +287,16 @@ func (self *HTTPContext) SecretFlagMap() string {
 		"DuringGame": SecretDuringGame,
 		"AfterGame":  SecretAfterGame,
 	})
+}
+
+func (self *HTTPContext) Consequence(s string) Consequence {
+	switch s {
+	case "ReliabilityHit":
+		return ReliabilityHit
+	case "NoWait":
+		return NoWait
+	}
+	panic(fmt.Errorf("Unknown consequence flag %v", s))
 }
 
 func (self *HTTPContext) SecretFlag(s string) SecretFlag {

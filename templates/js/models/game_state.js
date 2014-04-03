@@ -11,7 +11,18 @@ window.GameState = Backbone.Model.extend({
     delete(filtered.Options);
 		return filtered;
 	},
-	
+
+	consequences: function(typ) {
+	  var cons = [];
+		if ((this.get(typ + 'Consequences') & {{.Consequence "ReliabilityHit"}}) == {{.Consequence "ReliabilityHit"}}) {
+		  cons.push('{{.I "Reliability hit"}}');
+		}
+		if ((this.get(typ + 'Consequences') & {{.Consequence "NoWait"}}) == {{.Consequence "NoWait"}}) {
+		  cons.push('{{.I "No wait"}}');
+		}
+		return cons.join(", ");
+	},
+
 	me: function() {
 	  if (window.session.user.get('Email') == null || window.session.user.get('Email') == "") {
 		  return null;

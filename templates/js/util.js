@@ -58,6 +58,7 @@ var allocationMethodMap = {{.AllocationMethodMap}};
 var secrecyTypesMap = {{.SecrecyTypesMap}};
 var secretFlagMap = {{.SecretFlagMap}};
 var chatFlagMap = {{.ChatFlagMap}};
+var consequenceMap = {{.ConsequenceMap}};
 
 function allocationMethodName(id) {
   return allocationMethodMap[id].Translation;
@@ -84,20 +85,30 @@ function phaseTypes(variant) {
   return variantMap[variant].PhaseTypes;
 };
 
+function consequenceOptions() {
+  var rval = [];
+	{{range .ConsequenceOptions}}rval.push({
+	  id: {{.Id}},
+		name: '{{.Translation}}',
+	});
+	{{end}}return rval;
+};
+
 function chatFlagOptions() {
 	var rval = [];
 	{{range .ChatFlagOptions}}rval.push({
 		id: {{.Id}},
 		name: '{{.Translation}}',
 	});
-	{{end}}
-	return rval;
+	{{end}}return rval;
 };
 
 defaultAllocationMethod = '{{.DefaultAllocationMethod}}';
 defaultVariant = '{{.DefaultVariant}}';
 defaultDeadline = 1440;
 defaultChatFlags = {{.ChatFlag "White"}} | {{.ChatFlag "Conference"}} | {{.ChatFlag "Private"}};
+defaultNonCommitConsequences = {{.Consequence "NoWait"}};
+defaultNMRConsequences = {{.Consequence "NoWait"}} | {{.Consequence "ReliabilityHit"}};
 
 deadlineOptions = [
 	{ value: 1, name: '{{.I "1 minute" }}' },

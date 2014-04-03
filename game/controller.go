@@ -316,15 +316,17 @@ func Create(c common.WSContext) error {
 	c.Data().Overwrite(&state)
 
 	game := &Game{
-		Variant:          state.Game.Variant,
-		EndYear:          state.Game.EndYear,
-		Private:          state.Game.Private,
-		SecretEmail:      state.Game.SecretEmail,
-		SecretNickname:   state.Game.SecretNickname,
-		SecretNation:     state.Game.SecretNation,
-		Deadlines:        state.Game.Deadlines,
-		ChatFlags:        state.Game.ChatFlags,
-		AllocationMethod: state.Game.AllocationMethod,
+		Variant:               state.Game.Variant,
+		EndYear:               state.Game.EndYear,
+		Private:               state.Game.Private,
+		SecretEmail:           state.Game.SecretEmail,
+		SecretNickname:        state.Game.SecretNickname,
+		SecretNation:          state.Game.SecretNation,
+		Deadlines:             state.Game.Deadlines,
+		ChatFlags:             state.Game.ChatFlags,
+		AllocationMethod:      state.Game.AllocationMethod,
+		NonCommitConsequences: state.Game.NonCommitConsequences,
+		NMRConsequences:       state.Game.NMRConsequences,
 	}
 
 	if _, found := common.VariantMap[game.Variant]; !found {

@@ -26,6 +26,8 @@ window.CreateGameView = BaseView.extend({
 			ChatFlags: chatFlags,
 			State: {{.GameState "Created"}},
 			AllocationMethod: defaultAllocationMethod,
+      NonCommitConsequences: defaultNonCommitConsequences,
+			NMRConsequences: defaultNMRConsequences,
 		});
 		this.gameState.url = '/games';
 	},

@@ -60,17 +60,21 @@ type Game struct {
 	State              common.GameState
 	Variant            string
 	AllocationMethod   string
-	SecretEmail        common.SecretFlag
-	SecretNickname     common.SecretFlag
-	SecretNation       common.SecretFlag
 	EndYear            int
 	MinimumRanking     float64
 	MaximumRanking     float64
 	MinimumReliability float64
 
+	SecretEmail    common.SecretFlag
+	SecretNickname common.SecretFlag
+	SecretNation   common.SecretFlag
+
 	Deadlines map[dip.PhaseType]Minutes
 
 	ChatFlags map[dip.PhaseType]common.ChatFlag
+
+	NonCommitConsequences common.Consequence
+	NMRConsequences       common.Consequence
 
 	CreatedAt time.Time
 	UpdatedAt time.Time

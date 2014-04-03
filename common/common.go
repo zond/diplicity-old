@@ -90,6 +90,13 @@ func GetLanguage(r *http.Request) string {
 	return parts[0]
 }
 
+type Consequence int
+
+const (
+	ReliabilityHit = 1 << iota
+	NoWait
+)
+
 type ChatFlag int
 
 const (
@@ -106,6 +113,23 @@ func (self ChatChannel) Clone() (result ChatChannel) {
 		result[nation] = true
 	}
 	return
+}
+
+type ConsequenceOption struct {
+	Id          Consequence
+	Name        string
+	Translation string
+}
+
+var ConsequenceOptions = []ConsequenceOption{
+	ConsequenceOption{
+		Id:   ReliabilityHit,
+		Name: "Reliability hit",
+	},
+	ConsequenceOption{
+		Id:   NoWait,
+		Name: "No wait",
+	},
 }
 
 type ChatFlagOption struct {

@@ -14,6 +14,7 @@ window.GameStateView = BaseView.extend({
 		"hide.bs.collapse .game": "collapse",
 		"show.bs.collapse .game": "expand",
 		"click .game-secret-flag": "changeSecretFlag",
+		"click .game-consequence": "changeConsequence",
 	},
 
 	initialize: function(options) {
@@ -40,6 +41,14 @@ window.GameStateView = BaseView.extend({
 		var type = $(ev.target).attr('data-secret-type');
 		var flag = parseInt($(ev.target).attr('data-secret-flag'));
 		var currently = this.model.get(type);
+		this.model.set(type, currently ^ flag);
+	},
+
+	changeConsequence: function(ev) {
+	  ev.preventDefault();
+		var type = $(ev.target).attr('data-consequence-type') + 'Consequences';
+		var currently = this.model.get(type);
+		var flag = parseInt($(ev.target).attr('data-consequence'));
 		this.model.set(type, currently ^ flag);
 	},
 
