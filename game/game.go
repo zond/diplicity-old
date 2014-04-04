@@ -126,7 +126,7 @@ func (self *Game) allocate(d *kol.DB, phase *Phase) (err error) {
 	return
 }
 
-func (self *Game) endPhaseConsequences(c common.SkinnyContext, phase *Phase, member *Member) (err error) {
+func (self *Game) endPhaseConsequences(c common.SkinnyContext, phase *Phase, member *Member, opts dip.Options, nrCommitted, nrNoWait *int) (err error) {
 	if !member.Committed {
 		alreadyHitReliability := false
 		if (self.NonCommitConsequences & common.ReliabilityHit) == common.ReliabilityHit {
@@ -157,6 +157,25 @@ func (self *Game) endPhaseConsequences(c common.SkinnyContext, phase *Phase, mem
 			}
 			c.Infof("Increased HELD deadlines for %#v by one because %+v and %+v", string(member.UserId), self, phase)
 		}
+	}
+	member.Options = opts
+	if member.NoWait {
+		member.Committed = false
+		member.NoOrders = false
+		(*nrCommitted)++
+		(*nrNoWait)++
+	} else {
+		if len(opts) == 0 {
+			member.Committed = true
+			member.NoOrders = true
+			(*nrCommitted)++
+		} else {
+			member.Committed = false
+			member.NoOrders = false
+		}
+	}
+	if err = c.DB().Set(member); err != nil {
+		return
 	}
 	return
 }
@@ -218,36 +237,13 @@ func (self *Game) resolve(c common.SkinnyContext, phase *Phase) (err error) {
 		nrCommitted := 0
 		nrNoWait := 0
 		for index, _ := range members {
-			if err = self.endPhaseConsequences(c, phase, &members[index]); err != nil {
-				return
-			}
 			opts := dip.Options{}
 			if opts, err = nextPhase.Options(members[index].Nation); err != nil {
 				return
 			}
-			members[index].Options = opts
-			if members[index].NoWait {
-				members[index].Committed = false
-				members[index].NoOrders = false
-				nrCommitted++
-				nrNoWait++
-			} else {
-				if len(opts) == 0 {
-					members[index].Committed = true
-					members[index].NoOrders = true
-					nrCommitted++
-				} else {
-					members[index].Committed = false
-					members[index].NoOrders = false
-				}
-			}
-			if err = c.DB().Set(&members[index]); err != nil {
+			if err = self.endPhaseConsequences(c, phase, &members[index], opts, &nrCommitted, &nrNoWait); err != nil {
 				return
 			}
-		}
-		// Store the new phase
-		if err = c.DB().Set(nextPhase); err != nil {
-			return
 		}
 		// Mark the old phase as resolved, and save it
 		phase.Resolved = true
@@ -259,6 +255,21 @@ func (self *Game) resolve(c common.SkinnyContext, phase *Phase) (err error) {
 			self.EndReason = common.ZeroActiveMembers
 			self.State = common.GameStateEnded
 			if err = c.DB().Set(self); err != nil {
+				return
+			}
+			nextPhase.Resolved = true
+			if err = c.DB().Set(nextPhase); err != nil {
+				return
+			}
+		}
+		// Store the next phase
+		if err = c.DB().Set(nextPhase); err != nil {
+			return
+		}
+		// Break if game is ended
+		if self.State == common.GameStateEnded {
+			if !nextPhase.Resolved {
+				err = fmt.Errorf("WTF, how can game %+v be ended when nextPhase %+v isn't resolved?", self, nextPhase)
 				return
 			}
 			break
