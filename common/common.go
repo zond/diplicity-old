@@ -158,6 +158,8 @@ const (
 	nilCache
 )
 
+type EndReason string
+
 const (
 	ClassicalString                   = "classical"
 	RandomString                      = "random"
@@ -165,6 +167,7 @@ const (
 	BeforeGamePhaseType dip.PhaseType = "BeforeGame"
 	AfterGamePhaseType  dip.PhaseType = "AfterGame"
 	Anonymous           dip.Nation    = "Anonymous"
+	ZeroActiveMembers   EndReason     = "ZeroActiveMembers"
 )
 
 type GameState int

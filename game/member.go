@@ -23,6 +23,7 @@ type Member struct {
 
 	Committed bool
 	NoOrders  bool
+	NoWait    bool
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -163,6 +164,22 @@ func (self *Member) Created(d *kol.DB) {
 		panic(err)
 	}
 	d.EmitUpdate(&g)
+}
+
+func (self *Member) ReliabilityDelta(d *kol.DB, i int) (err error) {
+	user := &user.User{Id: self.UserId}
+	if err = d.Get(user); err != nil {
+		return
+	}
+	if i > 0 {
+		user.HeldDeadlines += i
+	} else {
+		user.MissedDeadlines += i
+	}
+	if err = d.Set(user); err != nil {
+		return
+	}
+	return
 }
 
 func (self Members) Disallows(d *kol.DB, asking *user.User) (result bool, err error) {

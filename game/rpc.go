@@ -83,13 +83,14 @@ func setPhaseCommitted(c common.WSContext, commit bool) (err error) {
 			return
 		}
 		member.Committed = commit
+		member.NoWait = false
 		if err = c.DB().Set(member); err != nil {
 			return
 		}
 		if !phase.Resolved {
 			count := 0
 			for _, m := range members {
-				if m.Committed {
+				if m.Committed || m.NoWait {
 					count++
 				}
 			}

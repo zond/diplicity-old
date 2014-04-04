@@ -58,6 +58,7 @@ type Game struct {
 	Closed             bool `kol:"index"`
 	Private            bool `kol:"index"`
 	State              common.GameState
+	EndReason          common.EndReason
 	Variant            string
 	AllocationMethod   string
 	EndYear            int
@@ -125,6 +126,41 @@ func (self *Game) allocate(d *kol.DB, phase *Phase) (err error) {
 	return
 }
 
+func (self *Game) endPhaseConsequences(c common.SkinnyContext, phase *Phase, member *Member) (err error) {
+	if !member.Committed {
+		alreadyHitReliability := false
+		if (self.NonCommitConsequences & common.ReliabilityHit) == common.ReliabilityHit {
+			if err = member.ReliabilityDelta(c.DB(), -1); err != nil {
+				return
+			}
+			c.Infof("Increased MISSED deadlines for %#v by one because %+v and %+v", string(member.UserId), self, phase)
+			alreadyHitReliability = true
+		}
+		if (self.NonCommitConsequences & common.NoWait) == common.NoWait {
+			member.NoWait = true
+		}
+		if len(phase.Orders[member.Nation]) == 0 {
+			if !alreadyHitReliability && (self.NMRConsequences&common.ReliabilityHit) == common.ReliabilityHit {
+				if err = member.ReliabilityDelta(c.DB(), -1); err != nil {
+					return
+				}
+				c.Infof("Increased MISSED deadlines for %#v by one because %+v and %+v", string(member.UserId), self, phase)
+			}
+			if (self.NMRConsequences & common.NoWait) == common.NoWait {
+				member.NoWait = true
+			}
+		}
+	} else {
+		if (self.NonCommitConsequences & common.ReliabilityHit) == common.ReliabilityHit {
+			if err = member.ReliabilityDelta(c.DB(), 1); err != nil {
+				return
+			}
+			c.Infof("Increased HELD deadlines for %#v by one because %+v and %+v", string(member.UserId), self, phase)
+		}
+	}
+	return
+}
+
 func (self *Game) resolve(c common.SkinnyContext, phase *Phase) (err error) {
 	// Check that we are in a phase where we CAN resolve
 	if self.State != common.GameStateStarted {
@@ -180,19 +216,30 @@ func (self *Game) resolve(c common.SkinnyContext, phase *Phase) (err error) {
 		}
 		// Commit everyone that doesn't have any orders to give
 		nrCommitted := 0
+		nrNoWait := 0
 		for index, _ := range members {
+			if err = self.endPhaseConsequences(c, phase, &members[index]); err != nil {
+				return
+			}
 			opts := dip.Options{}
 			if opts, err = nextPhase.Options(members[index].Nation); err != nil {
 				return
 			}
 			members[index].Options = opts
-			if len(opts) == 0 {
-				members[index].Committed = true
-				members[index].NoOrders = true
-				nrCommitted++
-			} else {
+			if members[index].NoWait {
 				members[index].Committed = false
 				members[index].NoOrders = false
+				nrCommitted++
+				nrNoWait++
+			} else {
+				if len(opts) == 0 {
+					members[index].Committed = true
+					members[index].NoOrders = true
+					nrCommitted++
+				} else {
+					members[index].Committed = false
+					members[index].NoOrders = false
+				}
 			}
 			if err = c.DB().Set(&members[index]); err != nil {
 				return
@@ -206,6 +253,15 @@ func (self *Game) resolve(c common.SkinnyContext, phase *Phase) (err error) {
 		phase.Resolved = true
 		if err = c.DB().Set(phase); err != nil {
 			return
+		}
+		// If nobody is active anymore
+		if nrNoWait == len(members) {
+			self.EndReason = common.ZeroActiveMembers
+			self.State = common.GameStateEnded
+			if err = c.DB().Set(self); err != nil {
+				return
+			}
+			break
 		}
 		// If everyone in the new phase isn't commited, schedule an auto resolve and break here.
 		if nrCommitted < len(members) {
