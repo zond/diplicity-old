@@ -162,7 +162,7 @@ window.GameControlsView = BaseView.extend({
 				that.chatParticipants = null;
 			}
 		}
-		if (that.model.get('Phase') != null) {
+		if (that.model.get('State') == {{.GameState "Started"}}) {
 			if (that.model.get('Phase').Ordinal != that.lastPhaseOrdinal) {
 				that.lastPhaseOrdinal = that.model.get('Phase').Ordinal;
 				that.deadline = null;
@@ -195,11 +195,17 @@ window.GameControlsView = BaseView.extend({
 			} else {
 				that.$('.commit-button').css('visibility', 'hidden');
 			}
-		} else {
+		} else if (that.model.get('State') == {{.GameState "Created"}}) {
 			that.$('.commit-button').css('visibility', 'hidden');
 			that.$('.phase-step').css('visibility', 'hidden');
 			that.$('.view-orders').css('visibility', 'hidden');
 			that.$('.view-results').css('visibility', 'hidden');
+		} else if (that.model.get('State') == {{.GameState "Ended"}}) {
+			that.$('.commit-button').css('display', 'none');
+			that.$('.phase-step').css('visibility', 'visible');
+			that.$('.view-orders').css('visibility', 'visible');
+			that.$('.view-results').css('visibility', 'visible');
+			that.$('.end-reason').text('{{.I "Game ended due to {0}"}}'.format(that.model.get('EndReason')));
 		}
 	},
 

@@ -61,7 +61,7 @@ func (self *Phase) autoResolve(c common.SkinnyContext) (err error) {
 			return
 		}
 		if self.Resolved {
-			err = fmt.Errorf("%+v was already resolved", self)
+			c.Infof("%+v was already resolved", self)
 			return
 		}
 		game := &Game{Id: self.GameId}

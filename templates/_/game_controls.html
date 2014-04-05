@@ -3,6 +3,9 @@
 		<h4 class="panel-title">
 			<div class="game-controls-right">
 				<span class="time-left"></span>
+				<a class="btn btn-primary btn-sm commit-phase commit-button" title="{{.I "Commit" }}" href="#">
+					<span class="glyphicon glyphicon-ok commit-button"></span>
+				</a>
 				<a class="btn btn-primary btn-sm phase-step previous-phase" disabled="disabled" title="{{.I "Back" }}" href="#">
 					<span class="glyphicon glyphicon-step-backward"></span>
 				</a>
@@ -11,9 +14,6 @@
 				</a>
 				<a class="btn btn-primary btn-sm phase-step later-phase last-phase" disabled="disabled" title="{{.I "Last" }}" href="#">
 					<span class="glyphicon glyphicon-fast-forward"></span>
-				</a>
-				<a class="btn btn-primary btn-sm commit-phase commit-button" title="{{.I "Commit" }}" href="#">
-					<span class="glyphicon glyphicon-ok commit-button"></span>
 				</a>
 			</div>
 			<div class="game-controls-left">
@@ -27,6 +27,7 @@
 				<a class="btn btn-primary btn-sm view-results" title="{{.I "Results" }}" href="#">
 					<span class="glyphicon glyphicon-bell"></span>
 				</a>
+				<span class="end-reason"></span>
 			</div>
 		</h4>
 	</div>
