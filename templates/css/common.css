@@ -27,8 +27,8 @@
 .unseen-messages {
 	position: absolute;
 	font-size: x-small !important;
-	left: 1.5em;
-	top: -0.5em;
+	left: 5px;
+	top: 29px;
 	background-color: rgba(255, 0, 0, 0.8);
 	border-radius: 50%;
 	padding: 2px;
@@ -73,14 +73,12 @@ table.chat-messages {
 	float: right;
 	color: red;
 }
-.game-chat-container {
-	display: none;
+.chat-channel-name {
+	text-align: left;
+	padding-left: 6px;
 }
-.game-results-container {
-	display: none;
-}
-.game-orders-container {
-	display: none;
+.game-chat {
+	background-color: #f5f5f5;
 }
 .bottom-aligned {
 	position: absolute;

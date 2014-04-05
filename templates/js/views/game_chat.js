@@ -13,27 +13,6 @@ window.GameChatView = BaseView.extend({
 	  this.listenTo(this.collection, 'reset', this.loadMessages);
 	},
 
-	channelShow: function(ev) {
-	  var that = this;
-		var channelId = $(ev.target).attr('data-participants');
-		window.session.router.navigate('/games/' + that.model.get('Id') + '/messages/' + channelId, { trigger: false });
-		var me = that.model.me();
-		if (me != null) {
-			that.collection.each(function(message) {
-				var messageChannelId = ChatMessage.channelIdFor(message.get('RecipientIds'));
-	      if (channelId == messageChannelId && (message.get('SeenBy') == null || !message.get('SeenBy')[me.Id])) {
-					RPC('See', {
-						MessageId: message.get('Id'),
-					}, function(error) {
-						if (error != null && error != '') {
-							logError('While seeing', message, error);
-						}
-					});
-				}
-			});
-		}
-	},
-
 	reloadModel: function() {
 	},
 
@@ -65,7 +44,6 @@ window.GameChatView = BaseView.extend({
 	addMessage: function(message) {
 		var that = this;
 		var channelId = that.ensureChannel(message.get('RecipientIds'));
-		that.channels[channelId].addMessage(message);
 	},
 
 	createChannel: function() {
@@ -86,34 +64,6 @@ window.GameChatView = BaseView.extend({
 				'</strong>' + 
 			'</div>');
 		}
-	},
-
-	disableSelector: function() {
-	  var that = this;
-		var sel = that.$('.new-channel-members');
-		var selectedOptions = sel.find('option:selected');
-		var nonSelectedOptions = sel.find('option').filter(function() {
-			return !$(this).is(':selected');
-		});
-		var dropdown = sel.parent().find('.multiselect-container');
-
-		nonSelectedOptions.each(function() {
-			var input = dropdown.find('input[value="' + $(this).val() + '"]');
-			input.prop('disabled', true);
-			input.parent('li').addClass('disabled');
-		});
-	},
-
-	enableSelector: function() {
-		var that = this;
-		var sel = that.$('.new-channel-members');
-		var dropdown = sel.parent().find('.multiselect-container');
-
-		sel.find('option').each(function() {
-			var input = dropdown.find('input[value="' + $(this).val() + '"]');
-			input.prop('disabled', false);
-			input.parent('li').addClass('disabled');
-		});
 	},
 
   render: function() {

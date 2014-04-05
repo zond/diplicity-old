@@ -98,7 +98,7 @@ window.GameControlsView = BaseView.extend({
 	  var that = this;
 		that.currentView = new GameChatView({
 		  chatParticipants: that.chatParticipants,
-			model: that.model,
+			model: that.gameView.model,
 			collection: that.chatMessages,
 			el: that.$('.game-control-container'),
 		}).doRender();
@@ -108,7 +108,7 @@ window.GameControlsView = BaseView.extend({
 	  var that = this;
 		that.currentView = new GameResultsView({
 			el: that.$('.game-control-container'),
-			model: that.model,
+			model: that.gameView.model,
 		}).doRender();
 	},
 
@@ -116,7 +116,7 @@ window.GameControlsView = BaseView.extend({
 	  var that = this;
 		that.currentView = new GameOrdersView({
 			el: that.$('.game-control-container'),
-			model: that.model,
+			model: that.gameView.model,
 		}).doRender();
 	},
 
@@ -213,7 +213,7 @@ window.GameControlsView = BaseView.extend({
 		}
 	},
 
-	reloadOrdersAndResults: function(model) {
+	reloadModel: function(model) {
     if (this.currentView != null) {
 			this.currentView.reloadModel(model);
 		}

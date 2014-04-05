@@ -41,7 +41,7 @@ window.GameView = BaseView.extend({
 				url: '/games/' + this.originalModel.get('Id') + '/' + (this.lastPhaseOrdinal + 1),
 			});
 			this.sub();
-			this.controlsView.reloadOrdersAndResults(this.model);
+			this.controlsView.reloadModel(this.model);
 			this.stateView.reloadModel(this.model);
 		}
 	},
@@ -54,7 +54,7 @@ window.GameView = BaseView.extend({
 			this.model = this.originalModel;
 			this.sub();
 			this.model.trigger('reset');
-			this.controlsView.reloadOrdersAndResults(this.model);
+			this.controlsView.reloadModel(this.model);
 			this.stateView.reloadModel(this.model);
 		}
 	},
@@ -70,7 +70,7 @@ window.GameView = BaseView.extend({
 				url: '/games/' + this.originalModel.get('Id') + '/' + (this.lastPhaseOrdinal - 1),
 			});
 			this.sub();
-			this.controlsView.reloadOrdersAndResults(this.model);
+			this.controlsView.reloadModel(this.model);
 			this.stateView.reloadModel(this.model);
 		}
 	},

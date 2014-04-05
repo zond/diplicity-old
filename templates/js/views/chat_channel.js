@@ -2,8 +2,6 @@ window.ChatChannelView = BaseView.extend({
 
   template: _.template($('#chat_channel_underscore').html()),
 
-	className: "panel panel-default",
-
 	events: {
 	  "click .create-message-button": "createMessage",
 		"keyup .new-message-body": "keyup",
@@ -38,10 +36,10 @@ window.ChatChannelView = BaseView.extend({
 		if (that.model.get('UnseenMessages') != null) {
 			var unseen = that.model.get('UnseenMessages')[that.name];
 			if (unseen > 0) {
-				that.$('.chat-channel-title-container .unseen-messages').text(unseen);
-				that.$('.chat-channel-title-container .unseen-messages').show();
+				that.$('.unseen-messages').text(unseen);
+				that.$('.unseen-messages').show();
 			} else {
-				that.$('.chat-channel-title-container .unseen-messages').hide();
+				that.$('.unseen-messages').hide();
 			}
 		}
 	},
