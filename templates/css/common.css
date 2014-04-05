@@ -10,9 +10,13 @@
 .phase-step {
 	visibility: hidden;
 }
+.game-controls-left .btn {
+	position: relative;
+	z-index: 300;
+}
 .game-controls-right .btn {
 	position: relative;
-	z-index: 100;
+	z-index: 300;
 }
 .game-controls form {
 	margin-bottom: 0px;
@@ -35,10 +39,17 @@
 .game-controls-left .unseen-messages {
 	left: 0px;
 }
-.chat-channel-title-container {
-	position: relative;
-}
 .game-controls-left {
+	position: relative;
+	z-index: 200;
+	margin-right: 150px;
+}
+.game-controls-right {
+	position: relative;
+	z-index: 200;
+	float: right;
+}
+.chat-channel-title-container {
 	position: relative;
 }
 .game-description-container {
@@ -70,9 +81,6 @@ table.chat-messages {
 }
 .game-orders-container {
 	display: none;
-}
-.game-controls-right {
-	float: right;
 }
 .bottom-aligned {
 	position: absolute;
@@ -168,7 +176,10 @@ table.chat-messages {
 .game-control-container {
 	z-index: 100;
 	position: relative;
-	margin-top: 1px;
+	margin-top: -27px;
+}
+.game-control-container > * {
+	padding-top: 27px;
 }
 .game-controls-container {
 	position: relative;
