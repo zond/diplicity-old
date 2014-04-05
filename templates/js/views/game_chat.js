@@ -34,6 +34,9 @@ window.GameChatView = BaseView.extend({
 		}
 	},
 
+	reloadModel: function() {
+	},
+
 	loadMessages: function() {
 	  var that = this;
 		that.$('#chat-channels').empty();

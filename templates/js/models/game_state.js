@@ -183,7 +183,10 @@ window.GameState = Backbone.Model.extend({
 
 	describe: function() {
 	  var that = this;
-		var nationInfo = allocationMethodName(that.get('AllocationMethod'));
+		var nationInfo = "";
+		if (that.get('AllocationMethod') != null) {
+			nationInfo = allocationMethodName(that.get('AllocationMethod'));
+		}
 		var member = that.me();
 		if (member != null && member.Nation != null && member.Nation != '') {
 		  var nationInfo = {{.I "nations" }}[member.Nation];

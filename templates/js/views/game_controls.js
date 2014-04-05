@@ -3,12 +3,12 @@ window.GameControlsView = BaseView.extend({
   template: _.template($('#game_controls_underscore').html()),
 
 	events: {
+    "click .view-map": "viewMap",
     "click .view-chat": "viewChat",
     "click .view-orders": "viewOrders",
     "click .view-results": "viewResults",
 		"click .commit-phase": "commitPhase",
 		"click .uncommit-phase": "uncommitPhase",
-		"hide.bs.collapse .game-controls": "hideControls",
 		"click .previous-phase": "phaseBack",
 		"click .next-phase": "phaseForward",
 		"click .last-phase": "lastPhase",
@@ -30,6 +30,7 @@ window.GameControlsView = BaseView.extend({
 		  this.lastPhaseOrdinal = this.model.get('Phase').Ordinal;
 		}
 		this.deadline = null;
+		this.currentView = null;
 	},
 
 	lastPhase: function(ev) {
@@ -85,35 +86,38 @@ window.GameControlsView = BaseView.extend({
 		}
 	},
 
-	handleClick: function(ev, view) {
-		if (ev != null) {
-		  ev.preventDefault();
-			if (this.currentView != view) {
-				ev.stopPropagation();
-			}
+	viewMap: function(ev) {
+		var that = this;
+	  if (that.currentView != null) {
+			that.currentView.clean();
 		}
-		this.$('.game-controls-container').hide();
-    this.$('.game-' + view + '-container').show();
-		this.$('.game-controls').collapse('show')
-		this.currentView = view;
+		that.$('.game-control-container').empty();
 	},
 
   viewChat: function(ev) {
 	  var that = this;
-		that.gameChatView.doRender();
-		that.handleClick(ev, 'chat');
+		that.currentView = new GameChatView({
+		  chatParticipants: that.chatParticipants,
+			model: that.model,
+			collection: that.chatMessages,
+			el: that.$('.game-control-container'),
+		}).doRender();
 	},
 
   viewResults: function(ev) {
 	  var that = this;
-		that.gameResultsView.doRender();
-		that.handleClick(ev, 'results');
+		that.currentView = new GameResultsView({
+			el: that.$('.game-control-container'),
+			model: that.model,
+		}).doRender();
 	},
 
   viewOrders: function(ev) {
 	  var that = this;
-		that.gameOrdersView.doRender();
-		that.handleClick(ev, 'orders');
+		that.currentView = new GameOrdersView({
+			el: that.$('.game-control-container'),
+			model: that.model,
+		}).doRender();
 	},
 
 	updateTimeLeft: function() {
@@ -210,8 +214,9 @@ window.GameControlsView = BaseView.extend({
 	},
 
 	reloadOrdersAndResults: function(model) {
-		this.gameOrdersView.reloadModel(model);
-		this.gameResultsView.reloadModel(model);
+    if (this.currentView != null) {
+			this.currentView.reloadModel(model);
+		}
 	},
 
   render: function() {
@@ -220,20 +225,6 @@ window.GameControlsView = BaseView.extend({
 		  parentId: that.parentId,
 			model: that.model,
 		}));
-		that.gameChatView = new GameChatView({
-		  chatParticipants: that.chatParticipants,
-			model: that.model,
-			collection: that.chatMessages,
-			el: that.$('.game-chat-container'),
-		});
-		that.gameResultsView = new GameResultsView({
-			el: that.$('.game-results-container'),
-			model: that.model,
-		});
-		that.gameOrdersView = new GameOrdersView({
-			el: that.$('.game-orders-container'),
-			model: that.model,
-		});
 		that.update();
 		return that;
 	},
