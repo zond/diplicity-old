@@ -27,6 +27,18 @@ window.ChatMessagesView = BaseView.extend({
 				model: msg,
 				game: that.model,
 			}).doRender().el);
+			var me = that.model.me();
+			if (me != null) {
+				if (!msg.get('SeenBy')[me.Id]) {
+					RPC('See', {
+						MessageId: msg.get('Id'),
+					}, function(error) {
+						if (error != null && error != '') {
+							logError('While seeing', msg, error);
+						}
+					});
+				}
+			}
 		}
 	},
 
