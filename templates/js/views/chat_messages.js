@@ -2,21 +2,31 @@ window.ChatMessagesView = BaseView.extend({
 
   template: _.template($('#chat_messages_underscore').html()),
 
-  initialize: function(opts) {
-		this.name = opts.name;
-		this.nMembers = opts.nMembers;
-		this.members = opts.members;
-		this.listenTo(this.model, 'change', this.doRender);
-	},
-
   events: {
 		"click .create-message-button": "createMessage",
     "keyup .new-message-body": "keyup",
 	},
 
+  initialize: function(opts) {
+		this.name = opts.name;
+		this.nMembers = opts.nMembers;
+		this.members = opts.members;
+		this.listenTo(this.collection, 'add', this.addMessage);
+	},
+
   keyup: function(ev) {
 	  if (ev.keyCode == 13 && !ev.shiftKey && !ev.altKey) { 
 			this.createMessage(ev);
+		}
+	},
+
+	addMessage: function(msg) {
+		var that = this;
+		if (that.name == ChatMessage.channelIdFor(msg.get('RecipientIds'))) {
+			that.$('.messages-container').prepend(new ChatMessageView({
+				model: msg,
+				game: that.model,
+			}).doRender().el);
 		}
 	},
 
@@ -27,11 +37,13 @@ window.ChatMessagesView = BaseView.extend({
 			// i have NO IDEA AT ALL why i have to use this clunky id scheme to find the body, but that.$('.new-message-body').val() never produced anything but ''
 			var body = $('.new-message-body').val();
 			if (body != '') {
+				var me = that.model.me();
 				$('.new-message-body').val('');
 				that.collection.create({
 					RecipientIds: that.members,
 					Body: body,
 					GameId: that.model.get('Id'),
+					SenderId: me.Id,
 				}, { silent: true });
 			}
 		} else {
@@ -49,12 +61,7 @@ window.ChatMessagesView = BaseView.extend({
 		that.$el.html(that.template({
 		}));
 		that.collection.each(function(msg) {
-			if (msg.get('SenderId') != null && that.name == ChatMessage.channelIdFor(msg.get('RecipientIds'))) {
-				that.$('.messages-container').prepend(new ChatMessageView({
-					model: msg,
-					game: that.model,
-				}).doRender().el);
-			}
+			that.addMessage(msg);
 		});
 		var maxHeight = $(window).height() - $('#top-navigation').height() - $('#current-game').height() - 27;
 		if (that.$('.channel-messages').height() > maxHeight) {
