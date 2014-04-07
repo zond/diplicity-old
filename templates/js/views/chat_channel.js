@@ -36,6 +36,8 @@ window.ChatChannelView = BaseView.extend({
 		  collection: that.collection,
 			name: that.name,
 			model: that.model,
+			nMembers: that.nMembers,
+			members: that.members,
 		}).doRender();
 	},
 
