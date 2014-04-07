@@ -14,7 +14,6 @@ window.ChatChannelView = BaseView.extend({
 		  that.nMembers++;
 			return id;
 		}).sort().join(".");
-		that.nameId = that.name.replace(/\./g, "_");
 		that.title = _.map(that.members, function(x, id) {
 		  var memb = that.model.member(id);
 			if (memb == null) {
@@ -35,6 +34,7 @@ window.ChatChannelView = BaseView.extend({
 	  new ChatMessagesView({
 			el: $('.game-control-container'),
 		  collection: that.collection,
+			name: that.name,
 			model: that.model,
 		}).doRender();
 	},
@@ -56,8 +56,6 @@ window.ChatChannelView = BaseView.extend({
 	  var that = this;
 		that.$el.html(that.template({
 			model: that.model,
-			name: that.name,
-			nameId: that.nameId,
 			title: that.title,
 		}));
 		that.updateUnseen();

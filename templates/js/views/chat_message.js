@@ -2,8 +2,6 @@ window.ChatMessageView = BaseView.extend({
 
   template: _.template($('#chat_message_underscore').html()),
 
-  tagName: 'tr',
-
 	initialize: function(options) {
 	  this.game = options.game;
 	},

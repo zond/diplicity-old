@@ -4,7 +4,6 @@ window.GameChatView = BaseView.extend({
 
 	events: {
 	  "click .create-channel-button": "createChannel",
-		"shown.bs.collapse .channel": "channelShow",
 	},
 
 	initialize: function(options) {

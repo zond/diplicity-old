@@ -92,6 +92,7 @@ window.GameControlsView = BaseView.extend({
 			that.currentView.clean();
 		}
 		that.$('.game-control-container').empty();
+		that.$('.game-control-container').css('height', '');
 	},
 
   viewChat: function(ev) {
