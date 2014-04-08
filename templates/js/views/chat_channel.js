@@ -8,7 +8,6 @@ window.ChatChannelView = BaseView.extend({
 
 	initialize: function(options) {
 	  var that = this;
-		console.log(options);
 	  that.members = options.members;
 		that.nMembers = _.size(that.members);
 		that.name = ChatMessage.channelIdFor(that.members);
