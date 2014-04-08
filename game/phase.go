@@ -103,8 +103,6 @@ func (self *Phase) Schedule(c common.SkinnyContext) error {
 }
 
 func (self *Phase) SendScheduleEmails(c common.SkinnyContext, game *Game) {
-	from := fmt.Sprintf("diplicity <%v>", c.MailAddress())
-
 	members, err := game.Members(c.DB())
 	for _, member := range members {
 		user := &user.User{Id: member.UserId}
@@ -145,12 +143,12 @@ func (self *Phase) SendScheduleEmails(c common.SkinnyContext, game *Game) {
 			}
 			body := fmt.Sprintf(common.EmailTemplate, text, contextLink, unsubLink)
 			if c.Env() == "development" {
-				c.Infof("Would have sent\nFrom: %#v\nTo: %#v\nSubject: %#v\n%v", from, to, subject, body)
+				c.Infof("Would have sent\nFrom: \"diplicity\" <%#v>\nTo: %#v\nSubject: %#v\n%v", c.MailAddress(), to, subject, body)
 			} else {
-				if err := c.SendMail(from, subject, body, to); err == nil {
-					c.Infof("Sent\nFrom: %#v\nTo: %#v\nSubject: %#v\n%v", from, to, subject, body)
+				if err := c.SendMail("diplicity", c.MailAddress(), subject, body, []string{to}); err == nil {
+					c.Infof("Sent\nFrom: \"diplicity\" <%#v>\nTo: %#v\nSubject: %#v\n%v", c.MailAddress(), to, subject, body)
 				} else {
-					c.Errorf("Unable to send %#v/%#v from %#v to %#v: %v", subject, body, from, to, err)
+					c.Errorf("Unable to send %#v/%#v from \"diplicity\" <%#v> to %#v: %v", subject, body, c.MailAddress(), to, err)
 				}
 			}
 		}

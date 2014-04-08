@@ -78,8 +78,8 @@ func (self *defaultWSContext) MailAddress() string {
 	return self.web.gmailAccount
 }
 
-func (self *defaultWSContext) SendMail(from, subject, message string, recips ...string) error {
-	return self.web.SendMail(from, subject, message, recips...)
+func (self *defaultWSContext) SendMail(fromName, replyTo, subject, message string, recips []string) error {
+	return self.web.SendMail(fromName, replyTo, subject, message, recips)
 }
 
 type Router struct {

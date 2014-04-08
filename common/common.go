@@ -30,7 +30,7 @@ const (
 )
 
 type Mailer interface {
-	SendMail(from, subject, message string, recips ...string) error
+	SendMail(fromName, replyTo, subject, message string, recips []string) error
 	MailAddress() string
 }
 

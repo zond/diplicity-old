@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/smtp"
 	"path/filepath"
 	"strings"
 	"sync/atomic"
@@ -56,6 +57,8 @@ type Web struct {
 	jsViewTemplates       *template.Template
 	gmailAccount          string
 	gmailPassword         string
+	smtpAccount           string
+	smtpHost              string
 	mailHandler           func(c SkinnyContext, msg *enmime.MIMEBody) error
 	router                *Router
 	secret                string
@@ -134,11 +137,17 @@ func (self *Web) MailAddress() string {
 	return self.gmailAccount
 }
 
+func (self *Web) SetSMTP(host, account string) *Web {
+	self.smtpAccount = account
+	self.smtpHost = host
+	return self
+}
+
 func (self *Web) Start() (err error) {
 	if self.gmailAccount != "" {
 		self.gmail = gmail.New(self.gmailAccount, self.gmailPassword).MailHandler(self.IncomingMail).ErrorHandler(func(e error) {
 			self.Fatalf("Mail handler: %v", e)
-		}).SMTPHost("localhost:25", "server@diplicity.oort.se", "")
+		})
 		if _, err = self.gmail.Start(); err != nil {
 			return
 		}
@@ -158,8 +167,23 @@ func (self *Web) Diet() SkinnyContext {
 	}
 }
 
-func (self *Web) SendMail(from, subject, message string, recips ...string) (err error) {
-	return self.gmail.Send(from, subject, message, recips...)
+func (self *Web) SendMail(fromName, replyTo, subject, message string, recips []string) (err error) {
+	body := strings.Join([]string{
+		"Content-Type: text/plain; charset=\"utf-8\"",
+		fmt.Sprintf("Reply-To: %v", replyTo),
+		fmt.Sprintf("From: %v <%v>", fromName, self.smtpAccount),
+		fmt.Sprintf("To: %v", strings.Join(recips, ", ")),
+		fmt.Sprintf("Subject: %v", subject),
+		"",
+		message,
+	}, "\r\n")
+	actualRecips := []string{}
+	for _, recip := range recips {
+		if match := gmail.AddrReg.FindString(recip); match != "" {
+			actualRecips = append(actualRecips, match)
+		}
+	}
+	return smtp.SendMail(self.smtpHost, nil, self.smtpAccount, actualRecips, []byte(body))
 }
 
 func (self *Web) DB() *kol.DB {

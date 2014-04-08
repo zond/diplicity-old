@@ -33,6 +33,8 @@ func main() {
 	db := flag.String("db", "diplicity", "The path to the database file to use")
 	appcache := flag.Bool("appcache", true, "Whether to enable appcache")
 	logOutput := flag.String("log", "-", "Where to send the log output")
+	smtpAccount := flag.String("smtp_account", "", "What From-address to put in the outgoing email")
+	smtpHost := flag.String("smtp_host", "", "What host to use when sending out email")
 
 	flag.Parse()
 
@@ -48,7 +50,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	server.SetAppcache(*appcache).SetGMail(*gmailAccount, *gmailPassword, game.IncomingMail)
+	server.SetAppcache(*appcache).SetGMail(*gmailAccount, *gmailPassword, game.IncomingMail).SetSMTP(*smtpHost, *smtpAccount)
 
 	router := mux.NewRouter()
 

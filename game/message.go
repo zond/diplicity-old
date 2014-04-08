@@ -151,7 +151,7 @@ func (self *Message) EmailTo(c common.SkinnyContext, game *Game, sender *Member,
 		}
 	}
 	senderName := sender.ShortName(game, senderUser)
-	from := fmt.Sprintf("%v <%v+%v@%v>", senderName, parts[0], encodedMailTag, parts[1])
+	replyTo := fmt.Sprintf("%v+%v@%v", parts[0], encodedMailTag, parts[1])
 	to := fmt.Sprintf("%v <%v>", recipName, recipUser.Email)
 	memberIds := []string{}
 	for memberId, _ := range self.RecipientIds {
@@ -170,13 +170,13 @@ func (self *Message) EmailTo(c common.SkinnyContext, game *Game, sender *Member,
 	}
 	body := fmt.Sprintf(common.EmailTemplate, self.Body, contextLink, unsubLink)
 	if c.Env() == common.Development {
-		c.Infof("Would have sent\nFrom: %#v\nTo: %#v\nSubject: %#v\n%v", from, to, subject, body)
+		c.Infof("Would have sent\nFrom: %#v <%#v>\nTo: %#v\nSubject: %#v\n%v", senderName, replyTo, to, subject, body)
 	} else {
-		c.Infof("Will try to send From: %#v, To: %#v, Subject: %#v", from, to, subject)
-		if err := c.SendMail(from, subject, body, to); err == nil {
-			c.Infof("Sent\nFrom: %#v\nTo: %#v\nSubject: %#v\n%v", from, to, subject, body)
+		c.Infof("Will try to send From: %#v <%#v>, To: %#v, Subject: %#v", senderName, replyTo, to, subject)
+		if err := c.SendMail(senderName, replyTo, subject, body, []string{to}); err == nil {
+			c.Infof("Sent\nFrom: %#v <%#v>\nTo: %#v\nSubject: %#v\n%v", senderName, replyTo, to, subject, body)
 		} else {
-			c.Errorf("Unable to send %#v/%#v from %#v to %#v: %v", subject, body, from, to, err)
+			c.Errorf("Unable to send %#v/%#v from %#v <%#v> to %#v: %v", subject, body, senderName, replyTo, to, err)
 		}
 	}
 }
