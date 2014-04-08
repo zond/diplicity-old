@@ -138,7 +138,7 @@ func (self *Web) Start() (err error) {
 	if self.gmailAccount != "" {
 		self.gmail = gmail.New(self.gmailAccount, self.gmailPassword).MailHandler(self.IncomingMail).ErrorHandler(func(e error) {
 			self.Fatalf("Mail handler: %v", e)
-		}).SMTPHost("localhost:25", "", "")
+		}).SMTPHost("localhost:25", "server@diplicity.oort.se", "")
 		if _, err = self.gmail.Start(); err != nil {
 			return
 		}
