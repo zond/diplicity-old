@@ -134,6 +134,7 @@ table.chat-messages {
 	height: 1em;
 }
 .chat-body {
+	word-break: normal;
 	padding: 0px;
 	display: inline;
 	margin: 0px;
