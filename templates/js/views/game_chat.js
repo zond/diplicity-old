@@ -8,6 +8,7 @@ window.GameChatView = BaseView.extend({
 
 	initialize: function(options) {
 	  this.channels = {};
+		this.chatParticipants = options.chatParticipants;
 	  this.listenTo(this.collection, 'add', this.addMessage);
 	  this.listenTo(this.collection, 'reset', this.loadMessages);
 	},
@@ -67,37 +68,50 @@ window.GameChatView = BaseView.extend({
 
   render: function() {
 	  var that = this;
-	  that.channels = {};
-    that.$el.html(that.template({
-		}));
-		var me = that.model.me();
-		if (me == null) {
-		  that.$('.create-channel-container').hide();
+		if (that.chatParticipants != null) {
+			new ChatMessagesView({
+				el: $('.game-control-container'),
+				collection: that.collection,
+				model: that.model,
+				members: _.inject(that.chatParticipants.split("."), function(sum, memb) {
+					sum[memb] = true;
+					return sum;
+				}, {}),
+			}).doRender();
+			that.chatParticipants = null;
 		} else {
-			_.each(that.model.members(), function(member) {
-			  if (member.Id != me.Id) {
-					var opt = $('<option value="' + member.Id + '"></option>');
-					if (that.model.get('State') == {{.GameState "Created"}}) {
-					  opt.text(member.describe());
-					} else {
-					  opt.text(member.Nation);
+			that.channels = {};
+			that.$el.html(that.template({
+			}));
+			var me = that.model.me();
+			if (me == null) {
+				that.$('.create-channel-container').hide();
+			} else {
+				_.each(that.model.members(), function(member) {
+					if (member.Id != me.Id) {
+						var opt = $('<option value="' + member.Id + '"></option>');
+						if (that.model.get('State') == {{.GameState "Created"}}) {
+							opt.text(member.describe());
+						} else {
+							opt.text(member.Nation);
+						}
+						that.$('.new-channel-members').append(opt);
 					}
-					that.$('.new-channel-members').append(opt);
-				}
-			});
-      var opts = {
-				onDropdownHide: function(ev) {
-					var el = $(ev.currentTarget);
-					el.css('margin-bottom', 0);
-				},
-				onDropdownShow: function(ev) {
-					var el = $(ev.currentTarget);
-					el.css('margin-bottom', el.find('.multiselect-container').height());
-				},
-			};
-			that.$('.new-channel-members').multiselect(opts);
+				});
+				var opts = {
+					onDropdownHide: function(ev) {
+														var el = $(ev.currentTarget);
+														el.css('margin-bottom', 0);
+													},
+					onDropdownShow: function(ev) {
+														var el = $(ev.currentTarget);
+														el.css('margin-bottom', el.find('.multiselect-container').height());
+													},
+				};
+				that.$('.new-channel-members').multiselect(opts);
+			}
+			this.loadMessages();
 		}
-		this.loadMessages();
 		return that;
 	},
 

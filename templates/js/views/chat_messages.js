@@ -7,11 +7,16 @@ window.ChatMessagesView = BaseView.extend({
     "keyup .new-message-body": "keyup",
 	},
 
-  initialize: function(opts) {
-		this.name = opts.name;
-		this.nMembers = opts.nMembers;
-		this.members = opts.members;
-		this.listenTo(this.collection, 'add', this.addMessage);
+  initialize: function(options) {
+		var that = this;
+	  that.members = options.members;
+		that.nMembers = _.size(that.members);
+		that.name = ChatMessage.channelIdFor(that.members);
+		that.listenTo(that.collection, 'add', that.addMessage);
+	},
+
+  onClose: function() {
+		window.session.router.navigate('/games/' + this.model.get('Id'), { trigger: false });
 	},
 
   keyup: function(ev) {
@@ -70,6 +75,7 @@ window.ChatMessagesView = BaseView.extend({
 
   render: function() {
 	  var that = this;
+		window.session.router.navigate('/games/' + this.model.get('Id') + '/messages/' + that.name, { trigger: false });
 		that.$el.html(that.template({
 		}));
 		that.collection.each(function(msg) {

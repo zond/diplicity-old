@@ -45,15 +45,6 @@ window.GameControlsView = BaseView.extend({
 	  this.gameView.phaseBack(ev);
 	},
 
-	hideControls: function(ev) {
-		window.session.router.navigate('/games/' + this.model.get('Id'), { trigger: false });
-	  if ($(ev.target).hasClass('game-controls')) {
-			this.$('.channel').each(function(x, el) {
-				$(el).collapse('hide');
-			});
-		}
-	},
-
 	commitPhase: function(ev) {
 	  ev.preventDefault();
 		ev.stopPropagation();
@@ -96,6 +87,9 @@ window.GameControlsView = BaseView.extend({
 	},
 
   viewChat: function(ev) {
+		if (ev != null) {
+			ev.preventDefault();
+		}
 	  var that = this;
 		that.currentView = new GameChatView({
 		  chatParticipants: that.chatParticipants,
@@ -106,6 +100,7 @@ window.GameControlsView = BaseView.extend({
 	},
 
   viewResults: function(ev) {
+		ev.preventDefault();
 	  var that = this;
 		that.currentView = new GameResultsView({
 			el: that.$('.game-control-container'),
@@ -114,6 +109,7 @@ window.GameControlsView = BaseView.extend({
 	},
 
   viewOrders: function(ev) {
+		ev.preventDefault();
 	  var that = this;
 		that.currentView = new GameOrdersView({
 			el: that.$('.game-control-container'),
@@ -158,12 +154,6 @@ window.GameControlsView = BaseView.extend({
 			}
 			if (that.chatParticipants != null) {
 				that.viewChat();
-				that.gameChatView.ensureChannel(_.inject(that.chatParticipants.split("."), function(sum, nat) {
-					sum[nat] = true;
-					return sum
-				}, {}));
-				that.gameChatView.$('.channel-' + that.chatParticipants.replace(/\./g, "_")).collapse('show');
-				that.gameChatView.$('.chevron-' + that.chatParticipants.replace(/\./g, "_")).removeClass('glyphicon-chevron-right').addClass('glyphicon-chevron-down');
 				that.chatParticipants = null;
 			}
 		}

@@ -8,35 +8,22 @@ window.ChatChannelView = BaseView.extend({
 
 	initialize: function(options) {
 	  var that = this;
+		console.log(options);
 	  that.members = options.members;
-		that.nMembers = 0;
-		that.name = _.map(that.members, function(x, id) {
-		  that.nMembers++;
-			return id;
-		}).sort().join(".");
-		that.title = _.map(that.members, function(x, id) {
-		  var memb = that.model.member(id);
-			if (memb == null) {
-			  return '{{.I "Anonymous" }}';
-			}
-			if (that.model.get('State') == {{.GameState "Created"}}) {
-				return memb.describe();
-			} else {
-				return memb.Nation;
-			}
-		}).sort().join(", ");
+		that.nMembers = _.size(that.members);
+		that.name = ChatMessage.channelIdFor(that.members);
+		that.title = ChatMessage.channelTitleFor(that.model, that.members);
 		that.listenTo(that.model, 'change', that.updateUnseen);
 		that.listenTo(that.model, 'reset', that.updateUnseen);
 	},
 
 	showMessages: function(ev) {
+		ev.preventDefault();
 		var that = this;
 	  new ChatMessagesView({
 			el: $('.game-control-container'),
 		  collection: that.collection,
-			name: that.name,
 			model: that.model,
-			nMembers: that.nMembers,
 			members: that.members,
 		}).doRender();
 	},
