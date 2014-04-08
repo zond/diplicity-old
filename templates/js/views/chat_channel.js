@@ -2,6 +2,8 @@ window.ChatChannelView = BaseView.extend({
 
   template: _.template($('#chat_channel_underscore').html()),
 
+  className: 'chat-channel',
+
   events: {
 		"click .chat-channel-name": "showMessages",
 	},
