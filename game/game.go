@@ -55,9 +55,9 @@ func (self SortedGames) Swap(i, j int) {
 type Game struct {
 	Id kol.Id
 
-	Closed             bool `kol:"index"`
-	Private            bool `kol:"index"`
-	State              common.GameState
+	Closed             bool             `kol:"index"`
+	Private            bool             `kol:"index"`
+	State              common.GameState `kol:"index"`
 	EndReason          common.EndReason
 	Variant            string
 	AllocationMethod   string
