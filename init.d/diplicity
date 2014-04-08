@@ -28,7 +28,7 @@ USER=www-data
 # Read configuration variable file if it is present
 [ -r /etc/default/$NAME ] && . /etc/default/$NAME
 
-DAEMON_ARGS="-gmail_account=$GMAIL_ACCOUNT -gmail_password=$GMAIL_PASSWORD -secret=$SECRET -env=production -log=/var/log/diplicity/diplicity -db=/var/local/diplicity/diplicity -port=8080"
+DAEMON_ARGS="-smtp_host=localhost:25 -smtp_account=server@diplicity.oort.se -gmail_account=$GMAIL_ACCOUNT -gmail_password=$GMAIL_PASSWORD -secret=$SECRET -env=production -log=/var/log/diplicity/diplicity -db=/var/local/diplicity/diplicity -port=8080"
 
 # Load the VERBOSE setting and other rcS variables
 . /lib/init/vars.sh

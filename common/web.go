@@ -183,7 +183,17 @@ func (self *Web) SendMail(fromName, replyTo, subject, message string, recips []s
 			actualRecips = append(actualRecips, match)
 		}
 	}
-	return smtp.SendMail(self.smtpHost, nil, self.smtpAccount, actualRecips, []byte(body))
+	if self.Env() == Development {
+		self.Infof("Would have sent\n%v", body)
+	} else {
+		self.Infof("Will try to send\n%v", body)
+		if err = smtp.SendMail(self.smtpHost, nil, self.smtpAccount, actualRecips, []byte(body)); err != nil {
+			self.Errorf("Unable to send\n%v\ndue to %v", body, err)
+			return
+		}
+		self.Infof("Sent\n%v", body)
+	}
+	return
 }
 
 func (self *Web) DB() *kol.DB {

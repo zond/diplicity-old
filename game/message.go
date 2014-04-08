@@ -169,16 +169,7 @@ func (self *Message) EmailTo(c common.SkinnyContext, game *Game, sender *Member,
 		return
 	}
 	body := fmt.Sprintf(common.EmailTemplate, self.Body, contextLink, unsubLink)
-	if c.Env() == common.Development {
-		c.Infof("Would have sent\nFrom: %#v <%#v>\nTo: %#v\nSubject: %#v\n%v", senderName, replyTo, to, subject, body)
-	} else {
-		c.Infof("Will try to send From: %#v <%#v>, To: %#v, Subject: %#v", senderName, replyTo, to, subject)
-		if err := c.SendMail(senderName, replyTo, subject, body, []string{to}); err == nil {
-			c.Infof("Sent\nFrom: %#v <%#v>\nTo: %#v\nSubject: %#v\n%v", senderName, replyTo, to, subject, body)
-		} else {
-			c.Errorf("Unable to send %#v/%#v from %#v <%#v> to %#v: %v", subject, body, senderName, replyTo, to, err)
-		}
-	}
+	c.SendMail(senderName, replyTo, subject, body, []string{to})
 }
 
 type IllegalMessageError struct {

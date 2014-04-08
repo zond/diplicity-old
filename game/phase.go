@@ -142,15 +142,7 @@ func (self *Phase) SendScheduleEmails(c common.SkinnyContext, game *Game) {
 				return
 			}
 			body := fmt.Sprintf(common.EmailTemplate, text, contextLink, unsubLink)
-			if c.Env() == "development" {
-				c.Infof("Would have sent\nFrom: \"diplicity\" <%#v>\nTo: %#v\nSubject: %#v\n%v", c.MailAddress(), to, subject, body)
-			} else {
-				if err := c.SendMail("diplicity", c.MailAddress(), subject, body, []string{to}); err == nil {
-					c.Infof("Sent\nFrom: \"diplicity\" <%#v>\nTo: %#v\nSubject: %#v\n%v", c.MailAddress(), to, subject, body)
-				} else {
-					c.Errorf("Unable to send %#v/%#v from \"diplicity\" <%#v> to %#v: %v", subject, body, c.MailAddress(), to, err)
-				}
-			}
+			c.SendMail("diplicity", c.MailAddress(), subject, body, []string{to})
 		}
 	}
 }
