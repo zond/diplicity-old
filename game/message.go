@@ -195,8 +195,9 @@ func IncomingMail(c common.SkinnyContext, msg *enmime.MIMEBody) (err error) {
 	c.Debugf("Incoming mail to %#v\n%v", msg.GetHeader("To"), text)
 	if match := gmail.AddrReg.FindString(msg.GetHeader("To")); match != "" {
 		lines := []string{}
+		mailUser := strings.Split(c.MailAddress(), "@")[0]
 		for _, line := range strings.Split(text, "\n") {
-			if !strings.Contains(line, c.MailAddress()) && strings.Index(line, ">") != 0 {
+			if !strings.Contains(line, mailUser) && strings.Index(line, ">") != 0 {
 				lines = append(lines, line)
 			}
 		}
