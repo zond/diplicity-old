@@ -191,7 +191,7 @@ func (self *Web) SendMail(fromName, replyTo, subject, message string, recips []s
 	if self.Env() == Development {
 		self.Infof("Would have sent\n%v", body)
 	} else {
-		key := uint32(time.Now().UnixNano()<<32) + rand.Uint32()
+		key := uint64(time.Now().UnixNano()<<32) + uint64(rand.Uint32())
 		self.Infof("%v: Will try to send\n%v", key, body)
 		if err = smtp.SendMail(self.smtpHost, nil, self.smtpAccount, actualRecips, []byte(body)); err != nil {
 			self.Errorf("%v: Unable to send: %v", key, err)
