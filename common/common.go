@@ -31,7 +31,8 @@ const (
 
 type Mailer interface {
 	SendMail(fromName, replyTo, subject, message string, recips []string) error
-	MailAddress() string
+	ReceiveAddress() string
+	SendAddress() string
 }
 
 type SkinnyContext interface {

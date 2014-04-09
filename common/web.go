@@ -133,7 +133,11 @@ func (self *Web) Secret() string {
 	return self.secret
 }
 
-func (self *Web) MailAddress() string {
+func (self *Web) SendAddress() string {
+	return self.smtpAccount
+}
+
+func (self *Web) ReceiveAddress() string {
 	return self.gmailAccount
 }
 

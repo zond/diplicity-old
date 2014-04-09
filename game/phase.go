@@ -142,7 +142,7 @@ func (self *Phase) SendScheduleEmails(c common.SkinnyContext, game *Game) {
 				return
 			}
 			body := fmt.Sprintf(common.EmailTemplate, text, contextLink, unsubLink)
-			c.SendMail("diplicity", c.MailAddress(), subject, body, []string{to})
+			c.SendMail("diplicity", c.ReceiveAddress(), subject, body, []string{to})
 		}
 	}
 }

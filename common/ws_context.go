@@ -74,7 +74,11 @@ func (self *defaultWSContext) I(phrase string, args ...interface{}) (result stri
 	return
 }
 
-func (self *defaultWSContext) MailAddress() string {
+func (self *defaultWSContext) SendAddress() string {
+	return self.web.smtpAccount
+}
+
+func (self *defaultWSContext) ReceiveAddress() string {
 	return self.web.gmailAccount
 }
 
