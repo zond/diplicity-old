@@ -127,7 +127,7 @@ func main() {
 	if err := game.ScheduleUnresolvedPhases(server.Diet()); err != nil {
 		panic(err)
 	}
-	server.Infof("Listening to %v  (env=%#v, appcache=%#v, gmail_account=%#v)", addr, *env, *appcache, *gmailAccount)
+	server.Infof("Listening to %v (env=%#v, appcache=%#v, gmail_account=%#v, smtp_account=%#v, smtp_host=%#v)", addr, *env, *appcache, *gmailAccount, *smtpAccount, *smtpHost)
 	server.Fatalf("%v", http.ListenAndServe(addr, router))
 
 }
