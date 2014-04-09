@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math/rand"
 	"net/http"
 	"net/smtp"
 	"path/filepath"
@@ -190,12 +191,13 @@ func (self *Web) SendMail(fromName, replyTo, subject, message string, recips []s
 	if self.Env() == Development {
 		self.Infof("Would have sent\n%v", body)
 	} else {
-		self.Infof("Will try to send\n%v", body)
+		key := uint32(time.Now().UnixNano()<<32) + rand.Uint32()
+		self.Infof("%v: Will try to send\n%v", key, body)
 		if err = smtp.SendMail(self.smtpHost, nil, self.smtpAccount, actualRecips, []byte(body)); err != nil {
-			self.Errorf("Unable to send\n%v\ndue to %v", body, err)
+			self.Errorf("%v: Unable to send: %v", key, err)
 			return
 		}
-		self.Infof("Sent\n%v", body)
+		self.Infof("%v: Successfully sent", key)
 	}
 	return
 }
