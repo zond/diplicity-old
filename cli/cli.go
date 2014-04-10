@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"os"
@@ -69,14 +70,22 @@ func (self *cli) send(email string, mess gosubs.Message) (err error) {
 	return
 }
 
-func (self *cli) post(path string, obj interface{}) (err error) {
+func (self *cli) post(path string, obj interface{}) (response string, err error) {
 	token, err := self.token(common.Admin)
 	cli := &http.Client{}
 	buf := &bytes.Buffer{}
 	if err = json.NewEncoder(buf).Encode(obj); err != nil {
 		return
 	}
-	_, err = cli.Post(fmt.Sprintf("http://%v:%v%v?token=%v", self.host, self.port, path, token), "application/json", buf)
+	resp, err := cli.Post(fmt.Sprintf("http://%v:%v%v?token=%v", self.host, self.port, path, token), "application/json", buf)
+	if err != nil {
+		return
+	}
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return
+	}
+	response = string(b)
 	return
 }
 
@@ -92,11 +101,12 @@ func (self *cli) get(path string) (result io.ReadCloser, err error) {
 }
 
 func (self *cli) createUser(email string) (err error) {
-	return self.post("/admin/users", map[string]interface{}{
+	_, err = self.post("/admin/users", map[string]interface{}{
 		"Email":         email,
 		"Id":            kol.Id(email),
 		"DiplicityHost": fmt.Sprintf("%v:%v", self.host, self.port),
 	})
+	return
 }
 
 func (self *cli) game(id string) (result game.AdminGameState, err error) {
@@ -149,6 +159,7 @@ func main() {
 	rollback := flag.String("rollback", "", "A game to rollback.")
 	recalc := flag.String("recalc", "", "A game to recalculate options for.")
 	until := flag.Int("until", 100000, "A phase ordinal to roll back to. This will be the unresolved phase.")
+	reindex := flag.Bool("reindex", false, "Reindex all games in the database.")
 
 	flag.Parse()
 
@@ -165,19 +176,27 @@ func main() {
 		}
 		io.Copy(os.Stdout, bod)
 	} else {
-		if *join == "" && *commitAll == "" && *commit == "" && *rollback == "" && *recalc == "" {
+		if *join == "" && *commitAll == "" && *commit == "" && *rollback == "" && *recalc == "" && *reindex == false {
 			flag.Usage()
 			return
 		}
 
+		if *reindex {
+			if _, err := cli.post("/admin/games/reindex", nil); err != nil {
+				panic(err)
+			} else {
+				fmt.Println(resp)
+			}
+		}
+
 		if *recalc != "" {
-			if err := cli.post(fmt.Sprintf("/admin/games/%v/recalc", *recalc), map[string]interface{}{}); err != nil {
+			if resp, err := cli.post(fmt.Sprintf("/admin/games/%v/recalc", *recalc), map[string]interface{}{}); err != nil {
 				panic(err)
 			}
 		}
 
 		if *rollback != "" {
-			if err := cli.post(fmt.Sprintf("/admin/games/%v/rollback/%v", *rollback, *until), map[string]interface{}{}); err != nil {
+			if _, err := cli.post(fmt.Sprintf("/admin/games/%v/rollback/%v", *rollback, *until), map[string]interface{}{}); err != nil {
 				panic(err)
 			}
 		}

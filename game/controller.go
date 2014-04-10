@@ -62,6 +62,20 @@ func AdminGetOptions(c *common.HTTPContext) (err error) {
 	return c.RenderJSON(opts)
 }
 
+func AdminReindexGames(c *common.HTTPContext) (err error) {
+	games := Games{}
+	if err = c.DB().Query().All(&games); err != nil {
+		return
+	}
+	for _, game := range games {
+		if err = c.DB().Index(game); err != nil {
+			return
+		}
+		fmt.Fprintf(c.Resp(), "Reindexed %#v\n", game.Id.String())
+	}
+	return
+}
+
 func AdminRecalcOptions(c *common.HTTPContext) (err error) {
 	gameId, err := base64.URLEncoding.DecodeString(c.Vars()["game_id"])
 	if err != nil {
