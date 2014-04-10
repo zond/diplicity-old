@@ -182,7 +182,7 @@ func main() {
 		}
 
 		if *reindex {
-			if _, err := cli.post("/admin/games/reindex", nil); err != nil {
+			if resp, err := cli.post("/admin/games/reindex", nil); err != nil {
 				panic(err)
 			} else {
 				fmt.Println(resp)
@@ -190,7 +190,7 @@ func main() {
 		}
 
 		if *recalc != "" {
-			if resp, err := cli.post(fmt.Sprintf("/admin/games/%v/recalc", *recalc), map[string]interface{}{}); err != nil {
+			if _, err := cli.post(fmt.Sprintf("/admin/games/%v/recalc", *recalc), map[string]interface{}{}); err != nil {
 				panic(err)
 			}
 		}
