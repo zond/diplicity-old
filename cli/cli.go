@@ -160,6 +160,7 @@ func main() {
 	recalc := flag.String("recalc", "", "A game to recalculate options for.")
 	until := flag.Int("until", 100000, "A phase ordinal to roll back to. This will be the unresolved phase.")
 	reindex := flag.Bool("reindex", false, "Reindex all games in the database.")
+	setrank1 := flag.Bool("setrank1", false, "Set rank of all users to 1.")
 
 	flag.Parse()
 
@@ -176,13 +177,21 @@ func main() {
 		}
 		io.Copy(os.Stdout, bod)
 	} else {
-		if *join == "" && *commitAll == "" && *commit == "" && *rollback == "" && *recalc == "" && *reindex == false {
+		if *join == "" && *commitAll == "" && *commit == "" && *rollback == "" && *recalc == "" && *reindex == false && *setrank1 == false {
 			flag.Usage()
 			return
 		}
 
 		if *reindex {
 			if resp, err := cli.post("/admin/games/reindex", nil); err != nil {
+				panic(err)
+			} else {
+				fmt.Println(resp)
+			}
+		}
+
+		if *setrank1 {
+			if resp, err := cli.post("/admin/users/setrank1", nil); err != nil {
 				panic(err)
 			} else {
 				fmt.Println(resp)

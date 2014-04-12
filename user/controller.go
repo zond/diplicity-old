@@ -13,6 +13,22 @@ import (
 	"github.com/zond/wsubs/gosubs"
 )
 
+func AdminSetRank1(c *common.HTTPContext) (err error) {
+	users := Users{}
+	if err = c.DB().Query().All(&users); err != nil {
+		return
+	}
+	for _, user := range users {
+		user.Ranking = 1
+		if err = c.DB().Set(&user); err != nil {
+			return
+		}
+		fmt.Fprintf(c.Resp(), "Set rank of %#v to 1\n", user.Email)
+	}
+	return
+
+}
+
 func AdminBecome(c *common.HTTPContext) (err error) {
 	c.Session().Values[common.SessionEmail] = c.Req().FormValue("become")
 	c.Close()
@@ -44,6 +60,7 @@ func Openid(c *common.HTTPContext) (err error) {
 		if err == kol.NotFound {
 			err = nil
 			u.Email = email
+			u.Ranking = 1
 		}
 		if err == nil {
 			u.Language = common.GetLanguage(c.Req())

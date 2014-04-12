@@ -109,6 +109,7 @@ func main() {
 	server.AdminHandle(router.Path("/admin/users").Methods("POST"), user.AdminCreateUser)
 	server.AdminHandle(router.Path("/admin/games/{game_id}/recalc").Methods("POST"), game.AdminRecalcOptions)
 	server.AdminHandle(router.Path("/admin/games/reindex").Methods("POST"), game.AdminReindexGames)
+	server.AdminHandle(router.Path("/admin/users/setrank1").Methods("POST"), user.AdminSetRank1)
 	server.DevHandle(router.Path("/admin/become").Methods("POST"), user.AdminBecome)
 
 	// Unsubscribe

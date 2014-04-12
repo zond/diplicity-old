@@ -174,7 +174,7 @@ func (self *Member) ReliabilityDelta(d *kol.DB, i int) (err error) {
 	if i > 0 {
 		user.HeldDeadlines += i
 	} else {
-		user.MissedDeadlines += i
+		user.MissedDeadlines -= i
 	}
 	if err = d.Set(user); err != nil {
 		return
