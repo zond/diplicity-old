@@ -191,11 +191,13 @@ window.GameControlsView = BaseView.extend({
 				that.$('.commit-button').css('visibility', 'hidden');
 			}
 		} else if (that.model.get('State') == {{.GameState "Created"}}) {
+		  that.$('.time-left').hide();
 			that.$('.commit-button').css('visibility', 'hidden');
 			that.$('.phase-step').css('visibility', 'hidden');
 			that.$('.view-orders').css('visibility', 'hidden');
 			that.$('.view-results').css('visibility', 'hidden');
 		} else if (that.model.get('State') == {{.GameState "Ended"}}) {
+		  that.$('.time-left').hide();
 			that.$('.commit-button').css('display', 'none');
 			that.$('.phase-step').css('visibility', 'visible');
 			that.$('.view-orders').css('visibility', 'visible');

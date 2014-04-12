@@ -20,6 +20,9 @@ window.GameState = Backbone.Model.extend({
 		if ((this.get(typ + 'Consequences') & {{.Consequence "NoWait"}}) == {{.Consequence "NoWait"}}) {
 		  cons.push('{{.I "No wait"}}');
 		}
+		if ((this.get(typ + 'Consequences') & {{.Consequence "Surrender"}}) == {{.Consequence "Surrender"}}) {
+		  cons.push('{{.I "Surrender"}}');
+		}
 		return cons.join(", ");
 	},
 

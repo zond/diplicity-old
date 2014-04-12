@@ -94,8 +94,9 @@ func GetLanguage(r *http.Request) string {
 type Consequence int
 
 const (
-	ReliabilityHit = 1 << iota
+	ReliabilityHit Consequence = 1 << iota
 	NoWait
+	Surrender
 )
 
 type ChatFlag int
@@ -130,6 +131,10 @@ var ConsequenceOptions = []ConsequenceOption{
 	ConsequenceOption{
 		Id:   NoWait,
 		Name: "No wait",
+	},
+	ConsequenceOption{
+		Id:   Surrender,
+		Name: "Surrender",
 	},
 }
 
@@ -170,6 +175,10 @@ const (
 	Anonymous           dip.Nation    = "Anonymous"
 	ZeroActiveMembers   EndReason     = "ZeroActiveMembers"
 )
+
+func SoloVictory(n dip.Nation) EndReason {
+	return EndReason(fmt.Sprintf("SoloVictory:%v", n))
+}
 
 type GameState int
 

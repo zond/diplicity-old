@@ -126,7 +126,8 @@ func (self *Game) allocate(d *kol.DB, phase *Phase) (err error) {
 	return
 }
 
-func (self *Game) endPhaseConsequences(c common.SkinnyContext, phase *Phase, member *Member, opts dip.Options, nrCommitted, nrNoWait *int) (err error) {
+func (self *Game) endPhaseConsequences(c common.SkinnyContext, phase *Phase, member *Member, opts dip.Options, waitFor, active, nonSurrendering *[]*Member) (err error) {
+	surrender := false
 	if !member.Committed {
 		alreadyHitReliability := false
 		if (self.NonCommitConsequences & common.ReliabilityHit) == common.ReliabilityHit {
@@ -137,7 +138,12 @@ func (self *Game) endPhaseConsequences(c common.SkinnyContext, phase *Phase, mem
 			alreadyHitReliability = true
 		}
 		if (self.NonCommitConsequences & common.NoWait) == common.NoWait {
+			c.Infof("Setting %#v to NoWait because of %+v and %+v", string(member.UserId), self, phase)
 			member.NoWait = true
+		}
+		if (self.NonCommitConsequences & common.Surrender) == common.Surrender {
+			c.Infof("Setting %#v to Surrender because of %+v and %+v", string(member.UserId), self, phase)
+			surrender = true
 		}
 		if len(phase.Orders[member.Nation]) == 0 {
 			if !alreadyHitReliability && (self.NMRConsequences&common.ReliabilityHit) == common.ReliabilityHit {
@@ -147,7 +153,12 @@ func (self *Game) endPhaseConsequences(c common.SkinnyContext, phase *Phase, mem
 				c.Infof("Increased MISSED deadlines for %#v by one because %+v and %+v", string(member.UserId), self, phase)
 			}
 			if (self.NMRConsequences & common.NoWait) == common.NoWait {
+				c.Infof("Setting %#v to NoWait because of %+v and %+v", string(member.UserId), self, phase)
 				member.NoWait = true
+			}
+			if (self.NMRConsequences & common.Surrender) == common.Surrender {
+				c.Infof("Setting %#v to Surrender because of %+v and %+v", string(member.UserId), self, phase)
+				surrender = true
 			}
 		}
 	} else {
@@ -158,23 +169,38 @@ func (self *Game) endPhaseConsequences(c common.SkinnyContext, phase *Phase, mem
 			c.Infof("Increased HELD deadlines for %#v by one because %+v and %+v", string(member.UserId), self, phase)
 		}
 	}
+	if !surrender {
+		*nonSurrendering = append(*nonSurrendering, member)
+	}
 	member.Options = opts
 	if member.NoWait {
 		member.Committed = false
 		member.NoOrders = false
-		(*nrCommitted)++
-		(*nrNoWait)++
 	} else {
+		*active = append(*active, member)
 		if len(opts) == 0 {
 			member.Committed = true
 			member.NoOrders = true
-			(*nrCommitted)++
 		} else {
+			*waitFor = append(*waitFor, member)
 			member.Committed = false
 			member.NoOrders = false
 		}
 	}
 	if err = c.DB().Set(member); err != nil {
+		return
+	}
+	return
+}
+
+func (self *Game) end(c common.SkinnyContext, phase *Phase, reason common.EndReason) (err error) {
+	self.EndReason = reason
+	self.State = common.GameStateEnded
+	if err = c.DB().Set(self); err != nil {
+		return
+	}
+	phase.Resolved = true
+	if err = c.DB().Set(phase); err != nil {
 		return
 	}
 	return
@@ -233,54 +259,63 @@ func (self *Game) resolve(c common.SkinnyContext, phase *Phase) (err error) {
 				}
 			}
 		}
+
 		// Commit everyone that doesn't have any orders to give
-		nrCommitted := 0
-		nrNoWait := 0
+		waitFor := []*Member{}
+		active := []*Member{}
+		nonSurrendering := []*Member{}
 		for index, _ := range members {
 			opts := dip.Options{}
 			if opts, err = nextPhase.Options(members[index].Nation); err != nil {
 				return
 			}
-			if err = self.endPhaseConsequences(c, phase, &members[index], opts, &nrCommitted, &nrNoWait); err != nil {
+			if err = self.endPhaseConsequences(c, phase, &members[index], opts, &waitFor, &active, &nonSurrendering); err != nil {
 				return
 			}
 		}
+
 		// Mark the old phase as resolved, and save it
 		phase.Resolved = true
 		if err = c.DB().Set(phase); err != nil {
 			return
 		}
-		// If nobody is active anymore
-		if nrNoWait == len(members) {
-			self.EndReason = common.ZeroActiveMembers
-			self.State = common.GameStateEnded
-			if err = c.DB().Set(self); err != nil {
+
+		// If we have a solo victor, end and return
+		if winner := nextDipPhase.Winner(state); winner != nil {
+			if err = self.end(c, nextPhase, common.SoloVictory(*winner)); err != nil {
 				return
 			}
-			nextPhase.Resolved = true
-			if err = c.DB().Set(nextPhase); err != nil {
-				return
-			}
+			return
 		}
+
+		// End the game now if nobody is active anymore
+		if len(active) == 0 {
+			if err = self.end(c, nextPhase, common.ZeroActiveMembers); err != nil {
+				return
+			}
+			return
+		}
+
+		// End the game now if only one player isn't surrendering
+		if len(nonSurrendering) == 1 {
+			if err = self.end(c, nextPhase, common.SoloVictory(nonSurrendering[0].Nation)); err != nil {
+				return
+			}
+			return
+		}
+
 		// Store the next phase
 		if err = c.DB().Set(nextPhase); err != nil {
 			return
 		}
-		// Break if game is ended
-		if self.State == common.GameStateEnded {
-			if !nextPhase.Resolved {
-				err = fmt.Errorf("WTF, how can game %+v be ended when nextPhase %+v isn't resolved?", self, nextPhase)
-				return
-			}
-			break
-		}
-		// If everyone in the new phase isn't commited, schedule an auto resolve and break here.
-		if nrCommitted < len(members) {
+
+		// If there is anyone we need to wait for, schedule an auto resolve and return here.
+		if len(waitFor) > 0 {
 			if err = nextPhase.Schedule(c); err != nil {
 				return
 			}
 			nextPhase.SendScheduleEmails(c, self)
-			break
+			return
 		}
 		phase = nextPhase
 	}

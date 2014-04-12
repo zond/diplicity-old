@@ -88,6 +88,10 @@ window.ChatMessagesView = BaseView.extend({
 		if ($('.game-control-container').height() > maxHeight) {
 			$('.game-control-container').height(maxHeight);
 		}
+		var me = that.model.me();
+		if (me == null) {
+			that.$('.create-message-form').hide();
+		}
 		return that;
 	},
 });

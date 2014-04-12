@@ -23,6 +23,7 @@ var en = map[string]string{
 	"Anonymous":             "Anonymous",
 	"Reliability hit":       "Reliability hit",
 	"No wait":               "No wait",
+	"Surrender":             "Surrender",
 	"Not committing":        "Not committing",
 	"Game ended due to {0}": "Game ended due to {0}",
 	"Not committing + NMR":  "Not committing + NMR",

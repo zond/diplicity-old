@@ -86,16 +86,19 @@
 						<th></th>
 						<th>{{.I "Reliability hit"}}</th>
 						<th>{{.I "No wait"}}</th>
+						<th>{{.I "Surrender"}}</th>
 					</tr>
 					<tr>
 						<td>{{.I "Not committing" }}</td>
 						<td><input <%= (model.get('NonCommitConsequences') & {{.Consequence "ReliabilityHit"}}) == {{.Consequence "ReliabilityHit"}} ? 'checked="checked" ' : '' %>type="checkbox" data-consequence="{{.Consequence "ReliabilityHit" }}" data-consequence-type="NonCommit" class="game-consequence"></td>
 						<td><input <%= (model.get('NonCommitConsequences') & {{.Consequence "NoWait"}}) == {{.Consequence "NoWait"}} ? 'checked="checked" ' : '' %>type="checkbox" data-consequence="{{.Consequence "NoWait" }}" data-consequence-type="NonCommit" class="game-consequence"></td>
+						<td><input <%= (model.get('NonCommitConsequences') & {{.Consequence "Surrender"}}) == {{.Consequence "Surrender"}} ? 'checked="checked" ' : '' %>type="checkbox" data-consequence="{{.Consequence "Surrender" }}" data-consequence-type="NonCommit" class="game-consequence"></td>
 					</tr>
 					<tr>
 						<td>{{.I "Not committing + NMR" }}</td>
 						<td><input <%= (model.get('NMRConsequences') & {{.Consequence "ReliabilityHit"}}) == {{.Consequence "ReliabilityHit"}} ? 'checked="checked" ' : '' %>type="checkbox" data-consequence="{{.Consequence "ReliabilityHit" }}" data-consequence-type="NMR" class="game-consequence"></td>
 						<td><input <%= (model.get('NMRConsequences') & {{.Consequence "NoWait"}}) == {{.Consequence "NoWait"}} ? 'checked="checked" ' : '' %>type="checkbox" data-consequence="{{.Consequence "NoWait" }}" data-consequence-type="NMR" class="game-consequence"></td>
+						<td><input <%= (model.get('NMRConsequences') & {{.Consequence "Surrender"}}) == {{.Consequence "Surrender"}} ? 'checked="checked" ' : '' %>type="checkbox" data-consequence="{{.Consequence "Surrender" }}" data-consequence-type="NMR" class="game-consequence"></td>
 					</tr>
 				</table>
 			</div>

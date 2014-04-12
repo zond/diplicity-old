@@ -177,9 +177,10 @@ func (self *HTTPContext) VariantMap() string {
 }
 
 func (self *HTTPContext) ConsequenceMap() string {
-	return gosubs.Prettify(map[string]int{
+	return gosubs.Prettify(map[string]Consequence{
 		"ReliabilityHit": ReliabilityHit,
 		"NoWait":         NoWait,
+		"Surrender":      Surrender,
 	})
 }
 
@@ -295,6 +296,8 @@ func (self *HTTPContext) Consequence(s string) Consequence {
 		return ReliabilityHit
 	case "NoWait":
 		return NoWait
+	case "Surrender":
+		return Surrender
 	}
 	panic(fmt.Errorf("Unknown consequence flag %v", s))
 }

@@ -108,7 +108,7 @@ defaultVariant = '{{.DefaultVariant}}';
 defaultDeadline = 1440;
 defaultChatFlags = {{.ChatFlag "White"}} | {{.ChatFlag "Conference"}} | {{.ChatFlag "Private"}};
 defaultNonCommitConsequences = {{.Consequence "NoWait"}};
-defaultNMRConsequences = {{.Consequence "NoWait"}} | {{.Consequence "ReliabilityHit"}};
+defaultNMRConsequences = {{.Consequence "NoWait"}} | {{.Consequence "ReliabilityHit"}} | {{.Consequence "Surrender"}};
 
 deadlineOptions = [
 	{ value: 1, name: '{{.I "1 minute" }}' },
