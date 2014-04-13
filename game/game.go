@@ -40,7 +40,7 @@ func (self Games) SortAndLimit(f func(a, b *Game) bool, limit int) Games {
 }
 
 type SortedGames struct {
-	Games    []*Game
+	Games    Games
 	LessFunc func(a, b *Game) bool
 }
 
@@ -88,7 +88,9 @@ type Game struct {
 }
 
 func (self *Game) Disallows(u *user.User) bool {
-	return u.Ranking < self.MinimumRanking || u.Ranking > self.MaximumRanking || u.Reliability() < self.MinimumReliability
+	return (self.MinimumRanking != 0 && u.Ranking < self.MinimumRanking) ||
+		(self.MaximumRanking != 0 && u.Ranking > self.MaximumRanking) ||
+		u.Reliability() < self.MinimumReliability
 }
 
 func (self *Game) allocate(d *kol.DB, phase *Phase) (err error) {

@@ -31,16 +31,33 @@ type GameState struct {
 
 type GameStates []GameState
 
-func (self GameStates) Len() int {
-	return len(self)
+func (self GameStates) SortAndLimit(f func(a, b GameState) bool, limit int) GameStates {
+	sorted := SortedGameStates{
+		GameStates: self,
+		LessFunc:   f,
+	}
+	sort.Sort(sorted)
+	if len(sorted.GameStates) > limit {
+		return sorted.GameStates[:limit]
+	}
+	return sorted.GameStates
 }
 
-func (self GameStates) Less(i, j int) bool {
-	return self[j].Game.CreatedAt.Before(self[i].Game.CreatedAt)
+type SortedGameStates struct {
+	GameStates GameStates
+	LessFunc   func(a, b GameState) bool
 }
 
-func (self GameStates) Swap(i, j int) {
-	self[i], self[j] = self[j], self[i]
+func (self SortedGameStates) Len() int {
+	return len(self.GameStates)
+}
+
+func (self SortedGameStates) Less(i, j int) bool {
+	return self.LessFunc(self.GameStates[i], self.GameStates[j])
+}
+
+func (self SortedGameStates) Swap(i, j int) {
+	self.GameStates[j], self.GameStates[i] = self.GameStates[i], self.GameStates[j]
 }
 
 func SubscribeMine(c common.WSContext) error {
@@ -80,7 +97,9 @@ func SubscribeMine(c common.WSContext) error {
 			}
 		}
 		if op == gosubs.FetchType || len(states) > 0 {
-			sort.Sort(states)
+			states = states.SortAndLimit(func(a, b GameState) bool {
+				return a.CreatedAt.Before(b.CreatedAt)
+			}, 1024*16)
 			return s.Send(states, op)
 		}
 		return nil
@@ -192,7 +211,7 @@ func SubscribeMessages(c common.WSContext) (err error) {
 	return s.Subscribe(&Message{})
 }
 
-func subscribeOthers(c common.WSContext, filter kol.QFilter, limiter func(source Games) (result Games)) error {
+func subscribeOthers(c common.WSContext, filter kol.QFilter, preLimiter func(source Games) (result Games), postLimiter func(source GameStates) (result GameStates)) error {
 	if c.Principal() == "" {
 		return websocket.JSON.Send(c.Conn(), gosubs.Message{
 			Type: gosubs.FetchType,
@@ -205,8 +224,8 @@ func subscribeOthers(c common.WSContext, filter kol.QFilter, limiter func(source
 	s.Query = s.DB().Query().Where(filter)
 	s.Call = func(i interface{}, op string) error {
 		games := i.([]*Game)
-		if limiter != nil {
-			games = ([]*Game)(limiter(Games(games)))
+		if preLimiter != nil {
+			games = ([]*Game)(preLimiter(Games(games)))
 		}
 		states := GameStates{}
 		isMember := false
@@ -215,29 +234,29 @@ func subscribeOthers(c common.WSContext, filter kol.QFilter, limiter func(source
 			return err
 		}
 		for _, game := range games {
-			if game.Disallows(me) {
-				break
-			}
-			members, err := game.Members(c.DB())
-			if err != nil {
-				return err
-			}
-			if disallows, err := members.Disallows(c.DB(), me); err != nil {
-				return err
-			} else if disallows {
-				break
-			}
-			isMember = members.Contains(c.Principal())
-			if !isMember {
-				state, err := game.ToState(c.DB(), members, nil)
+			if !game.Disallows(me) {
+				members, err := game.Members(c.DB())
 				if err != nil {
 					return err
 				}
-				states = append(states, state)
+				if disallows, err := members.Disallows(c.DB(), me); err != nil {
+					return err
+				} else if !disallows {
+					isMember = members.Contains(c.Principal())
+					if !isMember {
+						state, err := game.ToState(c.DB(), members, nil)
+						if err != nil {
+							return err
+						}
+						states = append(states, state)
+					}
+				}
 			}
 		}
 		if op == gosubs.FetchType || len(states) > 0 {
-			sort.Sort(states)
+			if postLimiter != nil {
+				states = postLimiter(states)
+			}
 			return s.Send(states, op)
 		}
 		return nil
@@ -246,11 +265,30 @@ func subscribeOthers(c common.WSContext, filter kol.QFilter, limiter func(source
 }
 
 func SubscribeOthersOpen(c common.WSContext) error {
-	return subscribeOthers(c, kol.And{kol.Equals{"Closed", false}, kol.Equals{"Private", false}}, nil)
+	return subscribeOthers(c, kol.And{kol.Equals{"Closed", false}, kol.Equals{"Private", false}}, nil, func(source GameStates) (result GameStates) {
+		return source.SortAndLimit(func(a, b GameState) bool {
+			leftA := 0
+			leftB := 0
+			if variant, found := common.VariantMap[a.Variant]; found {
+				leftA = len(variant.Nations) - len(a.Members)
+			}
+			if variant, found := common.VariantMap[b.Variant]; found {
+				leftB = len(variant.Nations) - len(b.Members)
+			}
+			if leftA < leftB {
+				return true
+			}
+			return a.CreatedAt.Before(b.CreatedAt)
+		}, 128)
+	})
 }
 
 func SubscribeOthersClosed(c common.WSContext) error {
-	return subscribeOthers(c, kol.And{kol.Equals{"State", common.GameStateStarted}, kol.Equals{"Closed", true}, kol.Equals{"Private", false}}, nil)
+	return subscribeOthers(c, kol.And{kol.Equals{"State", common.GameStateStarted}, kol.Equals{"Closed", true}, kol.Equals{"Private", false}}, func(source Games) (result Games) {
+		return source.SortAndLimit(func(a, b *Game) bool {
+			return a.UpdatedAt.Before(b.UpdatedAt)
+		}, 128)
+	}, nil)
 }
 
 func SubscribeOthersFinished(c common.WSContext) error {
@@ -258,5 +296,5 @@ func SubscribeOthersFinished(c common.WSContext) error {
 		return source.SortAndLimit(func(a, b *Game) bool {
 			return a.UpdatedAt.Before(b.UpdatedAt)
 		}, 128)
-	})
+	}, nil)
 }
