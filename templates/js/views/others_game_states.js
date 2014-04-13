@@ -63,6 +63,7 @@ window.OthersGameStatesView = BaseView.extend({
 		if (window.session.user.loggedIn() && that.collection.length == 0 && that.path == 'open') {
 		  that.$el.append('<a href="/create" class="btn btn-primary btn-lg btn-block">{{.I "No open games, why not create one?" }}</a>');
 		}
+		that.$('#others-games').css('margin-bottom', $('#bottom-navigation').height() + 'px');
 		return that;
 	},
 

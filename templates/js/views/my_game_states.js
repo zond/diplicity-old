@@ -75,6 +75,7 @@ window.MyGameStatesView = BaseView.extend({
 		if (window.session.user.loggedIn() && that.collection.length == 0) {
 			that.$el.append('<a href="/open" class="btn btn-primary btn-lg btn-block">{{.I "Not member of any games right now, why not join one?" }}</a>');
 		}
+		that.$('#my-games').css('margin-bottom', $('#bottom-navigation').height() + 'px');
 		return that;
 	},
 

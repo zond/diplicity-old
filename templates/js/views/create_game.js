@@ -54,6 +54,7 @@ window.CreateGameView = BaseView.extend({
 			}).doRender();
 			that.$('#create_game').append(state_view.el);
 		}
+		that.$('.game-state-button').css('margin-bottom', $('#bottom-navigation').height() + 'px');
 		return that;
 	},
 
