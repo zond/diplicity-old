@@ -1,4 +1,4 @@
-<div class="panel-heading<%- editable ? '' : ' accordion-toggle' %>" <%= editable ? '' : 'data-toggle="collapse" ' %>data-parent="#<%- parentId %>" href="#game-<%- model.cid %>">
+<div class="game-state-heading panel-heading<%- editable ? '' : ' accordion-toggle' %>" <%= editable ? '' : 'data-toggle="collapse" ' %>data-parent="#<%- parentId %>" href="#game-<%- model.cid %>">
 	<div class="view-game">
 		<% if (!editable) { %>
 		<%   if (play_state) { %>
@@ -12,6 +12,7 @@
 		<%   } %>
 		<% } %>
 	</div>
+	<div class="urgency-bar"></div>
 	<h4 class="panel-title game-description-container">
 		<span class="unseen-messages"><%- unseenMessages %></span>
 		<a class="game-description">

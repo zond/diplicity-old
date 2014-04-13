@@ -238,6 +238,20 @@ window.GameStateView = BaseView.extend({
 			}
 		}
 		that.memberViews = newMemberViews;
+		if (that.model.get('State') == {{.GameState "Started"}}) {
+			var minutesLeft = that.model.get('TimeLeft') / (1000000000 * 60);
+			var part = 1 - (minutesLeft / that.model.get('Deadlines')[that.model.get('Phase').Type]);
+			that.$('.urgency-bar').css('width', ($(window).width() - 4) * part);
+			that.$('.urgency-bar').show();
+	    var me = that.model.me();
+	    if (me.Committed) {
+			  that.$('.urgency-bar').addClass('urgency-bar-green').removeClass('urgency-bar-red');
+			} else {
+			  that.$('.urgency-bar').addClass('urgency-bar-red').removeClass('urgency-bar-green');
+			}	
+		} else {
+			that.$('.urgency-bar').hide();
+		}
 		return that;
 	},
 

@@ -10,6 +10,7 @@ import (
 	"code.google.com/p/go.net/websocket"
 
 	"github.com/zond/diplicity/common"
+	"github.com/zond/diplicity/epoch"
 	"github.com/zond/diplicity/user"
 	"github.com/zond/kcwraps/kol"
 	"github.com/zond/wsubs/gosubs"
@@ -71,8 +72,13 @@ func SubscribeMine(c common.WSContext) error {
 	}
 	s := c.Pack().New(c.Match()[0])
 	s.Query = s.DB().Query().Where(kol.Equals{"UserId", kol.Id(c.Principal())})
-	s.Call = func(i interface{}, op string) error {
+	s.Call = func(i interface{}, op string) (err error) {
 		members := i.([]*Member)
+		var ep time.Duration
+		ep, err = epoch.Get(c.DB())
+		if err != nil {
+			return
+		}
 		states := GameStates{}
 		for _, member := range members {
 			if op == gosubs.DeleteType {
@@ -82,22 +88,45 @@ func SubscribeMine(c common.WSContext) error {
 				})
 			} else {
 				game := &Game{Id: member.GameId}
-				if err := s.DB().Get(game); err != nil {
-					return err
+				if err = s.DB().Get(game); err != nil {
+					return
 				}
-				members, err := game.Members(c.DB())
-				if err != nil {
-					return err
+				var gameMembers Members
+				if gameMembers, err = game.Members(c.DB()); err != nil {
+					return
 				}
-				state, err := game.ToState(c.DB(), members, member)
-				if err != nil {
-					return err
+				var state GameState
+				if state, err = game.ToState(c.DB(), gameMembers, member); err != nil {
+					return
 				}
 				states = append(states, state)
 			}
 		}
 		if op == gosubs.FetchType || len(states) > 0 {
 			states = states.SortAndLimit(func(a, b GameState) bool {
+				urgencyA := time.Hour * 24 * 365
+				urgencyB := time.Hour * 24 * 365
+				switch a.State {
+				case common.GameStateStarted:
+					_, phase, err := a.Game.Phase(c.DB(), 0)
+					if err == nil {
+						urgencyA = phase.Deadline - ep
+					}
+				case common.GameStateCreated:
+					urgencyA -= 1
+				}
+				switch b.State {
+				case common.GameStateStarted:
+					_, phase, err := b.Game.Phase(c.DB(), 0)
+					if err == nil {
+						urgencyB = phase.Deadline - ep
+					}
+				case common.GameStateCreated:
+					urgencyB -= 1
+				}
+				if urgencyA != urgencyB {
+					return urgencyA < urgencyB
+				}
 				return a.CreatedAt.Before(b.CreatedAt)
 			}, 1024*16)
 			return s.Send(states, op)
@@ -275,8 +304,8 @@ func SubscribeOthersOpen(c common.WSContext) error {
 			if variant, found := common.VariantMap[b.Variant]; found {
 				leftB = len(variant.Nations) - len(b.Members)
 			}
-			if leftA < leftB {
-				return true
+			if leftA != leftB {
+				return leftA < leftB
 			}
 			return a.CreatedAt.Before(b.CreatedAt)
 		}, 128)
