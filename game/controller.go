@@ -341,6 +341,7 @@ func Create(c common.WSContext) error {
 		AllocationMethod:      state.Game.AllocationMethod,
 		NonCommitConsequences: state.Game.NonCommitConsequences,
 		NMRConsequences:       state.Game.NMRConsequences,
+		Ranking:               state.Game.Ranking,
 	}
 
 	if _, found := common.VariantMap[game.Variant]; !found {

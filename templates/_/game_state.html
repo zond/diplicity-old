@@ -1,4 +1,4 @@
-<div class="panel-heading<%- editable ? '' : ' accordion-toggle' %>" <%= editable ? '' : 'data-toggle="collapse" ' %>data-parent="#<%- parentId %>" href="#game_<%- model.cid %>">
+<div class="panel-heading<%- editable ? '' : ' accordion-toggle' %>" <%= editable ? '' : 'data-toggle="collapse" ' %>data-parent="#<%- parentId %>" href="#game-<%- model.cid %>">
 	<div class="view-game">
 		<% if (!editable) { %>
 		<%   if (play_state) { %>
@@ -19,40 +19,44 @@
 		</a>
 	</h4>
 </div>
-<div id="game_<%- model.cid %>" class="game <%= classes.join(" ") %>">
+<div id="game-<%- model.cid %>" class="game <%= classes.join(" ") %>">
 	<div class="panel-body">
 		<div class="panel-group">
 			<div class="panel panel-default">
-				<div class="panel-heading" class="accordion-toggle" data-toggle="collapse" href="#game_<%- model.cid %>_players">
+				<div class="panel-heading" class="accordion-toggle" data-toggle="collapse" href="#game-<%- model.cid %>-players">
 					<h4 class="panel-title">
 						<a>
 							<span class="glyphicon glyphicon-chevron-right"></span> <%- '{{.I "{0}/{1} players" }}'.format(model.get('Members').length, variantNations(model.get('Variant')).length) %>
 						</a>
 					</h4>
 				</div>
-				<div id="game_<%- model.cid %>_players" class="players panel-collapse collapse<%- membersExpanded ? ' in' : '' %>">
+				<div id="game-<%- model.cid %>-players" class="players panel-collapse collapse<%- membersExpanded ? ' in' : '' %>">
 					<table class="table table-condensed game-players">
 					</table>
 				</div>
 			</div>
 		</div>
 		<% if (editable) { %>
-		<div class="panel-group phase-types" id="game_<%- model.cid %>_phase_types">
+		<div class="panel-group phase-types" id="game-<%- model.cid %>-phase-types">
 		</div>
 		<form role="form">
 			<div class="form-group">
-				<label for="game_<%- model.cid %>_variant">{{.I "Variant" }}</label>
-				<select id="game_<%- model.cid %>_variant" class="form-control game-variant">
+				<label for="game-<%- model.cid %>-variant">{{.I "Variant" }}</label>
+				<select id="game-<%- model.cid %>-variant" class="form-control game-variant">
 				</select>	
 			</div>
 			<div class="form-group">
-				<label for="game_<%- model.cid %>_allocation_method">{{.I "Allocation method" }}</label>
-				<select id="game_<%- model.cid %>_allocation_method" class="form-control game-allocation-method">
+				<label for="game-<%- model.cid %>-allocation-method">{{.I "Allocation method" }}</label>
+				<select id="game-<%- model.cid %>-allocation-method" class="form-control game-allocation-method">
 				</select>	
 			</div>
 			<div class="form-group">
-				<input <%= model.get('Private') ? 'checked="checked" ' : '' %>type="checkbox" id="game_<%- model.cid %>_private" class="game_private">
-				<label for="game_<%- model.cid %>_private">{{.I "Private" }}</label>
+				<input <%= model.get('Private') ? 'checked="checked" ' : '' %>type="checkbox" id="game-<%- model.cid %>-private" class="game-private">
+				<label for="game-<%- model.cid %>-private">{{.I "Private" }}</label>
+			</div>
+			<div class="form-group">
+				<input <%= model.get('Ranking') ? 'checked="checked" ' : '' %>type="checkbox" id="game-<%- model.cid %>-ranking" class="game-ranking">
+				<label for="game-<%- model.cid %>-ranking">{{.I "Ranking" }}</label>
 			</div>
 			<div class="form-group">
 				<table class="table table-condensed">
@@ -116,6 +120,10 @@
 			<tr>
 				<td>{{.I "Public"}}</td>
 				<td><%- model.get('Private') ? '{{.I "No" }}' : '{{.I "Yes" }}' %></td>
+			</tr>
+			<tr>
+				<td>{{.I "Ranking"}}</td>
+				<td><%- model.get('Ranking') ? '{{.I "Yes" }}' : '{{.I "No" }}' %></td>
 			</tr>
 			<tr>
 				<td>{{.I "Not committing" }}</td>

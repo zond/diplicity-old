@@ -6,6 +6,7 @@ window.GameStateView = BaseView.extend({
 
   events: {
 		"click .game-private": "changePrivate",
+		"click .game-ranking": "changeRanking",
     "click .game-state-button": "buttonAction",
 		"change .game-allocation-method": "changeAllocationMethod",
 		"change .game-variant": "changeVariant",
@@ -112,7 +113,6 @@ window.GameStateView = BaseView.extend({
 				}
 			} else {
 			  that.model.destroy();
-				navigate('/');
 			}
 		}
 	},
@@ -127,8 +127,13 @@ window.GameStateView = BaseView.extend({
 		this.updateDescription();
 	},
 
+  changeRanking: function(ev) {
+	  this.model.set('Ranking', $(ev.target).is(':checked'), { silent: true });
+		this.updateDescription();
+	},
+
   changePrivate: function(ev) {
-	  this.model.set('Private', $(ev.target).val() == 'true', { silent: true });
+	  this.model.set('Private', $(ev.target).is(':checked'), { silent: true });
 		this.updateDescription();
 	},
 
