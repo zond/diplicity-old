@@ -15,6 +15,10 @@ import (
 	"github.com/zond/kcwraps/kol"
 )
 
+const (
+	RankingBlind = 1.0 / 16.0
+)
+
 func init() {
 	rand.Seed(time.Now().UnixNano())
 }
@@ -76,6 +80,8 @@ type Game struct {
 
 	NonCommitConsequences common.Consequence
 	NMRConsequences       common.Consequence
+
+	Ranking bool
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -193,7 +199,7 @@ func (self *Game) endPhaseConsequences(c common.SkinnyContext, phase *Phase, mem
 	return
 }
 
-func (self *Game) end(c common.SkinnyContext, phase *Phase, reason common.EndReason) (err error) {
+func (self *Game) end(c common.SkinnyContext, phase *Phase, members Members, winner *Member, reason common.EndReason) (err error) {
 	self.EndReason = reason
 	self.State = common.GameStateEnded
 	if err = c.DB().Set(self); err != nil {
@@ -202,6 +208,32 @@ func (self *Game) end(c common.SkinnyContext, phase *Phase, reason common.EndRea
 	phase.Resolved = true
 	if err = c.DB().Set(phase); err != nil {
 		return
+	}
+	if self.Ranking {
+		pot := 0.0
+		spend := 0.0
+		for index, _ := range members {
+			if !members[index].Id.Equals(winner.Id) {
+				user := &user.User{Id: members[index].UserId}
+				if err = c.DB().Get(user); err != nil {
+					return
+				}
+				spend = user.Ranking * RankingBlind
+				pot += spend
+				user.Ranking -= spend
+				if err = c.DB().Set(user); err != nil {
+					return
+				}
+			}
+		}
+		winnerUser := &user.User{Id: winner.UserId}
+		if err = c.DB().Get(winnerUser); err != nil {
+			return
+		}
+		winnerUser.Ranking += pot
+		if err = c.DB().Set(winnerUser); err != nil {
+			return
+		}
 	}
 	return
 }
@@ -282,7 +314,18 @@ func (self *Game) resolve(c common.SkinnyContext, phase *Phase) (err error) {
 
 		// If we have a solo victor, end and return
 		if winner := nextDipPhase.Winner(state); winner != nil {
-			if err = self.end(c, nextPhase, common.SoloVictory(*winner)); err != nil {
+			var winnerMember *Member
+			for _, member := range members {
+				if member.Nation == *winner {
+					winnerMember = &member
+					break
+				}
+			}
+			if winnerMember == nil {
+				err = fmt.Errorf("None of %+v has nation %#v??", members, *winner)
+				return
+			}
+			if err = self.end(c, nextPhase, members, winnerMember, common.SoloVictory(*winner)); err != nil {
 				return
 			}
 			return
@@ -290,7 +333,7 @@ func (self *Game) resolve(c common.SkinnyContext, phase *Phase) (err error) {
 
 		// End the game now if nobody is active anymore
 		if len(active) == 0 {
-			if err = self.end(c, nextPhase, common.ZeroActiveMembers); err != nil {
+			if err = self.end(c, nextPhase, members, nil, common.ZeroActiveMembers); err != nil {
 				return
 			}
 			return
@@ -298,7 +341,7 @@ func (self *Game) resolve(c common.SkinnyContext, phase *Phase) (err error) {
 
 		// End the game now if only one player isn't surrendering
 		if len(nonSurrendering) == 1 {
-			if err = self.end(c, nextPhase, common.SoloVictory(nonSurrendering[0].Nation)); err != nil {
+			if err = self.end(c, nextPhase, members, nonSurrendering[0], common.SoloVictory(nonSurrendering[0].Nation)); err != nil {
 				return
 			}
 			return
