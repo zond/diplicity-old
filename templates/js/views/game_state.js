@@ -244,7 +244,7 @@ window.GameStateView = BaseView.extend({
 			that.$('.urgency-bar').css('width', ($(window).width() - 4) * part);
 			that.$('.urgency-bar').show();
 	    var me = that.model.me();
-	    if (me.Committed) {
+	    if (me == null || me.Committed) {
 			  that.$('.urgency-bar').addClass('urgency-bar-green').removeClass('urgency-bar-red');
 			} else {
 			  that.$('.urgency-bar').addClass('urgency-bar-red').removeClass('urgency-bar-green');
