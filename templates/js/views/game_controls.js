@@ -24,7 +24,6 @@ window.GameControlsView = BaseView.extend({
 		this.listenTo(this.chatMessages, 'reset', this.update);
 		this.listenTo(this.model, 'change', this.update);
 		this.listenTo(this.model, 'reset', this.update);
-		this.timeLeftInterval = null;
 		this.lastPhaseOrdinal = 0;
 		if (this.model.get('Phase') != null) {
 		  this.lastPhaseOrdinal = this.model.get('Phase').Ordinal;
@@ -119,24 +118,27 @@ window.GameControlsView = BaseView.extend({
 
 	updateTimeLeft: function() {
 	  var that = this;
-		if (that.deadline == null) {
-			that.deadline = new Date(new Date().getTime() + that.model.get('TimeLeft') / 1000000);
-		}
-		var left = that.deadline.getTime() - new Date().getTime();
-		if (left < 0) {
-		  that.$('.time-left').hide();
-		} else {
-		  var secs = left / 1000;
-			if (secs > 3600 * 24) {
-			  that.$('.time-left').text('{{.I "{0}d" }}'.format(parseInt(secs / (3600 * 24))));
-			} else if (secs > 3600) {
-			  that.$('.time-left').text('{{.I "{0}h" }}'.format(parseInt(secs / 3600)));
-			} else if (secs > 60) {
-			  that.$('.time-left').text('{{.I "{0}m" }}'.format(parseInt(secs / 60)));
-			} else {
-			  that.$('.time-left').text('{{.I "{0}s" }}'.format(parseInt(secs)));
+		if (that.model.get('State') == {{.GameState "Started"}}) {
+			if (that.deadline == null) {
+				that.deadline = new Date(new Date().getTime() + that.model.get('TimeLeft') / 1000000);
 			}
-			that.$('.time-left').show();
+			var left = that.deadline.getTime() - new Date().getTime();
+			if (left < 0) {
+				that.$('.time-left').hide();
+			} else {
+				var secs = left / 1000;
+				if (secs > 3600 * 24) {
+					that.$('.time-left').text('{{.I "{0}d" }}'.format(parseInt(secs / (3600 * 24))));
+				} else if (secs > 3600) {
+					that.$('.time-left').text('{{.I "{0}h" }}'.format(parseInt(secs / 3600)));
+				} else if (secs > 60) {
+					that.$('.time-left').text('{{.I "{0}m" }}'.format(parseInt(secs / 60)));
+				} else {
+					that.$('.time-left').text('{{.I "{0}s" }}'.format(parseInt(secs)));
+				}
+				that.$('.time-left').show();
+				window.setTimeout(function() { that.updateTimeLeft(); }, 1000);
+			}
 		}
 	},
 
@@ -164,12 +166,6 @@ window.GameControlsView = BaseView.extend({
 			}
 			that.$('.phase-step').css('visibility', 'visible');
 			that.updateTimeLeft();
-		  if (that.timeLeftInterval != null) {
-			  window.clearInterval(that.timeLeftInterval);
-			}
-			that.timeLeftInterval = window.setInterval(function() {
-			  that.updateTimeLeft();
-			}, 1000);
 			that.$('.view-orders').css('visibility', 'visible');
 			that.$('.view-results').css('visibility', 'visible');
 			var me = that.model.me();

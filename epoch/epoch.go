@@ -3,6 +3,8 @@ package epoch
 import (
 	"time"
 
+	"sync/atomic"
+
 	"github.com/zond/diplicity/common"
 	"github.com/zond/kcwraps/kol"
 )
@@ -10,6 +12,8 @@ import (
 const (
 	epochKey = "github.com/zond/diplicity/epoch.Epoch"
 )
+
+var deltaPoint int64 = time.Now().UnixNano()
 
 type Epoch struct {
 	Id kol.Id
@@ -27,7 +31,7 @@ func Get(d *kol.DB) (result time.Duration, err error) {
 			return
 		}
 	}
-	result = epoch.At
+	result = epoch.At + time.Now().Sub(time.Unix(0, atomic.LoadInt64(&deltaPoint)))
 	return
 }
 
@@ -52,6 +56,7 @@ func Start(c common.SkinnyContext) (err error) {
 		for {
 			time.Sleep(time.Minute)
 			currently = time.Now().Sub(startedTime) + startedAt
+			atomic.StoreInt64(&deltaPoint, int64(time.Now().UnixNano()))
 			if err = Set(c.DB(), currently); err != nil {
 				panic(err)
 			}

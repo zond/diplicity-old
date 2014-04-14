@@ -211,7 +211,7 @@ func (self *Game) end(c common.SkinnyContext, phase *Phase, members Members, win
 	if err = c.DB().Set(phase); err != nil {
 		return
 	}
-	if self.Ranking {
+	if self.Ranking && winner != nil {
 		pot := 0.0
 		spend := 0.0
 		for index, _ := range members {

@@ -153,6 +153,29 @@ window.GameStateView = BaseView.extend({
 			}
 		}
 	},
+
+	updateTimeLeft: function() {
+		var that = this;
+		if (that.model.get('State') == {{.GameState "Started"}}) {
+			if (that.deadline == null) {
+				that.deadline = new Date(new Date().getTime() + that.model.get('TimeLeft') / 1000000);
+			}
+			var left = that.deadline.getTime() - new Date().getTime();
+			var part = 1 - (left / (that.model.get('Deadlines')[that.model.get('Phase').Type] * 60 * 1000));
+			that.$('.urgency-bar').css('width', ($(window).width() - 4) * part);
+			that.$('.urgency-bar').show();
+	    var me = that.model.me();
+	    if (me == null || me.Committed) {
+			  that.$('.urgency-bar').addClass('urgency-bar-green').removeClass('urgency-bar-red');
+			} else {
+			  that.$('.urgency-bar').addClass('urgency-bar-red').removeClass('urgency-bar-green');
+			}	
+			window.setTimeout(function() { that.updateTimeLeft(); }, 1000);
+		} else {
+			that.$('.urgency-bar').hide();
+		}
+	},
+
   render: function() {
 	  var that = this;
 		var classes = [];
@@ -197,7 +220,7 @@ window.GameStateView = BaseView.extend({
 					phaseTypeView = new PhaseTypeView({
 						parent: that,
 						phaseType: phaseType,
-						parentId: 'game_' + that.model.cid + '_phase_types',
+						parentId: 'game-' + that.model.cid + '-phase-types',
 						editable: that.editable,
 						gameState: that.model,
 					}).doRender();
@@ -238,20 +261,7 @@ window.GameStateView = BaseView.extend({
 			}
 		}
 		that.memberViews = newMemberViews;
-		if (that.model.get('State') == {{.GameState "Started"}}) {
-			var minutesLeft = that.model.get('TimeLeft') / (1000000000 * 60);
-			var part = 1 - (minutesLeft / that.model.get('Deadlines')[that.model.get('Phase').Type]);
-			that.$('.urgency-bar').css('width', ($(window).width() - 4) * part);
-			that.$('.urgency-bar').show();
-	    var me = that.model.me();
-	    if (me == null || me.Committed) {
-			  that.$('.urgency-bar').addClass('urgency-bar-green').removeClass('urgency-bar-red');
-			} else {
-			  that.$('.urgency-bar').addClass('urgency-bar-red').removeClass('urgency-bar-green');
-			}	
-		} else {
-			that.$('.urgency-bar').hide();
-		}
+		that.updateTimeLeft();
 		return that;
 	},
 

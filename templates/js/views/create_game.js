@@ -28,6 +28,7 @@ window.CreateGameView = BaseView.extend({
 			AllocationMethod: defaultAllocationMethod,
       NonCommitConsequences: defaultNonCommitConsequences,
 			NMRConsequences: defaultNMRConsequences,
+			Ranking: true,
 		});
 		this.gameState.url = '/games';
 	},
@@ -48,13 +49,13 @@ window.CreateGameView = BaseView.extend({
 				});
 			};
 			var state_view = new GameStateView({ 
-				parentId: 'create_game',
+				parentId: 'create-game',
 				editable: true,
 				model: that.gameState,
 			}).doRender();
-			that.$('#create_game').append(state_view.el);
+			that.$('#create-game').append(state_view.el);
 		}
-		that.$('.game-state-button').css('margin-bottom', $('#bottom-navigation').height() + 'px');
+		that.$('#create-game').css('margin-bottom', $('#bottom-navigation').height() + 'px');
 		return that;
 	},
 
