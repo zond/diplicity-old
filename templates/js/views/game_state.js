@@ -26,6 +26,10 @@ window.GameStateView = BaseView.extend({
 		this.parentId = options.parentId;
 		this.phaseTypeViews = {};
 		this.memberViews = {};
+		this.lastPhaseOrdinal = 0;
+		if (this.model.get('Phase') != null) {
+		  this.lastPhaseOrdinal = this.model.get('Phase').Ordinal;
+		}
 		this.reloadModel(this.model);
 	},
 
@@ -157,6 +161,10 @@ window.GameStateView = BaseView.extend({
 	updateTimeLeft: function() {
 		var that = this;
 		if (that.model.get('State') == {{.GameState "Started"}}) {
+			if (that.model.get('Phase').Ordinal != that.lastPhaseOrdinal) {
+				that.lastPhaseOrdinal = that.model.get('Phase').Ordinal;
+				that.deadline = null;
+			}
 			if (that.deadline == null) {
 				that.deadline = new Date(new Date().getTime() + that.model.get('TimeLeft') / 1000000);
 			}
