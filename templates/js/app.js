@@ -163,8 +163,12 @@ $(window).load(function() {
     navigate(Backbone.history.fragment || '/');
 	};
 
-	var match = /^.*:\/\/([^\/]*)\//.exec(window.location.href);
-	var url = "ws://" + match[1] + "/ws";
+	var match = /^(.*):\/\/([^\/]*)\//.exec(window.location.href);
+  var prefix = "ws";
+	if (match[1] == "https") {
+    prefix = "wss";
+	}
+	var url = prefix + "://" + match[2] + "/ws";
 
 	wsBackbone({
 	  state_handler: function(state) {
