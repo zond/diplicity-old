@@ -3,6 +3,10 @@ diplicity
 
 Next generation Droidippy.
 
+## Forum and mailing list
+
+http://groups.google.com/group/diplicity-dev
+
 ## Run locally
 
 * Install Go: https://code.google.com/p/go/downloads/list
