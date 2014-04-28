@@ -7,12 +7,14 @@
 		<script src="/js/{{.Version}}/all" type="text/javascript"></script>
 	</head>
 	<body>
-		<nav class="navbar navbar-default navbar-fixed-top" role="navigation" id="top-navigation">
-		</nav>
-		<div id="content">
+		<div id="view">
+			<nav class="navbar navbar-default navbar-fixed-top" role="navigation" id="top-navigation">
+			</nav>
+			<div id="content">
+			</div>
+			<nav class="navbar navbar-default navbar-fixed-bottom" role="navigation" id="bottom-navigation">
+			</nav>
 		</div>
-		<nav class="navbar navbar-default navbar-fixed-bottom" role="navigation" id="bottom-navigation">
-		</nav>
 		<div id="classicalMap" class="hidden">
 			{{.SVG "standard.svg"}}
 		</div>

@@ -60,6 +60,14 @@ $(window).load(function() {
 			"games/:id": "game",
 			"games/:id/messages/:participants": "chat",
 			"settings": "settings",
+			"map/:variant": "map",
+		},
+
+		map: function(variant) {
+			new MapView({
+				variant: variant,
+				el: $('#view'),
+			}).doRender();
 		},
 
 		settings: function() {
