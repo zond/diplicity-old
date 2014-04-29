@@ -68,6 +68,9 @@ var variantMap = {{.VariantMap}};
 var variants = {{.Variants}};
 var variantMainProvincesMap = {{.VariantMainProvincesMap}};
 var variantColorizableProvincesMap = {{.VariantColorizableProvincesMap}};
+var variantSelectableProvincesMap = {{.VariantSelectableProvincesMap}};
+
+var variantSupplyCenterMap = {{.VariantSupplyCenterMap}};
 
 function variantName(id) {
   return variantMap[id].Translation;

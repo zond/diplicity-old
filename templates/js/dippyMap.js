@@ -66,8 +66,11 @@ function dippyMap(container) {
 	that.unhighlightProvince = function(province) {
 		$(el).find('#' + selEscape(province) + '_highlight').remove();
 	};
-	that.addClickListener = function(province, handler) {
-	  highlightProvince(province);
+	that.addClickListener = function(province, handler, options) {
+		var nohighlight = (options || {}).nohighlight;
+		if (!nohighlight) {
+			highlightProvince(province);
+		}
 		var prov = $(el).find('#' + selEscape(province)).first();
 		var copy = prov.clone()[0];
 		copy.setAttribute("id", prov.attr('id') + "_click");
@@ -93,7 +96,9 @@ function dippyMap(container) {
 		});
 		ham.bind('tap', handler);
 		return function() {
-		  that.unhighlightProvince(province); 
+			if (!nohighlight) {
+				that.unhighlightProvince(province); 
+			}
 			ham.unbind('tap', handler);
 		};
 	};

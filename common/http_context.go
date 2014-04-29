@@ -192,6 +192,43 @@ func (self *HTTPContext) ChatFlagMap() string {
 	})
 }
 
+func (self *HTTPContext) VariantSupplyCenterMap() string {
+	result := map[string]map[string]bool{}
+	for _, variant := range Variants {
+		scMap, found := result[variant.Id]
+		if !found {
+			scMap = map[string]bool{}
+			result[variant.Id] = scMap
+		}
+		for _, nat := range variant.Nations {
+			for _, sc := range variant.Graph.SCs(nat) {
+				scMap[string(sc)] = true
+			}
+		}
+	}
+	return gosubs.Prettify(result)
+}
+
+func (self *HTTPContext) VariantSelectableProvincesMap() string {
+	result := map[string][]dip.Province{}
+	for _, variant := range Variants {
+		hasCoasts := map[dip.Province]bool{}
+		all := map[dip.Province]bool{}
+		for _, prov := range variant.Graph.Provinces() {
+			all[prov] = true
+			if prov != prov.Super() {
+				hasCoasts[prov.Super()] = true
+			}
+		}
+		for prov, _ := range all {
+			if prov != prov.Super() || !hasCoasts[prov] {
+				result[variant.Id] = append(result[variant.Id], prov)
+			}
+		}
+	}
+	return gosubs.Prettify(result)
+}
+
 func (self *HTTPContext) VariantColorizableProvincesMap() string {
 	result := map[string][]dip.Province{}
 	for _, variant := range Variants {
