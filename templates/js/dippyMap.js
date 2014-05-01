@@ -166,7 +166,7 @@ function dippyMap(container) {
 		var head1 = end1.sub(part2.orth().mul(headF1));
 
 		var path = document.createElementNS(SVG, "path");
-		path.setAttribute("style", "fill:" + color + ";stroke:#000000;stroke-width:0.5;stroke-miterlimit:4;stroke-opacity:1.0;fill-opacity:0.9;");
+		path.setAttribute("style", "fill:" + color + ";stroke:#000000;stroke-width:0.5;stroke-miterlimit:4;stroke-opacity:1.0;fill-opacity:0.7;");
 		var d = "M " + start0.x + "," + start0.y;
 		d += " C " + control0.x + "," + control0.y + "," + control0.x + "," + control0.y + "," + end0.x + "," + end0.y;
 		d += " L " + head0.x + "," + head0.y;
@@ -203,7 +203,7 @@ function dippyMap(container) {
 		el.appendChild(path);
 	};
 	that.addOrder = function(order, variant, nation) {
-	  var color = variantColor(variant, nation);
+	  var color = variantMap[variant].Colors[nation];
 	  if (order[1] == 'Hold') {
 		  addBox(order[0], 4, color);
 		} else if (order[1] == 'Move') {

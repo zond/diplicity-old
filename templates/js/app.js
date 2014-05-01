@@ -66,7 +66,7 @@ $(window).load(function() {
 		map: function(variant) {
 			new MapView({
 				variant: variant,
-				el: $('#view'),
+				el: $('#content'),
 			}).doRender();
 		},
 

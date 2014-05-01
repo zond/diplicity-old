@@ -66,27 +66,6 @@ function allocationMethodName(id) {
 
 var variantMap = {{.VariantMap}};
 var variants = {{.Variants}};
-var variantMainProvincesMap = {{.VariantMainProvincesMap}};
-var variantColorizableProvincesMap = {{.VariantColorizableProvincesMap}};
-var variantSelectableProvincesMap = {{.VariantSelectableProvincesMap}};
-
-var variantSupplyCenterMap = {{.VariantSupplyCenterMap}};
-
-function variantName(id) {
-  return variantMap[id].Translation;
-}
-
-function variantNations(id) {
-  return variantMap[id].Nations;
-}
-
-function variantColor(variantId, nation) {
-  return variantMap[variantId].Colors[nation];
-}
-
-function phaseTypes(variant) {
-  return variantMap[variant].PhaseTypes;
-};
 
 function consequenceOptions() {
   var rval = [];

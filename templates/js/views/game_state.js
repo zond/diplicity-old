@@ -222,7 +222,7 @@ window.GameStateView = BaseView.extend({
 		that.$('.game-allocation-method').val(that.model.get('AllocationMethod'));
 		if (that.editable) {
 			var newPhaseTypeViews = {};
-			_.each(['BeforeGame'].concat(phaseTypes(that.model.get('Variant'))).concat(['AfterGame']), function(phaseType) {
+			_.each(['BeforeGame'].concat(variantMap[that.model.get('Variant')].PhaseTypes).concat(['AfterGame']), function(phaseType) {
 				var phaseTypeView = that.phaseTypeViews[phaseType];
 				if (phaseTypeView == null) {
 					phaseTypeView = new PhaseTypeView({
@@ -245,7 +245,7 @@ window.GameStateView = BaseView.extend({
 			}
 			that.phaseTypeViews = newPhaseTypeViews;
 		} else {
-			_.each(['BeforeGame'].concat(phaseTypes(that.model.get('Variant'))).concat(['AfterGame']), function(phaseType) {
+			_.each(['BeforeGame'].concat(variantMap[that.model.get('Variant')].PhaseTypes).concat(['AfterGame']), function(phaseType) {
 				that.$('.phase-types').append('<tr><td>' + {{.I "phase_types" }}[phaseType] + '</td><td>' + that.model.describePhaseType(phaseType) + '</td></tr>');
 			});
 		}

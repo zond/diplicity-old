@@ -1,3 +1,49 @@
+
+function variantAbbreviate(variant, cont, s) {
+	var that = this;
+	var mapping = {};
+	switch (cont) {
+		case 'nation':
+			mapping = variantMap[variant].NationAbbrevs;
+			break
+		case 'unitType':
+			mapping = variantMap[variant].UnitTypeAbbrevs;
+			break
+		case 'orderType':
+			mapping = variantMap[variant].OrderTypeAbbrevs;
+			break
+	}
+	var rval = _.inject(mapping, function(sum, nat, ab) {
+		if (nat == s) {
+			return ab;
+		} else {
+			return sum;
+		}
+	}, s);
+	return rval;
+}
+
+function queryEncodePhaseState(variant, data) {
+	var rval = [];
+	_.each(data.Units, function(unit, prov) {
+		rval.push('u' + prov + '=' + variantAbbreviate(variant, 'unitType', unit.Type) + variantAbbreviate(variant, 'nation', unit.Nation));
+	});
+	_.each(data.Dislodgeds, function(unit, prov) {
+		rval.push('d' + prov + '=' + variantAbbreviate(variant, 'unitType', unit.Type) + variantAbbreviate(variant, 'nation', unit.Nation));
+	});
+	_.each(data.SupplyCenters, function(nat, prov) {
+		rval.push('s' + prov + '=' + variantAbbreviate(variant, 'nation', nat));
+	});
+	_.each(data.Orders, function(orders, nat) {
+    _.each(orders, function(order, prov) {
+			rval.push('o' + prov + '=' + _.map(order, function(part) {
+				return variantAbbreviate(variant, 'orderType', part);
+			}).join(','));
+		});
+	});
+	return rval.join('&');
+}
+
 window.GameState = Backbone.Model.extend({
 
   urlRoot: '/games',
@@ -10,6 +56,10 @@ window.GameState = Backbone.Model.extend({
 	  var filtered = JSON.parse(JSON.stringify(this));
     delete(filtered.Options);
 		return filtered;
+	},
+
+  queryEncode: function() {
+		return queryEncodePhaseState(this.get('Variant'), this.get('Phase'));
 	},
 
 	consequences: function(typ) {
@@ -105,7 +155,7 @@ window.GameState = Backbone.Model.extend({
 
 	conferenceChannel: function() {
 		var result = {};
-		_.each(variantNations(this.get('Variant')), function(nation) {
+		_.each(variantMap[this.get('Variant')].Nations, function(nation) {
 		  result[nation] = true;
 		});
 		return result
@@ -171,7 +221,7 @@ window.GameState = Backbone.Model.extend({
 	},
 
   allowChatMembers: function(n) {
-		var maxMembers = variantNations(this.get('Variant')).length;
+		var maxMembers = variantMap[this.get('Variant')].Nations.length;
 	  if (n == 2 && this.hasChatFlag("ChatPrivate")) {
 			return true;
 		}
@@ -199,9 +249,9 @@ window.GameState = Backbone.Model.extend({
 		if (phase != null) {
 			phaseInfo = '{0} {1}, {2}'.format({{.I "seasons"}}[phase.Season], phase.Year, {{.I "phase_types"}}[phase.Type]);
 		}
-		var info = [nationInfo, phaseInfo, variantName(that.get('Variant'))];
+		var info = [nationInfo, phaseInfo, variantMap[that.get('Variant')].Translation];
 		var lastDeadline = null;
-		_.each(phaseTypes(that.get('Variant')), function(phaseType) {
+		_.each(variantMap[that.get('Variant')].PhaseTypes, function(phaseType) {
 		  var thisDeadline = that.get('Deadlines')[phaseType];
 			if (thisDeadline != lastDeadline) {
 				info.push(deadlineName(thisDeadline));

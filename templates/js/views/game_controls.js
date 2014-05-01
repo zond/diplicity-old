@@ -142,6 +142,11 @@ window.GameControlsView = BaseView.extend({
 		}
 	},
 
+	updatePlannerURL: function(model) {
+		var that = this;
+		that.$('.view-planner').attr('href', '/map/' + model.get('Variant') + '?' + model.queryEncode());
+	},
+
 	update: function() {
 	  var that = this;
 		if (that.model.get('Members') != null) {

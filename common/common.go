@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	cla "github.com/zond/godip/classical/common"
+	claOrders "github.com/zond/godip/classical/orders"
 	"github.com/zond/godip/classical/start"
 	dip "github.com/zond/godip/common"
 	"github.com/zond/godip/graph"
@@ -237,13 +238,21 @@ var AllocationMethodMap = map[string]AllocationMethod{
 }
 
 type Variant struct {
-	Id          string
-	Name        string
-	Translation string
-	PhaseTypes  []dip.PhaseType
-	Nations     []dip.Nation
-	Colors      map[dip.Nation]string
-	Graph       *graph.Graph
+	Id                   string
+	Name                 string
+	Translation          string
+	PhaseTypes           []dip.PhaseType
+	Nations              []dip.Nation
+	Colors               map[dip.Nation]string
+	Graph                *graph.Graph
+	OrderTypes           []dip.OrderType
+	UnitTypes            []dip.UnitType
+	NationAbbrevs        map[string]dip.Nation
+	OrderTypeAbbrevs     map[string]dip.OrderType
+	UnitTypeAbbrevs      map[string]dip.UnitType
+	SupplyCenters        map[dip.Province]dip.Nation
+	SelectableProvinces  []dip.Province
+	ColorizableProvinces []dip.Province
 }
 
 func (self Variant) JSONNations() string {
@@ -251,7 +260,7 @@ func (self Variant) JSONNations() string {
 	return string(b)
 }
 
-type VariantSlice []Variant
+type VariantSlice []*Variant
 
 func (self VariantSlice) Len() int {
 	return len(self)
@@ -265,7 +274,7 @@ func (self VariantSlice) Swap(i, j int) {
 	self[i], self[j] = self[j], self[i]
 }
 
-var classicalVariant = Variant{
+var classicalVariant = &Variant{
 	Id:         ClassicalString,
 	Name:       "Classical",
 	PhaseTypes: cla.PhaseTypes,
@@ -279,14 +288,79 @@ var classicalVariant = Variant{
 		cla.Russia:  "#8d5e68",
 		cla.Turkey:  "#ffdb66",
 	},
-	Graph: start.Graph(),
+	OrderTypes:       claOrders.OrderTypes,
+	UnitTypes:        cla.UnitTypes,
+	Graph:            start.Graph(),
+	SupplyCenters:    start.SCs(),
+	OrderTypeAbbrevs: map[string]dip.OrderType{},
+	NationAbbrevs:    map[string]dip.Nation{},
+	UnitTypeAbbrevs:  map[string]dip.UnitType{},
+}
+
+func init() {
+	for _, orderType := range classicalVariant.OrderTypes {
+		i := 1
+		for {
+			if _, found := classicalVariant.OrderTypeAbbrevs[string(orderType)[0:i]]; !found {
+				break
+			}
+			i++
+		}
+		classicalVariant.OrderTypeAbbrevs[string(orderType)[0:i]] = orderType
+	}
+	for _, unitType := range classicalVariant.UnitTypes {
+		i := 1
+		for {
+			if _, found := classicalVariant.UnitTypeAbbrevs[string(unitType)[0:i]]; !found {
+				break
+			}
+			i++
+		}
+		classicalVariant.UnitTypeAbbrevs[string(unitType)[0:i]] = unitType
+	}
+	for _, nation := range classicalVariant.Nations {
+		i := 1
+		for {
+			if _, found := classicalVariant.NationAbbrevs[string(nation)[0:i]]; !found {
+				break
+			}
+			i++
+		}
+		classicalVariant.NationAbbrevs[string(nation)[0:i]] = nation
+	}
+	/*
+		All provinces that are either coastless or are the coasts themselves
+	*/
+	hasCoasts := map[dip.Province]bool{}
+	all := map[dip.Province]bool{}
+	for _, prov := range classicalVariant.Graph.Provinces() {
+		all[prov] = true
+		if prov != prov.Super() {
+			hasCoasts[prov.Super()] = true
+		}
+	}
+	for prov, _ := range all {
+		if prov != prov.Super() || !hasCoasts[prov] {
+			classicalVariant.SelectableProvinces = append(classicalVariant.SelectableProvinces, prov)
+		}
+	}
+	/*
+		All provinces that arent coasts
+	*/
+	supers := map[dip.Province]bool{}
+	for _, prov := range classicalVariant.Graph.Provinces() {
+		supers[prov.Super()] = true
+	}
+	for prov, _ := range supers {
+		classicalVariant.ColorizableProvinces = append(classicalVariant.ColorizableProvinces, prov)
+	}
 }
 
 var Variants = VariantSlice{
 	classicalVariant,
 }
 
-var VariantMap = map[string]Variant{
+var VariantMap = map[string]*Variant{
 	ClassicalString: classicalVariant,
 }
 

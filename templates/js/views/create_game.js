@@ -6,7 +6,7 @@ window.CreateGameView = BaseView.extend({
 		this.listenTo(window.session.user, 'change', this.doRender);
 		var deadlines = {};
 		var chatFlags = {};
-		_.each(phaseTypes(defaultVariant), function(type) {
+		_.each(variantMap[defaultVariant].PhaseTypes, function(type) {
 		  deadlines[type] = defaultDeadline;
       chatFlags[type] = defaultChatFlags;
 		});

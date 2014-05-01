@@ -219,22 +219,22 @@ window.GameView = BaseView.extend({
 		panZoom('.map');
 		for (var prov in phase.Units) {
 			var unit = phase.Units[prov];
-			that.map.addUnit(variant + 'Unit' + unit.Type, prov, variantColor(variant, unit.Nation));
+			that.map.addUnit(variant + 'Unit' + unit.Type, prov, variantMap[variant].Colors[unit.Nation]);
 		}
 		for (var prov in phase.Dislodgeds) {
 			var unit = phase.Dislodgeds[prov];
-			that.map.addUnit(variant + 'Unit' + unit.Type, prov, variantColor(variant, unit.Nation), true);
+			that.map.addUnit(variant + 'Unit' + unit.Type, prov, variantMap[variant].Colors[unit.Nation], true);
 		}
 		for (var nation in phase.Orders) {
 			for (var source in phase.Orders[nation]) {
 				that.map.addOrder([source].concat(phase.Orders[nation][source]), variant, nation);
 			}
 		}
-		_.each(variantColorizableProvincesMap[variant], function(prov) {
+		_.each(variantMap[variant].ColorizableProvinces, function(prov) {
 			if (phase.SupplyCenters[prov] == null) {
 				that.map.hideProvince(prov);
 			} else {
-				that.map.colorProvince(prov, variantColor(variant, phase.SupplyCenters[prov]));
+				that.map.colorProvince(prov, variantMap[variant].Colors[phase.SupplyCenters[prov]]);
 			}
 		});
 		that.map.showProvinces();
@@ -263,6 +263,7 @@ window.GameView = BaseView.extend({
 					that.renderedChildren = true;
 				}
 				if (that.model.get('Phase') != null) {
+					that.controlsView.updatePlannerURL(that.model);
 					if (that.model.get('Phase').Ordinal != that.lastPhaseOrdinal) {
 						that.lastPhaseOrdinal = that.model.get('Phase').Ordinal;
 					}

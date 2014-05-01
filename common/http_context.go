@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/gorilla/sessions"
-	dip "github.com/zond/godip/common"
 	"github.com/zond/kcwraps/kol"
 	"github.com/zond/wsubs/gosubs"
 )
@@ -168,10 +167,11 @@ func (self *HTTPContext) Variants() string {
 }
 
 func (self *HTTPContext) VariantMap() string {
-	result := map[string]Variant{}
+	result := map[string]*Variant{}
 	for _, variant := range Variants {
-		variant.Translation = self.mI(variant.Name)
-		result[variant.Id] = variant
+		cpy := *variant
+		cpy.Translation = self.mI(cpy.Name)
+		result[cpy.Id] = &cpy
 	}
 	return gosubs.Prettify(result)
 }
@@ -190,70 +190,6 @@ func (self *HTTPContext) ChatFlagMap() string {
 		"ChatGroup":      ChatGroup,
 		"ChatConference": ChatConference,
 	})
-}
-
-func (self *HTTPContext) VariantSupplyCenterMap() string {
-	result := map[string]map[string]bool{}
-	for _, variant := range Variants {
-		scMap, found := result[variant.Id]
-		if !found {
-			scMap = map[string]bool{}
-			result[variant.Id] = scMap
-		}
-		for _, nat := range variant.Nations {
-			for _, sc := range variant.Graph.SCs(nat) {
-				scMap[string(sc)] = true
-			}
-		}
-	}
-	return gosubs.Prettify(result)
-}
-
-func (self *HTTPContext) VariantSelectableProvincesMap() string {
-	result := map[string][]dip.Province{}
-	for _, variant := range Variants {
-		hasCoasts := map[dip.Province]bool{}
-		all := map[dip.Province]bool{}
-		for _, prov := range variant.Graph.Provinces() {
-			all[prov] = true
-			if prov != prov.Super() {
-				hasCoasts[prov.Super()] = true
-			}
-		}
-		for prov, _ := range all {
-			if prov != prov.Super() || !hasCoasts[prov] {
-				result[variant.Id] = append(result[variant.Id], prov)
-			}
-		}
-	}
-	return gosubs.Prettify(result)
-}
-
-func (self *HTTPContext) VariantColorizableProvincesMap() string {
-	result := map[string][]dip.Province{}
-	for _, variant := range Variants {
-		supers := map[dip.Province]bool{}
-		for _, prov := range variant.Graph.Provinces() {
-			supers[prov.Super()] = true
-		}
-		for prov, _ := range supers {
-			result[variant.Id] = append(result[variant.Id], prov)
-		}
-	}
-	return gosubs.Prettify(result)
-}
-
-func (self *HTTPContext) VariantMainProvincesMap() string {
-	result := map[string][]dip.Province{}
-	for _, variant := range Variants {
-		result[variant.Id] = []dip.Province{}
-		for _, prov := range variant.Graph.Provinces() {
-			if prov.Super() == prov {
-				result[variant.Id] = append(result[variant.Id], prov)
-			}
-		}
-	}
-	return gosubs.Prettify(result)
 }
 
 func (self *HTTPContext) ConsequenceOptions() (result []ConsequenceOption) {

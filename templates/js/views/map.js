@@ -65,54 +65,28 @@ window.MapView = BaseView.extend({
 					break;
 			}
 		}
-		console.log(data);
 		return data;
 	},
 
   expand: function(cont, s) {
+		var that = this;
 		switch (cont) {
 			case 'nation':
-				switch (s) {
-					case 'A':
-						return 'Austria';
-					case 'E':
-						return 'England';
-					case 'G':
-						return 'Germany';
-					case 'I':
-						return 'Italy';
-					case 'R':
-						return 'Russia';
-					case 'T':
-						return 'Turkey';
-					case 'F':
-						return 'France';
+				var found = variantMap[that.variant].NationAbbrevs[s];
+				if (found != null) {
+					return found;
 				}
 				break;
 			case 'unitType':
-				switch (s) {
-					case 'A':
-						return 'Army';
-					case 'F':
-						return 'Fleet';
+				var found = variantMap[that.variant].UnitTypeAbbrevs[s];
+				if (found != null) {
+					return found;
 				}
 				break;
 			case 'orderType':
-				switch (s) {
-					case 'M':
-						return 'Move';
-					case 'V':
-						return 'MoveViaConvoy';
-					case 'S':
-						return 'Support';
-					case 'C':
-						return 'Convoy';
-					case 'H':
-						return 'Hold';
-					case 'D':
-						return 'Disband';
-					case 'B':
-						return 'Build';
+				var found = variantMap[that.variant].OrderTypeAbbrevs[s];
+				if (found != null) {
+					return found;
 				}
 				break;
 		}
@@ -129,7 +103,7 @@ window.MapView = BaseView.extend({
 
 	selectProvince: function(callback) {
 		var that = this;
-		_.each(variantSelectableProvincesMap[that.variant], function(prov) {
+		_.each(variantMap[that.variant].SelectableProvinces, function(prov) {
 			that.decisionCleaners.push(that.map.addClickListener(prov, function(ev) {
 				that.cleanDecision();
 				callback(prov);
@@ -141,55 +115,68 @@ window.MapView = BaseView.extend({
 
 	selectUnitType: function(selected, cancelled) {
 		var that = this;
+		var options = [
+		  {
+				name: '{{.I "None" }}',
+				value: 'none',
+			},
+		];
+		_.each(variantMap[that.variant].UnitTypes, function(typ) {
+			options.push({
+				name: {{.I "unit_types" }}[typ],
+				value: typ,
+			});
+		});
 		new OptionsDialogView({
-      options: [
-			  {
-					name: '{{.I "Army" }}',
-				  value: 'Army',
-				},
-			  {
-					name: '{{.I "Fleet" }}',
-				  value: 'Fleet',
-				},
-			],
+      options: options,
 		  selected: selected,
 			cancelled: cancelled,
 		}).display();
 	},
 
+	superProv: function(prov) {
+		var match = /(.*)\/(.*)/.exec(prov);
+		if (match != null) {
+			return match[1];
+		}
+		return prov;
+	},
+
 	selectNation: function(selected, cancelled) {
 		var that = this;
+		var options = [
+			{
+				name: '{{.I "None" }}',
+				value: 'none',
+			},
+		];
+		_.each(variantMap[that.variant].Nations, function(nat) {
+			options.push({
+				name: {{.I "nations" }}[nat],
+				value: nat,
+			});
+		});
 		new OptionsDialogView({
-			options: [
-			  {
-					name: '{{.I "Austria" }}',
-				  value: 'Austria',
-				},
-			  {
-					name: '{{.I "England" }}',
-				  value: 'England',
-				},
-			  {
-					name: '{{.I "France" }}',
-				  value: 'France',
-				},
-			  {
-					name: '{{.I "Germany" }}',
-				  value: 'Germany',
-				},
-			  {
-					name: '{{.I "Italy" }}',
-				  value: 'Italy',
-				},
-			  {
-					name: '{{.I "Russia" }}',
-				  value: 'Russia',
-				},
-			  {
-					name: '{{.I "Turkey" }}',
-				  value: 'Turkey',
-				},
-			],
+			options: options,
+			selected: selected,
+			cancelled: cancelled,
+		}).display();
+	},
+	
+	selectOrderType: function(selected, cancelled) {
+		var that = this;
+		var options = [{
+			name: '{{.I "None" }}',
+			value: 'none',
+		}];
+		_.each(variantMap[that.variant].OrderTypes, function(typ) {
+			options.push({
+				name: {{.I "order_types" }}[typ],
+				value: typ,
+			});
+		});
+		new OptionsDialogView({
+			options: options,
 			selected: selected,
 			cancelled: cancelled,
 		}).display();
@@ -208,13 +195,13 @@ window.MapView = BaseView.extend({
     	      value: 'dislodged',
     			},
     	  ];
-		  if (that.data.Units[prov] != null) {
+		  if (that.data.Units[prov] != null || that.data.Dislodgeds[prov] != null || that.data.SupplyCenters[prov] != null) {
 				options.push({
     				name: '{{.I "Order" }}',
     	      value: 'order',
     		});
 			}
-			if (variantSupplyCenterMap[that.variant][prov]) {
+			if (variantMap[that.variant].SupplyCenters[prov]) {
 				options.push({
 					name: '{{.I "Supply center" }}',
 			    value: 'sc',
@@ -227,95 +214,183 @@ window.MapView = BaseView.extend({
     			switch (alternative) {
 						case 'unit':
 							that.selectNation(function(nat) {
-								that.selectUnitType(function(typ) {
-									that.data.Units[prov] = {
-										Type: typ,
-									  Nation: nat,
-									};
-									that.render();
-								}, function() {
-									that.decide();
-								});
+								if (nat == 'none') {
+									delete(that.data.Units[prov]);
+									that.update();
+								} else {
+									that.selectUnitType(function(typ) {
+										if (typ == 'none') {
+											delete(that.data.Units[prov]);
+											that.update();
+										} else {
+											that.data.Units[prov] = {
+												Type: typ,
+										    Nation: nat,
+											};
+											that.update();
+										}
+									}, function() {
+										that.decide();
+									});
+								}
+							}, function() {
+								that.decide();
+							});
+							break;
+						case 'sc':
+							that.selectNation(function(nat) {
+								if (nat == 'none') {
+									delete(that.data.SupplyCenters[that.superProv(prov)]);
+									that.update();
+								} else {
+									that.data.SupplyCenters[that.superProv(prov)] = nat;
+									that.update();
+								}
 							}, function() {
 								that.decide();
 							});
 							break;
     				case 'order':
-      				new OptionsDialogView({
-                options: [
-      					  {
-      						  name: '{{.I "Move" }}',
-                    value: 'Move',
-      						},
-      					  {
-      						  name: '{{.I "Move via convoy" }}',
-                    value: 'MoveViaConvoy',
-      						},
-      					  {
-      						  name: '{{.I "Support" }}',
-                    value: 'Support',
-      						},
-      					  {
-      						  name: '{{.I "Convoy" }}',
-                    value: 'Convoy',
-      						},
-      					  {
-      						  name: '{{.I "Hold" }}',
-                    value: 'Hold',
-      						},
-      					  {
-      						  name: '{{.I "Disband" }}',
-                    value: 'Disband',
-      						},
-      					  {
-      						  name: '{{.I "Build" }}',
-                    value: 'Build',
-      						},
-      					  {
-      						  name: '{{.I "Cancel" }}',
-                    value: 'cancel',
-      						},
-      					],
-      					selected: function(alternative) {
-      						switch (alternative) {
-      							case 'Move':
+							that.selectOrderType(function(alternative) {
+      					switch (alternative) {
+      						case 'Move':
+										that.selectProvince(function(to) {
+											var nation = that.data.Units[prov].Nation;
+											if (that.data.Dislodgeds[prov] != null) {
+												nation = that.data.Dislodgeds[prov].Nation;
+											}
+											var orders = that.data.Orders[nation];
+											if (orders == null) {
+												orders = {};
+												that.data.Orders[nation] = orders;
+											}
+											orders[prov] = ['Move', to];
+                      that.update();
+										});
+										break;
+      						case 'MoveViaConvoy':
+										that.selectProvince(function(to) {
+											var orders = that.data.Orders[that.data.Units[prov].Nation];
+											if (orders == null) {
+												orders = {};
+												that.data.Orders[that.data.Units[prov].Nation] = orders;
+											}
+											orders[prov] = ['Move', to];
+                      that.update();
+										});
+										break;
+      						case 'Support':
+										that.selectProvince(function(from) {
 											that.selectProvince(function(to) {
 												var orders = that.data.Orders[that.data.Units[prov].Nation];
 												if (orders == null) {
 													orders = {};
 													that.data.Orders[that.data.Units[prov].Nation] = orders;
 												}
-												orders[prov] = ['Move', to];
-                        that.render();
+												orders[prov] = ['Support', from, to];
+												that.update();
 											});
-											break;
-      							case 'MoveViaConvoy':
-											break;
-      							case 'Support':
-											break;
-      							case 'Convoy':
-											break;
-      							case 'Hold':
-											break;
-      							case 'Disband':
-											break;
-      							case 'Build':
-											break;
-										case 'cancel':
-											break;
-      						}
-      					},
-      					cancelled: function() {
-      						that.cleanDecision();
-      						that.decide();
-      					},
-      				}).display();
+										});
+										break;
+      						case 'Convoy':
+										that.selectProvince(function(from) {
+											that.selectProvince(function(to) {
+												var orders = that.data.Orders[that.data.Units[prov].Nation];
+												if (orders == null) {
+													orders = {};
+													that.data.Orders[that.data.Units[prov].Nation] = orders;
+												}
+												orders[prov] = ['Convoy', from, to];
+												that.update();
+											});
+										});
+										break;
+      						case 'Hold':
+										var orders = that.data.Orders[that.data.Units[prov].Nation];
+										if (orders == null) {
+											orders = {};
+											that.data.Orders[that.data.Units[prov].Nation] = orders;
+										}
+										orders[prov] = ['Hold'];
+										that.update();
+										break;
+      						case 'Disband':
+										var nation = that.data.Units[prov].Nation;
+										if (that.data.Dislodgeds[prov] != null) {
+											nation = that.data.Dislodgeds[prov].Nation;
+										}
+										var orders = that.data.Orders[nation];
+										if (orders == null) {
+											orders = {};
+											that.data.Orders[nation] = orders;
+										}
+										orders[prov] = ['Disband'];
+										that.update();
+										break;
+      						case 'Build':
+										that.selectUnitType(function(typ) {
+											if (typ == 'none') {
+												delete(that.data.Orders[that.data.SupplyCenters[prov]][prov]);
+											} else {
+												var orders = that.data.Orders[that.data.SupplyCenters[prov]];
+												if (orders == null) {
+													orders = {};
+													that.data.Orders[that.data.SupplyCenters[prov]] = orders;
+												}
+												orders[prov] = ['Build', typ];
+												that.update();
+											}
+										}, function() {
+											that.decide();
+										});
+										break;
+									case 'none':
+										var orders = that.data.Orders[that.data.Units[prov].Nation];
+										if (orders != null) {
+											delete(orders[prov]);
+										}
+										orders = that.data.Orders[that.data.Dislodgeds[prov].Nation];
+										if (orders != null) {
+											delete(orders[prov]);
+										}
+										orders = that.data.SupplyCenters[that.data.Dislodgeds[prov].Nation];
+										if (orders != null) {
+											delete(orders[prov]);
+										}
+										that.update();
+										break;
+      					}
+							},
+							function() {
+								that.decide();
+							});
     					break;
     				case 'dislodged':
-    					break;
-    				case 'sc':
-    					break;
-    			}
+							that.selectNation(function(nat) {
+								if (nat == 'none') {
+									delete(that.data.Dislodgeds[prov]);
+									that.update();
+								} else {
+									that.selectUnitType(function(typ) {
+										if (typ == 'none') {
+											delete(that.data.Dislodgeds[prov]);
+											that.update();
+										} else {
+											that.data.Dislodgeds[prov] = {
+												Type: typ,
+										    Nation: nat,
+											};
+											that.update();
+										}
+									}, function() {
+										that.decide();
+									});
+								}
+							}, function() {
+								that.decide();
+							});
+							break;
+					}
     		},
     		cancelled: function() {
 				  that.decide();
@@ -324,34 +399,45 @@ window.MapView = BaseView.extend({
 		});
 	},
 
-  render: function() {
+	encodeData: function() {
+		return queryEncodePhaseState(this.variant, this.data);
+	},
+
+	update: function() {
 		var that = this;
-		that.$el.html(that.template({}));
-		that.map = dippyMap(that.$('.map'));
 		that.map.copySVG(that.variant + 'Map');
 		panZoom('.map');
 		for (var prov in that.data.Units) {
 			var unit = that.data.Units[prov];
-			that.map.addUnit(that.variant + 'Unit' + unit.Type, prov, variantColor(that.variant, unit.Nation));
+			that.map.addUnit(that.variant + 'Unit' + unit.Type, prov, variantMap[that.variant].Colors[unit.Nation]);
 		}
 		for (var prov in that.data.Dislodgeds) {
 			var unit = that.data.Dislodgeds[prov];
-			that.map.addUnit(that.variant + 'Unit' + unit.Type, prov, variantColor(that.variant, unit.Nation), true);
+			that.map.addUnit(that.variant + 'Unit' + unit.Type, prov, variantMap[that.variant].Colors[unit.Nation], true);
 		}
 		for (var nation in that.data.Orders) {
 			for (var source in that.data.Orders[nation]) {
 				that.map.addOrder([source].concat(that.data.Orders[nation][source]), that.variant, nation);
 			}
 		}
-		_.each(variantColorizableProvincesMap[that.variant], function(prov) {
+		_.each(variantMap[that.variant].ColorizableProvinces, function(prov) {
 			if (that.data.SupplyCenters[prov] == null) {
 				that.map.hideProvince(prov);
 			} else {
-				that.map.colorProvince(prov, variantColor(that.variant, that.data.SupplyCenters[prov]));
+				that.map.colorProvince(prov, variantMap[that.variant].Colors[that.data.SupplyCenters[prov]]);
 			}
 		});
 		that.map.showProvinces();
 		that.decide();
+		window.session.router.navigate('/map/' + that.variant + '?' + that.encodeData(), { trigger: false, replace: true });
+	},
+
+  render: function() {
+		var that = this;
+		navLinks([]);
+		that.$el.html(that.template({}));
+		that.map = dippyMap(that.$('.map'));
+		that.update();
 		return that;
 	},
 

@@ -16,7 +16,7 @@ window.PreferencesAllocationDialogView = BaseView.extend({
 		this.nations = [];
 		this.doneCalled = false;
 		var that = this;
-		_.each(variantNations(that.gameState.get('Variant')), function(nation) {
+		_.each(variantMap[that.gameState.get('Variant')].Nations, function(nation) {
       that.nations.push(nation);
 		});
 	},
