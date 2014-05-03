@@ -72,16 +72,13 @@ window.MapView = BaseView.extend({
 			var val = params[key];
 			switch (key.substring(0,1)) {
 				case 'o':
-					var unit = data.Units[key.substring(1,4)];
-					if (unit != null) {
-						var nat = unit.Nation;
-						if (data.Orders[nat] == null) {
-							data.Orders[nat] = {};
-						}
-						data.Orders[nat][key.substring(1,4)] = _.map(val.split(','), function(part) {
-							return that.expand('orderType', part);
-						});
+					var nat = that.expand('nation', key.substring(4,5));
+					if (data.Orders[nat] == null) {
+						data.Orders[nat] = {};
 					}
+					data.Orders[nat][key.substring(1,4)] = _.map(val.split(','), function(part) {
+						return that.expand('orderType', part);
+					});
 					break;
 			}
 		}
@@ -365,17 +362,18 @@ window.MapView = BaseView.extend({
 										});
 										break;
 									case 'none':
-										var orders = that.data.Orders[that.data.Units[prov].Nation];
-										if (orders != null) {
-											delete(orders[prov]);
+										if (that.data.Units[prov] != null) {
+											if (that.data.Orders[that.data.Units[prov].Nation] != null) {
+												delete(that.data.Orders[that.data.Units[prov].Nation][prov]);
+											}
 										}
-										orders = that.data.Orders[that.data.Dislodgeds[prov].Nation];
-										if (orders != null) {
-											delete(orders[prov]);
+										if (that.data.Dislodgeds[prov] != null) {
+											if (that.data.Orders[that.data.Dislodgeds[prov].Nation] != null) {
+												delete(that.data.Orders[that.data.Dislodgeds[prov].Nation][prov]);
+											}
 										}
-										orders = that.data.SupplyCenters[that.data.Dislodgeds[prov].Nation];
-										if (orders != null) {
-											delete(orders[prov]);
+										if (that.data.SupplyCenters[prov] != null) {
+											delete(that.data.Orders[that.data.SupplyCenters[prov]][prov]);
 										}
 										that.update();
 										break;

@@ -36,7 +36,7 @@ function queryEncodePhaseState(variant, data) {
 	});
 	_.each(data.Orders, function(orders, nat) {
     _.each(orders, function(order, prov) {
-			rval.push('o' + prov + '=' + _.map(order, function(part) {
+			rval.push('o' + prov + variantAbbreviate(variant, 'nation', nat) + '=' + _.map(order, function(part) {
 				return variantAbbreviate(variant, 'orderType', part);
 			}).join(','));
 		});
