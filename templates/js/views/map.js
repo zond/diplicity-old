@@ -7,7 +7,7 @@ window.MapView = BaseView.extend({
 		that.variant = options.variant;
 		that.map = null;
 		that.decisionCleaners = [];
-		that.data = that.parseData();
+		that.data = options.data || that.parseData();
 	},
 
   unitReg: /^u(.{3,3})$/,

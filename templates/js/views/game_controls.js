@@ -12,6 +12,7 @@ window.GameControlsView = BaseView.extend({
 		"click .previous-phase": "phaseBack",
 		"click .next-phase": "phaseForward",
 		"click .last-phase": "lastPhase",
+    "click .view-planner": "viewPlanner",
 	},
 
 	initialize: function(options) {
@@ -30,6 +31,16 @@ window.GameControlsView = BaseView.extend({
 		}
 		this.deadline = null;
 		this.currentView = null;
+	},
+
+	viewPlanner: function(ev) {
+		ev.preventDefault();
+		window.session.router.navigate($(ev.target).attr('href'), { trigger: false });
+		new MapView({
+			data: this.model.get('Phase'),
+			variant: this.model.get('Variant'),
+			el: $('#content'),
+		}).doRender();
 	},
 
 	lastPhase: function(ev) {
