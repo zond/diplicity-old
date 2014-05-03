@@ -35,9 +35,10 @@ window.GameControlsView = BaseView.extend({
 
 	viewPlanner: function(ev) {
 		ev.preventDefault();
-		window.session.router.navigate($(ev.target).attr('href'), { trigger: false });
+		var href = $(ev.currentTarget).attr('href');
+		window.session.router.navigate(href, { trigger: false });
 		new MapView({
-			data: this.model.get('Phase'),
+			href: href,
 			variant: this.model.get('Variant'),
 			el: $('#content'),
 		}).doRender();

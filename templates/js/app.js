@@ -57,6 +57,7 @@ $(window).load(function() {
 			"closed": "closed",
 			"finished": "finished",
 			"create": "createGame",
+			"games/:id/:ordinal": "gamePhase",
 			"games/:id": "game",
 			"games/:id/messages/:participants": "chat",
 			"settings": "settings",
@@ -72,6 +73,16 @@ $(window).load(function() {
 
 		settings: function() {
 			new SettingsView({
+				el: $('#content'),
+			}).doRender();
+		},
+
+		gamePhase: function(id, ordinal) {
+			new GameView({
+				ordinal: ordinal,
+				model: new GameState({
+					Id: id,
+				}),
 				el: $('#content'),
 			}).doRender();
 		},

@@ -236,6 +236,9 @@ window.GameState = Backbone.Model.extend({
 
 	describe: function() {
 	  var that = this;
+		if (that.get('Variant') == null) {
+			return '';
+		}
 		var nationInfo = "";
 		if (that.get('AllocationMethod') != null) {
 			nationInfo = allocationMethodName(that.get('AllocationMethod'));

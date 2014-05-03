@@ -11,7 +11,7 @@ window.MapView = BaseView.extend({
 		that.variant = options.variant;
 		that.map = null;
 		that.decisionCleaners = [];
-		that.data = options.data || that.parseData();
+		that.data = that.parseData(options.href || window.location.href);
 	},
 
   unitReg: /^u(.{3,3})$/,
@@ -32,7 +32,7 @@ window.MapView = BaseView.extend({
 		});
 	},
 
-  parseData: function() {
+  parseData: function(href) {
 		var that = this;
 		var data = {
 		  Units: {},
@@ -41,7 +41,7 @@ window.MapView = BaseView.extend({
 			SupplyCenters: {},
 		};
 		var params = {};
-		parts = window.location.href.split('?');
+		parts = href.split('?');
 		if (parts.length > 1) {
       _.each(parts[1].split('&'), function(param) {
 				var parts = param.split('=');
