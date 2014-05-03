@@ -2,6 +2,10 @@ window.MapView = BaseView.extend({
 
   template: _.template($('#map_underscore').html()),
 
+  events: {
+		"click .shortener": "shorten",
+	},
+
 	initialize: function(options) {
 	  var that = this;
 		that.variant = options.variant;
@@ -11,6 +15,22 @@ window.MapView = BaseView.extend({
 	},
 
   unitReg: /^u(.{3,3})$/,
+
+  shorten: function() {
+		var that = this;
+		$.ajax('https://www.googleapis.com/urlshortener/v1/url', {
+			type: 'POST',
+			dataType: 'json',
+			data: JSON.stringify({
+				"longUrl": window.location.href,
+			}),
+			contentType : 'application/json',
+			success: function(data) {
+				that.$('.shortener').html('<a href="' + data.id + '">' + data.id + '</a>');
+				that.$('.shortener').removeClass('glyphicon').removeClass('glyphicon-compressed').removeClass('shortener');	
+			},
+		});
+	},
 
   parseData: function() {
 		var that = this;
