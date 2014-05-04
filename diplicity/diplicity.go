@@ -112,6 +112,8 @@ func main() {
 	server.AdminHandle(router.Path("/admin/users/setrank1").Methods("POST"), user.AdminSetRank1)
 	server.DevHandle(router.Path("/admin/become").Methods("POST"), user.AdminBecome)
 
+	server.Handle(router.Path("/resolve/{variant}").Methods("POST"), game.Resolve)
+
 	// Unsubscribe
 	server.Handle(router.Path("/unsubscribe/{unsubscribe_tag}").Methods("GET"), game.UnsubscribeEmails)
 

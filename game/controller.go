@@ -2,6 +2,7 @@ package game
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"sort"
 	"strconv"
@@ -14,6 +15,41 @@ import (
 	dip "github.com/zond/godip/common"
 	"github.com/zond/kcwraps/kol"
 )
+
+func Resolve(c *common.HTTPContext) (err error) {
+	phase := &Phase{}
+	if err = json.NewDecoder(c.Req().Body).Decode(phase); err != nil {
+		return
+	}
+	state, err := phase.State()
+	if err != nil {
+		return
+	}
+	if err = state.Next(); err != nil {
+		return
+	}
+	// Load the new godip phase from the state
+	nextDipPhase := state.Phase()
+	// Create a diplicity phase for the new phase
+	nextPhase := &Phase{
+		Ordinal:     phase.Ordinal + 1,
+		Orders:      map[dip.Nation]map[dip.Province][]string{},
+		Resolutions: map[dip.Province]string{},
+		Season:      nextDipPhase.Season(),
+		Year:        nextDipPhase.Year(),
+		Type:        nextDipPhase.Type(),
+	}
+	// Set the new phase positions
+	var resolutions map[dip.Province]error
+	nextPhase.Units, nextPhase.SupplyCenters, nextPhase.Dislodgeds, nextPhase.Dislodgers, nextPhase.Bounces, resolutions = state.Dump()
+	for prov, err := range resolutions {
+		nextPhase.Resolutions[prov] = err.Error()
+	}
+	if err = json.NewEncoder(c.Resp()).Encode(nextPhase); err != nil {
+		return
+	}
+	return
+}
 
 func UnsubscribeEmails(c *common.HTTPContext) (err error) {
 	unsubTag, err := common.DecodeUnsubscribeTag(c.Secret(), c.Vars()["unsubscribe_tag"])
