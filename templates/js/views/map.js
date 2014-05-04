@@ -16,7 +16,8 @@ window.MapView = BaseView.extend({
 
   unitReg: /^u(.{3,3})$/,
 
-  shorten: function() {
+  shorten: function(ev) {
+		ev.preventDefault();
 		var that = this;
 		$.ajax('https://www.googleapis.com/urlshortener/v1/url', {
 			type: 'POST',
@@ -26,8 +27,8 @@ window.MapView = BaseView.extend({
 			}),
 			contentType : 'application/json',
 			success: function(data) {
-				that.$('.shortener').html('<a href="' + data.id + '">' + data.id + '</a>');
-				that.$('.shortener').removeClass('glyphicon').removeClass('glyphicon-compressed').removeClass('shortener');	
+				that.$('.shortener').text(data.id);
+				that.$('.shortener').attr('href', data.id);
 			},
 		});
 	},
