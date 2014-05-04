@@ -24,7 +24,7 @@ function variantAbbreviate(variant, cont, s) {
 }
 
 function queryEncodePhaseState(variant, data) {
-	var rval = [];
+	var rval = ['season=' + data.Season, 'year=' + data.Year, 'type=' + data.Type];
 	_.each(data.Units, function(unit, prov) {
 		rval.push('u' + prov + '=' + variantAbbreviate(variant, 'unitType', unit.Type) + variantAbbreviate(variant, 'nation', unit.Nation));
 	});

@@ -4,6 +4,9 @@ window.MapView = BaseView.extend({
 
   events: {
 		"click .shortener": "shorten",
+    "click .season": "selectSeason",
+    "click .year": "selectYear",
+    "click .phase-type": "selectPhaseType",
 	},
 
 	initialize: function(options) {
@@ -12,6 +15,69 @@ window.MapView = BaseView.extend({
 		that.map = null;
 		that.decisionCleaners = [];
 		that.data = that.parseData(options.href || window.location.href);
+	},
+
+  selectYear: function(ev) {
+		ev.preventDefault();
+		var that = this;
+		var options = [
+		];
+		for (var i = 1901; i < 1936; i++) {
+			options.push({
+				name: '' + i,
+				value: '' + i,
+			});
+		}
+		new OptionsDialogView({
+      options: options,
+		  selected: function(sel) {
+				that.data.Year = sel;
+				that.update();
+			},
+			cancelled: function() {},
+		}).display();
+	},
+
+	selectPhaseType: function(ev) {
+		ev.preventDefault();
+		var that = this;
+		var options = [
+		];
+		_.each(variantMap[that.variant].PhaseTypes, function(typ) {
+			options.push({
+				name: {{.I "phase_types" }}[typ],
+				value: typ,
+			});
+		});
+		new OptionsDialogView({
+      options: options,
+		  selected: function(typ) {
+				that.data.Type = typ;
+				that.update();
+			},
+			cancelled: function() {},
+		}).display();
+	},
+
+	selectSeason: function(ev) {
+		ev.preventDefault();
+		var that = this;
+		var options = [
+		];
+		_.each(variantMap[that.variant].Seasons, function(season) {
+			options.push({
+				name: {{.I "seasons" }}[season],
+				value: season,
+			});
+		});
+		new OptionsDialogView({
+      options: options,
+		  selected: function(sel) {
+				that.data.Season = sel;
+				that.update();
+			},
+			cancelled: function() {},
+		}).display();
 	},
 
   unitReg: /^u(.{3,3})$/,
@@ -40,6 +106,9 @@ window.MapView = BaseView.extend({
 			Dislodgeds: {},
 			Orders: {},
 			SupplyCenters: {},
+      Season: variantMap[that.variant].Seasons[0],
+			Year: "1901",
+			Type: variantMap[that.variant].PhaseTypes[0],
 		};
 		var params = {};
 		parts = href.split('?');
@@ -48,6 +117,18 @@ window.MapView = BaseView.extend({
 				var parts = param.split('=');
 				params[parts[0]] = parts[1];
 			});
+		}
+		if (params.year != null) {
+			data.Year = parseInt(params.year);
+			delete(params.year);
+		}
+		if (params.season != null) {
+			data.Season = params.season;
+			delete(params.season);
+		}
+		if (params.type != null) {
+			data.Type = params.type;
+			delete(params.type);
 		}
 		for (var key in params) {
       var val = params[key];
@@ -447,6 +528,9 @@ window.MapView = BaseView.extend({
 			}
 		});
 		that.map.showProvinces();
+		that.$('.season').text(that.data.Season);
+		that.$('.year').text(that.data.Year);
+		that.$('.phase-type').text(that.data.Type);
 		that.decide();
 		window.session.router.navigate('/map/' + that.variant + '?' + that.encodeData(), { trigger: false, replace: true });
 	},

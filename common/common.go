@@ -253,6 +253,7 @@ type Variant struct {
 	SupplyCenters        map[dip.Province]dip.Nation
 	SelectableProvinces  []dip.Province
 	ColorizableProvinces []dip.Province
+	Seasons              []dip.Season
 }
 
 func (self Variant) JSONNations() string {
@@ -295,6 +296,7 @@ var classicalVariant = &Variant{
 	OrderTypeAbbrevs: map[string]dip.OrderType{},
 	NationAbbrevs:    map[string]dip.Nation{},
 	UnitTypeAbbrevs:  map[string]dip.UnitType{},
+	Seasons:          cla.Seasons,
 }
 
 func init() {

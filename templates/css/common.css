@@ -1,3 +1,8 @@
+.map-heading {
+	font-size: larger;
+	z-index: 200;
+	position: relative;
+}
 .shortener {
 	font-size: large;
 	margin: 5px;
