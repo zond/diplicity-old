@@ -43,8 +43,13 @@ func Resolve(c *common.HTTPContext) (err error) {
 	var resolutions map[dip.Province]error
 	nextPhase.Units, nextPhase.SupplyCenters, nextPhase.Dislodgeds, nextPhase.Dislodgers, nextPhase.Bounces, resolutions = state.Dump()
 	for prov, err := range resolutions {
-		nextPhase.Resolutions[prov] = err.Error()
+		if err == nil {
+			nextPhase.Resolutions[prov] = "OK"
+		} else {
+			nextPhase.Resolutions[prov] = err.Error()
+		}
 	}
+	c.Resp().Header().Set("Content-Type", "application/json; charset=UTF-8")
 	if err = json.NewEncoder(c.Resp()).Encode(nextPhase); err != nil {
 		return
 	}

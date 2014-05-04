@@ -7,6 +7,7 @@ window.MapView = BaseView.extend({
     "click .season": "selectSeason",
     "click .year": "selectYear",
     "click .phase-type": "selectPhaseType",
+    "click .resolve": "resolve",
 	},
 
 	initialize: function(options) {
@@ -15,6 +16,21 @@ window.MapView = BaseView.extend({
 		that.map = null;
 		that.decisionCleaners = [];
 		that.data = that.parseData(options.href || window.location.href);
+	},
+
+  resolve: function(ev) {
+		ev.preventDefault();
+		var that = this;
+		$.ajax("/resolve/" + that.variant, {
+			type: 'POST',
+			dataType: 'json',
+			data: JSON.stringify(that.data),
+			contentType : 'application/json',
+			success: function(data) {
+				that.data = data;
+				that.update(false);
+			},
+		});
 	},
 
   selectYear: function(ev) {
@@ -32,7 +48,7 @@ window.MapView = BaseView.extend({
       options: options,
 		  selected: function(sel) {
 				that.data.Year = sel;
-				that.update();
+				that.update(true);
 			},
 			cancelled: function() {},
 		}).display();
@@ -53,7 +69,7 @@ window.MapView = BaseView.extend({
       options: options,
 		  selected: function(typ) {
 				that.data.Type = typ;
-				that.update();
+				that.update(true);
 			},
 			cancelled: function() {},
 		}).display();
@@ -74,7 +90,7 @@ window.MapView = BaseView.extend({
       options: options,
 		  selected: function(sel) {
 				that.data.Season = sel;
-				that.update();
+				that.update(true);
 			},
 			cancelled: function() {},
 		}).display();
@@ -95,6 +111,7 @@ window.MapView = BaseView.extend({
 			success: function(data) {
 				that.$('.shortener').text(data.id);
 				that.$('.shortener').attr('href', data.id);
+				that.$('.shortener').css('padding-bottom', '0px');
 			},
 		});
 	},
@@ -315,18 +332,18 @@ window.MapView = BaseView.extend({
 							that.selectNation(function(nat) {
 								if (nat == 'none') {
 									delete(that.data.Units[prov]);
-									that.update();
+									that.update(true);
 								} else {
 									that.selectUnitType(function(typ) {
 										if (typ == 'none') {
 											delete(that.data.Units[prov]);
-											that.update();
+											that.update(true);
 										} else {
 											that.data.Units[prov] = {
 												Type: typ,
 										    Nation: nat,
 											};
-											that.update();
+											that.update(true);
 										}
 									}, function() {
 										that.decide();
@@ -340,10 +357,10 @@ window.MapView = BaseView.extend({
 							that.selectNation(function(nat) {
 								if (nat == 'none') {
 									delete(that.data.SupplyCenters[that.superProv(prov)]);
-									that.update();
+									that.update(true);
 								} else {
 									that.data.SupplyCenters[that.superProv(prov)] = nat;
-									that.update();
+									that.update(true);
 								}
 							}, function() {
 								that.decide();
@@ -364,7 +381,7 @@ window.MapView = BaseView.extend({
 												that.data.Orders[nation] = orders;
 											}
 											orders[prov] = ['Move', to];
-                      that.update();
+                      that.update(true);
 										});
 										break;
       						case 'MoveViaConvoy':
@@ -375,7 +392,7 @@ window.MapView = BaseView.extend({
 												that.data.Orders[that.data.Units[prov].Nation] = orders;
 											}
 											orders[prov] = ['Move', to];
-                      that.update();
+                      that.update(true);
 										});
 										break;
       						case 'Support':
@@ -387,7 +404,7 @@ window.MapView = BaseView.extend({
 													that.data.Orders[that.data.Units[prov].Nation] = orders;
 												}
 												orders[prov] = ['Support', from, to];
-												that.update();
+												that.update(true);
 											});
 										});
 										break;
@@ -400,7 +417,7 @@ window.MapView = BaseView.extend({
 													that.data.Orders[that.data.Units[prov].Nation] = orders;
 												}
 												orders[prov] = ['Convoy', from, to];
-												that.update();
+												that.update(true);
 											});
 										});
 										break;
@@ -411,7 +428,7 @@ window.MapView = BaseView.extend({
 											that.data.Orders[that.data.Units[prov].Nation] = orders;
 										}
 										orders[prov] = ['Hold'];
-										that.update();
+										that.update(true);
 										break;
       						case 'Disband':
 										var nation = that.data.Units[prov].Nation;
@@ -424,7 +441,7 @@ window.MapView = BaseView.extend({
 											that.data.Orders[nation] = orders;
 										}
 										orders[prov] = ['Disband'];
-										that.update();
+										that.update(true);
 										break;
       						case 'Build':
 										that.selectUnitType(function(typ) {
@@ -437,7 +454,7 @@ window.MapView = BaseView.extend({
 													that.data.Orders[that.data.SupplyCenters[prov]] = orders;
 												}
 												orders[prov] = ['Build', typ];
-												that.update();
+												that.update(true);
 											}
 										}, function() {
 											that.decide();
@@ -457,7 +474,7 @@ window.MapView = BaseView.extend({
 										if (that.data.SupplyCenters[prov] != null) {
 											delete(that.data.Orders[that.data.SupplyCenters[prov]][prov]);
 										}
-										that.update();
+										that.update(true);
 										break;
       					}
 							},
@@ -469,18 +486,18 @@ window.MapView = BaseView.extend({
 							that.selectNation(function(nat) {
 								if (nat == 'none') {
 									delete(that.data.Dislodgeds[prov]);
-									that.update();
+									that.update(true);
 								} else {
 									that.selectUnitType(function(typ) {
 										if (typ == 'none') {
 											delete(that.data.Dislodgeds[prov]);
-											that.update();
+											that.update(true);
 										} else {
 											that.data.Dislodgeds[prov] = {
 												Type: typ,
 										    Nation: nat,
 											};
-											that.update();
+											that.update(true);
 										}
 									}, function() {
 										that.decide();
@@ -503,7 +520,7 @@ window.MapView = BaseView.extend({
 		return queryEncodePhaseState(this.variant, this.data);
 	},
 
-	update: function() {
+	update: function(replace) {
 		var that = this;
 		that.map.copySVG(that.variant + 'Map');
 		panZoom('.map');
@@ -532,7 +549,7 @@ window.MapView = BaseView.extend({
 		that.$('.year').text(that.data.Year);
 		that.$('.phase-type').text(that.data.Type);
 		that.decide();
-		window.session.router.navigate('/map/' + that.variant + '?' + that.encodeData(), { trigger: false, replace: true });
+		window.session.router.navigate('/map/' + that.variant + '?' + that.encodeData(), { trigger: false, replace: replace });
 	},
 
   render: function() {
@@ -540,7 +557,7 @@ window.MapView = BaseView.extend({
 		navLinks([]);
 		that.$el.html(that.template({}));
 		that.map = dippyMap(that.$('.map'));
-		that.update();
+		that.update(true);
 		return that;
 	},
 
