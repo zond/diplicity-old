@@ -227,6 +227,19 @@ func SubscribeMessages(c common.WSContext) (err error) {
 		messages := i.([]*Message)
 		result := Messages{}
 		for _, message := range messages {
+			if message.Public && len(message.RecipientIds) != len(variant.Nations) {
+				game := &Game{Id: message.GameId}
+				if err = c.DB().Get(game); err != nil {
+					return
+				}
+				var members Members
+				if members, err = game.Members(c.DB()); err != nil {
+					return
+				}
+				for _, memb := range members {
+					message.RecipientIds[memb.Id.String()] = true
+				}
+			}
 			if message.Public || len(message.RecipientIds) == len(variant.Nations) || message.RecipientIds[memberId] {
 				result = append(result, *message)
 			}
