@@ -3,6 +3,9 @@
 	z-index: 200;
 	position: relative;
 }
+.shortened {
+	display: none;
+}
 .map-heading .btn {
 	position: relative;
 	z-index: 200;

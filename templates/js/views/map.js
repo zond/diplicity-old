@@ -28,6 +28,8 @@ window.MapView = BaseView.extend({
 			contentType : 'application/json',
 			success: function(data) {
 				that.data = data;
+				that.$('.shortened').hide();
+				that.$('.shortener').show();
 				that.update(false);
 			},
 		});
@@ -109,9 +111,10 @@ window.MapView = BaseView.extend({
 			}),
 			contentType : 'application/json',
 			success: function(data) {
-				that.$('.shortener').text(data.id);
-				that.$('.shortener').attr('href', data.id);
-				that.$('.shortener').css('padding-bottom', '0px');
+				that.$('.shortened').attr('href', data.id);
+				that.$('.shortened').text(data.id);
+				that.$('.shortened').show();
+				that.$('.shortener').hide();
 			},
 		});
 	},
