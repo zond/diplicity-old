@@ -86,6 +86,7 @@ type Message struct {
 	SenderId     kol.Id
 	RecipientIds map[string]bool
 	SeenBy       map[string]bool
+	Public       bool
 
 	Body string
 
@@ -267,18 +268,28 @@ func (self *Message) Send(c common.SkinnyContext, game *Game, sender *Member) (e
 	// Find what chats are allowed during this phase type
 	allowedFlags := game.ChatFlags[phaseType]
 
+	// load game members
+	members, err := game.Members(c.DB())
+	if err != nil {
+		return
+	}
+
 	// See if the recipient count is allowed
 	recipients := len(self.RecipientIds)
-	if recipients == 2 {
-		if (allowedFlags & common.ChatPrivate) == 0 {
+	if self.Public || recipients == len(common.VariantMap[game.Variant].Nations) {
+		if (allowedFlags & common.ChatConference) == 0 {
 			err = IllegalMessageError{
 				Description: fmt.Sprintf("%+v does not allow %+v during %+v", game, self, phaseType),
 				Phrase:      "This kind of message is not allowed at this stage of the game",
 			}
 			return
 		}
-	} else if recipients == len(common.VariantMap[game.Variant].Nations) {
-		if (allowedFlags & common.ChatConference) == 0 {
+		self.Public = true
+		for _, memb := range members {
+			self.RecipientIds[memb.Id.String()] = true
+		}
+	} else if recipients == 2 {
+		if (allowedFlags & common.ChatPrivate) == 0 {
 			err = IllegalMessageError{
 				Description: fmt.Sprintf("%+v does not allow %+v during %+v", game, self, phaseType),
 				Phrase:      "This kind of message is not allowed at this stage of the game",
@@ -298,10 +309,6 @@ func (self *Message) Send(c common.SkinnyContext, game *Game, sender *Member) (e
 		return
 	}
 
-	members, err := game.Members(c.DB())
-	if err != nil {
-		return
-	}
 	if err = c.DB().Set(self); err != nil {
 		return
 	}

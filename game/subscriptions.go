@@ -227,7 +227,7 @@ func SubscribeMessages(c common.WSContext) (err error) {
 		messages := i.([]*Message)
 		result := Messages{}
 		for _, message := range messages {
-			if len(message.RecipientIds) == len(variant.Nations) || message.RecipientIds[memberId] {
+			if message.Public || len(message.RecipientIds) == len(variant.Nations) || message.RecipientIds[memberId] {
 				result = append(result, *message)
 			}
 		}

@@ -225,7 +225,7 @@ window.GameState = Backbone.Model.extend({
 	  if (n == 2 && this.hasChatFlag("ChatPrivate")) {
 			return true;
 		}
-		if (n == maxMembers && this.hasChatFlag("ChatConference")) {
+		if ((n == this.get('Members').length || n == maxMembers) && this.hasChatFlag("ChatConference")) {
 		  return true;
 		}
 		if ((n > 2 && n < maxMembers) && this.hasChatFlag("ChatGroup")) {

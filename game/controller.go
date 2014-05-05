@@ -258,6 +258,7 @@ func CreateMessage(c common.WSContext) (err error) {
 		message.RecipientIds = map[string]bool{}
 	}
 
+	// set the body
 	message.Body = strings.TrimSpace(message.Body)
 	if message.Body == "" {
 		return

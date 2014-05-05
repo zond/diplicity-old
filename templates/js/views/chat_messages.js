@@ -51,6 +51,10 @@ window.ChatMessagesView = BaseView.extend({
 	  var that = this;
 		ev.preventDefault();
 		if (that.model.allowChatMembers(that.nMembers)) {
+			var publ = false;
+			if (that.model.get('Members').length == that.nMembers) {
+				publ = true;
+			}
 			// i have NO IDEA AT ALL why i have to use this clunky id scheme to find the body, but that.$('.new-message-body').val() never produced anything but ''
 			var body = $('.new-message-body').val();
 			if (body != '') {
@@ -59,6 +63,7 @@ window.ChatMessagesView = BaseView.extend({
 				that.collection.create({
 					RecipientIds: that.members,
 					Body: body,
+					Public: publ,
 					GameId: that.model.get('Id'),
 					SenderId: me.Id,
 				}, { silent: true });
