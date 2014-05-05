@@ -315,6 +315,7 @@ body {
 }
 .game-players {
 	margin-bottom: 0px;
+	border: 1px solid black;
 }
 .map-container {
 	width: 100%;
