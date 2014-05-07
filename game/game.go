@@ -359,7 +359,7 @@ func (self *Game) resolve(c common.SkinnyContext, phase *Phase) (err error) {
 			if err = nextPhase.Schedule(c); err != nil {
 				return
 			}
-			nextPhase.SendScheduleEmails(c, self)
+			nextPhase.SendStartedEmails(c, self)
 			return
 		}
 		phase = nextPhase
@@ -434,7 +434,7 @@ func (self *Game) start(c common.SkinnyContext) (err error) {
 	if err = phase.Schedule(c); err != nil {
 		return
 	}
-	phase.SendScheduleEmails(c, self)
+	phase.SendStartedEmails(c, self)
 	return
 }
 

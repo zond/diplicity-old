@@ -102,49 +102,64 @@ func (self *Phase) Schedule(c common.SkinnyContext) error {
 	return nil
 }
 
-func (self *Phase) SendScheduleEmails(c common.SkinnyContext, game *Game) {
+func (self *Phase) emailTo(c common.SkinnyContext, game *Game, member *Member, user *user.User) (err error) {
+	to := fmt.Sprintf("%v <%v>", member.Nation, user.Email)
+	unsubTag := &common.UnsubscribeTag{
+		T: common.UnsubscribePhaseEmail,
+		U: user.Id,
+	}
+	unsubTag.H = unsubTag.Hash(c.Secret())
+	encodedUnsubTag, err := unsubTag.Encode()
+	if err != nil {
+		return
+	}
+	contextLink, err := user.I("To see this in context: http://%v/games/%v", user.DiplicityHost, self.GameId)
+	if err != nil {
+		return
+	}
+	unsubLink, err := user.I("To unsubscribe: http://%v/unsubscribe/%v", user.DiplicityHost, encodedUnsubTag)
+	if err != nil {
+		return
+	}
+	text, err := user.I("A new phase has been created")
+	if err != nil {
+		return
+	}
+	subject, err := game.Describe(c, user)
+	if err != nil {
+		return
+	}
+	body := fmt.Sprintf(common.EmailTemplate, text, contextLink, unsubLink)
+	go c.SendMail("diplicity", c.ReceiveAddress(), subject, body, []string{to})
+	return
+}
+
+func (self *Phase) SendStartedEmails(c common.SkinnyContext, game *Game) (err error) {
 	members, err := game.Members(c.DB())
+	if err != nil {
+		return
+	}
 	for _, member := range members {
 		user := &user.User{Id: member.UserId}
 		if err = c.DB().Get(user); err != nil {
 			return
 		}
-		to := fmt.Sprintf("%v <%v>", member.Nation, user.Email)
-		if !user.PhaseEmailDisabled && !c.IsSubscribing(user.Email, fmt.Sprintf("/games/%v", game.Id)) {
-			unsubTag := &common.UnsubscribeTag{
-				T: common.UnsubscribePhaseEmail,
-				U: user.Id,
+		if !user.PhaseEmailDisabled {
+			subKey := fmt.Sprintf("/games/%v", game.Id)
+			if !c.IsSubscribing(user.Email, subKey) {
+				if err = self.emailTo(c, game, &member, user); err != nil {
+					c.Errorf("Failed sending to %#v: %v", user.Id.String(), err)
+					return
+				}
+			} else {
+				c.Infof("Not sending to %#v, already subscribing to %#v", user.Id.String(), subKey)
 			}
-			unsubTag.H = unsubTag.Hash(c.Secret())
-			encodedUnsubTag, err := unsubTag.Encode()
-			if err != nil {
-				c.Errorf("Failed to encode %+v: %v", unsubTag, err)
-				return
-			}
-			contextLink, err := user.I("To see this in context: http://%v/games/%v", user.DiplicityHost, self.GameId)
-			if err != nil {
-				c.Errorf("Failed translating context link: %v", err)
-				return
-			}
-			unsubLink, err := user.I("To unsubscribe: http://%v/unsubscribe/%v", user.DiplicityHost, encodedUnsubTag)
-			if err != nil {
-				c.Errorf("Failed translating unsubscribe link: %v", err)
-				return
-			}
-			text, err := user.I("A new phase has been created")
-			if err != nil {
-				c.Errorf("Failed translating: %v", err)
-				return
-			}
-			subject, err := game.Describe(c, user)
-			if err != nil {
-				c.Errorf("Failed describing: %v", err)
-				return
-			}
-			body := fmt.Sprintf(common.EmailTemplate, text, contextLink, unsubLink)
-			c.SendMail("diplicity", c.ReceiveAddress(), subject, body, []string{to})
+		} else {
+			c.Infof("Not sending to %#v, phase email disabled", user.Id.String())
 		}
 	}
+
+	return
 }
 
 func (self *Phase) Game(d *kol.DB) (result *Game, err error) {

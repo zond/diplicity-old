@@ -119,60 +119,6 @@ func (self *Message) Created(d *kol.DB) {
 	d.EmitUpdate(&g)
 }
 
-func (self *Message) EmailTo(c common.SkinnyContext, game *Game, sender *Member, senderUser *user.User, recip *Member, recipUser *user.User, subject, recipName string) {
-	mailTag := &MailTag{
-		M: self.Id,
-		R: recip.Id,
-	}
-	mailTag.H = mailTag.Hash(c.Secret())
-	encodedMailTag, err := mailTag.Encode()
-	if err != nil {
-		c.Errorf("Failed to encode %+v: %v", mailTag, err)
-		return
-	}
-
-	unsubTag := &common.UnsubscribeTag{
-		T: common.UnsubscribeMessageEmail,
-		U: recipUser.Id,
-	}
-	unsubTag.H = unsubTag.Hash(c.Secret())
-	encodedUnsubTag, err := unsubTag.Encode()
-	if err != nil {
-		c.Errorf("Failed to encode %+v: %v", unsubTag, err)
-		return
-	}
-
-	parts := strings.Split(c.ReceiveAddress(), "@")
-	if len(parts) != 2 {
-		if c.Env() == common.Development {
-			parts = []string{"user", "host.tld"}
-		} else {
-			c.Errorf("Failed parsing %#v as an email address", c.ReceiveAddress())
-			return
-		}
-	}
-	senderName := sender.ShortName(game, senderUser)
-	replyTo := fmt.Sprintf("%v+%v@%v", parts[0], encodedMailTag, parts[1])
-	to := fmt.Sprintf("%v <%v>", recipName, recipUser.Email)
-	memberIds := []string{}
-	for memberId, _ := range self.RecipientIds {
-		memberIds = append(memberIds, memberId)
-	}
-	sort.Sort(sort.StringSlice(memberIds))
-	contextLink, err := recipUser.I("To see this message in context: http://%v/games/%v/messages/%v", recipUser.DiplicityHost, self.GameId, self.ChannelId())
-	if err != nil {
-		c.Errorf("Failed translating context link: %v", err)
-		return
-	}
-	unsubLink, err := recipUser.I("To unsubscribe: http://%v/unsubscribe/%v", recipUser.DiplicityHost, encodedUnsubTag)
-	if err != nil {
-		c.Errorf("Failed translating unsubscribe link: %v", err)
-		return
-	}
-	body := fmt.Sprintf(common.EmailTemplate, self.Body, contextLink, unsubLink)
-	c.SendMail(senderName, replyTo, subject, body, []string{to})
-}
-
 type IllegalMessageError struct {
 	Description string
 	Phrase      string
@@ -325,33 +271,85 @@ func (self *Message) Send(c common.SkinnyContext, game *Game, sender *Member) (e
 	}
 	sort.Sort(recipNations)
 	recipName := strings.Join(recipNations, ", ")
-	subKey := fmt.Sprintf("/games/%v/messages", game.Id)
 	for memberId, _ := range self.RecipientIds {
 		for _, member := range members {
 			if memberId == member.Id.String() && self.SenderId.String() != memberId {
 				user := &user.User{Id: member.UserId}
-				if err = c.DB().Get(user); err == nil {
-					if !user.MessageEmailDisabled {
-						if !c.IsSubscribing(user.Email, subKey) {
-							memberCopy := member
-							gameDescription := ""
-							if gameDescription, err = game.Describe(c, user); err == nil {
-								go self.EmailTo(c, game, sender, senderUser, &memberCopy, user, gameDescription, recipName)
-							} else {
-								c.Errorf("Trying to describe %+v to %+v: %v", game, user, err)
-							}
-						} else {
-							c.Infof("Not sending to %#v, already subscribing to %#v", user.Id.String(), subKey)
+				if err = c.DB().Get(user); err != nil {
+					c.Errorf("Trying to load user %#v: %v", member.UserId.String(), err)
+					return
+				}
+				if !user.MessageEmailDisabled {
+					subKey := fmt.Sprintf("/games/%v/messages", game.Id)
+					if !c.IsSubscribing(user.Email, subKey) {
+						if err = self.emailTo(c, game, sender, senderUser, &member, user, recipName); err != nil {
+							c.Errorf("Failed sending to %#v: %v", user.Id.String(), err)
+							return
 						}
 					} else {
-						c.Infof("Not sending to %#v, message email disabled", user.Id.String())
+						c.Infof("Not sending to %#v, already subscribing to %#v", user.Id.String(), subKey)
 					}
 				} else {
-					c.Errorf("Trying to load user %#v: %v", member.UserId.String(), err)
+					c.Infof("Not sending to %#v, message email disabled", user.Id.String())
 				}
 			}
 		}
 	}
 
+	return
+}
+
+func (self *Message) emailTo(c common.SkinnyContext, game *Game, sender *Member, senderUser *user.User, recip *Member, recipUser *user.User, recipName string) (err error) {
+	mailTag := &MailTag{
+		M: self.Id,
+		R: recip.Id,
+	}
+	mailTag.H = mailTag.Hash(c.Secret())
+	encodedMailTag, err := mailTag.Encode()
+	if err != nil {
+		return
+	}
+
+	unsubTag := &common.UnsubscribeTag{
+		T: common.UnsubscribeMessageEmail,
+		U: recipUser.Id,
+	}
+	unsubTag.H = unsubTag.Hash(c.Secret())
+	encodedUnsubTag, err := unsubTag.Encode()
+	if err != nil {
+		return
+	}
+
+	parts := strings.Split(c.ReceiveAddress(), "@")
+	if len(parts) != 2 {
+		if c.Env() == common.Development {
+			parts = []string{"user", "host.tld"}
+		} else {
+			err = fmt.Errorf("Failed parsing %#v as an email address", c.ReceiveAddress())
+			return
+		}
+	}
+	senderName := sender.ShortName(game, senderUser)
+	replyTo := fmt.Sprintf("%v+%v@%v", parts[0], encodedMailTag, parts[1])
+	to := fmt.Sprintf("%v <%v>", recipName, recipUser.Email)
+	memberIds := []string{}
+	for memberId, _ := range self.RecipientIds {
+		memberIds = append(memberIds, memberId)
+	}
+	sort.Sort(sort.StringSlice(memberIds))
+	contextLink, err := recipUser.I("To see this message in context: http://%v/games/%v/messages/%v", recipUser.DiplicityHost, self.GameId, self.ChannelId())
+	if err != nil {
+		return
+	}
+	unsubLink, err := recipUser.I("To unsubscribe: http://%v/unsubscribe/%v", recipUser.DiplicityHost, encodedUnsubTag)
+	if err != nil {
+		return
+	}
+	body := fmt.Sprintf(common.EmailTemplate, self.Body, contextLink, unsubLink)
+	subject, err := game.Describe(c, recipUser)
+	if err != nil {
+		return
+	}
+	go c.SendMail(senderName, replyTo, subject, body, []string{to})
 	return
 }
