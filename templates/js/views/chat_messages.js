@@ -34,7 +34,7 @@ window.ChatMessagesView = BaseView.extend({
 			}).doRender().el);
 			var me = that.model.me();
 			if (me != null) {
-				if (!msg.get('SeenBy')[me.Id]) {
+				if (msg.get('SeenBy') != null && !msg.get('SeenBy')[me.Id]) {
 					RPC('See', {
 						MessageId: msg.get('Id'),
 					}, function(error) {
