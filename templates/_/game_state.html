@@ -27,7 +27,7 @@
 				<div class="panel-heading" class="accordion-toggle" data-toggle="collapse" href="#game-<%- model.cid %>-players">
 					<h4 class="panel-title">
 						<a>
-							<span class="glyphicon glyphicon-chevron-right"></span> <%- '{{.I "{0}/{1} players" }}'.format(model.get('Members').length, variantMap[model.get('Variant')].Nations.length) %>
+							<span class="glyphicon glyphicon-chevron-right"></span> <%- '{{.I "{0}/{1} players" }}'.format((model.get('Members') || []).length, (variantMap[model.get('Variant')] || {'Nations':[]}).Nations.length) %>
 						</a>
 					</h4>
 				</div>
