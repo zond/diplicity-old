@@ -152,10 +152,10 @@ func (self *Phase) SendStartedEmails(c common.SkinnyContext, game *Game) (err er
 					return
 				}
 			} else {
-				c.Infof("Not sending to %#v, already subscribing to %#v", user.Id.String(), subKey)
+				c.Infof("Not sending to %#v, already subscribing to %#v", user.Email, subKey)
 			}
 		} else {
-			c.Infof("Not sending to %#v, phase email disabled", user.Id.String())
+			c.Infof("Not sending to %#v, phase email disabled", user.Email)
 		}
 	}
 

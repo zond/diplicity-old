@@ -287,10 +287,10 @@ func (self *Message) Send(c common.SkinnyContext, game *Game, sender *Member) (e
 							return
 						}
 					} else {
-						c.Infof("Not sending to %#v, already subscribing to %#v", user.Id.String(), subKey)
+						c.Infof("Not sending to %#v, already subscribing to %#v", user.Email, subKey)
 					}
 				} else {
-					c.Infof("Not sending to %#v, message email disabled", user.Id.String())
+					c.Infof("Not sending to %#v, message email disabled", user.Email)
 				}
 			}
 		}
