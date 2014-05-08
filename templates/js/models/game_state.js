@@ -239,28 +239,40 @@ window.GameState = Backbone.Model.extend({
 		if (that.get('Variant') == null) {
 			return '';
 		}
-		var nationInfo = "";
-		if (that.get('AllocationMethod') != null) {
-			nationInfo = allocationMethodName(that.get('AllocationMethod'));
-		}
-		var member = that.me();
-		if (member != null && member.Nation != null && member.Nation != '') {
-		  var nationInfo = {{.I "nations" }}[member.Nation];
+		var info = []
+		if (that.get('State') == {{.GameState "Created" }}) {
+			if (that.get('AllocationMethod') != null) {
+				info.push(allocationMethodName(that.get('AllocationMethod')));
+			}
+		} else {
+			var member = that.me();
+			if (member != null && member.Nation != null && member.Nation != '') {
+				info.push({{.I "nations" }}[member.Nation]);
+			}
 		}
 		var phase = that.get('Phase');
-		var phaseInfo = '{{.I "Forming"}}';
 		if (phase != null) {
-			phaseInfo = '{0} {1}, {2}'.format({{.I "seasons"}}[phase.Season], phase.Year, {{.I "phase_types"}}[phase.Type]);
+			info.push('{0} {1}'.format({{.I "seasons"}}[phase.Season], phase.Year));
 		}
-		var info = [nationInfo, phaseInfo, variantMap[that.get('Variant')].Translation];
+		var silent = true;
 		var lastDeadline = null;
 		_.each(variantMap[that.get('Variant')].PhaseTypes, function(phaseType) {
+      if (that.get('ChatFlags')[phaseType] != 0) {
+				silent = false;
+			}
 		  var thisDeadline = that.get('Deadlines')[phaseType];
 			if (thisDeadline != lastDeadline) {
 				info.push(deadlineName(thisDeadline));
 				lastDeadline = thisDeadline;
 			}
 		});
+		if ((that.get('SecretEmail') & secretFlagMap['DuringGame']) == secretFlagMap['DuringGame'] &&
+				(that.get('SecretNickname') & secretFlagMap['DuringGame']) == secretFlagMap['DuringGame']) {
+			info.push('{{.I "Anonymous" }}');
+		}
+		if (silent) {
+			info.push('{{.I "Silent" }}');
+		}
 		return info.join(", ");
 	},
 

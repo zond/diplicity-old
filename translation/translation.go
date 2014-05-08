@@ -21,6 +21,7 @@ var en = map[string]string{
 	"The game does not allow that particular number of members in a chat channel right now. The only types of chat allowed at the moment are {0}.": "The game does not allow that particular number of members in a chat channel right now. The only types of chat allowed at the moment are {0}.",
 	"Send":                  "Send",
 	"Anonymous":             "Anonymous",
+	"Silent":                "Silent",
 	"Reliability hit":       "Reliability hit",
 	"No wait":               "No wait",
 	"Surrender":             "Surrender",
