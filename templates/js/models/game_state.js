@@ -252,7 +252,11 @@ window.GameState = Backbone.Model.extend({
 		}
 		var phase = that.get('Phase');
 		if (phase != null) {
-			info.push('{0} {1}'.format({{.I "seasons"}}[phase.Season], phase.Year));
+			if (phase.Type == 'Movement') {
+				info.push('{0} {1}'.format({{.I "seasons"}}[phase.Season], phase.Year));
+			} else {
+				info.push('{0} {1}, {2}'.format({{.I "seasons"}}[phase.Season], phase.Year, {{.I "phase_types"}}[phase.Type]));
+			}
 		}
 		var silent = true;
 		var lastDeadline = null;
