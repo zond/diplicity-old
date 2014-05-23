@@ -170,7 +170,7 @@ func (self *Game) endPhaseConsequences(c common.SkinnyContext, phase *Phase, mem
 			}
 		}
 	} else {
-		if (self.NonCommitConsequences & common.ReliabilityHit) == common.ReliabilityHit {
+		if (self.NonCommitConsequences&common.ReliabilityHit) == common.ReliabilityHit || (self.NMRConsequences&common.ReliabilityHit) == common.ReliabilityHit {
 			if err = member.ReliabilityDelta(c.DB(), 1); err != nil {
 				return
 			}
