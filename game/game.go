@@ -142,15 +142,15 @@ func (self *Game) endPhaseConsequences(c common.SkinnyContext, phase *Phase, mem
 			if err = member.ReliabilityDelta(c.DB(), -1); err != nil {
 				return
 			}
-			c.Infof("Increased MISSED deadlines for %#v by one because %+v and %+v", string(member.UserId), self, phase)
+			c.Infof("Increased MISSED deadlines for %#v by one because %+v, %+v and %+v", string(member.UserId), self, member, phase)
 			alreadyHitReliability = true
 		}
 		if (self.NonCommitConsequences & common.NoWait) == common.NoWait {
-			c.Infof("Setting %#v to NoWait because of %+v and %+v", string(member.UserId), self, phase)
+			c.Infof("Setting %#v to NoWait because of %+v, %+v and %+v", string(member.UserId), self, member, phase)
 			member.NoWait = true
 		}
 		if (self.NonCommitConsequences & common.Surrender) == common.Surrender {
-			c.Infof("Setting %#v to Surrender because of %+v and %+v", string(member.UserId), self, phase)
+			c.Infof("Setting %#v to Surrender because of %+v, %+v and %+v", string(member.UserId), self, member, phase)
 			surrender = true
 		}
 		if len(phase.Orders[member.Nation]) == 0 {
@@ -158,14 +158,14 @@ func (self *Game) endPhaseConsequences(c common.SkinnyContext, phase *Phase, mem
 				if err = member.ReliabilityDelta(c.DB(), -1); err != nil {
 					return
 				}
-				c.Infof("Increased MISSED deadlines for %#v by one because %+v and %+v", string(member.UserId), self, phase)
+				c.Infof("Increased MISSED deadlines for %#v by one because %+v, %+v and %+v", string(member.UserId), self, member, phase)
 			}
 			if (self.NMRConsequences & common.NoWait) == common.NoWait {
-				c.Infof("Setting %#v to NoWait because of %+v and %+v", string(member.UserId), self, phase)
+				c.Infof("Setting %#v to NoWait because of %+v, %+v and %+v", string(member.UserId), self, member, phase)
 				member.NoWait = true
 			}
 			if (self.NMRConsequences & common.Surrender) == common.Surrender {
-				c.Infof("Setting %#v to Surrender because of %+v and %+v", string(member.UserId), self, phase)
+				c.Infof("Setting %#v to Surrender because of %+v, %+v and %+v", string(member.UserId), self, member, phase)
 				surrender = true
 			}
 		}
@@ -174,7 +174,7 @@ func (self *Game) endPhaseConsequences(c common.SkinnyContext, phase *Phase, mem
 			if err = member.ReliabilityDelta(c.DB(), 1); err != nil {
 				return
 			}
-			c.Infof("Increased HELD deadlines for %#v by one because %+v and %+v", string(member.UserId), self, phase)
+			c.Infof("Increased HELD deadlines for %#v by one because %+v, %+v and %+v", string(member.UserId), self, member, phase)
 		}
 	}
 	if !surrender {
