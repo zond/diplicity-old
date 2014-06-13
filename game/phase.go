@@ -146,7 +146,7 @@ func (self *Phase) SendStartedEmails(c common.SkinnyContext, game *Game) (err er
 		}
 		if !user.PhaseEmailDisabled {
 			subKey := fmt.Sprintf("/games/%v", game.Id)
-			if !c.IsSubscribing(user.Email, subKey) {
+			if !c.IsSubscribing(user.Email, subKey, common.SubscriptionTimeout) {
 				if err = self.emailTo(c, game, &member, user); err != nil {
 					c.Errorf("Failed sending to %#v: %v", user.Id.String(), err)
 					return

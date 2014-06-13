@@ -12,6 +12,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	cla "github.com/zond/godip/classical/common"
 	claOrders "github.com/zond/godip/classical/orders"
@@ -27,7 +28,8 @@ type Translator interface {
 }
 
 const (
-	DefaultSecret = "something very very secret"
+	DefaultSecret       = "something very very secret"
+	SubscriptionTimeout = time.Minute * 15
 )
 
 type Mailer interface {

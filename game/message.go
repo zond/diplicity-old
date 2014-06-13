@@ -281,7 +281,7 @@ func (self *Message) Send(c common.SkinnyContext, game *Game, sender *Member) (e
 				}
 				if !user.MessageEmailDisabled {
 					subKey := fmt.Sprintf("/games/%v/messages", game.Id)
-					if !c.IsSubscribing(user.Email, subKey) {
+					if !c.IsSubscribing(user.Email, subKey, common.SubscriptionTimeout) {
 						if err = self.emailTo(c, game, sender, senderUser, &member, user, recipName); err != nil {
 							c.Errorf("Failed sending to %#v: %v", user.Id.String(), err)
 							return

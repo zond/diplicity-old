@@ -126,8 +126,8 @@ func (self *Web) Env() string {
 	return self.env
 }
 
-func (self *Web) IsSubscribing(principal, uri string) bool {
-	return self.router.IsSubscribing(principal, uri)
+func (self *Web) IsSubscribing(principal, uri string, timeout time.Duration) bool {
+	return self.router.IsSubscribing(principal, uri, timeout)
 }
 
 func (self *Web) Secret() string {
