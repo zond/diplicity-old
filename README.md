@@ -13,7 +13,7 @@ http://groups.google.com/group/diplicity-dev
 
 ## Run locally
 
-* Install Go: https://code.google.com/p/go/downloads/list
+* Install Go: http://golang.org/dl/
 * Create a Go workspace: `mkdir $HOME/go`
 * Set a GOPATH: `export GOPATH=$HOME/go`
 * Prepare the workspace for the diplicity project: `mkdir $GOPATH/src/github.com/zond`
