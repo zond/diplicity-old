@@ -3,6 +3,10 @@ diplicity
 
 Next generation Droidippy.
 
+## Public beta
+
+https://diplicity.oort.se/
+
 ## Forum and mailing list
 
 http://groups.google.com/group/diplicity-dev
