@@ -8,10 +8,18 @@ window.ChatMessageView = BaseView.extend({
 
   render: function() {
 	  var that = this;
+		var sender = that.game.member(that.model.get('SenderId'));
+		var senderName = '{{.I "Anonymous" }}';
+		if (sender != null) {
+			if (that.game.get('State') == {{.GameState "Created" }}) {
+				senderName = sender.shortDescribe();
+			} else {
+				senderName = sender.Nation;
+			}
+		}
 		that.$el.html(that.template({
 		  model: that.model,
-			game: that.game,
-			sender: that.game.member(that.model.get('SenderId')),
+			senderName: senderName,
 		}));
 		return that;
 	},

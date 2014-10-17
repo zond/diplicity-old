@@ -2,13 +2,11 @@ package game
 
 import (
 	"encoding/base64"
-	"fmt"
 	"sort"
 	"strconv"
 	"time"
 
 	"code.google.com/p/go.net/websocket"
-
 	"github.com/zond/diplicity/common"
 	"github.com/zond/diplicity/epoch"
 	"github.com/zond/diplicity/user"
@@ -208,11 +206,6 @@ func SubscribeMessages(c common.WSContext) (err error) {
 	if err = c.DB().Get(game); err != nil {
 		return
 	}
-	variant, found := common.VariantMap[game.Variant]
-	if !found {
-		err = fmt.Errorf("Unknown variant for %+v", game)
-		return
-	}
 	member, err := game.Member(c.DB(), c.Principal())
 	if err != nil && err != kol.NotFound {
 		return
@@ -227,7 +220,7 @@ func SubscribeMessages(c common.WSContext) (err error) {
 		messages := i.([]*Message)
 		result := Messages{}
 		for _, message := range messages {
-			if message.Public && len(message.RecipientIds) != len(variant.Nations) {
+			if message.Public {
 				game := &Game{Id: message.GameId}
 				if err = c.DB().Get(game); err != nil {
 					return
@@ -236,11 +229,12 @@ func SubscribeMessages(c common.WSContext) (err error) {
 				if members, err = game.Members(c.DB()); err != nil {
 					return
 				}
+				message.RecipientIds = map[string]bool{}
 				for _, memb := range members {
 					message.RecipientIds[memb.Id.String()] = true
 				}
 			}
-			if message.Public || len(message.RecipientIds) == len(variant.Nations) || message.RecipientIds[memberId] {
+			if message.Public || message.RecipientIds[memberId] {
 				result = append(result, *message)
 			}
 		}

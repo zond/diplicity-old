@@ -1,8 +1,4 @@
 <div class="chat-sender">
-<% if (game.get('State') == {{.GameState "Created" }}) { %>
-<%- sender.shortDescribe() %>
-<% } else { %>
-<%- sender.Nation %>
-<% } %>
+<%- senderName %>
 </div>
 <pre class="chat-body"><%- model.get('Body') %></pre>
