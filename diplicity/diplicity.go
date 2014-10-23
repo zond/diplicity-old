@@ -96,9 +96,10 @@ func main() {
 	router.Path("/ws").Handler(wsRouter)
 
 	// Static content
-	server.Handle(router.Path("/js/{ver}/all"), server.AllJs)
-	server.Handle(router.Path("/css/{ver}/all"), server.AllCss)
 	server.Handle(router.Path("/diplicity.appcache"), server.AppCache)
+	if err := server.HandleStatic(router, "components"); err != nil {
+		panic(err)
+	}
 	if err := server.HandleStatic(router, "static"); err != nil {
 		panic(err)
 	}

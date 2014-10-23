@@ -1,0 +1,38 @@
+<link rel="import" href="../core-header-panel/core-header-panel.html">
+<link rel="import" href="../core-toolbar/core-toolbar.html">
+<link rel="import" href="../paper-tabs/paper-tabs.html">
+
+<polymer-element name="diplicity-app" noscript>
+  <template>
+	  <style>
+			core-header-panel {
+				height: 100%;
+				overflow: auto;
+				-webkit-overflow-scrolling: touch; 
+			}
+			core-toolbar {
+				background: #03a9f4;
+				color: white;
+			}
+			#tabs {
+				width: 100%;
+				margin: 0;
+				-webkit-user-select: none;
+				-moz-user-select: none;
+				-ms-user-select: none;
+				user-select: none;
+				text-transform: uppercase;
+			}
+		</style>
+    <core-header-panel>
+		  <core-toolbar>
+			  <div flex>diplicity</div>
+				<paper-tabs id="tabs" selected="all" self-end>
+				  <paper-tab name="all">All</paper-tab>
+					<paper-tab name="favorites">Favorites</paper-tab>
+				</paper-tabs>
+			</core-toolbar>
+		</core-header-panel>
+	</template>
+</polymer-element>
+

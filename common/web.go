@@ -88,28 +88,7 @@ func NewWeb(secret, env, db string) (self *Web, err error) {
 		self.router.DevMode = true
 	}
 	self.router.LogLevel = self.logLevel
-	if self.svgTemplates, err = templar.GetMatchingTemplates(env == Development, "svgTemplates", "^templates/svg/[^/]*\\.svg$"); err != nil {
-		return
-	}
 	if self.textTemplates, err = templar.GetMatchingTemplates(env == Development, "textTemplates", "^templates/text/[^/]*$"); err != nil {
-		return
-	}
-	if self.jsModelTemplates, err = templar.GetMatchingTemplates(env == Development, "jsCollectionTemplates", "^templates/js/models/[^/]*\\.js$"); err != nil {
-		return
-	}
-	if self.jsCollectionTemplates, err = templar.GetMatchingTemplates(env == Development, "jsModelTemplates", "^templates/js/collections/[^/]*\\.js$"); err != nil {
-		return
-	}
-	if self.jsTemplates, err = templar.GetMatchingTemplates(env == Development, "jsTemplates", "^templates/js/[^/]*\\.js$"); err != nil {
-		return
-	}
-	if self.cssTemplates, err = templar.GetMatchingTemplates(env == Development, "cssTemplates", "^templates/css/[^/]*\\.css$"); err != nil {
-		return
-	}
-	if self._Templates, err = templar.GetMatchingTemplates(env == Development, "_Templates", "^templates/_/[^/]*\\.html$"); err != nil {
-		return
-	}
-	if self.jsViewTemplates, err = templar.GetMatchingTemplates(env == Development, "jsViewTemplates", "^templates/js/views/[^/]*\\.js$"); err != nil {
 		return
 	}
 	if self.htmlTemplates, err = templar.GetMatchingTemplates(env == Development, "htmlTemplates", "^templates/html/[^/]*\\.html$"); err != nil {
@@ -351,44 +330,50 @@ func (self *Web) render_Templates(data *HTTPContext) {
 	fmt.Fprintln(data.response, "})();")
 }
 
+func (self *Web) handleStaticFile(router *mux.Router, fil string) (err error) {
+	self.Handle(router.MatcherFunc(func(r *http.Request, rm *mux.RouteMatch) bool {
+		return strings.HasSuffix(r.URL.Path, filepath.Base(fil))
+	}), func(c *HTTPContext) (err error) {
+		if strings.HasSuffix(c.Req().URL.Path, ".css") {
+			c.SetContentType("text/css; charset=UTF-8", true)
+		} else if strings.HasSuffix(c.Req().URL.Path, ".png") {
+			c.SetContentType("image/png", true)
+		} else if strings.HasSuffix(c.Req().URL.Path, ".gif") {
+			c.SetContentType("image/gif", true)
+		} else if strings.HasSuffix(c.Req().URL.Path, ".html") {
+			c.SetContentType("text/html; charset=UTF-8", true)
+		} else if strings.HasSuffix(c.Req().URL.Path, ".js") {
+			c.SetContentType("application/javascript; charset=UTF-8", true)
+		} else if strings.HasSuffix(c.Req().URL.Path, ".ttf") {
+			c.SetContentType("font/truetype", true)
+		} else {
+			c.SetContentType("application/octet-stream", true)
+		}
+		in, err := templar.GetBlob(self.env == Development, fil)
+		if err != nil {
+			self.Errorf("%v", err)
+			c.Resp().WriteHeader(500)
+			fmt.Fprintln(c.Resp(), err)
+		} else {
+			defer in.Close()
+			if _, err = io.Copy(c.Resp(), in); err != nil {
+				return
+			}
+		}
+		return
+	})
+	return
+}
+
 func (self *Web) HandleStatic(router *mux.Router, dir string) (err error) {
-	children, err := templar.GetMatchingBlobNames(self.env == Development, "^static/.*")
+	children, err := templar.GetMatchingBlobNames(self.env == Development, fmt.Sprintf("^%v/.*", dir))
 	if err != nil {
 		return
 	}
 	for _, fil := range children {
-		cpy := fil
-		self.Handle(router.MatcherFunc(func(r *http.Request, rm *mux.RouteMatch) bool {
-			return strings.HasSuffix(r.URL.Path, filepath.Base(cpy))
-		}), func(c *HTTPContext) (err error) {
-			if strings.HasSuffix(c.Req().URL.Path, ".css") {
-				c.SetContentType("text/css; charset=UTF-8", true)
-			} else if strings.HasSuffix(c.Req().URL.Path, ".js") {
-				c.SetContentType("application/javascript; charset=UTF-8", true)
-			} else if strings.HasSuffix(c.Req().URL.Path, ".png") {
-				c.SetContentType("image/png", true)
-			} else if strings.HasSuffix(c.Req().URL.Path, ".gif") {
-				c.SetContentType("image/gif", true)
-			} else if strings.HasSuffix(c.Req().URL.Path, ".c.Resp()off") {
-				c.SetContentType("application/font-c.Resp()off", true)
-			} else if strings.HasSuffix(c.Req().URL.Path, ".ttf") {
-				c.SetContentType("font/truetype", true)
-			} else {
-				c.SetContentType("application/octet-stream", true)
-			}
-			in, err := templar.GetBlob(self.env == Development, cpy)
-			if err != nil {
-				self.Errorf("%v", err)
-				c.Resp().WriteHeader(500)
-				fmt.Fprintln(c.Resp(), err)
-			} else {
-				defer in.Close()
-				if _, err = io.Copy(c.Resp(), in); err != nil {
-					return
-				}
-			}
+		if err = self.handleStaticFile(router, fil); err != nil {
 			return
-		})
+		}
 	}
 	return
 }

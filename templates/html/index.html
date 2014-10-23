@@ -1,26 +1,15 @@
+<!doctype html>
 <html{{if .Appcache }} manifest="/diplicity.appcache"{{end}}>
 	<head>
 		<title>Diplicity</title>
-		<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+		<meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=no">
 		<link rel="shortcut icon" href="/favicon.ico" />
-		<link href="/css/{{.Version}}/all" rel="stylesheet" media="screen">
-		<script src="/js/{{.Version}}/all" type="text/javascript"></script>
+		<script src="/components/webcomponentsjs/webcomponents.js"></script>
+		<link rel="import" href="/components/font-roboto/roboto.html">
+		<link rel="import" href="/components/diplicity-app/diplicity-app.html">
+		<link href="/static/common.css" type="text/css" rel="stylesheet">
 	</head>
 	<body>
-		<nav class="navbar navbar-default navbar-fixed-top" role="navigation" id="top-navigation">
-		</nav>
-		<div id="content">
-		</div>
-		<nav class="navbar navbar-default navbar-fixed-bottom" role="navigation" id="bottom-navigation">
-		</nav>
-		<div id="classicalMap" class="hidden">
-			{{.SVG "standard.svg"}}
-		</div>
-		<div id="classicalUnitArmy" class="hidden">
-			{{.SVG "army.svg"}}
-		</div>
-		<div id="classicalUnitFleet" class="hidden">
-			{{.SVG "fleet.svg"}}
-		</div>
+		<diplicity-app></diplicity-app>
 	</body>
 </html>

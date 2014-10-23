@@ -1,7 +1,0 @@
-<% if (user.loggedIn()) { %>
-<div class="panel-group" id="create-game">
-</div>
-<% } else { %>
-<a href="/login?return_to={{.Abs "/create"}}" class="btn btn-primary btn-lg btn-block">{{.I "Log in to create a game" }}</a>
-<% } %>
-</div>
