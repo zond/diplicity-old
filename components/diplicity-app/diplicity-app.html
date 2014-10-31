@@ -5,36 +5,16 @@
 <link rel="import" href="../../../bower_components/core-menu/core-menu.html">
 <link rel="import" href="../../../bower_components/core-item/core-item.html">
 <link rel="import" href="../../../bower_components/paper-tabs/paper-tabs.html">
+<link rel="import" href="../../../bower_components/core-animated-pages/transitions/slide-from-right.html">
 
 <polymer-element name="diplicity-app">
   <template>
-	  <style>
-			core-toolbar {
-				background: #03a9f4;
-				color: white;
-			}
-			#tabs {
-				width: 100%;
-				margin: 0;
-				-webkit-user-select: none;
-				-moz-user-select: none;
-				-ms-user-select: none;
-				user-select: none;
-				text-transform: uppercase;
-			}
-			.game-owner-section {
-				display: none;
-			}
-			.game-owner-section.core-selected {
-				display: block;
-			}
-		</style>
     <core-scaffold flex>
 		  <core-header-panel navigation flex mode="seamed">
 			  <core-toolbar>
   			  <div flex>diplicity</div>
 		    </core-toolbar>
-				<core-menu theme="core-light-theme">
+				<core-menu>
 				  <core-item icon="settings" label="Settings"></core-item>
 				</core-menu>
 			</core-header-panel>
@@ -46,7 +26,7 @@
       	</paper-tabs>
       </div>
 			<div flex>
-     		<core-animated-pages valueattr="id" selected="{{ game_owner_selection }}" transitions="cross-fade">
+     		<core-animated-pages valueattr="id" selected="{{ game_owner_selection }}" transitions="slide-from-right">
      		  <section class="game-owner-section" id="mine">
      			  Mine
      			</section>
@@ -56,7 +36,7 @@
      		  <section class="game-owner-section" id="create">
      			  Create
      			</section>
-         </core-animated-pages>
+        </core-animated-pages>
 			</div>
 		</core-scaffold>
 	</template>
