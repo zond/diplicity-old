@@ -1,0 +1,26 @@
+{
+  "name": "diplicity",
+  "version": "0.0.0",
+  "homepage": "https://github.com/zond/diplicity",
+  "authors": [
+    "Martin Bruse <zondolfin@gmail.com>"
+  ],
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "core-animated-pages": "Polymer/core-animated-pages#~0.4.2",
+    "core-header-panel": "Polymer/core-header-panel#~0.4.2",
+    "core-menu": "Polymer/core-menu#~0.4.2",
+    "core-scaffold": "Polymer/core-scaffold#~0.4.2",
+    "core-toolbar": "Polymer/core-toolbar#~0.4.2",
+    "paper-tabs": "Polymer/paper-tabs#~0.4.2",
+    "webcomponents.js": "Polymer/webcomponentsjs#~0.4.2"
+  }
+}

@@ -97,6 +97,9 @@ func main() {
 
 	// Static content
 	server.Handle(router.Path("/diplicity.appcache"), server.AppCache)
+	if err := server.HandleStatic(router, "bower_components"); err != nil {
+		panic(err)
+	}
 	if err := server.HandleStatic(router, "components"); err != nil {
 		panic(err)
 	}

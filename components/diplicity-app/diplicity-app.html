@@ -1,15 +1,14 @@
-<link rel="import" href="../core-header-panel/core-header-panel.html">
-<link rel="import" href="../core-toolbar/core-toolbar.html">
-<link rel="import" href="../paper-tabs/paper-tabs.html">
+<link rel="import" href="../../../bower_components/core-scaffold/core-scaffold.html">
+<link rel="import" href="../../../bower_components/core-header-panel/core-header-panel.html">
+<link rel="import" href="../../../bower_components/core-toolbar/core-toolbar.html">
+<link rel="import" href="../../../bower_components/core-animated-pages/core-animated-pages.html">
+<link rel="import" href="../../../bower_components/core-menu/core-menu.html">
+<link rel="import" href="../../../bower_components/core-item/core-item.html">
+<link rel="import" href="../../../bower_components/paper-tabs/paper-tabs.html">
 
-<polymer-element name="diplicity-app" noscript>
+<polymer-element name="diplicity-app">
   <template>
 	  <style>
-			core-header-panel {
-				height: 100%;
-				overflow: auto;
-				-webkit-overflow-scrolling: touch; 
-			}
 			core-toolbar {
 				background: #03a9f4;
 				color: white;
@@ -23,16 +22,50 @@
 				user-select: none;
 				text-transform: uppercase;
 			}
+			.game-owner-section {
+				display: none;
+			}
+			.game-owner-section.core-selected {
+				display: block;
+			}
 		</style>
-    <core-header-panel>
-		  <core-toolbar>
-			  <div flex>diplicity</div>
-				<paper-tabs id="tabs" selected="all" self-end>
-				  <paper-tab name="all">All</paper-tab>
-					<paper-tab name="favorites">Favorites</paper-tab>
-				</paper-tabs>
-			</core-toolbar>
-		</core-header-panel>
+    <core-scaffold flex>
+		  <core-header-panel navigation flex mode="seamed">
+			  <core-toolbar>
+  			  <div flex>diplicity</div>
+		    </core-toolbar>
+				<core-menu theme="core-light-theme">
+				  <core-item icon="settings" label="Settings"></core-item>
+				</core-menu>
+			</core-header-panel>
+	    <div tool flex>
+        <paper-tabs id="tabs" selected="{{ game_owner_selection }}" self-end>
+      	  <paper-tab template name="mine">My games</paper-tab>
+      	  <paper-tab template name="others">Other games</paper-tab>
+      	  <paper-tab template name="create">Create game</paper-tab>
+      	</paper-tabs>
+      </div>
+			<div flex>
+     		<core-animated-pages valueattr="id" selected="{{ game_owner_selection }}" transitions="cross-fade">
+     		  <section class="game-owner-section" id="mine">
+     			  Mine
+     			</section>
+     		  <section class="game-owner-section" id="others">
+     			  Others
+     			</section>
+     		  <section class="game-owner-section" id="create">
+     			  Create
+     			</section>
+         </core-animated-pages>
+			</div>
+		</core-scaffold>
 	</template>
+	<script>
+		Polymer({
+			ready: function() {
+				this.game_owner_selection = "mine";
+			},
+		});
+	</script>
 </polymer-element>
 
