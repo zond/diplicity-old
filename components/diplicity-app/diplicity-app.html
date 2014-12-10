@@ -17,10 +17,14 @@
 				<core-menu>
 					<template if="{{ user.Id }}">
 				    <core-item icon="settings" label="Settings"></core-item>
-				    <core-item icon="lock-outline" label="Logout"></core-item>
+						<a href="/logout">
+							<core-item icon="lock-outline" label="Logout"></core-item>
+						</a>
 					</template>
 					<template if="{{ !user.Id }}">
-				    <core-item icon="lock-open" label="Login"></core-item>
+					  <a href="/login">
+				      <core-item icon="lock-open" label="Login"></core-item>
+						</a>
 					</template>
 				</core-menu>
 			</core-header-panel>
@@ -62,18 +66,23 @@
 				}
 				console.log('message', message);
 			},
-			ready: function() {
+			connectWebSocket: function() {
 				var that = this;
-				that.user = {"Id": ""};
 				var socketUrl = "";
 				if (window.location.protocol == 'http:') {
 					socketUrl = "ws://";
 				} else if (window.location.protocol == 'https:') {
 					socketUrl = "wss://";
 				} else {
-          throw "Unknown protocol " + window.location.protocol;
+				  throw "Unknown protocol " + window.location.protocol;
 				}
-        socketUrl += window.location.host + "/ws";
+				socketUrl += window.location.host + "/ws";
+				if (that.token != null) {
+					socketUrl += "?token=" + that.token.Encoded;
+				}
+				if (that.socket != null) {
+					that.socket.close();
+				}
 				that.socket = new WebSocket(socketUrl);
 				that.socket.onerror = function(options) {
 					console.log('error', options);
@@ -82,11 +91,26 @@
 					that.serverMessage(JSON.parse(options.data));
 				};
 				that.socket.onopen = function(options) {
-					this.send(JSON.stringify({"Type":"Subscribe","Object":{"URI":"/user"}}));
+					that.socket.send(JSON.stringify({"Type":"Subscribe","Object":{"URI":"/user"}}));
 				};
 				that.socket.onclose = function(options) {
 					console.log('close', options);
 				};
+			},
+			fetchToken: function() {
+				var that = this;
+        $.ajax('/token', {
+					success: function(data) {
+						that.token = data;
+						that.connectWebSocket();
+					},
+				});
+			},
+			ready: function() {
+				var that = this;
+				that.user = {"Id": ""};
+				that.token = null;
+				that.fetchToken();
 			},
 		});
 	</script>
