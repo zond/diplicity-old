@@ -12,14 +12,16 @@
     <core-scaffold flex>
 		  <core-header-panel navigation flex mode="seamed">
 			  <core-toolbar>
-  			  <div flex>diplicity</div>
+				  <div flex>
+						<div style="font-size: x-large;">diplicity</div>
+				  </div>
 		    </core-toolbar>
 				<core-menu>
 					<template if="{{ user.Id }}">
 						<a href="/logout">
 							<core-item icon="lock-outline" label="Logout"></core-item>
 						</a>
-				    <core-item icon="settings" label="Settings"></core-item>
+						<core-item icon="settings" label="{{ user.Email }}"></core-item>
 					</template>
 					<template if="{{ !user.Id }}">
 					  <a href="/login">
