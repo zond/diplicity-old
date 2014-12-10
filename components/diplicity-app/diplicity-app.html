@@ -16,10 +16,10 @@
 		    </core-toolbar>
 				<core-menu>
 					<template if="{{ user.Id }}">
-				    <core-item icon="settings" label="Settings"></core-item>
 						<a href="/logout">
 							<core-item icon="lock-outline" label="Logout"></core-item>
 						</a>
+				    <core-item icon="settings" label="Settings"></core-item>
 					</template>
 					<template if="{{ !user.Id }}">
 					  <a href="/login">
