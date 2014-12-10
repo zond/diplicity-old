@@ -21,7 +21,7 @@ http://groups.google.com/group/diplicity-dev
 * Install the dependencies: `cd $GOPATH/src/github.com/zond/diplicity && go get -u -v ./...`
 * Follow the 'Setting up OAuth 2.0' instructions at https://developers.google.com/accounts/docs/OpenIDConnect 
 * Copy the 'Client ID' and 'Client secret' strings when you have them.
-* Run the server locally, with the created client id and secret, and without appcache: `cd $GOPATH/src/github.com/zond/diplicity && go run diplicity/diplicity.go -appcache=false`-oauth_client_id=YOURCLIENTID -oauth_client_secret=YOURCLIENTSECRET
+* Run the server locally, with the created client id and secret, and without appcache: `cd $GOPATH/src/github.com/zond/diplicity && go run diplicity/diplicity.go -appcache=false -oauth_client_id=YOURCLIENTID -oauth_client_secret=YOURCLIENTSECRET`
 
 If you want to know other options when running locally: `cd $GOPATH/src/github.com/zond/diplicity && go run diplicity/diplicity.go -h`
 
