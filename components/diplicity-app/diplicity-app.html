@@ -5,7 +5,7 @@
 <link rel="import" href="../../../bower_components/core-menu/core-menu.html">
 <link rel="import" href="../../../bower_components/core-item/core-item.html">
 <link rel="import" href="../../../bower_components/paper-tabs/paper-tabs.html">
-<link rel="import" href="../../../bower_components/core-animated-pages/transitions/slide-from-right.html">
+<link rel="import" href="../../../bower_components/core-animated-pages/transitions/cross-fade.html">
 
 <polymer-element name="diplicity-app">
   <template>
@@ -15,26 +15,38 @@
   			  <div flex>diplicity</div>
 		    </core-toolbar>
 				<core-menu>
-				  <core-item icon="settings" label="Settings"></core-item>
+					<template if="{{ user.Id }}">
+				    <core-item icon="settings" label="Settings"></core-item>
+				    <core-item icon="lock-outline" label="Logout"></core-item>
+					</template>
+					<template if="{{ !user.Id }}">
+				    <core-item icon="lock-open" label="Login"></core-item>
+					</template>
 				</core-menu>
 			</core-header-panel>
 	    <div tool flex>
-        <paper-tabs id="tabs" selected="{{ game_owner_selection }}" self-end>
+        <paper-tabs id="tabs" selected="{{ gameOwnerSelection }}" self-end>
       	  <paper-tab template name="mine">My games</paper-tab>
       	  <paper-tab template name="others">Other games</paper-tab>
       	  <paper-tab template name="create">Create game</paper-tab>
       	</paper-tabs>
       </div>
 			<div flex>
-     		<core-animated-pages valueattr="id" selected="{{ game_owner_selection }}" transitions="slide-from-right">
-     		  <section class="game-owner-section" id="mine">
-     			  Mine
+     		<core-animated-pages valueattr="id" selected="{{ gameOwnerSelection }}" transitions="cross-fade">
+     		  <section id="mine">
+					  <div cross-fade>
+							Mine
+						</div>
      			</section>
-     		  <section class="game-owner-section" id="others">
-     			  Others
+     		  <section id="others">
+					  <div cross-fade>
+							Others
+						</div>
      			</section>
-     		  <section class="game-owner-section" id="create">
-     			  Create
+     		  <section id="create">
+					  <div cross-fade>
+							Create
+						</div>
      			</section>
         </core-animated-pages>
 			</div>
@@ -42,8 +54,39 @@
 	</template>
 	<script>
 		Polymer({
+			serverMessage: function(message) {
+				switch (message.Object.URI) {
+					case '/user':
+					  this.user = message.Object.Data;
+            break;
+				}
+				console.log('message', message);
+			},
 			ready: function() {
-				this.game_owner_selection = "mine";
+				var that = this;
+				that.user = {"Id": ""};
+				var socketUrl = "";
+				if (window.location.protocol == 'http:') {
+					socketUrl = "ws://";
+				} else if (window.location.protocol == 'https:') {
+					socketUrl = "wss://";
+				} else {
+          throw "Unknown protocol " + window.location.protocol;
+				}
+        socketUrl += window.location.host + "/ws";
+				that.socket = new WebSocket(socketUrl);
+				that.socket.onerror = function(options) {
+					console.log('error', options);
+				};
+				that.socket.onmessage = function(options) {
+					that.serverMessage(JSON.parse(options.data));
+				};
+				that.socket.onopen = function(options) {
+					this.send(JSON.stringify({"Type":"Subscribe","Object":{"URI":"/user"}}));
+				};
+				that.socket.onclose = function(options) {
+					console.log('close', options);
+				};
 			},
 		});
 	</script>
