@@ -36,6 +36,8 @@ func main() {
 	smtpAccount := flag.String("smtp_account", "", "What From-address to put in the outgoing email")
 	smtpHost := flag.String("smtp_host", "", "What host to use when sending out email")
 	schedule := flag.Bool("schedule", true, "Schedule unresolved phases at startup")
+	oauthClientSecret := flag.String("oauth_client_secret", "", "The client secret of your OAuth credentials in Google Cloud. See https://developers.google.com/accounts/docs/OpenIDConnect")
+	oauthClientId := flag.String("oauth_client_id", "", "The client id of your OAuth credentials in Google Cloud. See See https://developers.google.com/accounts/docs/OpenIDConnect")
 
 	flag.Parse()
 
@@ -53,12 +55,19 @@ func main() {
 	}
 	server.SetAppcache(*appcache).SetGMail(*gmailAccount, *gmailPassword, game.IncomingMail).SetSMTP(*smtpHost, *smtpAccount)
 
+	if *oauthClientSecret == "" {
+		server.Errorf("No oauth_client_secret provided, you will not be able to use Google single sign on")
+	}
+	if *oauthClientId == "" {
+		server.Errorf("No oauth_client_id provided, you will not be able to use Google single sign on")
+	}
+
 	router := mux.NewRouter()
 
 	// Login/logout
-	server.Handle(router.Path("/login"), user.Login)
+	server.Handle(router.Path("/login"), user.Login(*oauthClientId))
 	server.Handle(router.Path("/logout"), user.Logout)
-	server.Handle(router.Path("/openid"), user.Openid)
+	server.Handle(router.Path("/oauth2callback"), user.OAuth2Callback(*oauthClientId, *oauthClientSecret))
 	server.Handle(router.Path("/token"), user.Token)
 
 	// Resource routes for the WebSocket
