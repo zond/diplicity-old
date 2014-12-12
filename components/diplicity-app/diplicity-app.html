@@ -31,22 +31,22 @@
 				</core-menu>
 			</core-header-panel>
 	    <div tool flex>
-        <paper-tabs id="tabs" selected="{{ gameOwnerSelection }}" self-end>
+        <paper-tabs id="tabs" selected="{{ selected }}" self-end>
       	  <paper-tab template name="mine">My games</paper-tab>
-      	  <paper-tab template name="others">Other games</paper-tab>
+      	  <paper-tab template name="other">Other games</paper-tab>
       	  <paper-tab template name="create">Create game</paper-tab>
       	</paper-tabs>
       </div>
 			<div flex>
-     		<core-animated-pages valueattr="id" selected="{{ gameOwnerSelection }}" transitions="cross-fade">
+     		<core-animated-pages valueattr="id" selected="{{ selected }}" transitions="cross-fade">
      		  <section id="mine">
 					  <div cross-fade>
 							Mine
 						</div>
      			</section>
-     		  <section id="others">
+     		  <section id="other">
 					  <div cross-fade>
-							Others
+							Other
 						</div>
      			</section>
      		  <section id="create">
@@ -67,6 +67,12 @@
             break;
 				}
 				console.log('message', message);
+			},
+			selectedChanged: function() {
+				var match = /\/games\/(.*)/.exec(window.location.pathname);
+				if (match == null || match[1] != this.selected) {
+					window.history.pushState({}, "", "/games/" + this.selected);
+				}
 			},
 			connectWebSocket: function() {
 				var that = this;
@@ -108,11 +114,24 @@
 					},
 				});
 			},
+			route: function() {
+				var that = this;
+				var match = /\/games\/(.*)/.exec(window.location.pathname);
+				if (match != null) {
+					that.selected = match[1];
+				} else {
+					that.selected = "mine";
+				}
+			},
 			ready: function() {
 				var that = this;
 				that.user = {"Id": ""};
 				that.token = null;
 				that.loginUrl = window.location.protocol + "//" + window.location.host + "/login?return_to=" + encodeURIComponent(window.location.href);
+				$(window).on('popstate', function() {
+					that.route();
+				});
+				that.route();
 				that.fetchToken();
 			},
 		});
