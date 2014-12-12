@@ -55,19 +55,24 @@ var nonceLock = sync.Mutex{}
 func OAuth2Callback(clientId, clientSecret string) func(c *common.HTTPContext) (err error) {
 	return func(c *common.HTTPContext) (err error) {
 		state := c.Req().FormValue("state")
-		nonceLock.Lock()
-		defer nonceLock.Unlock()
-		if _, found := nonces[state]; !found {
-			err = fmt.Errorf("state not found")
+		parts := strings.SplitN(state, ".", 2)
+		if len(parts) != 2 {
+			err = fmt.Errorf("state %#v is invalid", state)
 			return
 		}
-		delete(nonces, state)
-
-		scheme := "http"
-		if c.Req().TLS != nil {
-			scheme = "https"
+		nonceLock.Lock()
+		defer nonceLock.Unlock()
+		if _, found := nonces[parts[0]]; !found {
+			err = fmt.Errorf("nonce not found")
+			return
 		}
-		redirectUrl, err := url.Parse(fmt.Sprintf("%v://%v/oauth2callback", scheme, c.Req().Host))
+		delete(nonces, parts[0])
+
+		returnTo, err := url.Parse(parts[1])
+		if err != nil {
+			return
+		}
+		redirectUrl, err := url.Parse(fmt.Sprintf("%v://%v/oauth2callback", returnTo.Scheme, c.Req().Host))
 		if err != nil {
 			return
 		}
@@ -96,9 +101,9 @@ func OAuth2Callback(clientId, clientSecret string) func(c *common.HTTPContext) (
 			delete(c.Session().Values, common.SessionEmail)
 		}
 		c.Close()
-		c.Resp().Header().Set("Location", "/")
+		c.Resp().Header().Set("Location", returnTo.String())
 		c.Resp().WriteHeader(302)
-		fmt.Fprintln(c.Resp(), "/")
+		fmt.Fprintln(c.Resp(), returnTo.String())
 		return
 	}
 }
@@ -134,11 +139,11 @@ func Logout(c *common.HTTPContext) (err error) {
 
 func Login(clientId string) func(c *common.HTTPContext) (err error) {
 	return func(c *common.HTTPContext) (err error) {
-		scheme := "http"
-		if c.Req().TLS != nil {
-			scheme = "https"
+		returnTo, err := url.Parse(c.Req().FormValue("return_to"))
+		if err != nil {
+			return
 		}
-		redirectUrl, err := url.Parse(fmt.Sprintf("%v://%v/oauth2callback", scheme, c.Req().Host))
+		redirectUrl, err := url.Parse(fmt.Sprintf("%v://%v/oauth2callback", returnTo.Scheme, c.Req().Host))
 		if err != nil {
 			return
 		}
@@ -146,6 +151,7 @@ func Login(clientId string) func(c *common.HTTPContext) (err error) {
 		nonceLock.Lock()
 		defer nonceLock.Unlock()
 		nonces[nonce] = struct{}{}
+		nonce += "." + returnTo.String()
 		url, err := goauth2.GetAuthURL(clientId, nonce, redirectUrl)
 		if err != nil {
 			return

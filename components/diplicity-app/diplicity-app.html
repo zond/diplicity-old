@@ -24,7 +24,7 @@
 						<core-item icon="settings" label="{{ user.Email }}"></core-item>
 					</template>
 					<template if="{{ !user.Id }}">
-					  <a href="/login">
+					<a href="{{ loginUrl }}">
 				      <core-item icon="lock-open" label="Login"></core-item>
 						</a>
 					</template>
@@ -112,6 +112,7 @@
 				var that = this;
 				that.user = {"Id": ""};
 				that.token = null;
+				that.loginUrl = window.location.protocol + "//" + window.location.host + "/login?return_to=" + encodeURIComponent(window.location.href);
 				that.fetchToken();
 			},
 		});
