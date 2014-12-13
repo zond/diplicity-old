@@ -1,20 +1,27 @@
-<link rel="import" href="../../../bower_components/core-scaffold/core-scaffold.html">
-<link rel="import" href="../../../bower_components/core-header-panel/core-header-panel.html">
-<link rel="import" href="../../../bower_components/core-toolbar/core-toolbar.html">
-<link rel="import" href="../../../bower_components/core-animated-pages/core-animated-pages.html">
-<link rel="import" href="../../../bower_components/core-menu/core-menu.html">
-<link rel="import" href="../../../bower_components/core-item/core-item.html">
-<link rel="import" href="../../../bower_components/paper-tabs/paper-tabs.html">
-<link rel="import" href="../../../bower_components/core-animated-pages/transitions/cross-fade.html">
+<link rel="import" href="/bower_components/core-scaffold/core-scaffold.html">
+<link rel="import" href="/bower_components/core-header-panel/core-header-panel.html">
+<link rel="import" href="/bower_components/core-toolbar/core-toolbar.html">
+<link rel="import" href="/bower_components/core-animated-pages/core-animated-pages.html">
+<link rel="import" href="/bower_components/core-menu/core-menu.html">
+<link rel="import" href="/bower_components/core-item/core-item.html">
+<link rel="import" href="/bower_components/paper-tabs/paper-tabs.html">
+<link rel="import" href="/bower_components/core-animated-pages/transitions/cross-fade.html">
+<link rel="import" href="/bower_components/app-router/app-router.html">
 
 <polymer-element name="diplicity-app">
   <template>
+	  <style>
+			core-toolbar a {
+				text-decoration: none;
+				font-size: x-large;
+			}
+		</style>
     <core-scaffold flex>
 		  <core-header-panel navigation flex mode="seamed">
 			  <core-toolbar>
 				  <div flex>
 						<a href="/">
-							<div style="font-size: x-large;">diplicity</div>
+							diplicity
 						</a>
 				  </div>
 		    </core-toolbar>
@@ -33,30 +40,37 @@
 				</core-menu>
 			</core-header-panel>
 	    <div tool flex>
-        <paper-tabs id="tabs" selected="{{ selected }}" self-end>
-      	  <paper-tab template name="mine">My games</paper-tab>
-      	  <paper-tab template name="other">Other games</paper-tab>
-      	  <paper-tab template name="create">Create game</paper-tab>
+				<paper-tabs valueattr="path" selected="{{ path }}" self-end>
+				  <paper-tab path="/games/mine">My games</paper-tab>
+					<paper-tab path="/games/other">Other games</paper-tab>
+					<paper-tab path="/games/create">Create game</paper-tab>
       	</paper-tabs>
       </div>
 			<div flex>
-     		<core-animated-pages valueattr="id" selected="{{ selected }}" transitions="cross-fade">
-     		  <section id="mine">
-					  <div cross-fade>
-							Mine
-						</div>
-     			</section>
-     		  <section id="other">
-					  <div cross-fade>
-							Other
-						</div>
-     			</section>
-     		  <section id="create">
-					  <div cross-fade>
-							Create
-						</div>
-     			</section>
-        </core-animated-pages>
+				<app-router id="router" mode="pushstate" core-animated-pages transitions="cross-fade">
+				  <app-route path="/games/mine">
+					  <template>
+						  <div cross-fade>
+						    Mine
+							</div>
+						</template>
+				  </app-route>
+				  <app-route path="/games/other">
+					  <template>
+						  <div cross-fade>
+						    Other
+							</div>
+						</template>
+				  </app-route>
+				  <app-route path="/games/create">
+					  <template>
+						  <div cross-fade>
+						    Create
+							</div>
+						</template>
+				  </app-route>
+				  <app-route path="*" redirect="/games/mine"></app-route>
+        </app-router>
 			</div>
 		</core-scaffold>
 	</template>
@@ -69,12 +83,6 @@
             break;
 				}
 				console.log('message', message);
-			},
-			selectedChanged: function() {
-				var match = /\/games\/(.*)/.exec(window.location.pathname);
-				if (match == null || match[1] != this.selected) {
-					window.history.pushState({}, "", "/games/" + this.selected);
-				}
 			},
 			connectWebSocket: function() {
 				var that = this;
@@ -116,25 +124,18 @@
 					},
 				});
 			},
-			route: function() {
-				var that = this;
-				var match = /\/games\/(.*)/.exec(window.location.pathname);
-				if (match != null) {
-					that.selected = match[1];
-				} else {
-					that.selected = "mine";
-				}
+			pathChanged: function() {
+				this.$.router.go(this.path);
 			},
 			ready: function() {
-				var that = this;
-				that.user = {"Id": ""};
-				that.token = null;
-				that.loginUrl = window.location.protocol + "//" + window.location.host + "/login?return_to=" + encodeURIComponent(window.location.href);
-				$(window).on('popstate', function() {
-					that.route();
-				});
-				that.route();
-				that.fetchToken();
+				this.user = {"Id": ""};
+				this.token = null;
+				this.loginUrl = window.location.protocol + "//" + window.location.host + "/login?return_to=" + encodeURIComponent(window.location.href);
+				this.path = window.location.pathname;
+				if (this.path == "/") {
+					this.path = "/games/mine";
+				}
+				this.fetchToken();
 			},
 		});
 	</script>
