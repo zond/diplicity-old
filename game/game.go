@@ -404,7 +404,9 @@ func (self *Game) start(c common.SkinnyContext) (err error) {
 	}
 	var startState *state.State
 	if self.Variant == common.ClassicalString {
-		startState = classical.Start()
+		if startState, err = classical.Start(); err != nil {
+			return
+		}
 	} else {
 		err = fmt.Errorf("Unknown variant %v", self.Variant)
 		return
