@@ -1,0 +1,32 @@
+<link rel="import" href="/components/z-panel/z-panel.html">
+
+<polymer-element name="game-list-element">
+  <template>
+	  <style>
+			paper-button.toggle {
+				width: 99%;
+				background: #CFD8DC;
+				margin: 5px;
+			}
+			z-panel {
+				width: 99%;
+			}
+		</style>
+	  <paper-button class="toggle" on-click="{{ toggleOpen }}" raised>CLICK</paper-button>
+		<core-collapse opened="{{ opened }}">
+		  <z-panel>
+				OPEN!!
+			</z-panel>
+		</core-collapse>
+	</template>
+	<script>
+		Polymer({
+			toggleOpen: function() {
+				this.opened = !this.opened;
+			},
+		});
+	</script>
+</polymer-element>
+
+
+

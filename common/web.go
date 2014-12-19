@@ -1,14 +1,14 @@
 package common
 
 import (
-	"bytes"
 	"compress/gzip"
 	"fmt"
-	"io"
+	"io/ioutil"
 	"log"
 	"math/rand"
 	"net/http"
 	"net/smtp"
+	"os"
 	"path/filepath"
 	"strings"
 	"sync/atomic"
@@ -21,7 +21,6 @@ import (
 	"github.com/zond/diplicity/translation"
 	"github.com/zond/gmail"
 	"github.com/zond/kcwraps/kol"
-	"github.com/zond/templar"
 	"github.com/zond/wsubs/gosubs"
 )
 
@@ -46,10 +45,7 @@ type Web struct {
 	gmail                 *gmail.Client
 	env                   string
 	logLevel              int
-	appcache              bool
 	svgTemplates          *template.Template
-	htmlTemplates         *template.Template
-	textTemplates         *template.Template
 	jsModelTemplates      *template.Template
 	jsCollectionTemplates *template.Template
 	jsTemplates           *template.Template
@@ -68,7 +64,6 @@ type Web struct {
 func NewWeb(secret, env, db string) (self *Web, err error) {
 	self = &Web{
 		secret:       secret,
-		appcache:     true,
 		env:          env,
 		sessionStore: sessions.NewCookieStore([]byte(secret)),
 	}
@@ -88,12 +83,6 @@ func NewWeb(secret, env, db string) (self *Web, err error) {
 		self.router.DevMode = true
 	}
 	self.router.LogLevel = self.logLevel
-	if self.textTemplates, err = templar.GetMatchingTemplates(env == Development, "textTemplates", "^templates/text/[^/]*$"); err != nil {
-		return
-	}
-	if self.htmlTemplates, err = templar.GetMatchingTemplates(env == Development, "htmlTemplates", "^templates/html/[^/]*\\.html$"); err != nil {
-		return
-	}
 	return
 }
 
@@ -202,11 +191,6 @@ func (self *Web) SetGMail(account, password string, handler func(c SkinnyContext
 	return self
 }
 
-func (self *Web) SetAppcache(appcache bool) *Web {
-	self.appcache = appcache
-	return self
-}
-
 func (self *Web) DevHandle(r *mux.Route, f func(c *HTTPContext) error) {
 	if self.Env() == Development {
 		self.Handle(r, func(c *HTTPContext) (err error) {
@@ -307,73 +291,61 @@ func (self *Web) Tracef(format string, args ...interface{}) {
 	self.Logf(Trace, "\033[1;32mTRACE\t"+format+"\033[0m", args...)
 }
 
-func (self *Web) render_Templates(data *HTTPContext) {
-	fmt.Fprintln(data.response, "(function() {")
-	fmt.Fprintln(data.response, "  var n;")
-	var buf *bytes.Buffer
-	var rendered string
-	for _, templ := range self._Templates.Templates() {
-		fmt.Fprintf(data.response, "  n = $('<script type=\"text/template\" id=\"%v_underscore\"></script>');\n", strings.Split(templ.Name(), ".")[0])
-		fmt.Fprintf(data.response, "  n.text('")
-		buf = new(bytes.Buffer)
-		if err := templ.Execute(buf, data); err != nil {
-			panic(err)
-		}
-		rendered = string(buf.Bytes())
-		rendered = strings.Replace(rendered, "\\", "\\\\", -1)
-		rendered = strings.Replace(rendered, "'", "\\'", -1)
-		rendered = strings.Replace(rendered, "\n", "\\n", -1)
-		fmt.Fprint(data.response, rendered)
-		fmt.Fprintln(data.response, "');")
-		fmt.Fprintln(data.response, "  $('head').append(n);")
+func (self *Web) HandleStatic(router *mux.Router, dir string) (err error) {
+	full := filepath.Join(".", dir)
+	legal, err := filepath.Abs(full)
+	if err != nil {
+		self.Errorf("Trying to filepath.Abs(%#v): %v", full, err)
+		return
 	}
-	fmt.Fprintln(data.response, "})();")
-}
-
-func (self *Web) handleStaticFile(router *mux.Router, fil string) (err error) {
 	self.Handle(router.MatcherFunc(func(r *http.Request, rm *mux.RouteMatch) bool {
-		return strings.HasSuffix(r.URL.Path, filepath.Base(fil))
+		full := filepath.Join(".", r.URL.Path)
+		abs, err := filepath.Abs(full)
+		if err != nil {
+			self.Errorf("Trying to filepath.Abs(%#v): %v", full, err)
+			return false
+		}
+		if !strings.HasPrefix(abs, legal) {
+			return false
+		}
+		if stat, err := os.Stat(abs); err != nil {
+			if !os.IsNotExist(err) {
+				self.Errorf("Trying to stat %#v: %v", abs, err)
+			}
+			return false
+		} else if stat.IsDir() {
+			return false
+		}
+		return true
 	}), func(c *HTTPContext) (err error) {
-		if strings.HasSuffix(c.Req().URL.Path, ".css") {
+		full := filepath.Join(".", c.Req().URL.Path)
+		abs, err := filepath.Abs(full)
+		if err != nil {
+			return
+		}
+		if strings.HasSuffix(abs, ".css") {
 			c.SetContentType("text/css; charset=UTF-8", true)
-		} else if strings.HasSuffix(c.Req().URL.Path, ".png") {
+		} else if strings.HasSuffix(abs, ".png") {
 			c.SetContentType("image/png", true)
-		} else if strings.HasSuffix(c.Req().URL.Path, ".gif") {
+		} else if strings.HasSuffix(abs, ".gif") {
 			c.SetContentType("image/gif", true)
-		} else if strings.HasSuffix(c.Req().URL.Path, ".html") {
+		} else if strings.HasSuffix(abs, ".html") {
 			c.SetContentType("text/html; charset=UTF-8", true)
-		} else if strings.HasSuffix(c.Req().URL.Path, ".js") {
+		} else if strings.HasSuffix(abs, ".js") {
 			c.SetContentType("application/javascript; charset=UTF-8", true)
-		} else if strings.HasSuffix(c.Req().URL.Path, ".ttf") {
+		} else if strings.HasSuffix(abs, ".ttf") {
 			c.SetContentType("font/truetype", true)
 		} else {
 			c.SetContentType("application/octet-stream", true)
 		}
-		in, err := templar.GetBlob(self.env == Development, fil)
+		b, err := ioutil.ReadFile(abs)
 		if err != nil {
-			self.Errorf("%v", err)
-			c.Resp().WriteHeader(500)
-			fmt.Fprintln(c.Resp(), err)
-		} else {
-			defer in.Close()
-			if _, err = io.Copy(c.Resp(), in); err != nil {
-				return
-			}
+			return
+		}
+		if _, err = c.Resp().Write(b); err != nil {
+			return
 		}
 		return
 	})
-	return
-}
-
-func (self *Web) HandleStatic(router *mux.Router, dir string) (err error) {
-	children, err := templar.GetMatchingBlobNames(self.env == Development, fmt.Sprintf("^%v/.*", dir))
-	if err != nil {
-		return
-	}
-	for _, fil := range children {
-		if err = self.handleStaticFile(router, fil); err != nil {
-			return
-		}
-	}
 	return
 }

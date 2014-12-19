@@ -21,6 +21,23 @@
     "core-scaffold": "Polymer/core-scaffold#~0.4.2",
     "core-toolbar": "Polymer/core-toolbar#~0.4.2",
     "paper-tabs": "Polymer/paper-tabs#~0.4.2",
-    "webcomponents.js": "Polymer/webcomponentsjs#~0.4.2"
+    "webcomponents.js": "Polymer/webcomponentsjs#~0.4.2",
+    "core-collapse": "Polymer/core-collapse#~0.5.2",
+    "paper-toggle-button": "Polymer/paper-toggle-button#~0.5.2",
+    "paper-button": "Polymer/paper-button#~0.5.2",
+    "paper-shadow": "Polymer/paper-shadow#~0.5.2"
+  },
+  "resolutions": {
+    "core-component-page": "^0.5.0",
+    "polymer": "^0.5.0",
+    "core-iconset": "^0.5.0",
+    "core-meta": "^0.5.0",
+    "core-icon": "^0.5.0",
+    "core-icons": "^0.5.0",
+    "core-iconset-svg": "^0.5.0",
+    "paper-ripple": "^0.5.0",
+    "font-roboto": "^0.5.0",
+    "paper-shadow": "^0.5.0",
+    "paper-button": "~0.5.2"
   }
 }

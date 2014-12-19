@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"net/url"
 	"sort"
-	"strings"
 	"text/template"
 	"time"
 
@@ -110,13 +109,6 @@ func (self *HTTPContext) Req() *http.Request {
 
 func (self *HTTPContext) Close() {
 	self.session.Save(self.request, self.response)
-}
-
-func (self *HTTPContext) Appcache() bool {
-	if self.Req().URL.Path == "" || self.Req().URL.Path == "/" || strings.Index(self.Req().URL.Path, "/map/") == 0 {
-		return self.web.appcache
-	}
-	return false
 }
 
 func (self *HTTPContext) mI(pattern string, args ...interface{}) (result string) {

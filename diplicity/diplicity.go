@@ -53,7 +53,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	server.SetAppcache(*appcache).SetGMail(*gmailAccount, *gmailPassword, game.IncomingMail).SetSMTP(*smtpHost, *smtpAccount)
+	server.SetGMail(*gmailAccount, *gmailPassword, game.IncomingMail).SetSMTP(*smtpHost, *smtpAccount)
 
 	if *oauthClientSecret == "" {
 		server.Errorf("No oauth_client_secret provided, you will not be able to use Google single sign on")
@@ -105,7 +105,6 @@ func main() {
 	router.Path("/ws").Handler(wsRouter)
 
 	// Static content
-	server.Handle(router.Path("/diplicity.appcache"), server.AppCache)
 	if err := server.HandleStatic(router, "bower_components"); err != nil {
 		panic(err)
 	}
