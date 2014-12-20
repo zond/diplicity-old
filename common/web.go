@@ -2,6 +2,7 @@ package common
 
 import (
 	"compress/gzip"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -291,6 +292,15 @@ func (self *Web) Tracef(format string, args ...interface{}) {
 	self.Logf(Trace, "\033[1;32mTRACE\t"+format+"\033[0m", args...)
 }
 
+func (self *Web) GameStates() (result string, err error) {
+	b, err := json.Marshal(GameStates)
+	if err != nil {
+		return
+	}
+	result = string(b)
+	return
+}
+
 func (self *Web) HandleStatic(router *mux.Router, dir string) (err error) {
 	full := filepath.Join(".", dir)
 	legal, err := filepath.Abs(full)
@@ -324,19 +334,19 @@ func (self *Web) HandleStatic(router *mux.Router, dir string) (err error) {
 			return
 		}
 		if strings.HasSuffix(abs, ".css") {
-			c.SetContentType("text/css; charset=UTF-8", true)
+			c.SetContentType("text/css; charset=UTF-8")
 		} else if strings.HasSuffix(abs, ".png") {
-			c.SetContentType("image/png", true)
+			c.SetContentType("image/png")
 		} else if strings.HasSuffix(abs, ".gif") {
-			c.SetContentType("image/gif", true)
+			c.SetContentType("image/gif")
 		} else if strings.HasSuffix(abs, ".html") {
-			c.SetContentType("text/html; charset=UTF-8", true)
+			c.SetContentType("text/html; charset=UTF-8")
 		} else if strings.HasSuffix(abs, ".js") {
-			c.SetContentType("application/javascript; charset=UTF-8", true)
+			c.SetContentType("application/javascript; charset=UTF-8")
 		} else if strings.HasSuffix(abs, ".ttf") {
-			c.SetContentType("font/truetype", true)
+			c.SetContentType("font/truetype")
 		} else {
-			c.SetContentType("application/octet-stream", true)
+			c.SetContentType("application/octet-stream")
 		}
 		b, err := ioutil.ReadFile(abs)
 		if err != nil {

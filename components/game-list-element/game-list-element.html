@@ -1,6 +1,6 @@
 <link rel="import" href="/components/z-panel/z-panel.html">
 
-<polymer-element name="game-list-element">
+<polymer-element name="game-list-element" attributes="game">
   <template>
 	  <style>
 			paper-button.toggle {
@@ -11,11 +11,18 @@
 			z-panel {
 				width: 99%;
 			}
+			#game-description {
+				text-transform: none;
+			}
 		</style>
-	  <paper-button class="toggle" on-click="{{ toggleOpen }}" raised>CLICK</paper-button>
+		<paper-button class="toggle" on-click="{{ toggleOpen }}" raised>
+		  <span id="game-description">
+				{{ game.Phase.Season }}, {{ game.Phase.Year }}, {{ game.Phase.Type }}
+			</span>
+		</paper-button>
 		<core-collapse opened="{{ opened }}">
 		  <z-panel>
-				OPEN!!
+        {{ jsonString }}
 			</z-panel>
 		</core-collapse>
 	</template>
@@ -23,6 +30,10 @@
 		Polymer({
 			toggleOpen: function() {
 				this.opened = !this.opened;
+			},
+			stringify: JSON.stringify,
+			computed: {
+				jsonString: 'stringify(game)',
 			},
 		});
 	</script>

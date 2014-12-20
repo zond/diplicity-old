@@ -1,11 +1,40 @@
 <link rel="import" href="/components/game-list/game-list.html">
+<link rel="import" href="/components/z-panel/z-panel.html">
 
 <polymer-element name="my-games" attributes="subscriber">
   <template>
-  	<game-list games="{{ games }}"></game-list>
+	<template if="{{ startedGames.length > 0 }}">
+		  <z-panel>
+			  Running
+				<game-list games="{{ startedGames }}"></game-list>
+			</z-panel>
+		</template>
+		<template if="{{ createdGames.length > 0 }}">
+		  <z-panel>
+			  Forming
+				<game-list games="{{ createdGames }}"></game-list>
+			</z-panel>
+		</template>
+		<template if="{{ endedGames.length > 0 }}">
+		  <z-panel>
+			  Finished
+				<game-list games="{{ endedGames }}"></game-list>
+			</z-panel>
+		</template>
 	</template>
 	<script>
 		Polymer({
+			filterGamesByState: function(games, state) {
+				return _.filter(games, function(game) {
+					return game.State == state;
+				});
+			},
+			gameStates: GameStates,
+			computed: {
+				startedGames: 'filterGamesByState(games, gameStates.started)',
+				createdGames: 'filterGamesByState(games, gameStates.created)',
+				endedGames: 'filterGamesByState(games, gameStates.ended)',
+			},
 			message: function(msg) {
 				if (msg.Type == 'Fetch') {
 					this.games = msg.Object.Data;

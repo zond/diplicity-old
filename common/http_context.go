@@ -40,16 +40,12 @@ func (self *HTTPContext) Session() *sessions.Session {
 	return self.session
 }
 
-func (self *HTTPContext) SetContentType(t string, cache bool) {
+func (self *HTTPContext) SetContentType(t string) {
 	self.Resp().Header().Set("Content-Type", t)
 	self.Resp().Header().Set("Vary", "Accept")
-	if cache {
-		self.Resp().Header().Set("Cache-Control", "public, max-age=864000")
-	} else {
-		self.Resp().Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
-		self.Resp().Header().Set("Pragma", "no-cache")
-		self.Resp().Header().Set("Expires", "0")
-	}
+	self.Resp().Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+	self.Resp().Header().Set("Pragma", "no-cache")
+	self.Resp().Header().Set("Expires", "0")
 }
 
 func (self *HTTPContext) Fatalf(format string, args ...interface{}) {
@@ -77,7 +73,7 @@ func (self *HTTPContext) RenderJSON(i interface{}) (err error) {
 	if err != nil {
 		return
 	}
-	self.SetContentType("application/json; charset=UTF-8", false)
+	self.SetContentType("application/json; charset=UTF-8")
 	_, err = self.Resp().Write(b)
 	return
 }

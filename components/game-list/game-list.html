@@ -6,7 +6,7 @@
 <polymer-element name="game-list" attributes="games">
   <template>
 	  <template repeat="{{ game in games }}">
-		  <game-list-element></game-list-element>
+		  <game-list-element game="{{ game }}"></game-list-element>
 		</template>
 	</template>
 	<script>

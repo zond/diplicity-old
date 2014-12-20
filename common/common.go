@@ -191,6 +191,12 @@ const (
 	GameStateEnded
 )
 
+var GameStates = map[string]GameState{
+	"created": GameStateCreated,
+	"started": GameStateStarted,
+	"ended":   GameStateEnded,
+}
+
 type SecretFlag int
 
 const (
