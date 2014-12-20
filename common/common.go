@@ -291,7 +291,7 @@ var classicalVariant = &Variant{
 		cla.Russia:  "#8d5e68",
 		cla.Turkey:  "#ffdb66",
 	},
-	OrderTypes:       claOrders.OrderTypes,
+	OrderTypes:       claOrders.OrderTypes(),
 	UnitTypes:        cla.UnitTypes,
 	Graph:            start.Graph(),
 	SupplyCenters:    start.SCs(),
