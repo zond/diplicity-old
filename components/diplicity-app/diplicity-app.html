@@ -7,9 +7,9 @@
 <link rel="import" href="/bower_components/paper-tabs/paper-tabs.html">
 <link rel="import" href="/bower_components/core-animated-pages/transitions/cross-fade.html">
 <link rel="import" href="/bower_components/app-router/app-router.html">
-<link rel="import" href="/components/diplicity-game-list/diplicity-game-list.html">
+<link rel="import" href="/components/my-games/my-games.html">
 
-<polymer-element name="diplicity-app">
+<polymer-element name="diplicity-app" attributes="subscriber">
   <template>
 	  <style>
 			core-toolbar a {
@@ -27,14 +27,14 @@
 				  </div>
 		    </core-toolbar>
 				<core-menu>
-					<template if="{{ state.user.Id }}">
+					<template if="{{ user.Id }}">
 						<a href="/logout">
 							<core-item icon="lock-outline" label="Logout"></core-item>
 						</a>
-						<core-item icon="settings" label="{{ state.user.Email }}"></core-item>
+						<core-item icon="settings" label="{{ user.Email }}"></core-item>
 					</template>
-					<template if="{{ !state.user.Id }}">
-					  <a href="{{ state.loginUrl }}">
+					<template if="{{ !user.Id }}">
+					  <a href="{{ loginUrl }}">
 				      <core-item icon="lock-open" label="Login"></core-item>
 						</a>
 					</template>
@@ -52,7 +52,7 @@
 				  <app-route path="/games/mine" bindRouter>
 					  <template>
 						  <div cross-fade>
-								<diplicity-game-list games="{{ router.templateInstance.model.state.myGames }}"></diplicity-game-list>
+								<my-games subscriber="{{ router.templateInstance.model }}"></my-games>
 							</div>
 						</template>
 				  </app-route>
@@ -77,19 +77,11 @@
 	</template>
 	<script>
 		Polymer({
-			serverMessage: function(message) {
-				var newState = jQuery.extend({}, this.state);
+			message: function(message) {
 				switch (message.Object.URI) {
 					case '/user':
-					  newState.user = message.Object.Data;
-            break;
-					case '/games/mine':
-					  if (message.Type == 'Fetch') {	
-							newState.myGames = message.Object.Data;
-						}
+            this.user = message.Object.Data;
 				}
-				this.state = newState;
-				console.log('message', message, 'state', this.state);
 			},
 			connectWebSocket: function() {
 				var that = this;
@@ -106,20 +98,32 @@
 					socketUrl += "?token=" + that.token.Encoded;
 				}
 				if (that.socket != null) {
+					that.connected = false;
 					that.socket.close();
 				}
 				that.socket = new WebSocket(socketUrl);
 				that.socket.onerror = function(options) {
+					that.connected = false;
 					console.log('error', options);
+					that.fetchToken();
 				};
 				that.socket.onmessage = function(options) {
-					that.serverMessage(JSON.parse(options.data));
+					var message = JSON.parse(options.data);
+					console.log('message', message);
+					var subs = that.subscriptions[message.Object.URI];
+					for (var i = 0; i < subs.length; i++) {
+						subs[i](message);
+					}
 				};
 				that.socket.onopen = function(options) {
-					that.socket.send(JSON.stringify({"Type":"Subscribe","Object":{"URI":"/user"}}));
-					that.socket.send(JSON.stringify({"Type":"Subscribe","Object":{"URI":"/games/mine"}}));
+					that.connected = true;
+					for (var uri in that.subscriptions) {
+						var cb = that.subscriptions[uri];
+						that.socket.send(JSON.stringify({"Type": "Subscribe", "Object": {"URI": uri}}));
+					}
 				};
 				that.socket.onclose = function(options) {
+					that.connected = false;
 					console.log('close', options);
 				};
 			},
@@ -135,18 +139,44 @@
 			pathChanged: function() {
 				this.$.router.go(this.path);
 			},
-			ready: function() {
-				this.state = {
-					user: {"Id": ""},
-					token: null,
-					loginUrl: window.location.protocol + "//" + window.location.host + "/login?return_to=" + encodeURIComponent(window.location.href),
-					myGames: [],
-				};
-				this.path = window.location.pathname;
-				if (this.path == "/") {
-					this.path = "/games/mine";
+			subscribe: function(uri, cb) {
+				if (this.subscriptions[uri] == null) {
+					this.subscriptions[uri] = [];
 				}
-				this.fetchToken();
+				this.subscriptions[uri].push(cb);
+				if (this.connected) {
+					this.socket.send(JSON.stringify({"Type":"Subscribe","Object":{"URI":uri}}));
+				}
+			},
+			subscriptions: {},
+			unsubscribe: function(uri, cb) {
+				if (this.connected) {
+					this.socket.send(JSON.stringify({"Type":"Unsubscribe","Object":{"URI":uri}}));
+				}
+				var newSubscriptions = [];
+				for (var i = 0; i < this.subscriptions.length; i++) {
+					if (this.subscriptions[i] != cb) {
+						newSubscriptions.push(this.subscriptions[i]);
+					}
+				}
+				this.subscriptions = newSubscriptions;
+			},
+			user: {"Id": ""},
+			token: null,
+			loginUrl: "",
+			path: "",
+			socket: null,
+			connected: false,
+			ready: function() {
+				var that = this;
+				that.loginUrl = window.location.protocol + "//" + window.location.host + "/login?return_to=" + encodeURIComponent(window.location.href);
+				_.bindAll(that, 'message');
+				that.subscribe("/user", that.message);
+				that.path = window.location.pathname;
+				if (that.path == "/") {
+					that.path = "/games/mine";
+				}
+				that.fetchToken();
 			},
 		});
 	</script>

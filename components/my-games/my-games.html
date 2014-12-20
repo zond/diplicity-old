@@ -1,0 +1,27 @@
+<link rel="import" href="/components/game-list/game-list.html">
+
+<polymer-element name="my-games" attributes="subscriber">
+  <template>
+  	<game-list games="{{ games }}"></game-list>
+	</template>
+	<script>
+		Polymer({
+			message: function(msg) {
+				if (msg.Type == 'Fetch') {
+					this.games = msg.Object.Data;
+				}
+			},
+			ready: function() {
+				this.games = [];
+				_.bindAll(this, 'message');
+				this.subscriber.subscribe('/games/mine', this.message);
+			},
+			detached: function() {
+				this.subscriber.unsubscribe('/games/mine', this.message);
+			},
+		});
+	</script>
+</polymer-element>
+
+
+
