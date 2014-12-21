@@ -1,39 +1,53 @@
+<link rel="import" href="/bower_components/paper-tabs/paper-tabs.html">
 <link rel="import" href="/components/game-list/game-list.html">
-<link rel="import" href="/components/z-panel/z-panel.html">
+<link rel="import" href="/components/path-selector/path-selector.html">
 
 <polymer-element name="my-games" attributes="subscriber">
   <template>
-	<template if="{{ startedGames.length > 0 }}">
-		  <z-panel>
-			  Running
-				<game-list games="{{ startedGames }}"></game-list>
-			</z-panel>
-		</template>
-		<template if="{{ createdGames.length > 0 }}">
-		  <z-panel>
-			  Forming
-				<game-list games="{{ createdGames }}"></game-list>
-			</z-panel>
-		</template>
-		<template if="{{ endedGames.length > 0 }}">
-		  <z-panel>
-			  Finished
-				<game-list games="{{ endedGames }}"></game-list>
-			</z-panel>
-		</template>
+	  <style>
+			paper-tabs::shadow > * {
+				height: 28px;
+			}
+			paper-tabs {
+				height: 28px;
+			}
+	  </style>
+		<paper-tabs valueattr="path" selected="{{ path }}" self-end>
+		  <paper-tab path="/games/mine/running">Running</paper-tab>
+		  <paper-tab path="/games/mine/forming">Forming</paper-tab>
+		  <paper-tab path="/games/mine/finished">Finished</paper-tab>
+		</paper-tabs>
+		<path-selector path="{{ path }}">
+		  <div path="/games/mine/running">
+				<div cross-fade>
+					<game-list games="{{ runningGames }}"></game-list>
+				</div>
+			</div>
+			<div path="/games/mine/forming">
+				<div cross-fade>
+					<game-list games="{{ formingGames }}"></game-list>
+				</div>
+			</div>
+		  <div path="/games/mine/finished">
+				<div cross-fade>
+					<game-list games="{{ finishedGames }}"></game-list>
+				</div>
+			</div>
+		</path-selector>
 	</template>
 	<script>
 		Polymer({
 			filterGamesByState: function(games, state) {
-				return _.filter(games, function(game) {
+				var result = _.filter(games, function(game) {
 					return game.State == state;
 				});
+				return result;
 			},
 			gameStates: GameStates,
 			computed: {
-				startedGames: 'filterGamesByState(games, gameStates.started)',
-				createdGames: 'filterGamesByState(games, gameStates.created)',
-				endedGames: 'filterGamesByState(games, gameStates.ended)',
+				runningGames: 'filterGamesByState(games, gameStates.started)',
+				formingGames: 'filterGamesByState(games, gameStates.created)',
+				finishedGames: 'filterGamesByState(games, gameStates.ended)',
 			},
 			message: function(msg) {
 				if (msg.Type == 'Fetch') {
@@ -41,9 +55,10 @@
 				}
 			},
 			ready: function() {
-				this.games = [];
-				_.bindAll(this, 'message');
-				this.subscriber.subscribe('/games/mine', this.message);
+				var that = this;
+				that.games = [];
+				_.bindAll(that, 'message');
+				that.subscriber.subscribe('/games/mine', that.message);
 			},
 			detached: function() {
 				this.subscriber.unsubscribe('/games/mine', this.message);

@@ -3,11 +3,12 @@
 <link rel="import" href="/bower_components/core-toolbar/core-toolbar.html">
 <link rel="import" href="/bower_components/core-animated-pages/core-animated-pages.html">
 <link rel="import" href="/bower_components/core-menu/core-menu.html">
+<link rel="import" href="/bower_components/core-animated-pages/core-animated-pages.html">
 <link rel="import" href="/bower_components/core-item/core-item.html">
 <link rel="import" href="/bower_components/paper-tabs/paper-tabs.html">
 <link rel="import" href="/bower_components/core-animated-pages/transitions/cross-fade.html">
-<link rel="import" href="/bower_components/app-router/app-router.html">
 <link rel="import" href="/components/my-games/my-games.html">
+<link rel="import" href="/components/other-games/other-games.html">
 
 <polymer-element name="diplicity-app" attributes="subscriber">
   <template>
@@ -48,30 +49,23 @@
       	</paper-tabs>
       </div>
 			<div flex>
-				<app-router id="router" mode="pushstate" core-animated-pages transitions="cross-fade">
-				  <app-route path="/games/mine" bindRouter>
-					  <template>
-						  <div cross-fade>
-								<my-games subscriber="{{ router.templateInstance.model }}"></my-games>
-							</div>
-						</template>
-				  </app-route>
-				  <app-route path="/games/other" bindRouter>
-					  <template>
-						  <div cross-fade>
-						    Other
-							</div>
-						</template>
-				  </app-route>
-				  <app-route path="/games/create" bindRouter>
-					  <template>
-						  <div cross-fade>
-						    Create
-							</div>
-						</template>
-				  </app-route>
-				  <app-route path="*" redirect="/games/mine"></app-route>
-        </app-router>
+				<path-selector path="{{ path }}">
+				  <div path="/games/mine">
+						<div cross-fade>
+							<my-games subscriber="{{ subscriber() }}"></my-games>
+						</div>
+					</div>
+					<div path="/games/other">
+						<div cross-fade>
+							<other-games subscriber="{{ subscriber() }}"></other-games>
+						</div>
+					</div>
+					<div path="/games/create">
+						<div cross-fade>
+							Create
+						</div>
+					</div>
+        </path-selector>
 			</div>
 		</core-scaffold>
 	</template>
@@ -82,6 +76,9 @@
 					case '/user':
             this.user = message.Object.Data;
 				}
+			},
+			subscriber: function() {
+				return this;
 			},
 			connectWebSocket: function() {
 				var that = this;
@@ -111,8 +108,10 @@
 					var message = JSON.parse(options.data);
 					console.log('message', message);
 					var subs = that.subscriptions[message.Object.URI];
-					for (var i = 0; i < subs.length; i++) {
-						subs[i](message);
+					if (subs != null) {
+						for (var i = 0; i < subs.length; i++) {
+							subs[i](message);
+						}
 					}
 				};
 				that.socket.onopen = function(options) {
@@ -136,9 +135,6 @@
 					},
 				});
 			},
-			pathChanged: function() {
-				this.$.router.go(this.path);
-			},
 			subscribe: function(uri, cb) {
 				if (this.subscriptions[uri] == null) {
 					this.subscriptions[uri] = [];
@@ -150,21 +146,23 @@
 			},
 			subscriptions: {},
 			unsubscribe: function(uri, cb) {
-				if (this.connected) {
-					this.socket.send(JSON.stringify({"Type":"Unsubscribe","Object":{"URI":uri}}));
-				}
-				var newSubscriptions = [];
-				for (var i = 0; i < this.subscriptions.length; i++) {
-					if (this.subscriptions[i] != cb) {
-						newSubscriptions.push(this.subscriptions[i]);
+				var subs = this.subscriptions[uri];
+				if (subs != null) {
+					if (this.connected) {
+						this.socket.send(JSON.stringify({"Type":"Unsubscribe","Object":{"URI":uri}}));
 					}
+					var newSubscriptions = [];
+					for (var i = 0; i < subs; i++) {
+						if (subs[i] != cb) {
+							newSubscriptions.push(subs[i]);
+						}
+					}
+					this.subscriptions[uri] = subs;
 				}
-				this.subscriptions = newSubscriptions;
 			},
 			user: {"Id": ""},
 			token: null,
 			loginUrl: "",
-			path: "",
 			socket: null,
 			connected: false,
 			ready: function() {
@@ -172,10 +170,6 @@
 				that.loginUrl = window.location.protocol + "//" + window.location.host + "/login?return_to=" + encodeURIComponent(window.location.href);
 				_.bindAll(that, 'message');
 				that.subscribe("/user", that.message);
-				that.path = window.location.pathname;
-				if (that.path == "/") {
-					that.path = "/games/mine";
-				}
 				that.fetchToken();
 			},
 		});

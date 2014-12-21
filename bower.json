@@ -15,7 +15,7 @@
     "tests"
   ],
   "dependencies": {
-    "core-animated-pages": "Polymer/core-animated-pages#~0.4.2",
+    "core-animated-pages": "Polymer/core-animated-pages#~0.5.2",
     "core-header-panel": "Polymer/core-header-panel#~0.4.2",
     "core-menu": "Polymer/core-menu#~0.4.2",
     "core-scaffold": "Polymer/core-scaffold#~0.4.2",
@@ -38,6 +38,11 @@
     "paper-ripple": "^0.5.0",
     "font-roboto": "^0.5.0",
     "paper-shadow": "^0.5.0",
-    "paper-button": "~0.5.2"
+    "paper-button": "~0.5.2",
+    "core-animated-pages": "~0.5.2",
+    "core-selector": "^0.5.0",
+    "core-selection": "^0.5.0",
+    "core-style": "^0.5.0",
+    "core-transition": "^0.5.0"
   }
 }
