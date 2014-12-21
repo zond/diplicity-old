@@ -43,14 +43,14 @@
 			</core-header-panel>
 	    <div tool flex>
 				<paper-tabs valueattr="path" selected="{{ path }}" self-end>
-				  <paper-tab path="/games/mine">My games</paper-tab>
+				  <paper-tab path="/">My games</paper-tab>
 					<paper-tab path="/games/other">Other games</paper-tab>
 					<paper-tab path="/games/create">Create game</paper-tab>
       	</paper-tabs>
       </div>
 			<div flex>
 				<path-selector path="{{ path }}">
-				  <div path="/games/mine">
+				  <div path="/">
 						<div cross-fade>
 							<my-games subscriber="{{ subscriber() }}"></my-games>
 						</div>
@@ -81,7 +81,6 @@
 				return this;
 			},
 			connectWebSocket: function() {
-				var that = this;
 				var socketUrl = "";
 				if (window.location.protocol == 'http:') {
 					socketUrl = "ws://";
@@ -91,48 +90,47 @@
 				  throw "Unknown protocol " + window.location.protocol;
 				}
 				socketUrl += window.location.host + "/ws";
-				if (that.token != null) {
-					socketUrl += "?token=" + that.token.Encoded;
+				if (this.token != null) {
+					socketUrl += "?token=" + this.token.Encoded;
 				}
-				if (that.socket != null) {
-					that.connected = false;
-					that.socket.close();
+				if (this.socket != null) {
+					this.connected = false;
+					this.socket.close();
 				}
-				that.socket = new WebSocket(socketUrl);
-				that.socket.onerror = function(options) {
-					that.connected = false;
+				this.socket = new WebSocket(socketUrl);
+				this.socket.onerror = function(options) {
+					this.connected = false;
 					console.log('error', options);
-					that.fetchToken();
+					this.fetchToken();
 				};
-				that.socket.onmessage = function(options) {
+				this.socket.onmessage = function(options) {
 					var message = JSON.parse(options.data);
 					console.log('message', message);
-					var subs = that.subscriptions[message.Object.URI];
+					var subs = this.subscriptions[message.Object.URI];
 					if (subs != null) {
 						for (var i = 0; i < subs.length; i++) {
 							subs[i](message);
 						}
 					}
-				};
-				that.socket.onopen = function(options) {
-					that.connected = true;
-					for (var uri in that.subscriptions) {
-						var cb = that.subscriptions[uri];
-						that.socket.send(JSON.stringify({"Type": "Subscribe", "Object": {"URI": uri}}));
+				}.bind(this);
+				this.socket.onopen = function(options) {
+					this.connected = true;
+					for (var uri in this.subscriptions) {
+						var cb = this.subscriptions[uri];
+						this.socket.send(JSON.stringify({"Type": "Subscribe", "Object": {"URI": uri}}));
 					}
-				};
-				that.socket.onclose = function(options) {
-					that.connected = false;
+				}.bind(this);
+				this.socket.onclose = function(options) {
+					this.connected = false;
 					console.log('close', options);
-				};
+				}.bind(this);
 			},
 			fetchToken: function() {
-				var that = this;
         $.ajax('/token', {
 					success: function(data) {
-						that.token = data;
-						that.connectWebSocket();
-					},
+						this.token = data;
+						this.connectWebSocket();
+					}.bind(this),
 				});
 			},
 			subscribe: function(uri, cb) {
@@ -166,11 +164,9 @@
 			socket: null,
 			connected: false,
 			ready: function() {
-				var that = this;
-				that.loginUrl = window.location.protocol + "//" + window.location.host + "/login?return_to=" + encodeURIComponent(window.location.href);
-				_.bindAll(that, 'message');
-				that.subscribe("/user", that.message);
-				that.fetchToken();
+				this.loginUrl = window.location.protocol + "//" + window.location.host + "/login?return_to=" + encodeURIComponent(window.location.href);
+				this.subscribe("/user", this.message.bind(this));
+				this.fetchToken();
 			},
 		});
 	</script>

@@ -13,14 +13,14 @@
 			}
 	  </style>
 		<paper-tabs valueattr="path" selected="{{ path }}" self-end>
-		  <paper-tab path="/games/other/open">Open</paper-tab>
+		  <paper-tab path="/games/other">Open</paper-tab>
 		  <paper-tab path="/games/other/closed">Closed</paper-tab>
 		  <paper-tab path="/games/other/finished">Finished</paper-tab>
 		</paper-tabs>
 		<path-selector path="{{ path }}">
-		  <div path="/games/other/open">
+		  <div path="/games/other">
 				<div cross-fade>
-					<template if="{{ path == '/games/other/open' }}">
+					<template if="{{ path == '/games/other' || path == 0 }}">
 					  <subscribing-game-list subscriber="{{ subscriber }}" path="/games/open"></subscribing-game-list>
 					</template>
 				</div>

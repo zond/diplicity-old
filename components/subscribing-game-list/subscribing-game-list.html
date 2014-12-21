@@ -20,13 +20,11 @@
 				this.opened = !this.opened;
 			},
 			ready: function() {
-				var that = this;
-				that.games = [];
-				_.bindAll(that, 'message');
-				that.subscriber.subscribe(that.path, that.message);
+				this.games = [];
+				this.subscriber.subscribe(this.path, this.message.bind(this));
 			},
 			detached: function() {
-				this.subscriber.unsubscribe(this.path, this.message);
+				this.subscriber.unsubscribe(this.path, this.message.bind(this));
 			},
 		});
 	</script>

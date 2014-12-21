@@ -10,7 +10,7 @@
 	<script>
 		Polymer({
 			pathChanged: function() {
-				if (!this.stop && this.path != 0 && window.location.pathname != this.path) {
+				if (this.path != 0 && window.location.pathname != this.path) {
 					window.history.pushState({ path: this.path }, this.path, this.path);
 				}
 			},
@@ -24,17 +24,13 @@
 						bestReg = this.paths[i];
 					}
 				}
-				this.exactMatch = bestMatch.length == window.location.pathname.length;
 				if (bestReg != null) {
-					this.stop = true;
 					this.path = bestReg;
-					this.stop = false;
-				}
+			  }
 			},
 			ready: function() {
 				this.paths = [];
 				this.pathMap = {};
-				this.stop = false;
 				$(this.$.content.getDistributedNodes()).each(function(i, el) { 
 					this.paths.push($(el).attr('path'));
 					this.pathMap[$(el).attr('path')] = true;

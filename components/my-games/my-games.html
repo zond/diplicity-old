@@ -13,12 +13,12 @@
 			}
 	  </style>
 		<paper-tabs valueattr="path" selected="{{ path }}" self-end>
-		  <paper-tab path="/games/mine/running">Running</paper-tab>
+		  <paper-tab path="/">Running</paper-tab>
 		  <paper-tab path="/games/mine/forming">Forming</paper-tab>
 		  <paper-tab path="/games/mine/finished">Finished</paper-tab>
 		</paper-tabs>
 		<path-selector path="{{ path }}">
-		  <div path="/games/mine/running">
+		  <div path="/">
 				<div cross-fade>
 					<game-list games="{{ runningGames }}"></game-list>
 				</div>
@@ -55,13 +55,11 @@
 				}
 			},
 			ready: function() {
-				var that = this;
-				that.games = [];
-				_.bindAll(that, 'message');
-				that.subscriber.subscribe('/games/mine', that.message);
+				this.games = [];
+				this.subscriber.subscribe('/games/mine', this.message.bind(this));
 			},
 			detached: function() {
-				this.subscriber.unsubscribe('/games/mine', this.message);
+				this.subscriber.unsubscribe('/games/mine', this.message.bind(this));
 			},
 		});
 	</script>
