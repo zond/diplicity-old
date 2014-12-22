@@ -11,20 +11,20 @@
 	</template>
 	<script>
 		Polymer({
-			message: function(msg) {
-				if (msg.Type == 'Fetch') {
-					this.games = msg.Object.Data;
-				}
-			},
 			toggleOpen: function() {
 				this.opened = !this.opened;
 			},
 			ready: function() {
 				this.games = [];
-				this.subscriber.subscribe(this.path, this.message.bind(this));
+				this.message = function(msg) {
+					if (msg.Type == 'Fetch') {
+						this.games = msg.Object.Data;
+					}
+				}.bind(this);
+				this.subscriber.subscribe(this.path, this.message);
 			},
 			detached: function() {
-				this.subscriber.unsubscribe(this.path, this.message.bind(this));
+				this.subscriber.unsubscribe(this.path, this.message);
 			},
 		});
 	</script>

@@ -71,12 +71,6 @@
 	</template>
 	<script>
 		Polymer({
-			message: function(message) {
-				switch (message.Object.URI) {
-					case '/user':
-            this.user = message.Object.Data;
-				}
-			},
 			subscriber: function() {
 				return this;
 			},
@@ -134,11 +128,16 @@
 				});
 			},
 			subscribe: function(uri, cb) {
-				if (this.subscriptions[uri] == null) {
-					this.subscriptions[uri] = [];
+				var alreadySubscribed = true;
+				var subs = this.subscriptions[uri];
+				if (subs == null || subs.length == 0) {
+					subs = [cb];
+					alreadySubscribed = false;
+				} else {
+				  subs = _.union(subs, [cb]);
 				}
-				this.subscriptions[uri].push(cb);
-				if (this.connected) {
+				this.subscriptions[uri] = subs;
+				if (!alreadySubscribed && this.connected) {
 					this.socket.send(JSON.stringify({"Type":"Subscribe","Object":{"URI":uri}}));
 				}
 			},
@@ -146,26 +145,25 @@
 			unsubscribe: function(uri, cb) {
 				var subs = this.subscriptions[uri];
 				if (subs != null) {
-					if (this.connected) {
+					subs = _.without(this.subscriptions[uri], cb)
+					if (subs.length == 0 && this.connected) {
 						this.socket.send(JSON.stringify({"Type":"Unsubscribe","Object":{"URI":uri}}));
-					}
-					var newSubscriptions = [];
-					for (var i = 0; i < subs; i++) {
-						if (subs[i] != cb) {
-							newSubscriptions.push(subs[i]);
-						}
 					}
 					this.subscriptions[uri] = subs;
 				}
 			},
-			user: {"Id": ""},
-			token: null,
-			loginUrl: "",
-			socket: null,
-			connected: false,
 			ready: function() {
+				this.socket = null;
+				this.token = null;
+        this.user = {"Id": ""};
+				this.connected = false;
 				this.loginUrl = window.location.protocol + "//" + window.location.host + "/login?return_to=" + encodeURIComponent(window.location.href);
-				this.subscribe("/user", this.message.bind(this));
+				this.subscribe("/user", function(message) {
+					switch (message.Object.URI) {
+						case '/user':
+						this.user = message.Object.Data;
+					}
+				}.bind(this));
 				this.fetchToken();
 			},
 		});

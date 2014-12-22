@@ -49,17 +49,17 @@
 				formingGames: 'filterGamesByState(games, gameStates.created)',
 				finishedGames: 'filterGamesByState(games, gameStates.ended)',
 			},
-			message: function(msg) {
-				if (msg.Type == 'Fetch') {
-					this.games = msg.Object.Data;
-				}
-			},
 			ready: function() {
 				this.games = [];
-				this.subscriber.subscribe('/games/mine', this.message.bind(this));
+				this.message = function(msg) {
+					if (msg.Type == 'Fetch') {
+						this.games = msg.Object.Data;
+					}
+				}.bind(this);
+				this.subscriber.subscribe('/games/mine', this.message);
 			},
 			detached: function() {
-				this.subscriber.unsubscribe('/games/mine', this.message.bind(this));
+				this.subscriber.unsubscribe('/games/mine', this.message);
 			},
 		});
 	</script>
