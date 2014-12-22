@@ -19,7 +19,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/jhillyerd/go.enmime"
-	"github.com/zond/diplicity/translation"
 	"github.com/zond/gmail"
 	"github.com/zond/kcwraps/kol"
 	"github.com/zond/wsubs/gosubs"
@@ -177,11 +176,10 @@ func (self *Web) DB() *kol.DB {
 
 func (self *Web) GetContext(w http.ResponseWriter, r *http.Request) (result *HTTPContext) {
 	result = &HTTPContext{
-		response:     w,
-		request:      r,
-		web:          self,
-		translations: translation.GetTranslations(GetLanguage(r)),
-		vars:         mux.Vars(r),
+		response: w,
+		request:  r,
+		web:      self,
+		vars:     mux.Vars(r),
 	}
 	result.session, _ = self.sessionStore.Get(r, SessionName)
 	return

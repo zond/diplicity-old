@@ -113,19 +113,10 @@ func (self *Phase) emailTo(c common.SkinnyContext, game *Game, member *Member, u
 	if err != nil {
 		return
 	}
-	contextLink, err := user.I("To see this in context: http://%v/games/%v", user.DiplicityHost, self.GameId)
-	if err != nil {
-		return
-	}
-	unsubLink, err := user.I("To unsubscribe: http://%v/unsubscribe/%v", user.DiplicityHost, encodedUnsubTag)
-	if err != nil {
-		return
-	}
-	text, err := user.I("A new phase has been created")
-	if err != nil {
-		return
-	}
-	subject, err := game.Describe(c, user)
+	contextLink := fmt.Sprintf("To see this in context: http://%v/games/%v", user.DiplicityHost, self.GameId)
+	unsubLink := fmt.Sprintf("To unsubscribe: http://%v/unsubscribe/%v", user.DiplicityHost, encodedUnsubTag)
+	text := fmt.Sprintf("A new phase has been created")
+	subject, err := game.Describe(c)
 	if err != nil {
 		return
 	}

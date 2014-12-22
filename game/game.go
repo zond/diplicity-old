@@ -367,26 +367,21 @@ func (self *Game) resolve(c common.SkinnyContext, phase *Phase) (err error) {
 	return
 }
 
-func (self *Game) Describe(c common.SkinnyContext, trans common.Translator) (result string, err error) {
+func (self *Game) Describe(c common.SkinnyContext) (result string, err error) {
 	switch self.State {
 	case common.GameStateCreated:
-		return trans.I(string(common.BeforeGamePhaseType))
+		result = "before game"
+		return
 	case common.GameStateStarted:
 		var phase *Phase
 		if _, phase, err = self.Phase(c.DB(), 0); err != nil {
 			return
 		}
-		season := ""
-		if season, err = trans.I(string(phase.Season)); err != nil {
-			return
-		}
-		typ := ""
-		if typ, err = trans.I(string(phase.Type)); err != nil {
-			return
-		}
-		return trans.I("game_phase_description", season, phase.Year, typ)
+		result = fmt.Sprintf("%v, %v, %v", phase.Season, phase.Year, phase.Type)
+		return
 	case common.GameStateEnded:
-		return trans.I(string(common.AfterGamePhaseType))
+		result = "after game"
+		return
 	}
 	err = fmt.Errorf("Unknown game state for %+v", self)
 	return

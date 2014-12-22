@@ -121,9 +121,8 @@ func (self ChatChannel) Clone() (result ChatChannel) {
 }
 
 type ConsequenceOption struct {
-	Id          Consequence
-	Name        string
-	Translation string
+	Id   Consequence
+	Name string
 }
 
 var ConsequenceOptions = []ConsequenceOption{
@@ -142,9 +141,8 @@ var ConsequenceOptions = []ConsequenceOption{
 }
 
 type ChatFlagOption struct {
-	Id          ChatFlag
-	Name        string
-	Translation string
+	Id   ChatFlag
+	Name string
 }
 
 var ChatFlagOptions = []ChatFlagOption{
@@ -206,9 +204,8 @@ const (
 )
 
 type AllocationMethod struct {
-	Id          string
-	Name        string
-	Translation string
+	Id   string
+	Name string
 }
 
 type AllocationMethodSlice []AllocationMethod
@@ -248,7 +245,6 @@ var AllocationMethodMap = map[string]AllocationMethod{
 type Variant struct {
 	Id                   string
 	Name                 string
-	Translation          string
 	PhaseTypes           []dip.PhaseType
 	Nations              []dip.Nation
 	Colors               map[dip.Nation]string

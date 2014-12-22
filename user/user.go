@@ -3,10 +3,10 @@ package user
 import (
 	"fmt"
 	"time"
+
 	"code.google.com/p/go.net/websocket"
 
 	"github.com/zond/diplicity/common"
-	"github.com/zond/diplicity/translation"
 	"github.com/zond/kcwraps/kol"
 	"github.com/zond/wsubs/gosubs"
 )
@@ -28,21 +28,6 @@ type User struct {
 	LastLoginAt time.Time
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
-}
-
-func (self *User) I(phrase string, args ...interface{}) (result string, err error) {
-	pattern, ok := translation.GetTranslations(self.Language)[phrase]
-	if !ok {
-		err = fmt.Errorf("Found no translation for %v", phrase)
-		result = err.Error()
-		return
-	}
-	if len(args) > 0 {
-		result = fmt.Sprintf(pattern, args...)
-		return
-	}
-	result = pattern
-	return
 }
 
 func (self *User) Reliability() float64 {

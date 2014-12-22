@@ -1,9 +1,6 @@
 package common
 
 import (
-	"fmt"
-
-	"github.com/zond/diplicity/translation"
 	"github.com/zond/kcwraps/subs"
 	"github.com/zond/wsubs/gosubs"
 )
@@ -13,7 +10,6 @@ type WSContext interface {
 	BetweenTransactions(func(c WSContext))
 	Transact(func(c WSContext) error) error
 	Mailer
-	I(phrase string, args ...interface{}) (string, error)
 	Env() string
 	Diet() SkinnyContext
 	Secret() string
@@ -21,16 +17,14 @@ type WSContext interface {
 
 func NewWSContext(c subs.Context, web *Web) WSContext {
 	return &defaultWSContext{
-		Context:      c,
-		web:          web,
-		translations: translation.GetTranslations(GetLanguage(c.Conn().Request())),
+		Context: c,
+		web:     web,
 	}
 }
 
 type defaultWSContext struct {
 	subs.Context
-	web          *Web
-	translations map[string]string
+	web *Web
 }
 
 func (self *defaultWSContext) Secret() string {
@@ -57,21 +51,6 @@ func (self defaultWSContext) Transact(f func(c WSContext) error) error {
 
 func (self *defaultWSContext) Env() string {
 	return self.web.env
-}
-
-func (self *defaultWSContext) I(phrase string, args ...interface{}) (result string, err error) {
-	pattern, ok := self.translations[phrase]
-	if !ok {
-		err = fmt.Errorf("Found no translation for %v", phrase)
-		result = err.Error()
-		return
-	}
-	if len(args) > 0 {
-		result = fmt.Sprintf(pattern, args...)
-		return
-	}
-	result = pattern
-	return
 }
 
 func (self *defaultWSContext) SendAddress() string {

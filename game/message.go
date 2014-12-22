@@ -337,16 +337,10 @@ func (self *Message) emailTo(c common.SkinnyContext, game *Game, sender *Member,
 		memberIds = append(memberIds, memberId)
 	}
 	sort.Sort(sort.StringSlice(memberIds))
-	contextLink, err := recipUser.I("To see this message in context: http://%v/games/%v/messages/%v", recipUser.DiplicityHost, self.GameId, self.ChannelId())
-	if err != nil {
-		return
-	}
-	unsubLink, err := recipUser.I("To unsubscribe: http://%v/unsubscribe/%v", recipUser.DiplicityHost, encodedUnsubTag)
-	if err != nil {
-		return
-	}
+	contextLink := fmt.Sprintf("To see this message in context: http://%v/games/%v/messages/%v", recipUser.DiplicityHost, self.GameId, self.ChannelId())
+	unsubLink := fmt.Sprintf("To unsubscribe: http://%v/unsubscribe/%v", recipUser.DiplicityHost, encodedUnsubTag)
 	body := fmt.Sprintf(common.EmailTemplate, self.Body, contextLink, unsubLink)
-	subject, err := game.Describe(c, recipUser)
+	subject, err := game.Describe(c)
 	if err != nil {
 		return
 	}
