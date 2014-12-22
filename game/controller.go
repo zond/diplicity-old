@@ -322,7 +322,7 @@ func AddMember(c common.WSContext) error {
 		if game.State != common.GameStateCreated {
 			return fmt.Errorf("%+v already started")
 		}
-		variant, found := common.VariantMap[game.Variant]
+		variant, found := common.Variants[game.Variant]
 		if !found {
 			return fmt.Errorf("Unknown variant %v", game.Variant)
 		}
@@ -386,7 +386,7 @@ func Create(c common.WSContext) error {
 		Ranking:               state.Game.Ranking,
 	}
 
-	if _, found := common.VariantMap[game.Variant]; !found {
+	if _, found := common.Variants[game.Variant]; !found {
 		return fmt.Errorf("Unknown variant for %+v", game)
 	}
 

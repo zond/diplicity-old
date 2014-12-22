@@ -222,7 +222,7 @@ func (self *Message) Send(c common.SkinnyContext, game *Game, sender *Member) (e
 
 	// See if the recipient count is allowed
 	recipients := len(self.RecipientIds)
-	if self.Public || recipients == len(common.VariantMap[game.Variant].Nations) {
+	if self.Public || recipients == len(common.Variants[game.Variant].Nations) {
 		if (allowedFlags & common.ChatConference) == 0 {
 			err = IllegalMessageError{
 				Description: fmt.Sprintf("%+v does not allow %+v during %+v", game, self, phaseType),

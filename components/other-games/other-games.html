@@ -2,7 +2,7 @@
 <link rel="import" href="/components/subscribing-game-list/subscribing-game-list.html">
 <link rel="import" href="/components/path-selector/path-selector.html">
 
-<polymer-element name="other-games" attributes="subscriber" noscript>
+<polymer-element name="other-games" attributes="subscriber user" noscript>
   <template>
 	  <style>
 			paper-tabs::shadow > * {
@@ -21,21 +21,21 @@
 		  <div path="/games/other">
 				<div cross-fade>
 					<template if="{{ path == '/games/other' || path == 0 }}">
-					  <subscribing-game-list subscriber="{{ subscriber }}" path="/games/open"></subscribing-game-list>
+					  <subscribing-game-list user="{{ user }}" subscriber="{{ subscriber }}" path="/games/open"></subscribing-game-list>
 					</template>
 				</div>
 			</div>
 			<div path="/games/other/closed">
 				<div cross-fade>
 					<template if="{{ path == '/games/other/closed' }}">
-					  <subscribing-game-list subscriber="{{ subscriber }}" path="/games/closed"></subscribing-game-list>
+					  <subscribing-game-list user="{{ user }}" subscriber="{{ subscriber }}" path="/games/closed"></subscribing-game-list>
 					</template>
 				</div>
 			</div>
 		  <div path="/games/other/finished">
 				<div cross-fade>
 					<template if="{{ path == '/games/other/finished' }}">
-					  <subscribing-game-list subscriber="{{ subscriber }}" path="/games/finished"></subscribing-game-list>
+					  <subscribing-game-list user="{{ user }}" subscriber="{{ subscriber }}" path="/games/finished"></subscribing-game-list>
 					</template>
 				</div>
 			</div>

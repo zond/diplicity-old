@@ -1,6 +1,6 @@
 <link rel="import" href="/components/z-panel/z-panel.html">
 
-<polymer-element name="game-list-element" attributes="game">
+<polymer-element name="game-list-element" attributes="game user">
   <template>
 	  <style>
 			paper-button.toggle {
@@ -15,12 +15,22 @@
 		</style>
 		<paper-button class="toggle" on-click="{{ toggleOpen }}" raised>
 		  <span id="game-description">
-				{{ game.Phase.Season }}, {{ game.Phase.Year }}, {{ game.Phase.Type }}
+				<template if="{{ game.State != gameStates.created }}">
+     			<template if="{{ me }}">
+     			{{ me.Nation }}, {{ game.Phase.Season }} {{ game.Phase.Year }}, {{ game.Phase.Type }}, {{ deadlines }}
+     			</template>
+     			<template if="{{ !me }}">
+     			{{ game.Phase.Season }} {{ game.Phase.Year }}, {{ game.Phase.Type }}, {{ deadlines }}
+     			</template>
+				</template>
+				<template if="{{ game.State == gameStates.created }}">
+				{{ game.Members.length }}/{{ variant.Nations.length }} members, {{ deadlines }}, {{ game.AllocationMethod }}
+				</template>
 			</span>
 		</paper-button>
 		<core-collapse opened="{{ opened }}">
 		  <z-panel>
-        {{ jsonString }}
+        {{ stringify(game) }}
 			</z-panel>
 		</core-collapse>
 	</template>
@@ -30,8 +40,40 @@
 				this.opened = !this.opened;
 			},
 			stringify: JSON.stringify,
+			findMe: function(u, g) {
+				if (u.Email == null) {
+					return null;
+				}
+				return _.find(this.game.Members, function(member) {
+					return member.User.Email == u.Email;
+				}.bind(this));
+			},
+			findVariant: function(g) {
+				return Variants[g.Variant];
+			},
+			gameStates: GameStates,
+			timeInWords: function(m) {
+				var hours = parseInt(m / 60);
+				var minutesLeft = m - (hours * 60);
+				if (minutesLeft == 0) {
+					return '' + hours + 'h';
+				} else {
+				  return '' + hours + ':' + minutesLeft + 'h';
+				}
+			},
+			displayDeadlines: function(g) {
+				if (g.Deadlines.Movement == g.Deadlines.Adjustment && g.Deadlines.Adjustment == g.Deadlines.Retreat) {
+				  return this.timeInWords(g.Deadlines.Movement);
+				}
+				if (g.Deadlines.Adjustment == g.Deadlines.Retreat) {
+					return this.timeInWords(g.Deadlines.Movement) + '/' + this.timeInWords(g.Deadlines.Adjustment);
+				}
+				return this.timeInWords(g.Deadlines.Movement) + '/' + this.timeInWords(g.Deadlines.Retreat) + '/' + this.timeInWords(g.Deadlines.Adjustment);
+			},
 			computed: {
-				jsonString: 'stringify(game)',
+				me: 'findMe(user, game)',
+				deadlines: 'displayDeadlines(game)',
+				variant: 'findVariant(game)',
 			},
 		});
 	</script>

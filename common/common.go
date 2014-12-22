@@ -265,20 +265,6 @@ func (self Variant) JSONNations() string {
 	return string(b)
 }
 
-type VariantSlice []*Variant
-
-func (self VariantSlice) Len() int {
-	return len(self)
-}
-
-func (self VariantSlice) Less(i, j int) bool {
-	return bytes.Compare([]byte(self[i].Name), []byte(self[j].Name)) < 0
-}
-
-func (self VariantSlice) Swap(i, j int) {
-	self[i], self[j] = self[j], self[i]
-}
-
 var classicalVariant = &Variant{
 	Id:         ClassicalString,
 	Name:       "Classical",
@@ -362,11 +348,7 @@ func init() {
 	}
 }
 
-var Variants = VariantSlice{
-	classicalVariant,
-}
-
-var VariantMap = map[string]*Variant{
+var Variants = map[string]*Variant{
 	ClassicalString: classicalVariant,
 }
 

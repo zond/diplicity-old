@@ -52,12 +52,12 @@
 				<path-selector path="{{ path }}">
 				  <div path="/">
 						<div cross-fade>
-							<my-games subscriber="{{ subscriber() }}"></my-games>
+							<my-games user="{{ user }}" subscriber="{{ subscriber() }}"></my-games>
 						</div>
 					</div>
 					<div path="/games/other">
 						<div cross-fade>
-							<other-games subscriber="{{ subscriber() }}"></other-games>
+							<other-games user="{{ user }}" subscriber="{{ subscriber() }}"></other-games>
 						</div>
 					</div>
 					<div path="/games/create">
@@ -155,7 +155,7 @@
 			ready: function() {
 				this.socket = null;
 				this.token = null;
-        this.user = {"Id": ""};
+        this.user = {};
 				this.connected = false;
 				this.loginUrl = window.location.protocol + "//" + window.location.host + "/login?return_to=" + encodeURIComponent(window.location.href);
 				this.subscribe("/user", function(message) {

@@ -305,10 +305,10 @@ func SubscribeOthersOpen(c common.WSContext) error {
 		return source.SortAndLimit(func(a, b GameState) bool {
 			leftA := 0
 			leftB := 0
-			if variant, found := common.VariantMap[a.Variant]; found {
+			if variant, found := common.Variants[a.Variant]; found {
 				leftA = len(variant.Nations) - len(a.Members)
 			}
-			if variant, found := common.VariantMap[b.Variant]; found {
+			if variant, found := common.Variants[b.Variant]; found {
 				leftB = len(variant.Nations) - len(b.Members)
 			}
 			if leftA != leftB {

@@ -101,7 +101,7 @@ func (self *Game) allocate(d *kol.DB, phase *Phase) (err error) {
 	switch self.AllocationMethod {
 	case common.RandomString:
 		for memberIndex, nationIndex := range rand.Perm(len(members)) {
-			members[memberIndex].Nation = common.VariantMap[self.Variant].Nations[nationIndex]
+			members[memberIndex].Nation = common.Variants[self.Variant].Nations[nationIndex]
 		}
 	case common.PreferencesString:
 		prefs := make([][]dip.Nation, len(members))

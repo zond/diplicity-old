@@ -3,10 +3,10 @@
 <link rel="import" href="/bower_components/paper-shadow/paper-shadow.html">
 <link rel="import" href="/components/game-list-element/game-list-element.html">
 
-<polymer-element name="subscribing-game-list" attributes="subscriber path">
+<polymer-element name="subscribing-game-list" attributes="subscriber path user">
   <template>
 	  <template repeat="{{ game in games }}">
-		  <game-list-element game="{{ game }}"></game-list-element>
+		  <game-list-element user="{{ user }}" game="{{ game }}"></game-list-element>
 		</template>
 	</template>
 	<script>
@@ -17,8 +17,21 @@
 			ready: function() {
 				this.games = [];
 				this.message = function(msg) {
-					if (msg.Type == 'Fetch') {
+					switch (msg.Type) {
+						case 'Fetch':
 						this.games = msg.Object.Data;
+						break;
+						case 'Create':
+						this.games.push(msg.Object.Data);
+						break;
+						case 'Update':
+						this.games = _.reject(this.games, function(g) {
+							return g.Id == msg.Object.Data.Id;
+						}).push(msg.Object.Data);
+						case 'Delete':
+						this.games = _.reject(this.games, function(g) {
+							return g.Id == msg.Object.Data.Id;
+						})
 					}
 				}.bind(this);
 				this.subscriber.subscribe(this.path, this.message);
