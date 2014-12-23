@@ -12,6 +12,14 @@
 			#game-description {
 				text-transform: none;
 			}
+			table {
+				border-collapse: collapse;
+				width: 100%;
+			}
+			td {
+				border: 1px solid #CFD8DC;
+				padding: 5px;
+			}
 		</style>
 		<paper-button class="toggle" on-click="{{ toggleOpen }}" raised>
 		  <span id="game-description">
@@ -30,7 +38,52 @@
 		</paper-button>
 		<core-collapse opened="{{ opened }}">
 		  <z-panel>
-        {{ stringify(game) }}
+			  <table>
+			  	<tr>
+						<td>Variant</td>
+						<td>{{ game.Variant }}</td>
+				  </tr>
+			  	<tr>
+						<td>Allocation method</td>
+						<td>{{ game.AllocationMethod }}</td>
+				  </tr>
+			  	<tr>
+						<td>Private</td>
+						<td>{{ game.Private }}</td>
+				  </tr>
+			  	<tr>
+						<td>Ranking</td>
+						<td>{{ game.Ranking }}</td>
+				  </tr>
+			  	<tr>
+						<td>Not committing</td>
+						<td>{{ notCommitting }}</td>
+				  </tr>
+			  	<tr>
+						<td>Not committing + NMR</td>
+						<td>{{ nmr }}</td>
+				  </tr>
+			  	<tr>
+						<td>Before game</td>
+						<td>{{ beforeGame }}</td>
+				  </tr>
+			  	<tr>
+						<td>Movement</td>
+						<td>{{ movement }}</td>
+				  </tr>
+			  	<tr>
+						<td>Adjustment</td>
+						<td>{{ adjustment }}</td>
+				  </tr>
+			  	<tr>
+						<td>Retreat</td>
+						<td>{{ retreat }}</td>
+				  </tr>
+			  	<tr>
+						<td>After game</td>
+						<td>{{ afterGame }}</td>
+				  </tr>
+				</table>
 			</z-panel>
 		</core-collapse>
 	</template>
@@ -70,10 +123,47 @@
 				}
 				return this.timeInWords(g.Deadlines.Movement) + '/' + this.timeInWords(g.Deadlines.Retreat) + '/' + this.timeInWords(g.Deadlines.Adjustment);
 			},
+			displayConsequences: function(c) {
+        var result = [];
+				if (c & Consequences.ReliabilityHit == Consequences.ReliabilityHit) {
+					result.push("reliability hit")
+				}
+				if (c & Consequences.NoWait == Consequences.NoWait) {
+					result.push("no wait")
+				}
+				if (c & Consequences.Surrender == Consequences.Surrender) {
+					result.push("surrender")
+				}
+				return result.join(", ");
+			},
+			displayPhase: function(g, p) {
+        var result = [];
+				if (g.ChatFlags[p] & ChatFlags.Private == ChatFlags.Private) {
+					result.push("private")
+				}
+				if (g.ChatFlags[p] & ChatFlags.Group == ChatFlags.Group) {
+					result.push("group")
+				}
+				if (g.ChatFlags[p] & ChatFlags.Conference == ChatFlags.Conference) {
+					result.push("conference")
+				}
+				var deadline = g.Deadlines[p];
+				if (deadline != null) {
+					result.push(this.timeInWords(deadline));
+				}
+				return result.join(", ");
+			},
 			computed: {
 				me: 'findMe(user, game)',
 				deadlines: 'displayDeadlines(game)',
 				variant: 'findVariant(game)',
+				notCommitting: 'displayConsequences(game.NonCommitConsequences)',
+				nmr: 'displayConsequences(game.NMRConsequences)',
+				beforeGame: 'displayPhase(game, "BeforeGame")',
+				movement: 'displayPhase(game, "Movement")',
+				adjustment: 'displayPhase(game, "Adjustment")',
+				retreat: 'displayPhase(game, "Retreat")',
+				afterGame: 'displayPhase(game, "AfterGame")',
 			},
 		});
 	</script>

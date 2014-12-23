@@ -102,6 +102,12 @@ const (
 	Surrender
 )
 
+var Consequences = map[string]Consequence{
+	"ReliabilityHit": ReliabilityHit,
+	"NoWait":         NoWait,
+	"Surrender":      Surrender,
+}
+
 type ChatFlag int
 
 const (
@@ -109,6 +115,12 @@ const (
 	ChatGroup
 	ChatConference
 )
+
+var ChatFlags = map[string]ChatFlag{
+	"Private":    ChatPrivate,
+	"Group":      ChatGroup,
+	"Conference": ChatConference,
+}
 
 type ChatChannel map[dip.Nation]bool
 

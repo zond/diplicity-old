@@ -290,6 +290,24 @@ func (self *Web) Tracef(format string, args ...interface{}) {
 	self.Logf(Trace, "\033[1;32mTRACE\t"+format+"\033[0m", args...)
 }
 
+func (self *Web) Consequences() (result string, err error) {
+	b, err := json.Marshal(Consequences)
+	if err != nil {
+		return
+	}
+	result = string(b)
+	return
+}
+
+func (self *Web) ChatFlags() (result string, err error) {
+	b, err := json.Marshal(ChatFlags)
+	if err != nil {
+		return
+	}
+	result = string(b)
+	return
+}
+
 func (self *Web) Variants() (result string, err error) {
 	b, err := json.Marshal(Variants)
 	if err != nil {
