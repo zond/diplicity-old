@@ -53,7 +53,27 @@
        	</paper-button>
       	<core-collapse opened="{{ membersOpened }}">
       	  <z-panel>
-					  Here be members
+					  <table>
+							<template repeat="{{ member in game.Members }}">
+     						<tr>
+									<template if="{{ member.Nation }}">
+									  <td>{{ member.Nation }}</td>
+									</template>
+									<template if="{{ member.User.Nickname && member.User.Email }}">
+									  <td>{{ member.User.Nickname }} &lt;{{ member.User.Email }}&gt;</td>
+									</template>
+									<template if="{{ member.User.Nickname && !member.User.Email }}">
+									  <td>{{ member.User.Nickname }}</td>
+									</template>
+									<template if="{{ !member.User.Nickname && member.User.Email }}">
+									  <td>Anonymous &lt;{{ member.User.Email }}&gt;/td>
+									</template>
+									<template if="{{ !member.User.Nickname && !member.User.Email }}">
+									  <td>Anonymous</td>
+									</template>
+     						</tr>
+							</template>
+						</table>
 					</z-panel>
 				</core-collapse>
 			  <table>
@@ -73,14 +93,18 @@
 						<td>Ranking</td>
 						<td>{{ game.Ranking }}</td>
 				  </tr>
-			  	<tr>
-						<td>Not committing</td>
-						<td>{{ notCommitting }}</td>
-				  </tr>
-			  	<tr>
-						<td>Not committing + NMR</td>
-						<td>{{ nmr }}</td>
-				  </tr>
+					<template if="{{ notCommitting }}">
+     		  	<tr>
+     					<td>Not committing</td>
+     					<td>{{ notCommitting }}</td>
+     			  </tr>
+					</template>
+					<template if="{{ nmr }}">
+			      <tr>
+				    	<td>Not committing + NMR</td>
+				    	<td>{{ nmr }}</td>
+				    </tr>
+					</template>
 			  	<tr>
 						<td>Before game</td>
 						<td>{{ beforeGame }}</td>
