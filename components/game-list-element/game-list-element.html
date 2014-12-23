@@ -6,11 +6,10 @@
 			paper-button.toggle {
 				display: block;
 				background: #CFD8DC;
-				margin: 5px;
-				margin-bottom: 10px;
+				margin: 0.35em;
 			}
-			#game-description {
-				text-transform: none;
+			.toggle-title {
+				text-transform: none !important;
 			}
 			table {
 				border-collapse: collapse;
@@ -18,11 +17,20 @@
 			}
 			td {
 				border: 1px solid #CFD8DC;
-				padding: 5px;
+				padding: 0.35em;
+			}
+			paper-button::shadow .button-content {
+				justify-content: flex-start !important;
+			}
+			.members-toggle {
+				height: 1.25em;
+			}
+			.members-toggle::shadow .button-content {
+				padding: 0.0em 0.57em;
 			}
 		</style>
-		<paper-button class="toggle" on-click="{{ toggleOpen }}" raised>
-		  <span id="game-description">
+		<paper-button class="toggle" on-click="{{ toggleOpened }}" raised>
+		  <span class="toggle-title">
 				<template if="{{ game.State != gameStates.created }}">
      			<template if="{{ me }}">
      			{{ me.Nation }}, {{ game.Phase.Season }} {{ game.Phase.Year }}, {{ game.Phase.Type }}, {{ deadlines }}
@@ -38,6 +46,16 @@
 		</paper-button>
 		<core-collapse opened="{{ opened }}">
 		  <z-panel>
+       	<paper-button class="toggle members-toggle" on-click="{{ toggleMembersOpened }}" raised>
+       	  <span class="toggle-title">
+						{{ game.Members.length }}/{{ variant.Nations.length }} members
+       		</span>
+       	</paper-button>
+      	<core-collapse opened="{{ membersOpened }}">
+      	  <z-panel>
+					  Here be members
+					</z-panel>
+				</core-collapse>
 			  <table>
 			  	<tr>
 						<td>Variant</td>
@@ -89,8 +107,11 @@
 	</template>
 	<script>
 		Polymer({
-			toggleOpen: function() {
+			toggleOpened: function() {
 				this.opened = !this.opened;
+			},
+			toggleMembersOpened: function() {
+				this.membersOpened = !this.membersOpened;
 			},
 			stringify: JSON.stringify,
 			findMe: function(u, g) {
