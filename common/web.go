@@ -317,6 +317,15 @@ func (self *Web) Variants() (result string, err error) {
 	return
 }
 
+func (self *Web) SecretFlags() (result string, err error) {
+	b, err := json.Marshal(SecretFlags)
+	if err != nil {
+		return
+	}
+	result = string(b)
+	return
+}
+
 func (self *Web) GameStates() (result string, err error) {
 	b, err := json.Marshal(GameStates)
 	if err != nil {

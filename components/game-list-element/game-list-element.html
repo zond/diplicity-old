@@ -28,6 +28,9 @@
 			.members-toggle::shadow .button-content {
 				padding: 0.0em 0.57em;
 			}
+			.secret-flag {
+				text-decoration: line-through;
+			}
 		</style>
 		<paper-button class="toggle" on-click="{{ toggleOpened }}" raised>
 		  <span class="toggle-title">
@@ -66,7 +69,7 @@
 									  <td>{{ member.User.Nickname }}</td>
 									</template>
 									<template if="{{ !member.User.Nickname && member.User.Email }}">
-									  <td>Anonymous &lt;{{ member.User.Email }}&gt;/td>
+									  <td>Anonymous &lt;{{ member.User.Email }}&gt;</td>
 									</template>
 									<template if="{{ !member.User.Nickname && !member.User.Email }}">
 									  <td>Anonymous</td>
@@ -191,6 +194,19 @@
 				}
 				if (g.ChatFlags[p] & ChatFlags.Conference == ChatFlags.Conference) {
 					result.push("conference")
+				}
+				var generalPhase = "DuringGame";
+				if (p == "BeforeGame" || p == "AfterGame") {
+					generalPhase = p;
+				}
+				if (g.SecretNation & SecretFlags[generalPhase] == SecretFlags[generalPhase]) {
+					result.push("-nation")
+				}
+				if (g.SecretNickname & SecretFlags[generalPhase] == SecretFlags[generalPhase]) {
+					result.push("-nickname")
+				}
+				if (g.SecretEmail & SecretFlags[generalPhase] == SecretFlags[generalPhase]) {
+					result.push("-email")
 				}
 				var deadline = g.Deadlines[p];
 				if (deadline != null) {

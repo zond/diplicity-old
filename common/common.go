@@ -215,6 +215,12 @@ const (
 	SecretAfterGame
 )
 
+var SecretFlags = map[string]SecretFlag{
+	"BeforeGame": SecretBeforeGame,
+	"DuringGame": SecretDuringGame,
+	"AfterGame":  SecretAfterGame,
+}
+
 type AllocationMethod struct {
 	Id   string
 	Name string
