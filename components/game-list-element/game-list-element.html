@@ -184,33 +184,50 @@
 				}
 				return result.join(", ");
 			},
+			conjoin: function(a) {
+				if (a.length == 0) {
+					return "";
+				}
+				if (a.length == 1) {
+					return a[0];
+				}
+				return a.slice(0, a.length - 1).join(", ") + " and " + a[a.length-1];
+			},
 			displayPhase: function(g, p) {
         var result = [];
+				var deadline = g.Deadlines[p];
+				if (deadline != null) {
+					result.push(this.timeInWords(deadline));
+				}
+				var chats = [];
 				if (g.ChatFlags[p] & ChatFlags.Private == ChatFlags.Private) {
-					result.push("private")
+					chats.push("private")
 				}
 				if (g.ChatFlags[p] & ChatFlags.Group == ChatFlags.Group) {
-					result.push("group")
+					chats.push("group")
 				}
 				if (g.ChatFlags[p] & ChatFlags.Conference == ChatFlags.Conference) {
-					result.push("conference")
+					chats.push("conference")
+				}
+				if (chats.length > 0) {
+					result.push(this.conjoin(chats) + " chat");
 				}
 				var generalPhase = "DuringGame";
 				if (p == "BeforeGame" || p == "AfterGame") {
 					generalPhase = p;
 				}
+				var secrets = [];
 				if (g.SecretNation & SecretFlags[generalPhase] == SecretFlags[generalPhase]) {
-					result.push("-nation")
+					secrets.push("nation")
 				}
 				if (g.SecretNickname & SecretFlags[generalPhase] == SecretFlags[generalPhase]) {
-					result.push("-nickname")
+					secrets.push("nickname")
 				}
 				if (g.SecretEmail & SecretFlags[generalPhase] == SecretFlags[generalPhase]) {
-					result.push("-email")
+					secrets.push("email")
 				}
-				var deadline = g.Deadlines[p];
-				if (deadline != null) {
-					result.push(this.timeInWords(deadline));
+				if (secrets.length > 0) {
+					result.push("secret " + this.conjoin(secrets));
 				}
 				return result.join(", ");
 			},
