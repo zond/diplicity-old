@@ -82,51 +82,51 @@
 			  <table>
 			  	<tr>
 						<td>Variant</td>
-						<td>{{ game.Variant }}</td>
+						<td>{{ capitalize(game.Variant) }}</td>
 				  </tr>
 			  	<tr>
 						<td>Allocation method</td>
-						<td>{{ game.AllocationMethod }}</td>
+						<td>{{ capitalize(game.AllocationMethod) }}</td>
 				  </tr>
 			  	<tr>
 						<td>Private</td>
-						<td>{{ game.Private }}</td>
+						<td>{{ capitalize('' + game.Private) }}</td>
 				  </tr>
 			  	<tr>
 						<td>Ranking</td>
-						<td>{{ game.Ranking }}</td>
+						<td>{{ capitalize('' + game.Ranking) }}</td>
 				  </tr>
 					<template if="{{ notCommitting }}">
      		  	<tr>
      					<td>Not committing</td>
-     					<td>{{ notCommitting }}</td>
+     					<td>{{ capitalize(notCommitting) }}</td>
      			  </tr>
 					</template>
 					<template if="{{ nmr }}">
 			      <tr>
 				    	<td>Not committing + NMR</td>
-				    	<td>{{ nmr }}</td>
+				    	<td>{{ capitalize(nmr) }}</td>
 				    </tr>
 					</template>
 			  	<tr>
 						<td>Before game</td>
-						<td>{{ beforeGame }}</td>
+						<td>{{ capitalize(beforeGame) }}</td>
 				  </tr>
 			  	<tr>
 						<td>Movement</td>
-						<td>{{ movement }}</td>
+						<td>{{ capitalize(movement) }}</td>
 				  </tr>
 			  	<tr>
 						<td>Adjustment</td>
-						<td>{{ adjustment }}</td>
+						<td>{{ capitalize(adjustment) }}</td>
 				  </tr>
 			  	<tr>
 						<td>Retreat</td>
-						<td>{{ retreat }}</td>
+						<td>{{ capitalize(retreat) }}</td>
 				  </tr>
 			  	<tr>
 						<td>After game</td>
-						<td>{{ afterGame }}</td>
+						<td>{{ capitalize(afterGame) }}</td>
 				  </tr>
 				</table>
 			</z-panel>
@@ -191,7 +191,13 @@
 				if (a.length == 1) {
 					return a[0];
 				}
-				return a.slice(0, a.length - 1).join(", ") + " and " + a[a.length-1];
+				return a.slice(0, a.length - 1).join(", ") + " and " + a[a.length - 1];
+			},
+			capitalize: function(s) {
+				if (s.length == 0) {
+					return "";
+				}
+				return s.substring(0,1).toUpperCase() + s.substring(1, s.length);
 			},
 			displayPhase: function(g, p) {
         var result = [];
