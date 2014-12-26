@@ -1,0 +1,317 @@
+<link rel="import" href="/bower_components/paper-toggle-button/paper-toggle-button.html">
+<link rel="import" href="/bower_components/paper-slider/paper-slider.html">
+<link rel="import" href="/components/z-panel/z-panel.html">
+
+<polymer-element name="create-game">
+  <template>
+	  <style>
+			h3 {
+				margin: 0px;
+			}
+			paper-slider {
+				width: 100%;
+			}
+			table {
+				border-collapse: collapse;
+				width: 100%;
+			}
+			td.label {
+				width: 50%;
+			}
+			td.deadline-unit {
+				width: 0.5em;
+			}
+			td {
+				border: 1px solid #CFD8DC;
+				padding: 0.35em;
+			}
+	  </style>
+		<z-panel>
+		  <table>
+				<tr>
+					<td class="label">
+						Variant
+					</td>
+					<td>
+						<select value="{{ variant }}">
+							<template repeat="{{ v in orderedVariants }}">
+							<option value="{{ v.Name }}">{{ v.Name }}</option>
+							</template>
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<td class="label">
+						Private
+					</td>
+					<td>
+						<paper-toggle-button checked="{{ private }}"></paper-toggle-button>
+					</td>
+				</tr>
+			</table>
+		</z-panel>
+		<z-panel>
+		  <h3>Before game</h3>
+		  <table>
+        <tr>
+					<td class="label">
+						Private press
+					</td>
+					<td>
+						<paper-toggle-button checked="{{ beforeGame.chatFlags.private }}"></paper-toggle-button>
+					</td>
+				</tr>
+        <tr>
+					<td class="label">
+						Group press
+					</td>
+					<td>
+						<paper-toggle-button checked="{{ beforeGame.chatFlags.group }}"></paper-toggle-button>
+					</td>
+				</tr>
+        <tr>
+					<td class="label">
+						Conference press
+					</td>
+					<td>
+						<paper-toggle-button checked="{{ beforeGame.chatFlags.conference }}"></paper-toggle-button>
+					</td>
+				</tr>
+        <tr>
+					<td class="label">
+						Secret nation
+					</td>
+					<td>
+						<paper-toggle-button checked="{{ beforeGame.secretFlags.nation }}"></paper-toggle-button>
+					</td>
+				</tr>
+        <tr>
+					<td class="label">
+						Secret nickname
+					</td>
+					<td>
+						<paper-toggle-button checked="{{ beforeGame.secretFlags.nickname }}"></paper-toggle-button>
+					</td>
+				</tr>
+        <tr>
+					<td class="label">
+						Secret email
+					</td>
+					<td>
+						<paper-toggle-button checked="{{ beforeGame.secretFlags.email }}"></paper-toggle-button>
+					</td>
+				</tr>
+			</table>
+		</z-panel>
+		<z-panel>
+		  <h3>During game</h3>
+		  <table>
+        <tr>
+					<td class="label">
+						Secret nation
+					</td>
+					<td>
+						<paper-toggle-button checked="{{ duringGame.secretFlags.nation }}"></paper-toggle-button>
+					</td>
+				</tr>
+        <tr>
+					<td class="label">
+						Secret nickname
+					</td>
+					<td>
+						<paper-toggle-button checked="{{ duringGame.secretFlags.nickname }}"></paper-toggle-button>
+					</td>
+				</tr>
+        <tr>
+					<td class="label">
+						Secret email
+					</td>
+					<td>
+						<paper-toggle-button checked="{{ duringGame.secretFlags.email }}"></paper-toggle-button>
+					</td>
+				</tr>
+			</table>
+			<template repeat="{{ phaseType in phaseTypes }}">
+			  <z-panel>
+				  <h3>{{ phaseType.name }}</h3>
+          <table>
+						<tr>
+							<td class="label">
+								Deadline
+							</td>
+							<td class="deadline-value">
+								<paper-slider editable min="1" max="{{ phaseType.deadlineUnit.m }}" value="{{ phaseType.deadlineValue }}"></paper-slider>
+							</td>
+							<td class="deadline-unit">
+								<select data-phase-type="{{ phaseType.name }}" on-change="{{ unitChanged }}" value="{{ phaseType.deadlineUnit.name }}">
+									<template repeat="{{ unit in deadlineUnitTypes }}">
+									  <option value="{{ unit.name }}">{{ unit.name }}</option>
+									</template>
+								</select>
+							</td>
+						</tr>
+            <tr>
+							<td class="label">
+			      		Private press
+			      	</td>
+							<td colspan="2">
+								<paper-toggle-button checked="{{ phaseType.chatFlags.private }}"></paper-toggle-button>
+			      	</td>
+			      </tr>
+            <tr>
+							<td class="label">
+			      		Group press
+			      	</td>
+							<td colspan="2">
+								<paper-toggle-button checked="{{ phaseType.chatFlags.group }}"></paper-toggle-button>
+			      	</td>
+			      </tr>
+            <tr>
+							<td class="label">
+			      		Conference press
+			      	</td>
+							<td colspan="2">
+								<paper-toggle-button checked="{{ phaseType.chatFlags.conference }}"></paper-toggle-button>
+			      	</td>
+			      </tr>
+					</table>
+				</z-panel>
+			</template>
+		</z-panel>
+		<z-panel>
+		  <h3>After game</h3>
+		  <table>
+        <tr>
+					<td class="label">
+						Private press
+					</td>
+					<td>
+						<paper-toggle-button checked="{{ afterGame.chatFlags.private }}"></paper-toggle-button>
+					</td>
+				</tr>
+        <tr>
+					<td class="label">
+						Group press
+					</td>
+					<td>
+						<paper-toggle-button checked="{{ afterGame.chatFlags.group }}"></paper-toggle-button>
+					</td>
+				</tr>
+        <tr>
+					<td class="label">
+						Conference press
+					</td>
+					<td>
+						<paper-toggle-button checked="{{ afterGame.chatFlags.conference }}"></paper-toggle-button>
+					</td>
+				</tr>
+        <tr>
+					<td class="label">
+						Secret nation
+					</td>
+					<td>
+						<paper-toggle-button checked="{{ afterGame.secretFlags.nation }}"></paper-toggle-button>
+					</td>
+				</tr>
+        <tr>
+					<td class="label">
+						Secret nickname
+					</td>
+					<td>
+						<paper-toggle-button checked="{{ afterGame.secretFlags.nickname }}"></paper-toggle-button>
+					</td>
+				</tr>
+        <tr>
+					<td class="label">
+						Secret email
+					</td>
+					<td>
+						<paper-toggle-button checked="{{ afterGame.secretFlags.email }}"></paper-toggle-button>
+					</td>
+				</tr>
+			</table>
+		</z-panel>
+	</template>
+	<script>
+		Polymer({
+			deadlineUnitTypes: [
+			  {
+					name: "minutes",
+					f: 1,
+					m: 60,
+				},
+				{
+					name: "hours",
+					f: 60,
+					m: 24,
+				},
+				{
+					name: "days",
+					f: 60 * 24,
+					m: 7,
+				},
+				{
+					name: "weeks",
+					f: 60 * 24 * 7,
+					m: 4,
+				},
+				{
+					name: "months",
+					f: 60 * 24 * 30,
+					m: 12,
+				},
+				{
+					name: "years",
+					f: 60 * 24 * 365,
+					m: 100,
+				},
+			],
+			defaultPhaseType: function(name) {
+				return {
+					name: name,
+					deadlineUnit: {
+						name: 'hours',
+						f: 60,
+						m: 24,
+					},
+					deadlineValue: 24,
+					chatFlags: {
+						private: true,
+						group: false,
+						conference: true,
+					},
+					secretFlags: {
+						nation: false,
+						nickname: false,
+						email: false,
+					},
+				};
+			},
+			ready: function() {
+				this.phaseTypes = [];
+				this.variant = 'Classical';
+				this.private = false;
+				this.beforeGame = this.defaultPhaseType("Before game");
+				this.duringGame = this.defaultPhaseType("During game");
+				this.afterGame = this.defaultPhaseType("After game");
+			},
+			orderedVariants: OrderedVariants,
+			unitChanged: function(ev) {
+				var unit = _.find(this.deadlineUnitTypes, function(unitType) {
+					return unitType.name == ev.target.value;
+				});
+				_.each(this.phaseTypes, function(phaseType) {
+					if (phaseType.name == $(ev.target).attr('data-phase-type')) {
+	          phaseType.deadlineUnit = unit;
+					}
+				});
+			},
+			variantChanged: function() {
+				this.phaseTypes = _.collect(Variants[this.variant].PhaseTypes, this.defaultPhaseType);
+			},
+		});
+	</script>
+</polymer-element>
+
+
+

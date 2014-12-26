@@ -9,31 +9,39 @@
 	</template>
 	<script>
 		Polymer({
-			pathChanged: function() {
-				if (this.path != 0 && window.location.pathname != this.path) {
-					window.history.pushState({ path: this.path }, this.path, this.path);
-				}
-			},
-			parseLocation: function() {
-				var bestMatch = null;
-				var bestReg = null;
-				for (var i = 0; i < this.paths.length; i++) {
-					var match = new RegExp(this.paths[i]).exec(window.location.pathname);
-					if (match != null && (bestMatch == null || match[0].length > bestMatch.length)) {
-						bestMatch = match[0];
-						bestReg = this.paths[i];
+			pathChanged: function(oldVal, newVal) {
+				if (oldVal != null) {
+					if (this.path != 0 && window.location.pathname != this.path) {
+						window.history.pushState({ path: this.path }, this.path, this.path);
 					}
 				}
-				if (bestReg != null) {
-					this.path = bestReg;
-			  }
+			},
+	    bestPath: function() {
+				var bestMatch = null;
+				var bestReg = null;
+				for (var path in this.paths) {
+					var match = new RegExp(path).exec(window.location.pathname);
+					if (match != null && (bestMatch == null || match[0].length > bestMatch.length)) {
+						bestMatch = match[0];
+						bestReg = path;
+					}
+				}
+				return bestReg;
+			},
+			parseLocation: function() {
+				var best = this.bestPath();
+				if (best != null) {
+					this.path = best;
+				}
 			},
 			ready: function() {
-				this.paths = [];
-				this.pathMap = {};
+				this.paths = {};
+				this.filteredPath = "";
 				$(this.$.content.getDistributedNodes()).each(function(i, el) { 
-					this.paths.push($(el).attr('path'));
-					this.pathMap[$(el).attr('path')] = true;
+					var pathAttr = $(el).attr('path');
+					if (pathAttr != null) {
+						this.paths[pathAttr] = true;
+					}
 				}.bind(this));
 				$(window).on('popstate', this.parseLocation.bind(this));
 				this.parseLocation();

@@ -17,7 +17,7 @@
   "dependencies": {
     "core-animated-pages": "Polymer/core-animated-pages#~0.5.2",
     "core-header-panel": "Polymer/core-header-panel#~0.4.2",
-    "core-menu": "Polymer/core-menu#~0.4.2",
+    "core-menu": "Polymer/core-menu#~0.5.2",
     "core-scaffold": "Polymer/core-scaffold#~0.4.2",
     "core-toolbar": "Polymer/core-toolbar#~0.4.2",
     "paper-tabs": "Polymer/paper-tabs#~0.4.2",
@@ -25,7 +25,8 @@
     "core-collapse": "Polymer/core-collapse#~0.5.2",
     "paper-toggle-button": "Polymer/paper-toggle-button#~0.5.2",
     "paper-button": "Polymer/paper-button#~0.5.2",
-    "paper-shadow": "Polymer/paper-shadow#~0.5.2"
+    "paper-shadow": "Polymer/paper-shadow#~0.5.2",
+    "paper-slider": "Polymer/paper-slider#~0.5.2"
   },
   "resolutions": {
     "core-component-page": "^0.5.0",
@@ -43,6 +44,11 @@
     "core-selector": "^0.5.0",
     "core-selection": "^0.5.0",
     "core-style": "^0.5.0",
-    "core-transition": "^0.5.0"
+    "core-transition": "^0.5.0",
+    "core-menu": "~0.5.2",
+    "core-item": "^0.5.0",
+    "core-icon-button": "^0.5.0",
+    "paper-icon-button": "^0.5.0",
+    "core-collapse": "^0.5.0"
   }
 }
