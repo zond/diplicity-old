@@ -111,16 +111,6 @@ var ChatFlags = map[string]ChatFlag{
 	"Conference": ChatConference,
 }
 
-type ChatChannel map[dip.Nation]bool
-
-func (self ChatChannel) Clone() (result ChatChannel) {
-	result = ChatChannel{}
-	for nation, _ := range self {
-		result[nation] = true
-	}
-	return
-}
-
 type EndReason string
 
 const (
