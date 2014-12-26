@@ -11,8 +11,10 @@ import (
 
 	"github.com/zond/diplicity/common"
 	"github.com/zond/diplicity/epoch"
+	"github.com/zond/diplicity/game/allocation"
 	"github.com/zond/diplicity/user"
 	dip "github.com/zond/godip/common"
+	"github.com/zond/godip/variants"
 	"github.com/zond/kcwraps/kol"
 )
 
@@ -322,7 +324,7 @@ func AddMember(c common.WSContext) error {
 		if game.State != common.GameStateCreated {
 			return fmt.Errorf("%+v already started")
 		}
-		variant, found := common.Variants[game.Variant]
+		variant, found := variants.Variants[game.Variant]
 		if !found {
 			return fmt.Errorf("Unknown variant %v", game.Variant)
 		}
@@ -386,11 +388,11 @@ func Create(c common.WSContext) error {
 		Ranking:               state.Game.Ranking,
 	}
 
-	if _, found := common.Variants[game.Variant]; !found {
+	if _, found := variants.Variants[game.Variant]; !found {
 		return fmt.Errorf("Unknown variant for %+v", game)
 	}
 
-	if _, found := common.AllocationMethodMap[game.AllocationMethod]; !found {
+	if _, found := allocation.Methods[game.AllocationMethod]; !found {
 		return fmt.Errorf("Unknown allocation method for %+v", game)
 	}
 

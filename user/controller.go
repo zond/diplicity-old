@@ -92,7 +92,6 @@ func OAuth2Callback(clientId, clientSecret string) func(c *common.HTTPContext) (
 				u.Ranking = 1
 			}
 			if err == nil {
-				u.Language = common.GetLanguage(c.Req())
 				u.DiplicityHost = c.Req().Host
 				u.LastLoginAt = time.Now()
 				err = c.DB().Set(u)

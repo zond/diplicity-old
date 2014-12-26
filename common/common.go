@@ -6,7 +6,6 @@ import (
 	"crypto/subtle"
 	"encoding/base64"
 	"encoding/gob"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"regexp"
@@ -14,11 +13,7 @@ import (
 	"strings"
 	"time"
 
-	cla "github.com/zond/godip/classical/common"
-	claOrders "github.com/zond/godip/classical/orders"
-	"github.com/zond/godip/classical/start"
 	dip "github.com/zond/godip/common"
-	"github.com/zond/godip/graph"
 	"github.com/zond/kcwraps/kol"
 	"github.com/zond/wsubs/gosubs"
 )
@@ -88,12 +83,6 @@ func (self skinnyWSContext) Transact(f func(c SkinnyContext) error) error {
 	})
 }
 
-func GetLanguage(r *http.Request) string {
-	bestLanguage := MostAccepted(r, "default", "Accept-Language")
-	parts := strings.Split(bestLanguage, "-")
-	return parts[0]
-}
-
 type Consequence int
 
 const (
@@ -132,61 +121,13 @@ func (self ChatChannel) Clone() (result ChatChannel) {
 	return
 }
 
-type ConsequenceOption struct {
-	Id   Consequence
-	Name string
-}
-
-var ConsequenceOptions = []ConsequenceOption{
-	ConsequenceOption{
-		Id:   ReliabilityHit,
-		Name: "Reliability hit",
-	},
-	ConsequenceOption{
-		Id:   NoWait,
-		Name: "No wait",
-	},
-	ConsequenceOption{
-		Id:   Surrender,
-		Name: "Surrender",
-	},
-}
-
-type ChatFlagOption struct {
-	Id   ChatFlag
-	Name string
-}
-
-var ChatFlagOptions = []ChatFlagOption{
-	ChatFlagOption{
-		Id:   ChatPrivate,
-		Name: "Private press",
-	},
-	ChatFlagOption{
-		Id:   ChatGroup,
-		Name: "Group press",
-	},
-	ChatFlagOption{
-		Id:   ChatConference,
-		Name: "Conference press",
-	},
-}
-
-const (
-	regular = iota
-	nilCache
-)
-
 type EndReason string
 
 const (
-	ClassicalString                   = "classical"
-	RandomString                      = "random"
-	PreferencesString                 = "preferences"
-	BeforeGamePhaseType dip.PhaseType = "BeforeGame"
-	AfterGamePhaseType  dip.PhaseType = "AfterGame"
-	Anonymous           dip.Nation    = "Anonymous"
-	ZeroActiveMembers   EndReason     = "ZeroActiveMembers"
+	BeforePhaseType   dip.PhaseType = "Before"
+	AfterPhaseType    dip.PhaseType = "After"
+	Anonymous         dip.Nation    = "Anonymous"
+	ZeroActiveMembers EndReason     = "ZeroActiveMembers"
 )
 
 func SoloVictory(n dip.Nation) EndReason {
@@ -219,155 +160,6 @@ var SecretFlags = map[string]SecretFlag{
 	"BeforeGame": SecretBeforeGame,
 	"DuringGame": SecretDuringGame,
 	"AfterGame":  SecretAfterGame,
-}
-
-type AllocationMethod struct {
-	Id   string
-	Name string
-}
-
-type AllocationMethodSlice []AllocationMethod
-
-func (self AllocationMethodSlice) Len() int {
-	return len(self)
-}
-
-func (self AllocationMethodSlice) Less(i, j int) bool {
-	return bytes.Compare([]byte(self[i].Name), []byte(self[j].Name)) < 0
-}
-
-func (self AllocationMethodSlice) Swap(i, j int) {
-	self[i], self[j] = self[j], self[i]
-}
-
-var randomAllocationMethod = AllocationMethod{
-	Id:   RandomString,
-	Name: "Random",
-}
-
-var preferencesAllocationMethod = AllocationMethod{
-	Id:   PreferencesString,
-	Name: "Preferences",
-}
-
-var AllocationMethods = AllocationMethodSlice{
-	randomAllocationMethod,
-	preferencesAllocationMethod,
-}
-
-var AllocationMethodMap = map[string]AllocationMethod{
-	RandomString:      randomAllocationMethod,
-	PreferencesString: preferencesAllocationMethod,
-}
-
-type Variant struct {
-	Id                   string
-	Name                 string
-	PhaseTypes           []dip.PhaseType
-	Nations              []dip.Nation
-	Colors               map[dip.Nation]string
-	Graph                *graph.Graph
-	OrderTypes           []dip.OrderType
-	UnitTypes            []dip.UnitType
-	NationAbbrevs        map[string]dip.Nation
-	OrderTypeAbbrevs     map[string]dip.OrderType
-	UnitTypeAbbrevs      map[string]dip.UnitType
-	SupplyCenters        map[dip.Province]dip.Nation
-	SelectableProvinces  []dip.Province
-	ColorizableProvinces []dip.Province
-	Seasons              []dip.Season
-}
-
-func (self Variant) JSONNations() string {
-	b, _ := json.Marshal(self.Nations)
-	return string(b)
-}
-
-var classicalVariant = &Variant{
-	Id:         ClassicalString,
-	Name:       "Classical",
-	PhaseTypes: cla.PhaseTypes,
-	Nations:    cla.Nations,
-	Colors: map[dip.Nation]string{
-		cla.Austria: "#afe773",
-		cla.England: "#483c6c",
-		cla.France:  "#5693aa",
-		cla.Germany: "#ff8b66",
-		cla.Italy:   "#1b6c61",
-		cla.Russia:  "#8d5e68",
-		cla.Turkey:  "#ffdb66",
-	},
-	OrderTypes:       claOrders.OrderTypes(),
-	UnitTypes:        cla.UnitTypes,
-	Graph:            start.Graph(),
-	SupplyCenters:    start.SCs(),
-	OrderTypeAbbrevs: map[string]dip.OrderType{},
-	NationAbbrevs:    map[string]dip.Nation{},
-	UnitTypeAbbrevs:  map[string]dip.UnitType{},
-	Seasons:          cla.Seasons,
-}
-
-func init() {
-	for _, orderType := range classicalVariant.OrderTypes {
-		i := 1
-		for {
-			if _, found := classicalVariant.OrderTypeAbbrevs[string(orderType)[0:i]]; !found {
-				break
-			}
-			i++
-		}
-		classicalVariant.OrderTypeAbbrevs[string(orderType)[0:i]] = orderType
-	}
-	for _, unitType := range classicalVariant.UnitTypes {
-		i := 1
-		for {
-			if _, found := classicalVariant.UnitTypeAbbrevs[string(unitType)[0:i]]; !found {
-				break
-			}
-			i++
-		}
-		classicalVariant.UnitTypeAbbrevs[string(unitType)[0:i]] = unitType
-	}
-	for _, nation := range classicalVariant.Nations {
-		i := 1
-		for {
-			if _, found := classicalVariant.NationAbbrevs[string(nation)[0:i]]; !found {
-				break
-			}
-			i++
-		}
-		classicalVariant.NationAbbrevs[string(nation)[0:i]] = nation
-	}
-	/*
-		All provinces that are either coastless or are the coasts themselves
-	*/
-	hasCoasts := map[dip.Province]bool{}
-	all := map[dip.Province]bool{}
-	for _, prov := range classicalVariant.Graph.Provinces() {
-		all[prov] = true
-		if prov != prov.Super() {
-			hasCoasts[prov.Super()] = true
-		}
-	}
-	for prov, _ := range all {
-		if prov != prov.Super() || !hasCoasts[prov] {
-			classicalVariant.SelectableProvinces = append(classicalVariant.SelectableProvinces, prov)
-		}
-	}
-	/*
-		All provinces that arent coasts
-	*/
-	supers := map[dip.Province]bool{}
-	for _, prov := range classicalVariant.Graph.Provinces() {
-		supers[prov.Super()] = true
-	}
-	for prov, _ := range supers {
-		classicalVariant.ColorizableProvinces = append(classicalVariant.ColorizableProvinces, prov)
-	}
-}
-
-var Variants = map[string]*Variant{
-	ClassicalString: classicalVariant,
 }
 
 var prefPattern = regexp.MustCompile("^([^\\s;]+)(;q=([\\d.]+))?$")

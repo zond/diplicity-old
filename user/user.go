@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"code.google.com/p/go.net/websocket"
-
 	"github.com/zond/diplicity/common"
 	"github.com/zond/kcwraps/kol"
 	"github.com/zond/wsubs/gosubs"
@@ -22,7 +21,6 @@ type User struct {
 	MissedDeadlines      int
 	HeldDeadlines        int
 	Ranking              float64
-	Language             string
 	DiplicityHost        string
 
 	LastLoginAt time.Time

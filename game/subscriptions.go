@@ -10,6 +10,7 @@ import (
 	"github.com/zond/diplicity/common"
 	"github.com/zond/diplicity/epoch"
 	"github.com/zond/diplicity/user"
+	"github.com/zond/godip/variants"
 	"github.com/zond/kcwraps/kol"
 	"github.com/zond/wsubs/gosubs"
 )
@@ -305,10 +306,10 @@ func SubscribeOthersOpen(c common.WSContext) error {
 		return source.SortAndLimit(func(a, b GameState) bool {
 			leftA := 0
 			leftB := 0
-			if variant, found := common.Variants[a.Variant]; found {
+			if variant, found := variants.Variants[a.Variant]; found {
 				leftA = len(variant.Nations) - len(a.Members)
 			}
-			if variant, found := common.Variants[b.Variant]; found {
+			if variant, found := variants.Variants[b.Variant]; found {
 				leftB = len(variant.Nations) - len(b.Members)
 			}
 			if leftA != leftB {

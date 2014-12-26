@@ -8,10 +8,11 @@ import (
 
 	"github.com/zond/diplicity/common"
 	"github.com/zond/diplicity/epoch"
+	"github.com/zond/diplicity/game/allocation"
 	"github.com/zond/diplicity/user"
-	"github.com/zond/godip/classical"
 	dip "github.com/zond/godip/common"
 	"github.com/zond/godip/state"
+	"github.com/zond/godip/variants"
 	"github.com/zond/kcwraps/kol"
 )
 
@@ -98,21 +99,22 @@ func (self *Game) allocate(d *kol.DB, phase *Phase) (err error) {
 	if err != nil {
 		return
 	}
-	switch self.AllocationMethod {
-	case common.RandomString:
-		for memberIndex, nationIndex := range rand.Perm(len(members)) {
-			members[memberIndex].Nation = common.Variants[self.Variant].Nations[nationIndex]
-		}
-	case common.PreferencesString:
-		prefs := make([][]dip.Nation, len(members))
-		for index, member := range members {
-			prefs[index] = member.PreferredNations
-		}
-		for index, nation := range optimizePreferences(prefs) {
-			members[index].Nation = nation
-		}
-	default:
-		return fmt.Errorf("Unknown allocation method %v", self.AllocationMethod)
+	prefs := make([][]dip.Nation, len(members))
+	for index, member := range members {
+		prefs[index] = member.PreferredNations
+	}
+	variant, found := variants.Variants[self.Variant]
+	if !found {
+		err = fmt.Errorf("Unknown variant %v", self.Variant)
+		return
+	}
+	allocationMethod, found := allocation.Methods[self.AllocationMethod]
+	if !found {
+		err = fmt.Errorf("Unknown allocation method %v", self.Variant)
+		return
+	}
+	for index, nation := range allocationMethod.Allocate(variant.Nations, prefs) {
+		members[index].Nation = nation
 	}
 	for index, _ := range members {
 		opts := dip.Options{}
@@ -398,13 +400,13 @@ func (self *Game) start(c common.SkinnyContext) (err error) {
 		return
 	}
 	var startState *state.State
-	if self.Variant == common.ClassicalString {
-		if startState, err = classical.Start(); err != nil {
-			return
-		}
-	} else {
+	if variant, found := variants.Variants[self.Variant]; !found {
 		err = fmt.Errorf("Unknown variant %v", self.Variant)
 		return
+	} else {
+		if startState, err = variant.Start(); err != nil {
+			return
+		}
 	}
 	startPhase := startState.Phase()
 	epoch, err := epoch.Get(c.DB())

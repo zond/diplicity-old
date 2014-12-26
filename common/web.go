@@ -20,6 +20,7 @@ import (
 	"github.com/gorilla/sessions"
 	"github.com/jhillyerd/go.enmime"
 	"github.com/zond/gmail"
+	"github.com/zond/godip/variants"
 	"github.com/zond/kcwraps/kol"
 	"github.com/zond/wsubs/gosubs"
 )
@@ -309,7 +310,7 @@ func (self *Web) ChatFlags() (result string, err error) {
 }
 
 func (self *Web) Variants() (result string, err error) {
-	b, err := json.Marshal(Variants)
+	b, err := json.Marshal(variants.Variants)
 	if err != nil {
 		return
 	}

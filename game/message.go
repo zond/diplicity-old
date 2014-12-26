@@ -17,6 +17,7 @@ import (
 	"github.com/zond/diplicity/user"
 	"github.com/zond/gmail"
 	dip "github.com/zond/godip/common"
+	"github.com/zond/godip/variants"
 	"github.com/zond/kcwraps/kol"
 )
 
@@ -197,7 +198,7 @@ func (self *Message) Send(c common.SkinnyContext, game *Game, sender *Member) (e
 	var phaseType dip.PhaseType
 	switch game.State {
 	case common.GameStateCreated:
-		phaseType = common.BeforeGamePhaseType
+		phaseType = common.BeforePhaseType
 	case common.GameStateStarted:
 		var phase *Phase
 		if _, phase, err = game.Phase(c.DB(), 0); err != nil {
@@ -205,7 +206,7 @@ func (self *Message) Send(c common.SkinnyContext, game *Game, sender *Member) (e
 		}
 		phaseType = phase.Type
 	case common.GameStateEnded:
-		phaseType = common.AfterGamePhaseType
+		phaseType = common.AfterPhaseType
 	default:
 		err = fmt.Errorf("Unknown game state for %+v", game)
 		return
@@ -222,7 +223,7 @@ func (self *Message) Send(c common.SkinnyContext, game *Game, sender *Member) (e
 
 	// See if the recipient count is allowed
 	recipients := len(self.RecipientIds)
-	if self.Public || recipients == len(common.Variants[game.Variant].Nations) {
+	if self.Public || recipients == len(variants.Variants[game.Variant].Nations) {
 		if (allowedFlags & common.ChatConference) == 0 {
 			err = IllegalMessageError{
 				Description: fmt.Sprintf("%+v does not allow %+v during %+v", game, self, phaseType),
