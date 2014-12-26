@@ -4,8 +4,7 @@ import (
 	"fmt"
 	"strings"
 	"time"
-
-	"github.com/zond/diplicity/common"
+	"github.com/zond/diplicity/game/meta"
 	"github.com/zond/diplicity/user"
 	dip "github.com/zond/godip/common"
 	"github.com/zond/kcwraps/kol"
@@ -90,14 +89,14 @@ func (self *Member) ToState(d *kol.DB, g *Game, email string, isMember bool, isA
 	secretNation := false
 	secretEmail := false
 	secretNickname := false
-	var flag common.SecretFlag
+	var flag meta.SecretFlag
 	switch g.State {
-	case common.GameStateCreated:
-		flag = common.SecretBeforeGame
-	case common.GameStateStarted:
-		flag = common.SecretDuringGame
-	case common.GameStateEnded:
-		flag = common.SecretAfterGame
+	case meta.GameStateCreated:
+		flag = meta.SecretBeforeGame
+	case meta.GameStateStarted:
+		flag = meta.SecretDuringGame
+	case meta.GameStateEnded:
+		flag = meta.SecretAfterGame
 	default:
 		panic(fmt.Errorf("Unknown game state for %+v", g))
 	}
@@ -127,11 +126,11 @@ func (self *Member) ToState(d *kol.DB, g *Game, email string, isMember bool, isA
 }
 
 func (self *Member) ShortName(game *Game, user *user.User) string {
-	if game.State == common.GameStateCreated {
-		if user.Nickname != "" && game.SecretNickname&common.SecretBeforeGame == 0 {
+	if game.State == meta.GameStateCreated {
+		if user.Nickname != "" && game.SecretNickname&meta.SecretBeforeGame == 0 {
 			return user.Nickname
 		}
-		if user.Email != "" && game.SecretEmail&common.SecretBeforeGame == 0 {
+		if user.Email != "" && game.SecretEmail&meta.SecretBeforeGame == 0 {
 			return strings.Split(user.Email, "@")[0]
 		}
 		return "Anonymous"

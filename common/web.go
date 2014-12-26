@@ -4,6 +4,7 @@ import (
 	"compress/gzip"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"math/rand"
@@ -19,6 +20,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/jhillyerd/go.enmime"
+	"github.com/zond/diplicity/game/meta"
 	"github.com/zond/gmail"
 	"github.com/zond/godip/variants"
 	"github.com/zond/kcwraps/kol"
@@ -87,6 +89,28 @@ func NewWeb(secret, env, db string) (self *Web, err error) {
 	return
 }
 
+var temps = template.Must(template.ParseGlob("templates/*"))
+
+func (self *Web) Index(c *HTTPContext) (err error) {
+	c.SetContentType("text/html; charset=UTF-8")
+	f, err := os.Open(filepath.Join("static", "index.html"))
+	if err != nil {
+		return
+	}
+	defer f.Close()
+	if _, err = io.Copy(c.Resp(), f); err != nil {
+		return
+	}
+	return
+}
+
+func (self *Web) Go2JS(c *HTTPContext) (err error) {
+	c.SetContentType("application/javascript; charset=UTF-8")
+	if err = temps.ExecuteTemplate(c.Resp(), "go.js", self); err != nil {
+		return
+	}
+	return
+}
 func (self *Web) Router() *Router {
 	return self.router
 }
@@ -292,7 +316,7 @@ func (self *Web) Tracef(format string, args ...interface{}) {
 }
 
 func (self *Web) Consequences() (result string, err error) {
-	b, err := json.Marshal(Consequences)
+	b, err := json.Marshal(meta.Consequences)
 	if err != nil {
 		return
 	}
@@ -301,7 +325,16 @@ func (self *Web) Consequences() (result string, err error) {
 }
 
 func (self *Web) ChatFlags() (result string, err error) {
-	b, err := json.Marshal(ChatFlags)
+	b, err := json.Marshal(meta.ChatFlags)
+	if err != nil {
+		return
+	}
+	result = string(b)
+	return
+}
+
+func (self *Web) OrderedVariants() (result string, err error) {
+	b, err := json.Marshal(variants.OrderedVariants)
 	if err != nil {
 		return
 	}
@@ -319,7 +352,7 @@ func (self *Web) Variants() (result string, err error) {
 }
 
 func (self *Web) SecretFlags() (result string, err error) {
-	b, err := json.Marshal(SecretFlags)
+	b, err := json.Marshal(meta.SecretFlags)
 	if err != nil {
 		return
 	}
@@ -328,7 +361,7 @@ func (self *Web) SecretFlags() (result string, err error) {
 }
 
 func (self *Web) GameStates() (result string, err error) {
-	b, err := json.Marshal(GameStates)
+	b, err := json.Marshal(meta.GameStates)
 	if err != nil {
 		return
 	}

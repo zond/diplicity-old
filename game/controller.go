@@ -12,6 +12,7 @@ import (
 	"github.com/zond/diplicity/common"
 	"github.com/zond/diplicity/epoch"
 	"github.com/zond/diplicity/game/allocation"
+	"github.com/zond/diplicity/game/meta"
 	"github.com/zond/diplicity/user"
 	dip "github.com/zond/godip/common"
 	"github.com/zond/godip/variants"
@@ -290,7 +291,7 @@ func DeleteMember(c common.WSContext) error {
 		if err := c.DB().Get(game); err != nil {
 			return fmt.Errorf("Game not found: %v", err)
 		}
-		if game.State != common.GameStateCreated {
+		if game.State != meta.GameStateCreated {
 			return fmt.Errorf("%+v already started", game)
 		}
 		member := Member{}
@@ -321,7 +322,7 @@ func AddMember(c common.WSContext) error {
 		if err := c.DB().Get(&game); err != nil {
 			return fmt.Errorf("Game not found")
 		}
-		if game.State != common.GameStateCreated {
+		if game.State != meta.GameStateCreated {
 			return fmt.Errorf("%+v already started")
 		}
 		variant, found := variants.Variants[game.Variant]

@@ -14,6 +14,7 @@ import (
 
 	"github.com/jhillyerd/go.enmime"
 	"github.com/zond/diplicity/common"
+	"github.com/zond/diplicity/game/meta"
 	"github.com/zond/diplicity/user"
 	"github.com/zond/gmail"
 	dip "github.com/zond/godip/common"
@@ -197,16 +198,16 @@ func (self *Message) Send(c common.SkinnyContext, game *Game, sender *Member) (e
 	// See what phase type the game is in
 	var phaseType dip.PhaseType
 	switch game.State {
-	case common.GameStateCreated:
-		phaseType = common.BeforePhaseType
-	case common.GameStateStarted:
+	case meta.GameStateCreated:
+		phaseType = meta.BeforePhaseType
+	case meta.GameStateStarted:
 		var phase *Phase
 		if _, phase, err = game.Phase(c.DB(), 0); err != nil {
 			return
 		}
 		phaseType = phase.Type
-	case common.GameStateEnded:
-		phaseType = common.AfterPhaseType
+	case meta.GameStateEnded:
+		phaseType = meta.AfterPhaseType
 	default:
 		err = fmt.Errorf("Unknown game state for %+v", game)
 		return
@@ -224,7 +225,7 @@ func (self *Message) Send(c common.SkinnyContext, game *Game, sender *Member) (e
 	// See if the recipient count is allowed
 	recipients := len(self.RecipientIds)
 	if self.Public || recipients == len(variants.Variants[game.Variant].Nations) {
-		if (allowedFlags & common.ChatConference) == 0 {
+		if (allowedFlags & meta.ChatConference) == 0 {
 			err = IllegalMessageError{
 				Description: fmt.Sprintf("%+v does not allow %+v during %+v", game, self, phaseType),
 				Phrase:      "This kind of message is not allowed at this stage of the game",
@@ -236,7 +237,7 @@ func (self *Message) Send(c common.SkinnyContext, game *Game, sender *Member) (e
 			self.RecipientIds[memb.Id.String()] = true
 		}
 	} else if recipients == 2 {
-		if (allowedFlags & common.ChatPrivate) == 0 {
+		if (allowedFlags & meta.ChatPrivate) == 0 {
 			err = IllegalMessageError{
 				Description: fmt.Sprintf("%+v does not allow %+v during %+v", game, self, phaseType),
 				Phrase:      "This kind of message is not allowed at this stage of the game",
@@ -244,7 +245,7 @@ func (self *Message) Send(c common.SkinnyContext, game *Game, sender *Member) (e
 			return
 		}
 	} else if recipients > 2 {
-		if (allowedFlags & common.ChatGroup) == 0 {
+		if (allowedFlags & meta.ChatGroup) == 0 {
 			err = IllegalMessageError{
 				Description: fmt.Sprintf("%+v does not allow %+v during %+v", game, self, phaseType),
 				Phrase:      "This kind of message is not allowed at this stage of the game",

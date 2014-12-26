@@ -9,6 +9,7 @@ import (
 	"code.google.com/p/go.net/websocket"
 	"github.com/zond/diplicity/common"
 	"github.com/zond/diplicity/epoch"
+	"github.com/zond/diplicity/game/meta"
 	"github.com/zond/diplicity/user"
 	"github.com/zond/godip/variants"
 	"github.com/zond/kcwraps/kol"
@@ -106,21 +107,21 @@ func SubscribeMine(c common.WSContext) error {
 				urgencyA := time.Hour * 24 * 365
 				urgencyB := time.Hour * 24 * 365
 				switch a.State {
-				case common.GameStateStarted:
+				case meta.GameStateStarted:
 					_, phase, err := a.Game.Phase(c.DB(), 0)
 					if err == nil {
 						urgencyA = phase.Deadline - ep
 					}
-				case common.GameStateCreated:
+				case meta.GameStateCreated:
 					urgencyA -= 1
 				}
 				switch b.State {
-				case common.GameStateStarted:
+				case meta.GameStateStarted:
 					_, phase, err := b.Game.Phase(c.DB(), 0)
 					if err == nil {
 						urgencyB = phase.Deadline - ep
 					}
-				case common.GameStateCreated:
+				case meta.GameStateCreated:
 					urgencyB -= 1
 				}
 				if urgencyA != urgencyB {
@@ -321,7 +322,7 @@ func SubscribeOthersOpen(c common.WSContext) error {
 }
 
 func SubscribeOthersClosed(c common.WSContext) error {
-	return subscribeOthers(c, kol.And{kol.Equals{"State", common.GameStateStarted}, kol.Equals{"Closed", true}, kol.Equals{"Private", false}}, func(source Games) (result Games) {
+	return subscribeOthers(c, kol.And{kol.Equals{"State", meta.GameStateStarted}, kol.Equals{"Closed", true}, kol.Equals{"Private", false}}, func(source Games) (result Games) {
 		return source.SortAndLimit(func(a, b *Game) bool {
 			return a.UpdatedAt.Before(b.UpdatedAt)
 		}, 128)
@@ -329,7 +330,7 @@ func SubscribeOthersClosed(c common.WSContext) error {
 }
 
 func SubscribeOthersFinished(c common.WSContext) error {
-	return subscribeOthers(c, kol.And{kol.Equals{"State", common.GameStateEnded}, kol.Equals{"Private", false}}, func(source Games) (result Games) {
+	return subscribeOthers(c, kol.And{kol.Equals{"State", meta.GameStateEnded}, kol.Equals{"Private", false}}, func(source Games) (result Games) {
 		return source.SortAndLimit(func(a, b *Game) bool {
 			return a.UpdatedAt.Before(b.UpdatedAt)
 		}, 128)

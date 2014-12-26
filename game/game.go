@@ -9,6 +9,7 @@ import (
 	"github.com/zond/diplicity/common"
 	"github.com/zond/diplicity/epoch"
 	"github.com/zond/diplicity/game/allocation"
+	"github.com/zond/diplicity/game/meta"
 	"github.com/zond/diplicity/user"
 	dip "github.com/zond/godip/common"
 	"github.com/zond/godip/state"
@@ -60,10 +61,10 @@ func (self SortedGames) Swap(i, j int) {
 type Game struct {
 	Id kol.Id
 
-	Closed             bool             `kol:"index"`
-	Private            bool             `kol:"index"`
-	State              common.GameState `kol:"index"`
-	EndReason          common.EndReason
+	Closed             bool           `kol:"index"`
+	Private            bool           `kol:"index"`
+	State              meta.GameState `kol:"index"`
+	EndReason          meta.EndReason
 	Variant            string
 	AllocationMethod   string
 	EndYear            int
@@ -71,16 +72,16 @@ type Game struct {
 	MaximumRanking     float64
 	MinimumReliability float64
 
-	SecretEmail    common.SecretFlag
-	SecretNickname common.SecretFlag
-	SecretNation   common.SecretFlag
+	SecretEmail    meta.SecretFlag
+	SecretNickname meta.SecretFlag
+	SecretNation   meta.SecretFlag
 
 	Deadlines map[dip.PhaseType]Minutes
 
-	ChatFlags map[dip.PhaseType]common.ChatFlag
+	ChatFlags map[dip.PhaseType]meta.ChatFlag
 
-	NonCommitConsequences common.Consequence
-	NMRConsequences       common.Consequence
+	NonCommitConsequences meta.Consequence
+	NMRConsequences       meta.Consequence
 
 	Ranking bool
 
@@ -140,39 +141,39 @@ func (self *Game) endPhaseConsequences(c common.SkinnyContext, phase *Phase, mem
 	surrender := false
 	if !member.Committed {
 		alreadyHitReliability := false
-		if (self.NonCommitConsequences & common.ReliabilityHit) == common.ReliabilityHit {
+		if (self.NonCommitConsequences & meta.ReliabilityHit) == meta.ReliabilityHit {
 			if err = member.ReliabilityDelta(c.DB(), -1); err != nil {
 				return
 			}
 			c.Infof("Increased MISSED deadlines for %#v by one because %+v, %+v and %+v", string(member.UserId), self, member, phase)
 			alreadyHitReliability = true
 		}
-		if (self.NonCommitConsequences & common.NoWait) == common.NoWait {
+		if (self.NonCommitConsequences & meta.NoWait) == meta.NoWait {
 			c.Infof("Setting %#v to NoWait because of %+v, %+v and %+v", string(member.UserId), self, member, phase)
 			member.NoWait = true
 		}
-		if (self.NonCommitConsequences & common.Surrender) == common.Surrender {
+		if (self.NonCommitConsequences & meta.Surrender) == meta.Surrender {
 			c.Infof("Setting %#v to Surrender because of %+v, %+v and %+v", string(member.UserId), self, member, phase)
 			surrender = true
 		}
 		if len(phase.Orders[member.Nation]) == 0 {
-			if !alreadyHitReliability && (self.NMRConsequences&common.ReliabilityHit) == common.ReliabilityHit {
+			if !alreadyHitReliability && (self.NMRConsequences&meta.ReliabilityHit) == meta.ReliabilityHit {
 				if err = member.ReliabilityDelta(c.DB(), -1); err != nil {
 					return
 				}
 				c.Infof("Increased MISSED deadlines for %#v by one because %+v, %+v and %+v", string(member.UserId), self, member, phase)
 			}
-			if (self.NMRConsequences & common.NoWait) == common.NoWait {
+			if (self.NMRConsequences & meta.NoWait) == meta.NoWait {
 				c.Infof("Setting %#v to NoWait because of %+v, %+v and %+v", string(member.UserId), self, member, phase)
 				member.NoWait = true
 			}
-			if (self.NMRConsequences & common.Surrender) == common.Surrender {
+			if (self.NMRConsequences & meta.Surrender) == meta.Surrender {
 				c.Infof("Setting %#v to Surrender because of %+v, %+v and %+v", string(member.UserId), self, member, phase)
 				surrender = true
 			}
 		}
 	} else {
-		if (self.NonCommitConsequences&common.ReliabilityHit) == common.ReliabilityHit || (self.NMRConsequences&common.ReliabilityHit) == common.ReliabilityHit {
+		if (self.NonCommitConsequences&meta.ReliabilityHit) == meta.ReliabilityHit || (self.NMRConsequences&meta.ReliabilityHit) == meta.ReliabilityHit {
 			if err = member.ReliabilityDelta(c.DB(), 1); err != nil {
 				return
 			}
@@ -203,9 +204,9 @@ func (self *Game) endPhaseConsequences(c common.SkinnyContext, phase *Phase, mem
 	return
 }
 
-func (self *Game) end(c common.SkinnyContext, phase *Phase, members Members, winner *Member, reason common.EndReason) (err error) {
+func (self *Game) end(c common.SkinnyContext, phase *Phase, members Members, winner *Member, reason meta.EndReason) (err error) {
 	self.EndReason = reason
-	self.State = common.GameStateEnded
+	self.State = meta.GameStateEnded
 	if err = c.DB().Set(self); err != nil {
 		return
 	}
@@ -244,7 +245,7 @@ func (self *Game) end(c common.SkinnyContext, phase *Phase, members Members, win
 
 func (self *Game) resolve(c common.SkinnyContext, phase *Phase) (err error) {
 	// Check that we are in a phase where we CAN resolve
-	if self.State != common.GameStateStarted {
+	if self.State != meta.GameStateStarted {
 		err = fmt.Errorf("%+v is not started", self)
 		return
 	}
@@ -329,7 +330,7 @@ func (self *Game) resolve(c common.SkinnyContext, phase *Phase) (err error) {
 				err = fmt.Errorf("None of %+v has nation %#v??", members, *winner)
 				return
 			}
-			if err = self.end(c, nextPhase, members, winnerMember, common.SoloVictory(*winner)); err != nil {
+			if err = self.end(c, nextPhase, members, winnerMember, meta.SoloVictory(*winner)); err != nil {
 				return
 			}
 			return
@@ -337,7 +338,7 @@ func (self *Game) resolve(c common.SkinnyContext, phase *Phase) (err error) {
 
 		// End the game now if nobody is active anymore
 		if len(active) == 0 {
-			if err = self.end(c, nextPhase, members, nil, common.ZeroActiveMembers); err != nil {
+			if err = self.end(c, nextPhase, members, nil, meta.ZeroActiveMembers); err != nil {
 				return
 			}
 			return
@@ -345,7 +346,7 @@ func (self *Game) resolve(c common.SkinnyContext, phase *Phase) (err error) {
 
 		// End the game now if only one player isn't surrendering
 		if len(nonSurrendering) == 1 {
-			if err = self.end(c, nextPhase, members, nonSurrendering[0], common.SoloVictory(nonSurrendering[0].Nation)); err != nil {
+			if err = self.end(c, nextPhase, members, nonSurrendering[0], meta.SoloVictory(nonSurrendering[0].Nation)); err != nil {
 				return
 			}
 			return
@@ -371,17 +372,17 @@ func (self *Game) resolve(c common.SkinnyContext, phase *Phase) (err error) {
 
 func (self *Game) Describe(c common.SkinnyContext) (result string, err error) {
 	switch self.State {
-	case common.GameStateCreated:
+	case meta.GameStateCreated:
 		result = "before game"
 		return
-	case common.GameStateStarted:
+	case meta.GameStateStarted:
 		var phase *Phase
 		if _, phase, err = self.Phase(c.DB(), 0); err != nil {
 			return
 		}
 		result = fmt.Sprintf("%v, %v, %v", phase.Season, phase.Year, phase.Type)
 		return
-	case common.GameStateEnded:
+	case meta.GameStateEnded:
 		result = "after game"
 		return
 	}
@@ -390,11 +391,11 @@ func (self *Game) Describe(c common.SkinnyContext) (result string, err error) {
 }
 
 func (self *Game) start(c common.SkinnyContext) (err error) {
-	if self.State != common.GameStateCreated {
+	if self.State != meta.GameStateCreated {
 		err = fmt.Errorf("%+v is already started", self)
 		return
 	}
-	self.State = common.GameStateStarted
+	self.State = meta.GameStateStarted
 	self.Closed = true
 	if err = c.DB().Set(self); err != nil {
 		return
