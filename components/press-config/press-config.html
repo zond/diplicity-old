@@ -1,0 +1,60 @@
+<link rel="import" href="/bower_components/paper-toggle-button/paper-toggle-button.html">
+<link rel="import" href="/components/z-panel/z-panel.html">
+<link rel="import" href="/components/deadline-config/deadline-config.html">
+
+<polymer-element name="press-config" attributes="config game">
+  <template>
+	  <style>
+			table {
+				border-collapse: collapse;
+				width: 100%;
+			}
+			td.label {
+				width: 50%;
+			}
+			td {
+				border: 1px solid #CFD8DC;
+				padding: 0.35em;
+			}
+			caption {
+				text-align: left;
+				font-weight: bold;
+			}
+	  </style>
+	  <z-panel>
+   		<table>
+				<template if="{{ config.name != 'Before' }}">
+				  <template if="{{ config.name != 'After' }}">
+				    <caption>{{ config.name }}</caption>
+					</template>
+				</template>
+				<template repeat="{{ k in keys(config) }}">
+				  <template if="{{ k != 'name' }}">
+			      <tr>
+			      	<td class="label">
+								{{ k }}
+			      	</td>
+			      	<td>
+			      		<paper-toggle-button checked="{{ config[k] }}"></paper-toggle-button>
+			      	</td>
+			      </tr>
+					</template>
+				</template>
+			</table>
+		</z-panel>
+		<template if="{{ config.name != 'After' }}">
+		  <template if="{{ config.name != 'Before' }}">
+        <deadline-config config="{{ game.deadlineConfigs[config.name] }}"></deadline-config>
+			</template>
+		</template>
+	</template>
+	<script>
+		Polymer({
+			keys: _.keys,
+		});
+	</script>
+</polymer-element>
+
+
+
+

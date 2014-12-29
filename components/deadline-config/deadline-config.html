@@ -1,0 +1,101 @@
+<link rel="import" href="/bower_components/paper-toggle-button/paper-toggle-button.html">
+<link rel="import" href="/components/z-panel/z-panel.html">
+
+<polymer-element name="deadline-config" attributes="config">
+  <template>
+	  <style>
+			paper-slider {
+				width: 100%;
+				height: 1em;
+			}
+			paper-slider::shadow #sliderContainer {
+				height: 1em;
+				margin: 0px;
+			}
+			paper-slider::shadow paper-input::shadow paper-input-decorator {
+				padding: 0px;
+			}
+			table {
+				border-collapse: collapse;
+				width: 100%;
+			}
+			td.label {
+				width: 50%;
+			}
+			td.deadline-unit {
+				width: 0.5em;
+			}
+			td {
+				border: 1px solid #CFD8DC;
+				padding: 0.35em;
+			}
+	  </style>
+		<z-panel>
+    	<table>
+				<tr>
+					<td class="label">
+						Deadline
+					</td>
+					<td class="deadline-value">
+						<paper-slider editable min="1" max="{{ config.deadlineUnit.m }}" value="{{ config.deadlineValue }}"></paper-slider>
+					</td>
+					<td class="deadline-unit">
+						<select data-phase-type="{{ config.name }}" on-change="{{ changeUnit }}" value="{{ config.deadlineUnit.name }}">
+							<template repeat="{{ unit in deadlineUnitTypes }}">
+							<option value="{{ unit.name }}">{{ unit.name }}</option>
+							</template>
+						</select>
+					</td>
+				</tr>
+			</table>
+		</z-panel>
+	</template>
+	<script>
+		Polymer({
+			stringify: JSON.stringify,
+			changeUnit: function(ev) {
+				var unit = _.find(this.deadlineUnitTypes, function(u) {
+					return u.name == ev.target.value;
+				});
+				this.config.deadlineUnit = unit;
+			},
+			deadlineUnitTypes: [
+			  {
+					name: "minutes",
+					f: 1,
+					m: 60,
+				},
+				{
+					name: "hours",
+					f: 60,
+					m: 24,
+				},
+				{
+					name: "days",
+					f: 60 * 24,
+					m: 7,
+				},
+				{
+					name: "weeks",
+					f: 60 * 24 * 7,
+					m: 4,
+				},
+				{
+					name: "months",
+					f: 60 * 24 * 30,
+					m: 12,
+				},
+				{
+					name: "years",
+					f: 60 * 24 * 365,
+					m: 100,
+				},
+			],
+		});
+	</script>
+</polymer-element>
+
+
+
+
+
