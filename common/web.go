@@ -20,6 +20,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/jhillyerd/go.enmime"
+	"github.com/zond/diplicity/game/allocation"
 	"github.com/zond/diplicity/game/meta"
 	"github.com/zond/gmail"
 	"github.com/zond/godip/variants"
@@ -324,8 +325,8 @@ func (self *Web) Consequences() (result string, err error) {
 	return
 }
 
-func (self *Web) ChatFlags() (result string, err error) {
-	b, err := json.Marshal(meta.ChatFlags)
+func (self *Web) OrderedAllocationMethods() (result string, err error) {
+	b, err := json.Marshal(allocation.OrderedMethods)
 	if err != nil {
 		return
 	}
@@ -344,15 +345,6 @@ func (self *Web) OrderedVariants() (result string, err error) {
 
 func (self *Web) Variants() (result string, err error) {
 	b, err := json.Marshal(variants.Variants)
-	if err != nil {
-		return
-	}
-	result = string(b)
-	return
-}
-
-func (self *Web) SecretFlags() (result string, err error) {
-	b, err := json.Marshal(meta.SecretFlags)
 	if err != nil {
 		return
 	}

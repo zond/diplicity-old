@@ -80,5 +80,5 @@ func optimizePreferences(preferences [][]dip.Nation) (result []dip.Nation) {
 
 type Method struct {
 	Name     string
-	Allocate func(nations []dip.Nation, prefs [][]dip.Nation) (result []dip.Nation)
+	Allocate func(nations []dip.Nation, prefs [][]dip.Nation) (result []dip.Nation) `json:"-"`
 }

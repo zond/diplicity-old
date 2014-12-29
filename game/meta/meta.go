@@ -20,25 +20,12 @@ var Consequences = map[string]Consequence{
 	"Surrender":      Surrender,
 }
 
-type ChatFlag int
-
-const (
-	ChatPrivate = 1 << iota
-	ChatGroup
-	ChatConference
-)
-
-var ChatFlags = map[string]ChatFlag{
-	"Private":    ChatPrivate,
-	"Group":      ChatGroup,
-	"Conference": ChatConference,
-}
-
 type EndReason string
 
 const (
 	BeforePhaseType   dip.PhaseType = "Before"
 	AfterPhaseType    dip.PhaseType = "After"
+	DuringPhaseType   dip.PhaseType = "During"
 	Anonymous         dip.Nation    = "Anonymous"
 	ZeroActiveMembers EndReason     = "ZeroActiveMembers"
 )
@@ -59,18 +46,4 @@ var GameStates = map[string]GameState{
 	"created": GameStateCreated,
 	"started": GameStateStarted,
 	"ended":   GameStateEnded,
-}
-
-type SecretFlag int
-
-const (
-	SecretBeforeGame = 1 << iota
-	SecretDuringGame
-	SecretAfterGame
-)
-
-var SecretFlags = map[string]SecretFlag{
-	"BeforeGame": SecretBeforeGame,
-	"DuringGame": SecretDuringGame,
-	"AfterGame":  SecretAfterGame,
 }

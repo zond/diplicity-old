@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
 	"github.com/zond/diplicity/game/meta"
 	"github.com/zond/diplicity/user"
 	dip "github.com/zond/godip/common"
@@ -86,34 +87,30 @@ func (self *Member) ToState(d *kol.DB, g *Game, email string, isMember bool, isA
 		},
 		User: &user.User{},
 	}
-	secretNation := false
-	secretEmail := false
-	secretNickname := false
-	var flag meta.SecretFlag
+	privacyConfig := PrivacyConfig{}
 	switch g.State {
 	case meta.GameStateCreated:
-		flag = meta.SecretBeforeGame
+		privacyConfig = g.PrivacyConfigs[meta.BeforePhaseType]
 	case meta.GameStateStarted:
-		flag = meta.SecretDuringGame
+		privacyConfig = g.PrivacyConfigs[meta.DuringPhaseType]
 	case meta.GameStateEnded:
-		flag = meta.SecretAfterGame
+		privacyConfig = g.PrivacyConfigs[meta.AfterPhaseType]
 	default:
 		panic(fmt.Errorf("Unknown game state for %+v", g))
 	}
-	secretNation, secretEmail, secretNickname = g.SecretNation&flag == flag, g.SecretEmail&flag == flag, g.SecretNickname&flag == flag
 	isMe := string(self.UserId) == email
-	if isAdmin || isMe || !secretNation {
+	if isAdmin || isMe || !privacyConfig.SecretNation {
 		result.Member.Nation = self.Nation
 	}
-	if isAdmin || isMe || !secretEmail || !secretNickname {
+	if isAdmin || isMe || !privacyConfig.SecretEmail || !privacyConfig.SecretNickname {
 		foundUser := &user.User{Id: self.UserId}
 		if err = d.Get(foundUser); err != nil {
 			return
 		}
-		if isAdmin || (isMember && (isMe || !secretEmail)) {
+		if isAdmin || (isMember && (isMe || !privacyConfig.SecretEmail)) {
 			result.User.Email = foundUser.Email
 		}
-		if isAdmin || (isMe || !secretNickname) {
+		if isAdmin || (isMe || !privacyConfig.SecretNickname) {
 			result.User.Nickname = foundUser.Nickname
 		}
 		if isAdmin || isMe {
@@ -127,10 +124,10 @@ func (self *Member) ToState(d *kol.DB, g *Game, email string, isMember bool, isA
 
 func (self *Member) ShortName(game *Game, user *user.User) string {
 	if game.State == meta.GameStateCreated {
-		if user.Nickname != "" && game.SecretNickname&meta.SecretBeforeGame == 0 {
+		if user.Nickname != "" && !game.PrivacyConfigs[meta.BeforePhaseType].SecretNickname {
 			return user.Nickname
 		}
-		if user.Email != "" && game.SecretEmail&meta.SecretBeforeGame == 0 {
+		if user.Email != "" && !game.PrivacyConfigs[meta.BeforePhaseType].SecretEmail {
 			return strings.Split(user.Email, "@")[0]
 		}
 		return "Anonymous"

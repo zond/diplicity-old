@@ -58,6 +58,18 @@ func (self SortedGames) Swap(i, j int) {
 	self.Games[j], self.Games[i] = self.Games[i], self.Games[j]
 }
 
+type PrivacyConfig struct {
+	SecretNation   bool
+	SecretNickname bool
+	SecretEmail    bool
+}
+
+type PressConfig struct {
+	PrivatePress    bool
+	GroupPress      bool
+	ConferencePress bool
+}
+
 type Game struct {
 	Id kol.Id
 
@@ -71,19 +83,14 @@ type Game struct {
 	MinimumRanking     float64
 	MaximumRanking     float64
 	MinimumReliability float64
+	Ranking            bool
 
-	SecretEmail    meta.SecretFlag
-	SecretNickname meta.SecretFlag
-	SecretNation   meta.SecretFlag
-
-	Deadlines map[dip.PhaseType]Minutes
-
-	ChatFlags map[dip.PhaseType]meta.ChatFlag
+	PressConfigs   map[dip.PhaseType]PressConfig
+	PrivacyConfigs map[dip.PhaseType]PrivacyConfig
+	Deadlines      map[dip.PhaseType]Minutes
 
 	NonCommitConsequences meta.Consequence
 	NMRConsequences       meta.Consequence
-
-	Ranking bool
 
 	CreatedAt time.Time
 	UpdatedAt time.Time

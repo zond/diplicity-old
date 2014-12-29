@@ -214,7 +214,7 @@ func (self *Message) Send(c common.SkinnyContext, game *Game, sender *Member) (e
 	}
 
 	// Find what chats are allowed during this phase type
-	allowedFlags := game.ChatFlags[phaseType]
+	pressConfig := game.PressConfigs[phaseType]
 
 	// load game members
 	members, err := game.Members(c.DB())
@@ -225,7 +225,7 @@ func (self *Message) Send(c common.SkinnyContext, game *Game, sender *Member) (e
 	// See if the recipient count is allowed
 	recipients := len(self.RecipientIds)
 	if self.Public || recipients == len(variants.Variants[game.Variant].Nations) {
-		if (allowedFlags & meta.ChatConference) == 0 {
+		if !pressConfig.ConferencePress {
 			err = IllegalMessageError{
 				Description: fmt.Sprintf("%+v does not allow %+v during %+v", game, self, phaseType),
 				Phrase:      "This kind of message is not allowed at this stage of the game",
@@ -237,7 +237,7 @@ func (self *Message) Send(c common.SkinnyContext, game *Game, sender *Member) (e
 			self.RecipientIds[memb.Id.String()] = true
 		}
 	} else if recipients == 2 {
-		if (allowedFlags & meta.ChatPrivate) == 0 {
+		if !pressConfig.PrivatePress {
 			err = IllegalMessageError{
 				Description: fmt.Sprintf("%+v does not allow %+v during %+v", game, self, phaseType),
 				Phrase:      "This kind of message is not allowed at this stage of the game",
@@ -245,7 +245,7 @@ func (self *Message) Send(c common.SkinnyContext, game *Game, sender *Member) (e
 			return
 		}
 	} else if recipients > 2 {
-		if (allowedFlags & meta.ChatGroup) == 0 {
+		if !pressConfig.GroupPress {
 			err = IllegalMessageError{
 				Description: fmt.Sprintf("%+v does not allow %+v during %+v", game, self, phaseType),
 				Phrase:      "This kind of message is not allowed at this stage of the game",
