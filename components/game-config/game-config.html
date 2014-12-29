@@ -1,8 +1,7 @@
 <link rel="import" href="/bower_components/paper-toggle-button/paper-toggle-button.html">
-<link rel="import" href="/components/press-config/press-config.html">
 <link rel="import" href="/components/z-panel/z-panel.html">
 
-<polymer-element name="privacy-config" attributes="config game">
+<polymer-element name="game-config" attributes="config">
   <template>
 	  <style>
 			table {
@@ -23,7 +22,9 @@
 	  </style>
     <z-panel>
       <table>
-				<caption>{{ config.name }}</caption>
+				<template if="{{ config.name }}">
+			  	<caption>{{ config.name }}</caption>
+				</template>
 				<template repeat="{{ k in keys(config) }}">
 				  <template if="{{ k != 'name' }}">
             <tr>
@@ -37,28 +38,16 @@
 					</template>
 				</template>
     	</table>
-			<template if="{{ config.name == 'Before' }}">
-			  <press-config config="{{ game.PressConfigs.Before }}" game="{{ game }}"></press-config>
-			</template>
-			<template if="{{ config.name == 'During' }}" repeat="{{ pressConfig in values(game.PressConfigs) }}">
-			  <template if="{{ pressConfig.name != 'Before' }}">
-				  <template if="{{ pressConfig.name != 'After' }}">
-					  <press-config config="{{ pressConfig }}" game="{{ game }}"></press-config>
-				  </template>
-			  </template>
-			</template>
-			<template if="{{ config.name == 'After' }}">
-			  <press-config config="{{ game.PressConfigs.After }}" game="{{ game }}"></press-config>
-			</template>
+			<content></content>
     </z-panel>
 	</template>
 	<script>
 		Polymer({
 			keys: _.keys,
-      values: _.values,
 		});
 	</script>
 </polymer-element>
+
 
 
 

@@ -63,7 +63,7 @@
 					</div>
 					<div path="/games/create">
 						<div cross-fade>
-							<create-game></create-game>
+							<create-game creator="{{ gameCreator() }}"></create-game>
 						</div>
 					</div>
         </path-selector>
@@ -139,7 +139,12 @@
 				}
 				this.subscriptions[uri] = subs;
 				if (!alreadySubscribed && this.connected) {
-					this.socket.send(JSON.stringify({"Type":"Subscribe","Object":{"URI":uri}}));
+					this.socket.send(JSON.stringify({
+						"Type": "Subscribe",
+						"Object": {
+							"URI": uri,
+						},
+					}));
 				}
 			},
 			subscriptions: {},
@@ -148,10 +153,32 @@
 				if (subs != null) {
 					subs = _.without(this.subscriptions[uri], cb)
 					if (subs.length == 0 && this.connected) {
-						this.socket.send(JSON.stringify({"Type":"Unsubscribe","Object":{"URI":uri}}));
+						this.socket.send(JSON.stringify({
+							"Type": "Unsubscribe",
+							"Object": {
+								"URI": uri,
+							},
+						}));
 					}
 					this.subscriptions[uri] = subs;
 				}
+			},
+			gameCreator: function() {
+				return {
+					create: function(g) {
+						console.log(g);
+						/*
+						this.socket.send(JSON.stringify({
+							"Type": "Create",
+							"Object": {
+								"URI": "/games",
+								"Data": g,
+							},
+						}));
+						*/
+						this.path = "/";
+					}.bind(this),
+				};
 			},
 			ready: function() {
 				this.socket = null;

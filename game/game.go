@@ -70,6 +70,12 @@ type PressConfig struct {
 	ConferencePress bool
 }
 
+type Consequences struct {
+	ReliabilityHit bool
+	NoWait         bool
+	Surrender      bool
+}
+
 type Game struct {
 	Id kol.Id
 
@@ -89,8 +95,8 @@ type Game struct {
 	PrivacyConfigs map[dip.PhaseType]PrivacyConfig
 	Deadlines      map[dip.PhaseType]Minutes
 
-	NonCommitConsequences meta.Consequence
-	NMRConsequences       meta.Consequence
+	NonCommitConsequences Consequences
+	NMRConsequences       Consequences
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -148,39 +154,39 @@ func (self *Game) endPhaseConsequences(c common.SkinnyContext, phase *Phase, mem
 	surrender := false
 	if !member.Committed {
 		alreadyHitReliability := false
-		if (self.NonCommitConsequences & meta.ReliabilityHit) == meta.ReliabilityHit {
+		if self.NonCommitConsequences.ReliabilityHit {
 			if err = member.ReliabilityDelta(c.DB(), -1); err != nil {
 				return
 			}
 			c.Infof("Increased MISSED deadlines for %#v by one because %+v, %+v and %+v", string(member.UserId), self, member, phase)
 			alreadyHitReliability = true
 		}
-		if (self.NonCommitConsequences & meta.NoWait) == meta.NoWait {
+		if self.NonCommitConsequences.NoWait {
 			c.Infof("Setting %#v to NoWait because of %+v, %+v and %+v", string(member.UserId), self, member, phase)
 			member.NoWait = true
 		}
-		if (self.NonCommitConsequences & meta.Surrender) == meta.Surrender {
+		if self.NonCommitConsequences.Surrender {
 			c.Infof("Setting %#v to Surrender because of %+v, %+v and %+v", string(member.UserId), self, member, phase)
 			surrender = true
 		}
 		if len(phase.Orders[member.Nation]) == 0 {
-			if !alreadyHitReliability && (self.NMRConsequences&meta.ReliabilityHit) == meta.ReliabilityHit {
+			if !alreadyHitReliability && self.NMRConsequences.ReliabilityHit {
 				if err = member.ReliabilityDelta(c.DB(), -1); err != nil {
 					return
 				}
 				c.Infof("Increased MISSED deadlines for %#v by one because %+v, %+v and %+v", string(member.UserId), self, member, phase)
 			}
-			if (self.NMRConsequences & meta.NoWait) == meta.NoWait {
+			if self.NMRConsequences.NoWait {
 				c.Infof("Setting %#v to NoWait because of %+v, %+v and %+v", string(member.UserId), self, member, phase)
 				member.NoWait = true
 			}
-			if (self.NMRConsequences & meta.Surrender) == meta.Surrender {
+			if self.NMRConsequences.Surrender {
 				c.Infof("Setting %#v to Surrender because of %+v, %+v and %+v", string(member.UserId), self, member, phase)
 				surrender = true
 			}
 		}
 	} else {
-		if (self.NonCommitConsequences&meta.ReliabilityHit) == meta.ReliabilityHit || (self.NMRConsequences&meta.ReliabilityHit) == meta.ReliabilityHit {
+		if self.NonCommitConsequences.ReliabilityHit || self.NMRConsequences.ReliabilityHit {
 			if err = member.ReliabilityDelta(c.DB(), 1); err != nil {
 				return
 			}

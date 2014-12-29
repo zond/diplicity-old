@@ -1,10 +1,9 @@
 <link rel="import" href="/bower_components/paper-button/paper-button.html">
 <link rel="import" href="/bower_components/paper-toggle-button/paper-toggle-button.html">
-<link rel="import" href="/bower_components/paper-slider/paper-slider.html">
 <link rel="import" href="/components/z-panel/z-panel.html">
-<link rel="import" href="/components/privacy-config/privacy-config.html">
+<link rel="import" href="/components/game-config/game-config.html">
 
-<polymer-element name="create-game">
+<polymer-element name="create-game" attributes="creator">
   <template>
 	  <style>
 			paper-button {
@@ -77,9 +76,25 @@
 					</td>
 				</tr>
 			</table>
+			<game-config config="{{ game.NonCommitConsequences }}"></game-config>
+			<game-config config="{{ game.NMRConsequences }}"></game-config>
 		</z-panel>
 		<template repeat="{{ privacyConfig in values(game.PrivacyConfigs) }}">
-		  <privacy-config config="{{ privacyConfig }}" game="{{ game }}"></privacy-config>
+		  <game-config config="{{ privacyConfig }}">
+		    <template if="{{ privacyConfig.name == 'Before' }}">
+		      <game-config config="{{ game.PressConfigs.Before }}" game="{{ game }}"></game-config>
+		    </template>
+		    <template if="{{ privacyConfig.name == 'During' }}" repeat="{{ pressConfig in values(game.PressConfigs) }}">
+		      <template if="{{ pressConfig.name }}">
+					  <game-config config="{{ pressConfig }}" game="{{ game }}">
+					    <game-config config="{{ game.deadlineConfigs[pressConfig.name] }}"></game-config>
+					  </game-config>
+		      </template>
+		    </template>
+		    <template if="{{ privacyConfig.name == 'After' }}">
+		      <game-config config="{{ game.PressConfigs.After }}" game="{{ game }}"></game-config>
+		    </template>
+		  </game-config>
 		</template>
 		<paper-button on-click="{{ createGame }}" raised>Create</paper-button>
 	</template>
@@ -117,6 +132,14 @@
 					m: 100,
 				},
 			],
+			defaultConsequenceConfig: function(name) {
+				return {
+					name: name,
+					ReliabilityHit: true,
+					NoWait: true,
+					Surrender: true,
+				};
+			},
 			defaultDeadlineConfig: function() {
 				return {
 					deadlineUnit: {
@@ -128,6 +151,9 @@
 				};
 			},
 			defaultPressConfig: function(name) {
+				if (name == 'After' || name == 'Before') {
+					name = '';
+				}
 				return {
 					name: name,
 					PrivatePress: true,
@@ -164,7 +190,7 @@
 				_.each(this.game.deadlineConfigs, function(deadlineConfig, phaseName) {
 					this.game.Deadlines[phaseName] = deadlineConfig.deadlineValue * deadlineConfig.deadlineUnit.f;
 				}.bind(this));
-				console.log(this.game);
+				this.creator.create(this.game);
 			},
 			stringify: JSON.stringify,
 			values: _.values,
@@ -182,6 +208,8 @@
 					memo[phaseTypeName] = this.defaultDeadlineConfig();
 					return memo;
 				}.bind(this), {});
+				this.game.NonCommitConsequences = this.defaultConsequenceConfig("Not committing");
+				this.game.NMRConsequences = this.defaultConsequenceConfig("Not committing + NMR");
 			},
 		});
 	</script>
