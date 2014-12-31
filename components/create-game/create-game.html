@@ -2,6 +2,7 @@
 <link rel="import" href="/bower_components/paper-toggle-button/paper-toggle-button.html">
 <link rel="import" href="/components/z-panel/z-panel.html">
 <link rel="import" href="/components/game-config/game-config.html">
+<link rel="import" href="/components/preferences-list/preferences-list.html">
 
 <polymer-element name="create-game" attributes="creator">
   <template>
@@ -31,15 +32,6 @@
 			}
 			td.deadline-unit {
 				width: 0.5em;
-			}
-			li {
-				border: 1px solid #CFD8DC;
-				padding: 0.35em;
-			}
-			ol {
-				margin: 0px; 
-				padding: 0px;
-				list-style-position: inside;
 			}
 			td {
 				border: 1px solid #CFD8DC;
@@ -90,12 +82,7 @@
 							Preferences
 						</td>
 						<td>
-							<core-drag-drop></core-drag-drop>
-							<ol id="preferences-list">
-								<template repeat="{{ nation in game.nations }}">
-								  <li on-click="{{ bumpNation }}">{{ nation }}</li>
-								</template>
-							</ol>
+							<preferences-list list="{{ game.Members[0].PreferredNations }}"></preferences-list>
 						</td>
 				  </tr>
 			  </template>
@@ -156,33 +143,6 @@
 					m: 100,
 				},
 			],
-			bumpNation: function(ev) {
-				var clicked = ev.target.innerText;
-				var currentList = [];
-				var before = null;
-				var last = null;
-				$(this.$.optionTable.querySelector('#preferences-list')).children('li').each(function(index, el) {
-					if (el.innerText == clicked) {
-						before = last;
-					}
-					currentList.push(el.innerText);
-					last = el.innerText;
-				});
-				if (before != null) {
-					currentList = _.collect(currentList, function(nation) {
-						if (nation == clicked) {
-							return before;
-						} else if (nation == before) {
-							return clicked;
-						} else {
-							return nation;
-						}
-					});
-				}
-				$(this.$.optionTable.querySelector('#preferences-list')).children('li').each(function(index, el) {
-					el.innerText = currentList[index];
-				});
-			},
 			defaultConsequenceConfig: function(name) {
 				return {
 					name: name,
@@ -222,9 +182,13 @@
 			},
 			ready: function() {
 				this.game = {
-				  AllocationMethod: "Random",
+				  AllocationMethod: "Preferences",
 					Variant: "Classical",
-					Nations: [],
+					Members: [
+					  {
+					    PreferredNations: [],
+					  },
+					],
 				};
 				this.variant = 'Classical';
 			},
@@ -245,9 +209,7 @@
 				$(this.$.optionTable.querySelector('#preferences-list')).children().each(function(index, el) {
 					console.log(el.innerText);
 				});
-				/*
 				this.creator.create(this.game);
-				*/
 			},
 			stringify: JSON.stringify,
 			values: _.values,
@@ -267,7 +229,7 @@
 				}.bind(this), {});
 				this.game.NonCommitConsequences = this.defaultConsequenceConfig("Not committing");
 				this.game.NMRConsequences = this.defaultConsequenceConfig("Not committing + NMR");
-				this.game.nations = Variants[this.variant].Nations;
+				this.game.Members[0].PreferredNations = Variants[this.variant].Nations;
 			},
 		});
 	</script>

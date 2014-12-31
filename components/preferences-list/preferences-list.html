@@ -1,0 +1,53 @@
+
+<polymer-element name="preferences-list" attributes="list">
+  <template>
+	  <style>
+			li {
+				border: 1px solid #CFD8DC;
+				padding: 0.35em;
+			}
+			ol {
+				margin: 0px; 
+				padding: 0px;
+				list-style-position: inside;
+			}
+		</style>
+		<ol id="preferences-list">
+    	<template repeat="{{ el in list }}">
+    	  <li on-click="{{ bumpEl }}">{{ el }}</li>
+    	</template>
+    </ol>
+	</template>
+	<script>
+		Polymer({
+			bumpEl: function(ev) {
+				var clicked = ev.target.innerText;
+				var before = null;
+				var last = null;
+				_.each(this.list, function(el) {
+					if (el == clicked) {
+						before = last;
+					}
+					last = el;
+				}.bind(this));
+				if (before != null) {
+					this.list = _.collect(this.list, function(el) {
+						if (el == clicked) {
+							return before;
+						} else if (el == before) {
+							return clicked;
+						} else {
+							return el;
+						}
+					});
+				}
+			},
+		});
+	</script>
+</polymer-element>
+
+
+
+
+
+

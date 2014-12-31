@@ -166,8 +166,6 @@
 			gameCreator: function() {
 				return {
 					create: function(g) {
-						console.log(g);
-						/*
 						this.socket.send(JSON.stringify({
 							"Type": "Create",
 							"Object": {
@@ -175,7 +173,6 @@
 								"Data": g,
 							},
 						}));
-						*/
 						this.path = "/";
 					}.bind(this),
 				};
