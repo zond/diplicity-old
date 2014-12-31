@@ -2,6 +2,7 @@
 <link rel="import" href="/bower_components/paper-toggle-button/paper-toggle-button.html">
 <link rel="import" href="/components/z-panel/z-panel.html">
 <link rel="import" href="/components/game-config/game-config.html">
+<link rel="import" href="/components/deadline-config/deadline-config.html">
 <link rel="import" href="/components/preferences-list/preferences-list.html">
 
 <polymer-element name="create-game" attributes="creator">
@@ -98,7 +99,7 @@
 		    <template if="{{ privacyConfig.name == 'During' }}" repeat="{{ pressConfig in values(game.PressConfigs) }}">
 		      <template if="{{ pressConfig.name }}">
 					  <game-config config="{{ pressConfig }}" game="{{ game }}">
-					    <game-config config="{{ game.deadlineConfigs[pressConfig.name] }}"></game-config>
+					    <deadline-config config="{{ game.deadlineConfigs[pressConfig.name] }}"></deadline-config>
 					  </game-config>
 		      </template>
 		    </template>
