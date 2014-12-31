@@ -32,6 +32,15 @@
 			td.deadline-unit {
 				width: 0.5em;
 			}
+			li {
+				border: 1px solid #CFD8DC;
+				padding: 0.35em;
+			}
+			ol {
+				margin: 0px; 
+				padding: 0px;
+				list-style-position: inside;
+			}
 			td {
 				border: 1px solid #CFD8DC;
 				padding: 0.35em;
@@ -42,7 +51,7 @@
 			}
 	  </style>
 		<z-panel>
-		  <table>
+		  <table id="optionTable">
 				<tr>
 					<td class="label">
 						Private
@@ -75,6 +84,21 @@
 						</select>
 					</td>
 				</tr>
+				<template if="{{ game.AllocationMethod == 'Preferences' }}">
+				  <tr>
+						<td>
+							Preferences
+						</td>
+						<td>
+							<core-drag-drop></core-drag-drop>
+							<ol id="preferences-list">
+								<template repeat="{{ nation in game.nations }}">
+								  <li on-click="{{ bumpNation }}">{{ nation }}</li>
+								</template>
+							</ol>
+						</td>
+				  </tr>
+			  </template>
 			</table>
 			<game-config config="{{ game.NonCommitConsequences }}"></game-config>
 			<game-config config="{{ game.NMRConsequences }}"></game-config>
@@ -132,6 +156,33 @@
 					m: 100,
 				},
 			],
+			bumpNation: function(ev) {
+				var clicked = ev.target.innerText;
+				var currentList = [];
+				var before = null;
+				var last = null;
+				$(this.$.optionTable.querySelector('#preferences-list')).children('li').each(function(index, el) {
+					if (el.innerText == clicked) {
+						before = last;
+					}
+					currentList.push(el.innerText);
+					last = el.innerText;
+				});
+				if (before != null) {
+					currentList = _.collect(currentList, function(nation) {
+						if (nation == clicked) {
+							return before;
+						} else if (nation == before) {
+							return clicked;
+						} else {
+							return nation;
+						}
+					});
+				}
+				$(this.$.optionTable.querySelector('#preferences-list')).children('li').each(function(index, el) {
+					el.innerText = currentList[index];
+				});
+			},
 			defaultConsequenceConfig: function(name) {
 				return {
 					name: name,
@@ -173,6 +224,7 @@
 				this.game = {
 				  AllocationMethod: "Random",
 					Variant: "Classical",
+					Nations: [],
 				};
 				this.variant = 'Classical';
 			},
@@ -190,7 +242,12 @@
 				_.each(this.game.deadlineConfigs, function(deadlineConfig, phaseName) {
 					this.game.Deadlines[phaseName] = deadlineConfig.deadlineValue * deadlineConfig.deadlineUnit.f;
 				}.bind(this));
+				$(this.$.optionTable.querySelector('#preferences-list')).children().each(function(index, el) {
+					console.log(el.innerText);
+				});
+				/*
 				this.creator.create(this.game);
+				*/
 			},
 			stringify: JSON.stringify,
 			values: _.values,
@@ -210,6 +267,7 @@
 				}.bind(this), {});
 				this.game.NonCommitConsequences = this.defaultConsequenceConfig("Not committing");
 				this.game.NMRConsequences = this.defaultConsequenceConfig("Not committing + NMR");
+				this.game.nations = Variants[this.variant].Nations;
 			},
 		});
 	</script>

@@ -302,7 +302,7 @@ func subscribeOthers(c common.WSContext, filter kol.QFilter, preLimiter func(sou
 	return s.Subscribe(&Game{})
 }
 
-func SubscribeOthersOpen(c common.WSContext) error {
+func SubscribeOthersOpen(c common.WSContext) (err error) {
 	return subscribeOthers(c, kol.And{kol.Equals{"Closed", false}, kol.Equals{"Private", false}}, nil, func(source GameStates) (result GameStates) {
 		return source.SortAndLimit(func(a, b GameState) bool {
 			leftA := 0

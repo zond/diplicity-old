@@ -43,7 +43,7 @@ const (
 )
 
 var GameStates = map[string]GameState{
-	"created": GameStateCreated,
-	"started": GameStateStarted,
-	"ended":   GameStateEnded,
+	"Created": GameStateCreated,
+	"Started": GameStateStarted,
+	"Ended":   GameStateEnded,
 }
