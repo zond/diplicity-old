@@ -1,22 +1,16 @@
+<link rel="import" href="/bower_components/paper-button/paper-button.html">
 
 <polymer-element name="preferences-list" attributes="list">
   <template>
 	  <style>
-			li {
-				border: 1px solid #CFD8DC;
-				padding: 0.35em;
-			}
-			ol {
-				margin: 0px; 
-				padding: 0px;
-				list-style-position: inside;
+			paper-button {
+				margin-bottom: 0.5em;
+				text-transform: none !important;
 			}
 		</style>
-		<ol id="preferences-list">
-    	<template repeat="{{ el in list }}">
-    	  <li on-click="{{ bumpEl }}">{{ el }}</li>
-    	</template>
-    </ol>
+		<template repeat="{{ el in list }}">
+		  <paper-button flex layout vertical on-click="{{ bumpEl }}" raised>{{ el }}</paper-button>
+		</template>
 	</template>
 	<script>
 		Polymer({

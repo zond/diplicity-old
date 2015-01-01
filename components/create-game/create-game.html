@@ -9,7 +9,6 @@
   <template>
 	  <style>
 			paper-button {
-				width: 100%;
 				margin-bottom: 0.5em;
 				text-transform: none !important;
 			}
@@ -108,7 +107,7 @@
 		    </template>
 		  </game-config>
 		</template>
-		<paper-button on-click="{{ createGame }}" raised>Create</paper-button>
+		<paper-button on-click="{{ createGame }}" layout vertical flex raised>Create</paper-button>
 	</template>
 	<script>
 		Polymer({
