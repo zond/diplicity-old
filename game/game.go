@@ -17,8 +17,16 @@ import (
 	"github.com/zond/kcwraps/kol"
 )
 
+type EndReason string
+
+func SoloVictory(n dip.Nation) EndReason {
+	return EndReason(fmt.Sprintf("SoloVictory:%v", n))
+}
+
 const (
-	RankingBlind = 1.0 / 16.0
+	RankingBlind                 = 1.0 / 16.0
+	Anonymous         dip.Nation = "Anonymous"
+	ZeroActiveMembers EndReason  = "ZeroActiveMembers"
 )
 
 func init() {
@@ -82,7 +90,7 @@ type Game struct {
 	Closed             bool           `kol:"index"`
 	Private            bool           `kol:"index"`
 	State              meta.GameState `kol:"index"`
-	EndReason          meta.EndReason
+	EndReason          EndReason
 	Variant            string
 	AllocationMethod   string
 	EndYear            int
@@ -217,7 +225,7 @@ func (self *Game) endPhaseConsequences(c common.SkinnyContext, phase *Phase, mem
 	return
 }
 
-func (self *Game) end(c common.SkinnyContext, phase *Phase, members Members, winner *Member, reason meta.EndReason) (err error) {
+func (self *Game) end(c common.SkinnyContext, phase *Phase, members Members, winner *Member, reason EndReason) (err error) {
 	self.EndReason = reason
 	self.State = meta.GameStateEnded
 	if err = c.DB().Set(self); err != nil {
@@ -343,7 +351,7 @@ func (self *Game) resolve(c common.SkinnyContext, phase *Phase) (err error) {
 				err = fmt.Errorf("None of %+v has nation %#v??", members, *winner)
 				return
 			}
-			if err = self.end(c, nextPhase, members, winnerMember, meta.SoloVictory(*winner)); err != nil {
+			if err = self.end(c, nextPhase, members, winnerMember, SoloVictory(*winner)); err != nil {
 				return
 			}
 			return
@@ -351,7 +359,7 @@ func (self *Game) resolve(c common.SkinnyContext, phase *Phase) (err error) {
 
 		// End the game now if nobody is active anymore
 		if len(active) == 0 {
-			if err = self.end(c, nextPhase, members, nil, meta.ZeroActiveMembers); err != nil {
+			if err = self.end(c, nextPhase, members, nil, ZeroActiveMembers); err != nil {
 				return
 			}
 			return
@@ -359,7 +367,7 @@ func (self *Game) resolve(c common.SkinnyContext, phase *Phase) (err error) {
 
 		// End the game now if only one player isn't surrendering
 		if len(nonSurrendering) == 1 {
-			if err = self.end(c, nextPhase, members, nonSurrendering[0], meta.SoloVictory(nonSurrendering[0].Nation)); err != nil {
+			if err = self.end(c, nextPhase, members, nonSurrendering[0], SoloVictory(nonSurrendering[0].Nation)); err != nil {
 				return
 			}
 			return

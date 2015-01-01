@@ -35,7 +35,7 @@
 		</style>
 		<paper-button class="toggle" on-click="{{ toggleOpened }}" raised>
 		  <span class="toggle-title">
-				<template if="{{ game.State != gameStates.created }}">
+				<template if="{{ game.State != gameStates.Created }}">
      			<template if="{{ me }}">
      			{{ me.Nation }}, {{ game.Phase.Season }} {{ game.Phase.Year }}, {{ game.Phase.Type }}, {{ deadlines }}
      			</template>
@@ -43,7 +43,7 @@
      			{{ game.Phase.Season }} {{ game.Phase.Year }}, {{ game.Phase.Type }}, {{ deadlines }}
      			</template>
 				</template>
-				<template if="{{ game.State == gameStates.created }}">
+				<template if="{{ game.State == gameStates.Created }}">
 				{{ game.Members.length }}/{{ variant.Nations.length }} members, {{ deadlines }}, {{ game.AllocationMethod }}
 				</template>
 			</span>
@@ -174,16 +174,12 @@
 			},
 			displayConsequences: function(c) {
         var result = [];
-				if (c & Consequences.ReliabilityHit == Consequences.ReliabilityHit) {
-					result.push("reliability hit")
+				for (var k in c) {
+					if (c[k]) {
+						result.push(k)
+					}
 				}
-				if (c & Consequences.NoWait == Consequences.NoWait) {
-					result.push("no wait")
-				}
-				if (c & Consequences.Surrender == Consequences.Surrender) {
-					result.push("surrender")
-				}
-				return result.join(", ");
+				return this.conjoin(result);
 			},
 			conjoin: function(a) {
 				if (a.length == 0) {
@@ -201,40 +197,33 @@
 				return s.substring(0,1).toUpperCase() + s.substring(1, s.length);
 			},
 			displayPhase: function(g, p) {
+				console.log(g);
         var result = [];
 				var deadline = g.Deadlines[p];
 				if (deadline != null) {
 					result.push(this.timeInWords(deadline));
 				}
 				var chats = [];
-				if (g.ChatFlags[p] & ChatFlags.Private == ChatFlags.Private) {
-					chats.push("private")
-				}
-				if (g.ChatFlags[p] & ChatFlags.Group == ChatFlags.Group) {
-					chats.push("group")
-				}
-				if (g.ChatFlags[p] & ChatFlags.Conference == ChatFlags.Conference) {
-					chats.push("conference")
+				for (var k in g.PressConfigs[p]) {
+					if (g.PressConfigs[p][k]) {
+						chats.push(k)
+					}
 				}
 				if (chats.length > 0) {
-					result.push(this.conjoin(chats) + " press");
+					result.push(this.conjoin(chats));
 				}
 				var generalPhase = "DuringGame";
-				if (p == "BeforeGame" || p == "AfterGame") {
+				if (p == "Before" || p == "After") {
 					generalPhase = p;
 				}
 				var secrets = [];
-				if (g.SecretNation & SecretFlags[generalPhase] == SecretFlags[generalPhase]) {
-					secrets.push("nation")
-				}
-				if (g.SecretNickname & SecretFlags[generalPhase] == SecretFlags[generalPhase]) {
-					secrets.push("nickname")
-				}
-				if (g.SecretEmail & SecretFlags[generalPhase] == SecretFlags[generalPhase]) {
-					secrets.push("email")
+				for (var k in g.PrivacyConfigs[generalPhase]) {
+					if (g.PrivacyConfigs[generalPhase][k]) {
+						secrets.push(k);
+					}
 				}
 				if (secrets.length > 0) {
-					result.push("secret " + this.conjoin(secrets));
+					result.push(this.conjoin(secrets));
 				}
 				return result.join(", ");
 			},
@@ -244,11 +233,11 @@
 				variant: 'findVariant(game)',
 				notCommitting: 'displayConsequences(game.NonCommitConsequences)',
 				nmr: 'displayConsequences(game.NMRConsequences)',
-				beforeGame: 'displayPhase(game, "BeforeGame")',
+				beforeGame: 'displayPhase(game, "Before")',
 				movement: 'displayPhase(game, "Movement")',
 				adjustment: 'displayPhase(game, "Adjustment")',
 				retreat: 'displayPhase(game, "Retreat")',
-				afterGame: 'displayPhase(game, "AfterGame")',
+				afterGame: 'displayPhase(game, "After")',
 			},
 		});
 	</script>

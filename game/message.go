@@ -199,7 +199,7 @@ func (self *Message) Send(c common.SkinnyContext, game *Game, sender *Member) (e
 	var phaseType dip.PhaseType
 	switch game.State {
 	case meta.GameStateCreated:
-		phaseType = meta.BeforePhaseType
+		phaseType = BeforePhaseType
 	case meta.GameStateStarted:
 		var phase *Phase
 		if _, phase, err = game.Phase(c.DB(), 0); err != nil {
@@ -207,7 +207,7 @@ func (self *Message) Send(c common.SkinnyContext, game *Game, sender *Member) (e
 		}
 		phaseType = phase.Type
 	case meta.GameStateEnded:
-		phaseType = meta.AfterPhaseType
+		phaseType = AfterPhaseType
 	default:
 		err = fmt.Errorf("Unknown game state for %+v", game)
 		return

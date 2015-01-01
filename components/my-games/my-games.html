@@ -39,15 +39,16 @@
 		Polymer({
 			filterGamesByState: function(games, state) {
 				var result = _.filter(games, function(game) {
+					console.log('checking if', game, 'is', state);
 					return game.State == state;
 				});
 				return result;
 			},
 			gameStates: GameStates,
 			computed: {
-				runningGames: 'filterGamesByState(games, gameStates.started)',
-				formingGames: 'filterGamesByState(games, gameStates.created)',
-				finishedGames: 'filterGamesByState(games, gameStates.ended)',
+				runningGames: 'filterGamesByState(games, gameStates.Started)',
+				formingGames: 'filterGamesByState(games, gameStates.Created)',
+				finishedGames: 'filterGamesByState(games, gameStates.Ended)',
 			},
 			ready: function() {
 				this.games = [];

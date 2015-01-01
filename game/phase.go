@@ -14,6 +14,12 @@ import (
 	"github.com/zond/kcwraps/kol"
 )
 
+const (
+	BeforePhaseType dip.PhaseType = "Before"
+	AfterPhaseType  dip.PhaseType = "After"
+	DuringPhaseType dip.PhaseType = "During"
+)
+
 func ScheduleUnresolvedPhases(c common.SkinnyContext) (err error) {
 	unresolved := Phases{}
 	if err = c.DB().Query().Where(kol.Equals{"Resolved", false}).All(&unresolved); err != nil {

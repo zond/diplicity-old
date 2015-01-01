@@ -376,6 +376,7 @@ func Create(c common.WSContext) error {
 
 	game := &Game{
 		Variant:               state.Game.Variant,
+		State:                 meta.GameStateCreated,
 		EndYear:               state.Game.EndYear,
 		PressConfigs:          state.Game.PressConfigs,
 		PrivacyConfigs:        state.Game.PrivacyConfigs,

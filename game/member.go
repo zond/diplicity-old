@@ -90,11 +90,11 @@ func (self *Member) ToState(d *kol.DB, g *Game, email string, isMember bool, isA
 	privacyConfig := PrivacyConfig{}
 	switch g.State {
 	case meta.GameStateCreated:
-		privacyConfig = g.PrivacyConfigs[meta.BeforePhaseType]
+		privacyConfig = g.PrivacyConfigs[BeforePhaseType]
 	case meta.GameStateStarted:
-		privacyConfig = g.PrivacyConfigs[meta.DuringPhaseType]
+		privacyConfig = g.PrivacyConfigs[DuringPhaseType]
 	case meta.GameStateEnded:
-		privacyConfig = g.PrivacyConfigs[meta.AfterPhaseType]
+		privacyConfig = g.PrivacyConfigs[AfterPhaseType]
 	default:
 		panic(fmt.Errorf("Unknown game state for %+v", g))
 	}
@@ -124,10 +124,10 @@ func (self *Member) ToState(d *kol.DB, g *Game, email string, isMember bool, isA
 
 func (self *Member) ShortName(game *Game, user *user.User) string {
 	if game.State == meta.GameStateCreated {
-		if user.Nickname != "" && !game.PrivacyConfigs[meta.BeforePhaseType].SecretNickname {
+		if user.Nickname != "" && !game.PrivacyConfigs[BeforePhaseType].SecretNickname {
 			return user.Nickname
 		}
-		if user.Email != "" && !game.PrivacyConfigs[meta.BeforePhaseType].SecretEmail {
+		if user.Email != "" && !game.PrivacyConfigs[BeforePhaseType].SecretEmail {
 			return strings.Split(user.Email, "@")[0]
 		}
 		return "Anonymous"

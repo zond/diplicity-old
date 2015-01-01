@@ -316,15 +316,6 @@ func (self *Web) Tracef(format string, args ...interface{}) {
 	self.Logf(Trace, "\033[1;32mTRACE\t"+format+"\033[0m", args...)
 }
 
-func (self *Web) Consequences() (result string, err error) {
-	b, err := json.Marshal(meta.Consequences)
-	if err != nil {
-		return
-	}
-	result = string(b)
-	return
-}
-
 func (self *Web) OrderedAllocationMethods() (result string, err error) {
 	b, err := json.Marshal(allocation.OrderedMethods)
 	if err != nil {
