@@ -252,7 +252,7 @@ func SubscribeMessages(c common.WSContext) (err error) {
 func subscribeOthers(c common.WSContext, filter kol.QFilter, preLimiter func(source Games) (result Games), postLimiter func(source GameStates) (result GameStates)) error {
 	s := c.Pack().New(c.Match()[0])
 	s.Query = s.DB().Query().Where(filter)
-	s.Call = func(i interface{}, op string) error {
+	s.Call = func(i interface{}, op string) (err error) {
 		games := i.([]*Game)
 		if preLimiter != nil {
 			games = ([]*Game)(preLimiter(Games(games)))
@@ -260,23 +260,29 @@ func subscribeOthers(c common.WSContext, filter kol.QFilter, preLimiter func(sou
 		states := GameStates{}
 		isMember := false
 		me := &user.User{Id: kol.Id(c.Principal())}
-		if err := c.DB().Get(me); err != nil {
-			return err
+		if err = c.DB().Get(me); err != nil {
+			if err == kol.NotFound {
+				me = nil
+				err = nil
+			} else {
+				return
+			}
 		}
 		for _, game := range games {
 			if !game.Disallows(me) {
-				members, err := game.Members(c.DB())
-				if err != nil {
-					return err
+				members := Members{}
+				if members, err = game.Members(c.DB()); err != nil {
+					return
 				}
-				if disallows, err := members.Disallows(c.DB(), me); err != nil {
-					return err
+				disallows := false
+				if disallows, err = members.Disallows(c.DB(), me); err != nil {
+					return
 				} else if !disallows {
 					isMember = members.Contains(c.Principal())
 					if !isMember {
-						state, err := game.ToState(c.DB(), members, nil)
-						if err != nil {
-							return err
+						var state GameState
+						if state, err = game.ToState(c.DB(), members, nil); err != nil {
+							return
 						}
 						states = append(states, state)
 					}
@@ -289,7 +295,7 @@ func subscribeOthers(c common.WSContext, filter kol.QFilter, preLimiter func(sou
 			}
 			return s.Send(states, op)
 		}
-		return nil
+		return
 	}
 	return s.Subscribe(&Game{})
 }

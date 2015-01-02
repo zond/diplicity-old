@@ -179,6 +179,9 @@ func (self *Member) ReliabilityDelta(d *kol.DB, i int) (err error) {
 }
 
 func (self Members) Disallows(d *kol.DB, asking *user.User) (result bool, err error) {
+	if asking == nil {
+		return
+	}
 	var askerList map[string]bool
 	if askerList, err = asking.Blacklistings(d); err != nil {
 		return

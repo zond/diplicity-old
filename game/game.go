@@ -111,6 +111,9 @@ type Game struct {
 }
 
 func (self *Game) Disallows(u *user.User) bool {
+	if u == nil {
+		return false
+	}
 	return (self.MinimumRanking != 0 && u.Ranking < self.MinimumRanking) ||
 		(self.MaximumRanking != 0 && u.Ranking > self.MaximumRanking) ||
 		u.Reliability() < self.MinimumReliability
