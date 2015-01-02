@@ -39,7 +39,6 @@
 		Polymer({
 			filterGamesByState: function(games, state) {
 				var result = _.filter(games, function(game) {
-					console.log('checking if', game, 'is', state);
 					return game.State == state;
 				});
 				return result;

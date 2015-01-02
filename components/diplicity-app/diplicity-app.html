@@ -43,30 +43,44 @@
 				</core-menu>
 			</core-header-panel>
 	    <div tool flex>
-				<paper-tabs valueattr="path" selected="{{ path }}" self-end>
-				  <paper-tab path="/">My games</paper-tab>
-					<paper-tab path="/games/other">Other games</paper-tab>
-					<paper-tab path="/games/create">Create game</paper-tab>
-      	</paper-tabs>
+				<template if="{{ user.Id }}">
+				  <paper-tabs valueattr="path" selected="{{ path }}" self-end>
+			      <paper-tab path="/">My games</paper-tab>
+						<paper-tab path="/games/other">Other games</paper-tab>
+			    	<paper-tab path="/games/create">Create game</paper-tab>
+					</paper-tabs>
+				</template>
+				<template if="{{ !user.Id }}">
+				  <paper-tabs valueattr="path" selected="/" self-end>
+						<paper-tab path="/">Games</paper-tab>
+					</paper-tabs>
+				</template>
       </div>
 			<div flex>
-				<path-selector path="{{ path }}">
-				  <div path="/">
-						<div cross-fade>
-							<my-games user="{{ user }}" subscriber="{{ subscriber() }}"></my-games>
-						</div>
+				<template if="{{ user.Id }}">
+					<path-selector path="{{ path }}">
+				    <div path="/">
+				    	<div cross-fade>
+				    		<my-games user="{{ user }}" subscriber="{{ subscriber() }}"></my-games>
+				    	</div>
+				    </div>
+				    <div path="/games/other">
+				    	<div cross-fade>
+				    		<other-games user="{{ user }}" subscriber="{{ subscriber() }}"></other-games>
+				    	</div>
+				    </div>
+				    <div path="/games/create">
+				    	<div cross-fade>
+				    		<create-game creator="{{ gameCreator() }}"></create-game>
+				    	</div>
+				    </div>
+					</path-selector>
+				</template>
+				<template if="{{ !user.Id }}">
+				  <div cross-fade>
+						<other-games user="{{ user }}" subscriber="{{ subscriber() }}"></other-games>
 					</div>
-					<div path="/games/other">
-						<div cross-fade>
-							<other-games user="{{ user }}" subscriber="{{ subscriber() }}"></other-games>
-						</div>
-					</div>
-					<div path="/games/create">
-						<div cross-fade>
-							<create-game creator="{{ gameCreator() }}"></create-game>
-						</div>
-					</div>
-        </path-selector>
+				</template>
 			</div>
 		</core-scaffold>
 	</template>

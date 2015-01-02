@@ -198,7 +198,6 @@
 				var unit = _.find(this.deadlineUnitTypes, function(unitType) {
 					return unitType.name == ev.target.value;
 				});
-				console.log(unit);
 				this.game.deadlineConfigs[$(ev.target).attr('data-phase-type')].deadlineUnit = unit;
 			},
 			createGame: function() {
@@ -206,9 +205,6 @@
 				_.each(this.game.deadlineConfigs, function(deadlineConfig, phaseName) {
 					this.game.Deadlines[phaseName] = deadlineConfig.deadlineValue * deadlineConfig.deadlineUnit.f;
 				}.bind(this));
-				$(this.$.optionTable.querySelector('#preferences-list')).children().each(function(index, el) {
-					console.log(el.innerText);
-				});
 				this.creator.create(this.game);
 			},
 			stringify: JSON.stringify,

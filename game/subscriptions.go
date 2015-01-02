@@ -250,14 +250,6 @@ func SubscribeMessages(c common.WSContext) (err error) {
 }
 
 func subscribeOthers(c common.WSContext, filter kol.QFilter, preLimiter func(source Games) (result Games), postLimiter func(source GameStates) (result GameStates)) error {
-	if c.Principal() == "" {
-		return websocket.JSON.Send(c.Conn(), gosubs.Message{
-			Type: gosubs.FetchType,
-			Object: &gosubs.Object{
-				URI: c.Match()[0],
-			},
-		})
-	}
 	s := c.Pack().New(c.Match()[0])
 	s.Query = s.DB().Query().Where(filter)
 	s.Call = func(i interface{}, op string) error {
