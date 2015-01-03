@@ -1,5 +1,6 @@
 <link rel="import" href="/bower_components/paper-button/paper-button.html">
 <link rel="import" href="/components/z-panel/z-panel.html">
+<link rel="import" href="/components/preferences-list/preferences-list.html">
 
 <polymer-element name="game-list-element" attributes="game user">
   <template>
@@ -20,8 +21,11 @@
 				border: 1px solid #CFD8DC;
 				padding: 0.35em;
 			}
-			paper-button::shadow .button-content {
+			paper-button.toggle::shadow .button-content {
 				justify-content: flex-start !important;
+			}
+			paper-button {
+				text-transform: none !important;
 			}
 			.members-toggle {
 				height: 1.25em;
@@ -129,12 +133,34 @@
 						<td>After game</td>
 						<td>{{ capitalize(afterGame) }}</td>
 				  </tr>
+			    <template if="{{ !me }}">
+			      <template if="{{ !game.Closed }}">
+			    	  <template if="{{ game.AllocationMethod == 'Preferences' }}">
+							  <tr>
+									<td>
+										Preferences
+									</td>
+									<td>
+										<preferences-list list="{{ preferences }}"></preferences-list>
+									</td>
+								</tr>
+			    		</template>
+							<tr>
+								<td colspan="2">
+									<paper-button layout vertical flex raised>Join</paper-button>
+								</td>
+							</tr>
+			    	</template>
+			    </template>
 				</table>
 			</z-panel>
 		</core-collapse>
 	</template>
 	<script>
 		Polymer({
+			ready: function() {
+				this.preferences = Variants[this.game.Variant].Nations;
+			},
 			toggleOpened: function() {
 				this.opened = !this.opened;
 			},
