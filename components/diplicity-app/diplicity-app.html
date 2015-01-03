@@ -123,37 +123,44 @@
 							} else {
 							  var old = subs[i].get();
 								if (old.constructor === Array) {
-								  switch (msg.Type) {
+								  switch (message.Type) {
 									case 'Create':
-									  old = _.clone(old);
-									  old.push(msg.Object.Data);
-                    subs[i].set(old)
+                    subs[i].set(old.concat(message.Object.Data));
 										break;
 									case 'Update':
+									  var updated = {};
+										_.each(message.Object.Data, function(el) {
+											updated[el.Id] = el;
+										});
 									  old = _.collect(old, function(el) {
-											if (el.Id == msg.Object.Data.Id) {
-												return msg.Object.Data;
+											var found = updated[el.Id];
+											if (found == null) {
+												return el;
 											} else {
-											  return el;
+											  return found;
 											}
 									  });
 									  subs[i].set(old);
 										break;
 									case 'Delete':
+									  var deleted = {};
+										_.each(message.Object.Data, function(el) {
+											deleted[el.Id] = el;
+										});
 									  old = _.reject(old, function(el) {
-                      return el.Id == msg.Object.Data.Id;
+											return deleted[el.Id] != null;
 										});
 										subs[i].set(old);
 										break;
 									}
 								} else {
-								  switch (msg.Type) {
+								  switch (message.Type) {
 									case 'Create':
 									  console.log('Message was a create on a non Array type subscription. Very confusing.');
-									  subs[i].set(msg.Object.Data);
+									  subs[i].set(message.Object.Data);
 										break;
 									case 'Update':
-									  subs[i].set(msg.Object.Data);
+									  subs[i].set(message.Object.Data);
 										break;
 									case 'Delete':
 									  old = $.extend({}, old);
@@ -228,8 +235,13 @@
 			gameLeaver: function() {
 				return {
 					leave: function(g) {
-						console.log('leaving', g);
-					},
+						this.socket.send(JSON.stringify({
+							"Type": "Delete",
+							"Object": {
+								"URI": "/games/" + g.Id,
+							},
+						}));
+					}.bind(this),
 				};
 			},
 			gameCreator: function() {
