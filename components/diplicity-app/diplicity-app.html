@@ -61,7 +61,7 @@
 					<path-selector path="{{ path }}">
 				    <div path="/">
 				    	<div cross-fade>
-				    		<my-games user="{{ user }}" subscriber="{{ subscriber() }}"></my-games>
+								<my-games user="{{ user }}" leaver="{{ gameLeaver() }}" subscriber="{{ subscriber() }}"></my-games>
 				    	</div>
 				    </div>
 				    <div path="/games/other">
@@ -114,11 +114,55 @@
 				};
 				this.socket.onmessage = function(options) {
 					var message = JSON.parse(options.data);
-					console.log('message', message);
+					console.log('Message', message);
 					var subs = this.subscriptions[message.Object.URI];
 					if (subs != null) {
 						for (var i = 0; i < subs.length; i++) {
-							subs[i](message);
+							if (message.Type == 'Fetch') {
+							  subs[i].set(message.Object.Data);
+							} else {
+							  var old = subs[i].get();
+								if (old.constructor === Array) {
+								  switch (msg.Type) {
+									case 'Create':
+									  old = _.clone(old);
+									  old.push(msg.Object.Data);
+                    subs[i].set(old)
+										break;
+									case 'Update':
+									  old = _.collect(old, function(el) {
+											if (el.Id == msg.Object.Data.Id) {
+												return msg.Object.Data;
+											} else {
+											  return el;
+											}
+									  });
+									  subs[i].set(old);
+										break;
+									case 'Delete':
+									  old = _.reject(old, function(el) {
+                      return el.Id == msg.Object.Data.Id;
+										});
+										subs[i].set(old);
+										break;
+									}
+								} else {
+								  switch (msg.Type) {
+									case 'Create':
+									  console.log('Message was a create on a non Array type subscription. Very confusing.');
+									  subs[i].set(msg.Object.Data);
+										break;
+									case 'Update':
+									  subs[i].set(msg.Object.Data);
+										break;
+									case 'Delete':
+									  old = $.extend({}, old);
+									  old._deleted = true;
+										subs[i].set(old);
+										break;
+									}
+								}
+							}
 						}
 					}
 				}.bind(this);
@@ -142,14 +186,16 @@
 					}.bind(this),
 				});
 			},
-			subscribe: function(uri, cb) {
+			subscribe: function(uri, newSub) {
 				var alreadySubscribed = true;
 				var subs = this.subscriptions[uri];
 				if (subs == null || subs.length == 0) {
-					subs = [cb];
+					subs = [newSub];
 					alreadySubscribed = false;
 				} else {
-				  subs = _.union(subs, [cb]);
+				  subs = _.reject(subs, function(sub) {
+						return sub == newSub;
+					}).concat([newSub]);
 				}
 				this.subscriptions[uri] = subs;
 				if (!alreadySubscribed && this.connected) {
@@ -162,10 +208,12 @@
 				}
 			},
 			subscriptions: {},
-			unsubscribe: function(uri, cb) {
+			unsubscribe: function(uri, toRemove) {
 				var subs = this.subscriptions[uri];
 				if (subs != null) {
-					subs = _.without(this.subscriptions[uri], cb)
+					subs = _.reject(this.subscriptions[uri], function(sub) {
+						return sub == toRemove;
+					});
 					if (subs.length == 0 && this.connected) {
 						this.socket.send(JSON.stringify({
 							"Type": "Unsubscribe",
@@ -176,6 +224,13 @@
 					}
 					this.subscriptions[uri] = subs;
 				}
+			},
+			gameLeaver: function() {
+				return {
+					leave: function(g) {
+						console.log('leaving', g);
+					},
+				};
 			},
 			gameCreator: function() {
 				return {
@@ -197,17 +252,19 @@
         this.user = {};
 				this.connected = false;
 				this.loginUrl = window.location.protocol + "//" + window.location.host + "/login?return_to=" + encodeURIComponent(window.location.href);
-				this.message = function(message) {
-					switch (message.Object.URI) {
-						case '/user':
-						this.user = message.Object.Data;
-					}
-				}.bind(this);
-				this.subscribe("/user", this.message);
+				this.userSubscription = {
+					get: function() {
+						return this.user;
+					}.bind(this),
+					set: function(u) {
+						this.user = u;
+					}.bind(this),
+				};
+				this.subscribe("/user", this.userSubscription);
 				this.fetchToken();
 			},
 			detached: function() {
-				this.unsubscribe('/user', this.message);
+				this.unsubscribe('/user', this.userSubscription);
 			},
 		});
 	</script>

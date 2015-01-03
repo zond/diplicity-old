@@ -2,7 +2,7 @@
 <link rel="import" href="/components/z-panel/z-panel.html">
 <link rel="import" href="/components/preferences-list/preferences-list.html">
 
-<polymer-element name="game-list-element" attributes="game user">
+<polymer-element name="game-list-element" attributes="game user leaver">
   <template>
 	  <style>
 			paper-button.toggle {
@@ -133,8 +133,15 @@
 						<td>After game</td>
 						<td>{{ capitalize(afterGame) }}</td>
 				  </tr>
-			    <template if="{{ !me }}">
-			      <template if="{{ !game.Closed }}">
+					<template if="{{ !game.Closed }}">
+					  <template if="{{ me }}">
+							<tr>
+								<td colspan="2">
+									<paper-button layout vertical flex raised on-click="{{ leave }}">Leave</paper-button>
+								</td>
+							</tr>
+				  	</template>
+			      <template if="{{ !me }}">
 			    	  <template if="{{ game.AllocationMethod == 'Preferences' }}">
 							  <tr>
 									<td>
@@ -150,8 +157,8 @@
 									<paper-button layout vertical flex raised>Join</paper-button>
 								</td>
 							</tr>
-			    	</template>
-			    </template>
+			      </template>
+					</template>
 				</table>
 			</z-panel>
 		</core-collapse>
@@ -197,6 +204,9 @@
 					return this.timeInWords(g.Deadlines.Movement) + '/' + this.timeInWords(g.Deadlines.Adjustment);
 				}
 				return this.timeInWords(g.Deadlines.Movement) + '/' + this.timeInWords(g.Deadlines.Retreat) + '/' + this.timeInWords(g.Deadlines.Adjustment);
+			},
+			leave: function() {
+				this.leaver.leave(this.game);
 			},
 			displayConsequences: function(c) {
         var result = [];

@@ -2,7 +2,7 @@
 <link rel="import" href="/components/game-list/game-list.html">
 <link rel="import" href="/components/path-selector/path-selector.html">
 
-<polymer-element name="my-games" attributes="subscriber user">
+<polymer-element name="my-games" attributes="subscriber user leaver">
   <template>
 	  <style>
 			paper-tabs::shadow > * {
@@ -20,17 +20,17 @@
 		<path-selector path="{{ path }}">
 		  <div path="/">
 				<div cross-fade>
-					<game-list user="{{ user }}" games="{{ runningGames }}"></game-list>
+					<game-list user="{{ user }}" leaver="{{ leaver }}" games="{{ runningGames }}"></game-list>
 				</div>
 			</div>
 			<div path="/games/mine/forming">
 				<div cross-fade>
-					<game-list user="{{ user }}" games="{{ formingGames }}"></game-list>
+					<game-list user="{{ user }}" leaver="{{ leaver }}" games="{{ formingGames }}"></game-list>
 				</div>
 			</div>
 		  <div path="/games/mine/finished">
 				<div cross-fade>
-					<game-list user="{{ user }}" games="{{ finishedGames }}"></game-list>
+					<game-list user="{{ user }}" leaver="{{ leaver}}" games="{{ finishedGames }}"></game-list>
 				</div>
 			</div>
 		</path-selector>
@@ -51,28 +51,18 @@
 			},
 			ready: function() {
 				this.games = [];
-				this.message = function(msg) {
-					switch (msg.Type) {
-						case 'Fetch':
-						this.games = msg.Object.Data;
-						break;
-						case 'Create':
-						this.games.push(msg.Object.Data);
-						break;
-						case 'Update':
-						this.games = _.reject(this.games, function(g) {
-							return g.Id == msg.Object.Data.Id;
-						}).push(msg.Object.Data);
-						case 'Delete':
-						this.games = _.reject(this.games, function(g) {
-							return g.Id == msg.Object.Data.Id;
-						})
-					}
-				}.bind(this);
-				this.subscriber.subscribe('/games/mine', this.message);
+				this.gamesSubscription = {
+					get: function() {
+						return this.games;
+					}.bind(this),
+					set: function(g) {
+						this.games = g;
+					}.bind(this),
+				};
+				this.subscriber.subscribe('/games/mine', this.gamesSubscription);
 			},
 			detached: function() {
-				this.subscriber.unsubscribe('/games/mine', this.message);
+				this.subscriber.unsubscribe('/games/mine', this.gamesSubscription);
 			},
 		});
 	</script>
