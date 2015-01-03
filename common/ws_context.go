@@ -7,8 +7,8 @@ import (
 
 type WSContext interface {
 	subs.SubContext
-	BetweenTransactions(func(c WSContext))
-	Transact(func(c WSContext) error) error
+	BetweenTransactions(func(WSContext) error) error
+	Transact(func(WSContext) error) error
 	Mailer
 	Env() string
 	Diet() SkinnyContext
@@ -35,10 +35,10 @@ func (self *defaultWSContext) Diet() SkinnyContext {
 	return skinnyWSContext{WSContext: self}
 }
 
-func (self defaultWSContext) BetweenTransactions(f func(c WSContext)) {
-	self.Context.BetweenTransactions(func(c subs.Context) {
+func (self defaultWSContext) BetweenTransactions(f func(WSContext) error) (err error) {
+	return self.Context.BetweenTransactions(func(c subs.Context) (err error) {
 		self.Context = c
-		f(&self)
+		return f(&self)
 	})
 }
 

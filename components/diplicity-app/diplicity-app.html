@@ -61,12 +61,12 @@
 					<path-selector path="{{ path }}">
 				    <div path="/">
 				    	<div cross-fade>
-								<my-games user="{{ user }}" leaver="{{ gameLeaver() }}" subscriber="{{ subscriber() }}"></my-games>
+								<my-games user="{{ user }}" leaver="{{ gameLeaver() }}" joiner="{{ gameJoiner() }}" subscriber="{{ subscriber() }}"></my-games>
 				    	</div>
 				    </div>
 				    <div path="/games/other">
 				    	<div cross-fade>
-				    		<other-games user="{{ user }}" subscriber="{{ subscriber() }}"></other-games>
+				    		<other-games user="{{ user }}" leaver="{{ gameLeaver() }}" joiner="{{ gameJoiner() }}" subscriber="{{ subscriber() }}"></other-games>
 				    	</div>
 				    </div>
 				    <div path="/games/create">
@@ -78,7 +78,7 @@
 				</template>
 				<template if="{{ !user.Id }}">
 				  <div cross-fade>
-						<other-games user="{{ user }}" subscriber="{{ subscriber() }}"></other-games>
+						<other-games user="{{ user }}" leaver="{{ gameLeaver() }}" joiner="{{ gameJoiner() }}" subscriber="{{ subscriber() }}"></other-games>
 					</div>
 				</template>
 			</div>
@@ -177,7 +177,12 @@
 					this.connected = true;
 					for (var uri in this.subscriptions) {
 						var cb = this.subscriptions[uri];
-						this.socket.send(JSON.stringify({"Type": "Subscribe", "Object": {"URI": uri}}));
+						this.socket.send(JSON.stringify({
+							Type: "Subscribe", 
+							Object: {
+								URI: uri,
+						  },
+						}));
 					}
 				}.bind(this);
 				this.socket.onclose = function(options) {
@@ -207,9 +212,9 @@
 				this.subscriptions[uri] = subs;
 				if (!alreadySubscribed && this.connected) {
 					this.socket.send(JSON.stringify({
-						"Type": "Subscribe",
-						"Object": {
-							"URI": uri,
+						Type: "Subscribe",
+						Object: {
+							URI: uri,
 						},
 					}));
 				}
@@ -223,9 +228,9 @@
 					});
 					if (subs.length == 0 && this.connected) {
 						this.socket.send(JSON.stringify({
-							"Type": "Unsubscribe",
-							"Object": {
-								"URI": uri,
+							Type: "Unsubscribe",
+							Object: {
+								URI: uri,
 							},
 						}));
 					}
@@ -236,9 +241,22 @@
 				return {
 					leave: function(g) {
 						this.socket.send(JSON.stringify({
-							"Type": "Delete",
-							"Object": {
-								"URI": "/games/" + g.Id,
+							Type: "Delete",
+							Object: {
+								URI: "/games/" + g.Id,
+							},
+						}));
+					}.bind(this),
+				};
+			},
+			gameJoiner: function() {
+				return {
+					join: function(g) {
+						this.socket.send(JSON.stringify({
+							Type: "Update",
+							Object: {
+								URI: "/games/" + g.Id,
+								Data: g,
 							},
 						}));
 					}.bind(this),
@@ -248,10 +266,10 @@
 				return {
 					create: function(g) {
 						this.socket.send(JSON.stringify({
-							"Type": "Create",
-							"Object": {
-								"URI": "/games",
-								"Data": g,
+							Type: "Create",
+							Object: {
+								URI: "/games",
+								Data: g,
 							},
 						}));
 						this.path = "/";

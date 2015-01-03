@@ -105,20 +105,20 @@ func (self *Message) ChannelId() string {
 	return strings.Join(recips, ".")
 }
 
-func (self *Message) Updated(d *kol.DB, old *Message) {
+func (self *Message) Updated(d *kol.DB, old *Message) (err error) {
 	g := Game{Id: self.GameId}
-	if err := d.Get(&g); err != nil {
-		panic(err)
+	if err = d.Get(&g); err != nil {
+		return
 	}
-	d.EmitUpdate(&g)
+	return d.EmitUpdate(&g)
 }
 
-func (self *Message) Created(d *kol.DB) {
+func (self *Message) Created(d *kol.DB) (err error) {
 	g := Game{Id: self.GameId}
-	if err := d.Get(&g); err != nil {
-		panic(err)
+	if err = d.Get(&g); err != nil {
+		return
 	}
-	d.EmitUpdate(&g)
+	return d.EmitUpdate(&g)
 }
 
 type IllegalMessageError struct {

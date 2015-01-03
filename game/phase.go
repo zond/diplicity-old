@@ -82,30 +82,35 @@ func (self *Phase) autoResolve(c common.SkinnyContext) (err error) {
 	return
 }
 
-func (self *Phase) Schedule(c common.SkinnyContext) error {
+func (self *Phase) Schedule(c common.SkinnyContext) (err error) {
 	if !self.Resolved {
-		ep, err := epoch.Get(c.DB())
-		if err != nil {
-			return err
+		var ep time.Duration
+		if ep, err = epoch.Get(c.DB()); err != nil {
+			return
 		}
 		timeout := self.Deadline - ep
-		c.BetweenTransactions(func(c common.SkinnyContext) {
+		if err = c.BetweenTransactions(func(c common.SkinnyContext) (err error) {
 			if timeout > 0 {
 				time.AfterFunc(timeout, func() {
-					if err := self.autoResolve(c); err != nil {
-						c.Errorf("Failed resolving %+v after %v: %v", self, timeout, err)
+					if err = self.autoResolve(c); err != nil {
+						err = fmt.Errorf("Failed resolving %+v after %v: %v", self, timeout, err)
+						return
 					}
 				})
 				c.Debugf("Scheduled resolution of %v/%v in %v at %v", self.GameId, self.Id, timeout, time.Now().Add(timeout))
 			} else {
 				c.Debugf("Resolving %v/%v immediately, it is %v overdue", self.GameId, self.Id, -timeout)
-				if err := self.autoResolve(c); err != nil {
-					c.Errorf("Failed resolving %+v immediately: %v", self, err)
+				if err = self.autoResolve(c); err != nil {
+					err = fmt.Errorf("Failed resolving %+v immediately: %v", self, err)
+					return
 				}
 			}
-		})
+			return
+		}); err != nil {
+			return
+		}
 	}
-	return nil
+	return
 }
 
 func (self *Phase) emailTo(c common.SkinnyContext, game *Game, member *Member, user *user.User) (err error) {
@@ -165,12 +170,12 @@ func (self *Phase) Game(d *kol.DB) (result *Game, err error) {
 	return
 }
 
-func (self *Phase) Updated(d *kol.DB, old *Phase) {
+func (self *Phase) Updated(d *kol.DB, old *Phase) (err error) {
 	g := Game{Id: self.GameId}
-	if err := d.Get(&g); err != nil {
-		panic(err)
+	if err = d.Get(&g); err != nil {
+		return
 	}
-	d.EmitUpdate(&g)
+	return d.EmitUpdate(&g)
 }
 
 func (self *Phase) redact(member *Member) *Phase {

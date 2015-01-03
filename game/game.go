@@ -462,15 +462,19 @@ func (self *Game) start(c common.SkinnyContext) (err error) {
 	return
 }
 
-func (self *Game) Updated(d *kol.DB, old *Game) {
+func (self *Game) Updated(d *kol.DB, old *Game) (err error) {
 	if old != self {
-		members, err := self.Members(d)
-		if err == nil {
-			for _, member := range members {
-				d.EmitUpdate(&member)
+		members := Members{}
+		if members, err = self.Members(d); err != nil {
+			return
+		}
+		for _, member := range members {
+			if err = d.EmitUpdate(&member); err != nil {
+				return
 			}
 		}
 	}
+	return
 }
 
 func (self *Game) Phases(d *kol.DB) (result Phases, err error) {

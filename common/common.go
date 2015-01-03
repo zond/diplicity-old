@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
 	"github.com/zond/kcwraps/kol"
 	"github.com/zond/wsubs/gosubs"
 )
@@ -36,8 +37,8 @@ type SkinnyContext interface {
 	gosubs.SubscriptionManager
 	Mailer
 	DB() *kol.DB
-	BetweenTransactions(func(c SkinnyContext))
-	Transact(func(c SkinnyContext) error) error
+	BetweenTransactions(func(SkinnyContext) error) error
+	Transact(func(SkinnyContext) error) error
 	Env() string
 	Secret() string
 }
@@ -47,10 +48,10 @@ type skinnyWeb struct {
 	db *kol.DB
 }
 
-func (self skinnyWeb) BetweenTransactions(f func(c SkinnyContext)) {
-	self.db.BetweenTransactions(func(d *kol.DB) {
+func (self skinnyWeb) BetweenTransactions(f func(SkinnyContext) error) (err error) {
+	return self.db.BetweenTransactions(func(d *kol.DB) (err error) {
 		self.db = d
-		f(self)
+		return f(self)
 	})
 }
 
@@ -69,9 +70,9 @@ type skinnyWSContext struct {
 	WSContext
 }
 
-func (self skinnyWSContext) BetweenTransactions(f func(c SkinnyContext)) {
-	self.WSContext.BetweenTransactions(func(c WSContext) {
-		f(skinnyWSContext{c})
+func (self skinnyWSContext) BetweenTransactions(f func(SkinnyContext) error) (err error) {
+	return self.WSContext.BetweenTransactions(func(c WSContext) error {
+		return f(skinnyWSContext{c})
 	})
 }
 

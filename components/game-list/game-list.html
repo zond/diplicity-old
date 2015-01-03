@@ -3,10 +3,10 @@
 <link rel="import" href="/bower_components/paper-shadow/paper-shadow.html">
 <link rel="import" href="/components/game-list-element/game-list-element.html">
 
-<polymer-element name="game-list" attributes="games leaver user">
+<polymer-element name="game-list" attributes="games leaver user joiner">
   <template>
 	  <template repeat="{{ game in games }}">
-		  <game-list-element user="{{ user }}" leaver="{{ leaver }}" game="{{ game }}"></game-list-element>
+		  <game-list-element user="{{ user }}" joiner="{{ joiner }}" leaver="{{ leaver }}" game="{{ game }}"></game-list-element>
 		</template>
 	</template>
 	<script>

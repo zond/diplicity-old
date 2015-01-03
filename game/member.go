@@ -1,6 +1,7 @@
 package game
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 	"time"
@@ -96,7 +97,8 @@ func (self *Member) ToState(d *kol.DB, g *Game, email string, isMember bool, isA
 	case meta.GameStateEnded:
 		privacyConfig = g.PrivacyConfigs[AfterPhaseType]
 	default:
-		panic(fmt.Errorf("Unknown game state for %+v", g))
+		err = fmt.Errorf("Unknown game state for %+v", g)
+		return
 	}
 	isMe := string(self.UserId) == email
 	if isAdmin || isMe || !privacyConfig.SecretNation {
@@ -135,31 +137,62 @@ func (self *Member) ShortName(game *Game, user *user.User) string {
 	return string(self.Nation)
 }
 
-func (self *Member) Deleted(d *kol.DB) {
+func (self *Member) Deleted(d *kol.DB) (err error) {
 	g := Game{Id: self.GameId}
-	if err := d.Get(&g); err == nil {
-		d.EmitUpdate(&g)
-	} else if err != kol.NotFound {
-		panic(err)
+	if err = d.Get(&g); err == nil {
+		if err = d.EmitUpdate(&g); err != nil {
+			return
+		}
+		members := Members{}
+		if members, err = g.Members(d); err != nil {
+			return
+		}
+		for _, member := range members {
+			if bytes.Compare(member.Id, self.Id) != 0 {
+				if err = d.EmitUpdate(&member); err != nil {
+					return
+				}
+			}
+		}
+	} else if err == kol.NotFound {
+		err = nil
 	}
+	return
 }
 
-func (self *Member) Updated(d *kol.DB, old *Member) {
+func (self *Member) Updated(d *kol.DB, old *Member) (err error) {
 	if old != self {
 		g := Game{Id: self.GameId}
-		if err := d.Get(&g); err != nil {
-			panic(err)
+		if err = d.Get(&g); err != nil {
+			return
 		}
-		d.EmitUpdate(&g)
+		if err = d.EmitUpdate(&g); err != nil {
+			return
+		}
 	}
+	return
 }
 
-func (self *Member) Created(d *kol.DB) {
+func (self *Member) Created(d *kol.DB) (err error) {
 	g := Game{Id: self.GameId}
-	if err := d.Get(&g); err != nil {
-		panic(err)
+	if err = d.Get(&g); err != nil {
+		return
 	}
-	d.EmitUpdate(&g)
+	if err = d.EmitUpdate(&g); err != nil {
+		return
+	}
+	members := Members{}
+	if members, err = g.Members(d); err != nil {
+		return
+	}
+	for _, member := range members {
+		if bytes.Compare(member.Id, self.Id) != 0 {
+			if err = d.EmitUpdate(&member); err != nil {
+				return
+			}
+		}
+	}
+	return
 }
 
 func (self *Member) ReliabilityDelta(d *kol.DB, i int) (err error) {

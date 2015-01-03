@@ -2,7 +2,7 @@
 <link rel="import" href="/components/game-list/game-list.html">
 <link rel="import" href="/components/path-selector/path-selector.html">
 
-<polymer-element name="my-games" attributes="subscriber user leaver">
+<polymer-element name="my-games" attributes="subscriber user leaver joiner">
   <template>
 	  <style>
 			paper-tabs::shadow > * {
@@ -20,17 +20,17 @@
 		<path-selector path="{{ path }}">
 		  <div path="/">
 				<div cross-fade>
-					<game-list user="{{ user }}" leaver="{{ leaver }}" games="{{ runningGames }}"></game-list>
+					<game-list user="{{ user }}" joiner="{{ joiner }}" leaver="{{ leaver }}" games="{{ runningGames }}"></game-list>
 				</div>
 			</div>
 			<div path="/games/mine/forming">
 				<div cross-fade>
-					<game-list user="{{ user }}" leaver="{{ leaver }}" games="{{ formingGames }}"></game-list>
+					<game-list user="{{ user }}" joiner="{{ joiner }}" leaver="{{ leaver }}" games="{{ formingGames }}"></game-list>
 				</div>
 			</div>
 		  <div path="/games/mine/finished">
 				<div cross-fade>
-					<game-list user="{{ user }}" leaver="{{ leaver}}" games="{{ finishedGames }}"></game-list>
+					<game-list user="{{ user }}" joiner="{{ joiner }}" leaver="{{ leaver}}" games="{{ finishedGames }}"></game-list>
 				</div>
 			</div>
 		</path-selector>

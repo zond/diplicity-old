@@ -2,7 +2,7 @@
 <link rel="import" href="/components/z-panel/z-panel.html">
 <link rel="import" href="/components/preferences-list/preferences-list.html">
 
-<polymer-element name="game-list-element" attributes="game user leaver">
+<polymer-element name="game-list-element" attributes="game user leaver joiner">
   <template>
 	  <style>
 			paper-button.toggle {
@@ -133,31 +133,33 @@
 						<td>After game</td>
 						<td>{{ capitalize(afterGame) }}</td>
 				  </tr>
-					<template if="{{ !game.Closed }}">
-					  <template if="{{ me }}">
-							<tr>
-								<td colspan="2">
-									<paper-button layout vertical flex raised on-click="{{ leave }}">Leave</paper-button>
-								</td>
-							</tr>
-				  	</template>
-			      <template if="{{ !me }}">
-			    	  <template if="{{ game.AllocationMethod == 'Preferences' }}">
-							  <tr>
-									<td>
-										Preferences
-									</td>
-									<td>
-										<preferences-list list="{{ preferences }}"></preferences-list>
-									</td>
-								</tr>
-			    		</template>
-							<tr>
-								<td colspan="2">
-									<paper-button layout vertical flex raised>Join</paper-button>
-								</td>
-							</tr>
-			      </template>
+					<template if="{{ user.Id }}">
+    				<template if="{{ !game.Closed }}">
+    				  <template if="{{ me }}">
+    						<tr>
+    							<td colspan="2">
+    								<paper-button layout vertical flex raised on-click="{{ leave }}">Leave</paper-button>
+    							</td>
+    						</tr>
+    			  	</template>
+    		      <template if="{{ !me }}">
+    		    	  <template if="{{ game.AllocationMethod == 'Preferences' }}">
+    						  <tr>
+    								<td>
+    									Preferences
+    								</td>
+    								<td>
+    									<preferences-list list="{{ preferences }}"></preferences-list>
+    								</td>
+    							</tr>
+    		    		</template>
+    						<tr>
+    							<td colspan="2">
+    								<paper-button layout vertical flex raised on-click="{{ join }}">Join</paper-button>
+    							</td>
+    						</tr>
+    		      </template>
+    				</template>
 					</template>
 				</table>
 			</z-panel>
@@ -207,6 +209,14 @@
 			},
 			leave: function() {
 				this.leaver.leave(this.game);
+			},
+			join: function() {
+				this.game.Members = [
+				  {
+            PreferredNations: this.preferences,
+					},
+				];
+				this.joiner.join(this.game);
 			},
 			displayConsequences: function(c) {
         var result = [];
