@@ -8,14 +8,13 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	"github.com/zond/diplicity/common"
+	"github.com/zond/diplicity/srv"
 	"github.com/zond/goauth2"
 	"github.com/zond/unbolted"
 	"github.com/zond/wsubs/gosubs"
 )
 
-func AdminSetRank1(c *common.HTTPContext) (err error) {
+func AdminSetRank1(c *srv.HTTPContext) (err error) {
 	return c.DB().Update(func(tx *unbolted.TX) (err error) {
 		users := Users{}
 		if err = tx.Query().All(&users); err != nil {
@@ -32,8 +31,8 @@ func AdminSetRank1(c *common.HTTPContext) (err error) {
 	})
 }
 
-func AdminBecome(c *common.HTTPContext) (err error) {
-	c.Session().Values[common.SessionEmail] = c.Req().FormValue("become")
+func AdminBecome(c *srv.HTTPContext) (err error) {
+	c.Session().Values[srv.SessionEmail] = c.Req().FormValue("become")
 	c.Close()
 	c.Resp().Header().Set("Location", "/")
 	c.Resp().WriteHeader(302)
@@ -41,7 +40,7 @@ func AdminBecome(c *common.HTTPContext) (err error) {
 	return
 }
 
-func AdminCreateUser(c *common.HTTPContext) (err error) {
+func AdminCreateUser(c *srv.HTTPContext) (err error) {
 	user := &User{}
 	if err = json.NewDecoder(c.Req().Body).Decode(user); err != nil {
 		return
@@ -53,8 +52,8 @@ func AdminCreateUser(c *common.HTTPContext) (err error) {
 var nonces = map[string]struct{}{}
 var nonceLock = sync.Mutex{}
 
-func OAuth2Callback(clientId, clientSecret string) func(c *common.HTTPContext) (err error) {
-	return func(c *common.HTTPContext) (err error) {
+func OAuth2Callback(clientId, clientSecret string) func(c *srv.HTTPContext) (err error) {
+	return func(c *srv.HTTPContext) (err error) {
 		state := c.Req().FormValue("state")
 		parts := strings.SplitN(state, ".", 2)
 		if len(parts) != 2 {
@@ -84,7 +83,7 @@ func OAuth2Callback(clientId, clientSecret string) func(c *common.HTTPContext) (
 
 		if ok {
 			email = strings.ToLower(email)
-			c.Session().Values[common.SessionEmail] = email
+			c.Session().Values[srv.SessionEmail] = email
 			if err = c.DB().Update(func(tx *unbolted.TX) (err error) {
 				u := &User{Id: unbolted.Id(email)}
 				err = c.DB().Get(u)
@@ -103,7 +102,7 @@ func OAuth2Callback(clientId, clientSecret string) func(c *common.HTTPContext) (
 				return
 			}
 		} else {
-			delete(c.Session().Values, common.SessionEmail)
+			delete(c.Session().Values, srv.SessionEmail)
 		}
 		c.Close()
 		c.Resp().Header().Set("Location", returnTo.String())
@@ -113,8 +112,8 @@ func OAuth2Callback(clientId, clientSecret string) func(c *common.HTTPContext) (
 	}
 }
 
-func Token(c *common.HTTPContext) (err error) {
-	if emailIf, found := c.Session().Values[common.SessionEmail]; found {
+func Token(c *srv.HTTPContext) (err error) {
+	if emailIf, found := c.Session().Values[srv.SessionEmail]; found {
 		token := &gosubs.Token{
 			Principal: fmt.Sprint(emailIf),
 			Timeout:   time.Now().Add(time.Second * 10),
@@ -129,8 +128,8 @@ func Token(c *common.HTTPContext) (err error) {
 	return
 }
 
-func Logout(c *common.HTTPContext) (err error) {
-	delete(c.Session().Values, common.SessionEmail)
+func Logout(c *srv.HTTPContext) (err error) {
+	delete(c.Session().Values, srv.SessionEmail)
 	c.Close()
 	redirect := c.Req().FormValue("return_to")
 	if redirect == "" {
@@ -142,8 +141,8 @@ func Logout(c *common.HTTPContext) (err error) {
 	return
 }
 
-func Login(clientId string) func(c *common.HTTPContext) (err error) {
-	return func(c *common.HTTPContext) (err error) {
+func Login(clientId string) func(c *srv.HTTPContext) (err error) {
+	return func(c *srv.HTTPContext) (err error) {
 		returnTo, err := url.Parse(c.Req().FormValue("return_to"))
 		if err != nil {
 			return

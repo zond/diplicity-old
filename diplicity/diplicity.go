@@ -7,29 +7,29 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/zond/diplicity/common"
 	"github.com/zond/diplicity/epoch"
 	"github.com/zond/diplicity/game"
+	"github.com/zond/diplicity/srv"
 	"github.com/zond/diplicity/user"
 	"github.com/zond/wsubs/gosubs"
 	"github.com/zond/ziprot"
 )
 
 func wantsJSON(r *http.Request, m *mux.RouteMatch) bool {
-	return common.MostAccepted(r, "text/html", "Accept") == "application/json"
+	return srv.MostAccepted(r, "text/html", "Accept") == "application/json"
 }
 
 func wantsHTML(r *http.Request, m *mux.RouteMatch) bool {
-	mostAccepted := common.MostAccepted(r, "text/html", "Accept")
+	mostAccepted := srv.MostAccepted(r, "text/html", "Accept")
 	return mostAccepted == "text/html" || mostAccepted == "*/*"
 }
 
 func main() {
 	port := flag.Int("port", 8080, "The port to listen on")
-	secret := flag.String("secret", common.DefaultSecret, "The cookie store secret")
+	secret := flag.String("secret", srv.DefaultSecret, "The cookie store secret")
 	gmailAccount := flag.String("gmail_account", "", "The GMail account to use for sending and receiving message email")
 	gmailPassword := flag.String("gmail_password", "", "The GMail account password")
-	env := flag.String("env", common.Development, "What environment to run")
+	env := flag.String("env", srv.Development, "What environment to run")
 	db := flag.String("db", "diplicity.db", "The path to the database file to use")
 	logOutput := flag.String("log", "-", "Where to send the log output")
 	smtpAccount := flag.String("smtp_account", "", "What From-address to put in the outgoing email")
@@ -48,7 +48,7 @@ func main() {
 		log.SetOutput(z.MaxFiles(10).MaxSize(1024 * 1024 * 256))
 	}
 
-	server, err := common.NewServer(*secret, *env, *db)
+	server, err := srv.NewServer(*secret, *env, *db)
 	if err != nil {
 		panic(err)
 	}

@@ -15,8 +15,8 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/zond/diplicity/common"
 	"github.com/zond/diplicity/game"
+	"github.com/zond/diplicity/srv"
 	"github.com/zond/godip/variants"
 	"github.com/zond/unbolted"
 	"github.com/zond/wsubs/gosubs"
@@ -86,7 +86,7 @@ func (self *cli) send(email string, mess gosubs.Message) (err error) {
 }
 
 func (self *cli) post(path string, obj interface{}) (response string, err error) {
-	token, err := self.token(common.Admin)
+	token, err := self.token(srv.Admin)
 	cli := &http.Client{}
 	buf := &bytes.Buffer{}
 	if err = json.NewEncoder(buf).Encode(obj); err != nil {
@@ -105,7 +105,7 @@ func (self *cli) post(path string, obj interface{}) (response string, err error)
 }
 
 func (self *cli) get(path string) (result io.ReadCloser, err error) {
-	token, err := self.token(common.Admin)
+	token, err := self.token(srv.Admin)
 	cli := &http.Client{}
 	resp, err := cli.Get(fmt.Sprintf("http://%v:%v%v?token=%v", self.host, self.port, path, token))
 	if err != nil {
@@ -165,7 +165,7 @@ func main() {
 	host := flag.String("host", "localhost", "The host to connect to.")
 	port := flag.Int("port", 8080, "The port to connect to.")
 	email := flag.String("email", "", "The email to fake authenticating as. Mandatory unless url is provided.")
-	secret := flag.String("secret", common.DefaultSecret, "The token secret of the server.")
+	secret := flag.String("secret", srv.DefaultSecret, "The token secret of the server.")
 	join := flag.String("join", "", "A game to join as the provided email.")
 	path := flag.String("path", "", "A path to fetch from the host authenticated as Admin.")
 	commit := flag.String("commit", "", "A game to commit the latest phase as the provided email.")

@@ -3,8 +3,7 @@ package user
 import (
 	"fmt"
 	"time"
-
-	"github.com/zond/diplicity/common"
+	"github.com/zond/diplicity/srv"
 	"github.com/zond/unbolted"
 	"github.com/zond/wsubs/gosubs"
 )
@@ -51,7 +50,7 @@ type Blacklisting struct {
 	UpdatedAt   time.Time
 }
 
-func SubscribeEmail(c common.WSContext) error {
+func SubscribeEmail(c srv.WSContext) error {
 	if c.Principal() == "" {
 		return c.Conn().WriteJSON(gosubs.Message{
 			Type: gosubs.FetchType,
@@ -65,10 +64,10 @@ func SubscribeEmail(c common.WSContext) error {
 	return s.Subscribe(&User{Id: unbolted.Id(c.Principal())})
 }
 
-func Update(c common.WSContext) (err error) {
+func Update(c srv.WSContext) (err error) {
 	var user User
 	c.Data().Overwrite(&user)
-	return c.Update(func(c common.WSTXContext) (err error) {
+	return c.Update(func(c srv.WSTXContext) (err error) {
 		current := &User{Id: user.Id}
 		if err = c.TX().Get(current); err != nil {
 			return

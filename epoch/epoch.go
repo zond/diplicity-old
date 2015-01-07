@@ -4,8 +4,7 @@ import (
 	"time"
 
 	"sync/atomic"
-
-	"github.com/zond/diplicity/common"
+	"github.com/zond/diplicity/srv"
 	"github.com/zond/unbolted"
 )
 
@@ -54,7 +53,7 @@ func set(d *unbolted.DB, at time.Duration) (err error) {
 	return
 }
 
-func Start(c common.SkinnyContext) (err error) {
+func Start(c srv.SkinnyContext) (err error) {
 	startedAt, err := getDB(c.DB())
 	if err != nil {
 		return

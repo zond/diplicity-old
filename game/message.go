@@ -13,8 +13,8 @@ import (
 	"time"
 
 	"github.com/jhillyerd/go.enmime"
-	"github.com/zond/diplicity/common"
 	"github.com/zond/diplicity/game/meta"
+	"github.com/zond/diplicity/srv"
 	"github.com/zond/diplicity/unsubscribe"
 	"github.com/zond/diplicity/user"
 	"github.com/zond/gmail"
@@ -131,7 +131,7 @@ func (self IllegalMessageError) Error() string {
 	return self.Description
 }
 
-func IncomingMail(c common.SkinnyContext, msg *enmime.MIMEBody) (err error) {
+func IncomingMail(c srv.SkinnyContext, msg *enmime.MIMEBody) (err error) {
 	text := gmail.DecodeText(msg.Text, msg.GetHeader("Content-Type"))
 	c.Debugf("Incoming mail to %#v\n%v", msg.GetHeader("To"), text)
 	if match := gmail.AddrReg.FindString(msg.GetHeader("To")); match != "" {
@@ -152,7 +152,7 @@ func IncomingMail(c common.SkinnyContext, msg *enmime.MIMEBody) (err error) {
 			if match2 := emailPlusReg.FindStringSubmatch(match); match2 != nil {
 				var tag *MailTag
 				if tag, err = DecodeMailTag(c.Secret(), match2[1]); err == nil {
-					if err = c.Update(func(c common.SkinnyTXContext) (err error) {
+					if err = c.Update(func(c srv.SkinnyTXContext) (err error) {
 						sender := &Member{Id: tag.R}
 						if err = c.TX().Get(sender); err != nil {
 							return
@@ -182,7 +182,7 @@ func IncomingMail(c common.SkinnyContext, msg *enmime.MIMEBody) (err error) {
 	return nil
 }
 
-func (self *Message) Send(c common.SkinnyTXContext, game *Game, sender *Member) (err error) {
+func (self *Message) Send(c srv.SkinnyTXContext, game *Game, sender *Member) (err error) {
 	c.Debugf("Sending %#v from %#v in %#v", self.Body, sender.Nation, game.Id.String())
 	// make sure the sender is correct
 	self.SenderId = sender.Id
@@ -288,7 +288,7 @@ func (self *Message) Send(c common.SkinnyTXContext, game *Game, sender *Member) 
 				}
 				if !user.MessageEmailDisabled {
 					subKey := fmt.Sprintf("/games/%v/messages", game.Id)
-					if !c.IsSubscribing(user.Email, subKey, common.SubscriptionTimeout) {
+					if !c.IsSubscribing(user.Email, subKey, srv.SubscriptionTimeout) {
 						if err = self.emailTo(c, game, sender, senderUser, &member, user, recipName); err != nil {
 							c.Errorf("Failed sending to %#v: %v", user.Id.String(), err)
 							return
@@ -306,7 +306,7 @@ func (self *Message) Send(c common.SkinnyTXContext, game *Game, sender *Member) 
 	return
 }
 
-func (self *Message) emailTo(c common.SkinnyTXContext, game *Game, sender *Member, senderUser *user.User, recip *Member, recipUser *user.User, recipName string) (err error) {
+func (self *Message) emailTo(c srv.SkinnyTXContext, game *Game, sender *Member, senderUser *user.User, recip *Member, recipUser *user.User, recipName string) (err error) {
 	mailTag := &MailTag{
 		M: self.Id,
 		R: recip.Id,
@@ -329,7 +329,7 @@ func (self *Message) emailTo(c common.SkinnyTXContext, game *Game, sender *Membe
 
 	parts := strings.Split(c.ReceiveAddress(), "@")
 	if len(parts) != 2 {
-		if c.Env() == common.Development {
+		if c.Env() == srv.Development {
 			parts = []string{"user", "host.tld"}
 		} else {
 			err = fmt.Errorf("Failed parsing %#v as an email address", c.ReceiveAddress())

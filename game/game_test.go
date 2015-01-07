@@ -1,9 +1,10 @@
 package game
 
 import (
-	dip "github.com/zond/godip/common"
 	"reflect"
 	"testing"
+
+	dip "github.com/zond/godip/common"
 )
 
 func TestOptimizePreferences(t *testing.T) {

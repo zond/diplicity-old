@@ -8,11 +8,10 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/zond/diplicity/common"
 	"github.com/zond/diplicity/epoch"
 	"github.com/zond/diplicity/game/allocation"
 	"github.com/zond/diplicity/game/meta"
+	"github.com/zond/diplicity/srv"
 	"github.com/zond/diplicity/unsubscribe"
 	"github.com/zond/diplicity/user"
 	dip "github.com/zond/godip/common"
@@ -20,7 +19,7 @@ import (
 	"github.com/zond/unbolted"
 )
 
-func Resolve(c *common.HTTPContext) (err error) {
+func Resolve(c *srv.HTTPContext) (err error) {
 	phase := &Phase{}
 	if err = json.NewDecoder(c.Req().Body).Decode(phase); err != nil {
 		return
@@ -60,7 +59,7 @@ func Resolve(c *common.HTTPContext) (err error) {
 	return
 }
 
-func UnsubscribeEmails(c *common.HTTPContext) (err error) {
+func UnsubscribeEmails(c *srv.HTTPContext) (err error) {
 	return c.DB().Update(func(tx *unbolted.TX) (err error) {
 		unsubTag, err := unsubscribe.DecodeUnsubscribeTag(c.Secret(), c.Vars()["unsubscribe_tag"])
 		if err != nil {
@@ -89,7 +88,7 @@ func UnsubscribeEmails(c *common.HTTPContext) (err error) {
 	})
 }
 
-func AdminGetOptions(c *common.HTTPContext) (err error) {
+func AdminGetOptions(c *srv.HTTPContext) (err error) {
 	var opts dip.Options
 	return c.DB().View(func(tx *unbolted.TX) (err error) {
 		gameId, err := base64.URLEncoding.DecodeString(c.Vars()["game_id"])
@@ -112,7 +111,7 @@ func AdminGetOptions(c *common.HTTPContext) (err error) {
 	return c.RenderJSON(opts)
 }
 
-func AdminReindexGames(c *common.HTTPContext) (err error) {
+func AdminReindexGames(c *srv.HTTPContext) (err error) {
 	return c.DB().Update(func(tx *unbolted.TX) (err error) {
 		games := Games{}
 		if err = tx.Query().All(&games); err != nil {
@@ -128,7 +127,7 @@ func AdminReindexGames(c *common.HTTPContext) (err error) {
 	})
 }
 
-func AdminRecalcOptions(c *common.HTTPContext) (err error) {
+func AdminRecalcOptions(c *srv.HTTPContext) (err error) {
 	return c.DB().Update(func(tx *unbolted.TX) (err error) {
 		gameId, err := base64.URLEncoding.DecodeString(c.Vars()["game_id"])
 		if err != nil {
@@ -167,7 +166,7 @@ func AdminRecalcOptions(c *common.HTTPContext) (err error) {
 	})
 }
 
-func AdminRollback(c *common.HTTPContext) (err error) {
+func AdminRollback(c *srv.HTTPContext) (err error) {
 	return c.DB().Update(func(tx *unbolted.TX) (err error) {
 		gameId, err := base64.URLEncoding.DecodeString(c.Vars()["game_id"])
 		if err != nil {
@@ -236,7 +235,7 @@ type AdminGameState struct {
 	Members []MemberState
 }
 
-func AdminGetGame(c *common.HTTPContext) (err error) {
+func AdminGetGame(c *srv.HTTPContext) (err error) {
 	var g *Game
 	var phases Phases
 	var memberStates []MemberState
@@ -271,7 +270,7 @@ func AdminGetGame(c *common.HTTPContext) (err error) {
 	})
 }
 
-func CreateMessage(c common.WSContext) (err error) {
+func CreateMessage(c srv.WSContext) (err error) {
 	// load the  message provided by the client
 	message := &Message{}
 	c.Data().Overwrite(message)
@@ -285,7 +284,7 @@ func CreateMessage(c common.WSContext) (err error) {
 		return
 	}
 
-	return c.Update(func(c common.WSTXContext) (err error) {
+	return c.Update(func(c srv.WSTXContext) (err error) {
 		// and the game
 		game := &Game{Id: message.GameId}
 		if err := c.TX().Get(game); err != nil {
@@ -301,8 +300,8 @@ func CreateMessage(c common.WSContext) (err error) {
 	})
 }
 
-func DeleteMember(c common.WSContext) error {
-	return c.Update(func(c common.WSTXContext) error {
+func DeleteMember(c srv.WSContext) error {
+	return c.Update(func(c srv.WSTXContext) error {
 		decodedId, err := unbolted.DecodeId(c.Match()[1])
 		if err != nil {
 			return err
@@ -334,10 +333,10 @@ func DeleteMember(c common.WSContext) error {
 	})
 }
 
-func AddMember(c common.WSContext) error {
+func AddMember(c srv.WSContext) error {
 	var state GameState
 	c.Data().Overwrite(&state)
-	return c.Update(func(c common.WSTXContext) error {
+	return c.Update(func(c srv.WSTXContext) error {
 		game := Game{Id: state.Game.Id}
 		if err := c.TX().Get(&game); err != nil {
 			return fmt.Errorf("Game not found")
@@ -390,7 +389,7 @@ func AddMember(c common.WSContext) error {
 	})
 }
 
-func Create(c common.WSContext) error {
+func Create(c srv.WSContext) error {
 	var state GameState
 	c.Data().Overwrite(&state)
 
@@ -421,7 +420,7 @@ func Create(c common.WSContext) error {
 		UserId:           unbolted.Id(c.Principal()),
 		PreferredNations: state.Members[0].PreferredNations,
 	}
-	return c.Update(func(c common.WSTXContext) error {
+	return c.Update(func(c srv.WSTXContext) error {
 		if err := c.TX().Set(game); err != nil {
 			return err
 		}

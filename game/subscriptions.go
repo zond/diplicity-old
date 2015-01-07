@@ -5,10 +5,9 @@ import (
 	"sort"
 	"strconv"
 	"time"
-
-	"github.com/zond/diplicity/common"
 	"github.com/zond/diplicity/epoch"
 	"github.com/zond/diplicity/game/meta"
+	"github.com/zond/diplicity/srv"
 	"github.com/zond/diplicity/user"
 	"github.com/zond/godip/variants"
 	"github.com/zond/unbolted"
@@ -60,7 +59,7 @@ func (self SortedGameStates) Swap(i, j int) {
 	self.GameStates[j], self.GameStates[i] = self.GameStates[i], self.GameStates[j]
 }
 
-func SubscribeMine(c common.WSContext) error {
+func SubscribeMine(c srv.WSContext) error {
 	if c.Principal() == "" {
 		return c.Conn().WriteJSON(gosubs.Message{
 			Type: gosubs.FetchType,
@@ -72,7 +71,7 @@ func SubscribeMine(c common.WSContext) error {
 	s := c.Pack().New(c.Match()[0])
 	s.Query = s.DB().Query().Where(unbolted.Equals{"UserId", unbolted.Id(c.Principal())})
 	s.Call = func(i interface{}, op string) (err error) {
-		return c.View(func(c common.WSTXContext) (err error) {
+		return c.View(func(c srv.WSTXContext) (err error) {
 			members := i.([]*Member)
 			var ep time.Duration
 			ep, err = epoch.Get(c.TX())
@@ -137,14 +136,14 @@ func SubscribeMine(c common.WSContext) error {
 	return s.Subscribe(&Member{})
 }
 
-func SubscribeGame(c common.WSContext) error {
+func SubscribeGame(c srv.WSContext) error {
 	base64DecodedId, err := base64.URLEncoding.DecodeString(c.Match()[1])
 	if err != nil {
 		return err
 	}
 	s := c.Pack().New(c.Match()[0])
 	s.Call = func(i interface{}, op string) (err error) {
-		return c.View(func(c common.WSTXContext) (err error) {
+		return c.View(func(c srv.WSTXContext) (err error) {
 			game := i.(*Game)
 			members, err := game.Members(c.TX())
 			if err != nil {
@@ -167,12 +166,12 @@ func SubscribeGame(c common.WSContext) error {
 	return s.Subscribe(&Game{Id: base64DecodedId})
 }
 
-func SubscribeGamePhase(c common.WSContext) (err error) {
+func SubscribeGamePhase(c srv.WSContext) (err error) {
 	base64DecodedId, err := base64.URLEncoding.DecodeString(c.Match()[1])
 	if err != nil {
 		return err
 	}
-	if err = c.View(func(c common.WSTXContext) (err error) {
+	if err = c.View(func(c srv.WSTXContext) (err error) {
 		game := &Game{Id: base64DecodedId}
 		if err = c.TX().Get(game); err != nil {
 			return
@@ -207,14 +206,14 @@ func SubscribeGamePhase(c common.WSContext) (err error) {
 	return
 }
 
-func SubscribeMessages(c common.WSContext) (err error) {
+func SubscribeMessages(c srv.WSContext) (err error) {
 	base64DecodedId, err := base64.URLEncoding.DecodeString(c.Match()[1])
 	if err != nil {
 		return err
 	}
 	game := &Game{Id: base64DecodedId}
 	var member *Member
-	if err = c.View(func(c common.WSTXContext) (err error) {
+	if err = c.View(func(c srv.WSTXContext) (err error) {
 		if err = c.TX().Get(game); err != nil {
 			return
 		}
@@ -235,7 +234,7 @@ func SubscribeMessages(c common.WSContext) (err error) {
 	s := c.Pack().New(c.Match()[0])
 	s.Query = s.DB().Query().Where(unbolted.Equals{"GameId", base64DecodedId})
 	s.Call = func(i interface{}, op string) (err error) {
-		return c.View(func(c common.WSTXContext) (err error) {
+		return c.View(func(c srv.WSTXContext) (err error) {
 			messages := i.([]*Message)
 			result := Messages{}
 			for _, message := range messages {
@@ -267,11 +266,11 @@ func SubscribeMessages(c common.WSContext) (err error) {
 	return s.Subscribe(&Message{})
 }
 
-func subscribeOthers(c common.WSContext, filter unbolted.QFilter, preLimiter func(source Games) (result Games), postLimiter func(source GameStates) (result GameStates)) error {
+func subscribeOthers(c srv.WSContext, filter unbolted.QFilter, preLimiter func(source Games) (result Games), postLimiter func(source GameStates) (result GameStates)) error {
 	s := c.Pack().New(c.Match()[0])
 	s.Query = s.DB().Query().Where(filter)
 	s.Call = func(i interface{}, op string) (err error) {
-		return c.View(func(c common.WSTXContext) (err error) {
+		return c.View(func(c srv.WSTXContext) (err error) {
 			games := i.([]*Game)
 			if preLimiter != nil {
 				games = ([]*Game)(preLimiter(Games(games)))
@@ -320,7 +319,7 @@ func subscribeOthers(c common.WSContext, filter unbolted.QFilter, preLimiter fun
 	return s.Subscribe(&Game{})
 }
 
-func SubscribeOthersOpen(c common.WSContext) (err error) {
+func SubscribeOthersOpen(c srv.WSContext) (err error) {
 	return subscribeOthers(c, unbolted.And{unbolted.Equals{"Closed", false}, unbolted.Equals{"Private", false}}, nil, func(source GameStates) (result GameStates) {
 		return source.SortAndLimit(func(a, b GameState) bool {
 			leftA := 0
@@ -339,7 +338,7 @@ func SubscribeOthersOpen(c common.WSContext) (err error) {
 	})
 }
 
-func SubscribeOthersClosed(c common.WSContext) error {
+func SubscribeOthersClosed(c srv.WSContext) error {
 	return subscribeOthers(c, unbolted.And{unbolted.Equals{"State", meta.GameStateStarted}, unbolted.Equals{"Closed", true}, unbolted.Equals{"Private", false}}, func(source Games) (result Games) {
 		return source.SortAndLimit(func(a, b *Game) bool {
 			return a.UpdatedAt.Before(b.UpdatedAt)
@@ -347,7 +346,7 @@ func SubscribeOthersClosed(c common.WSContext) error {
 	}, nil)
 }
 
-func SubscribeOthersFinished(c common.WSContext) error {
+func SubscribeOthersFinished(c srv.WSContext) error {
 	return subscribeOthers(c, unbolted.And{unbolted.Equals{"State", meta.GameStateEnded}, unbolted.Equals{"Private", false}}, func(source Games) (result Games) {
 		return source.SortAndLimit(func(a, b *Game) bool {
 			return a.UpdatedAt.Before(b.UpdatedAt)

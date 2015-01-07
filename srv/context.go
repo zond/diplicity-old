@@ -1,4 +1,4 @@
-package common
+package srv
 
 import (
 	"github.com/zond/unbolted"

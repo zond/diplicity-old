@@ -3,9 +3,8 @@ package game
 import (
 	"fmt"
 	"time"
-
-	"github.com/zond/diplicity/common"
 	"github.com/zond/diplicity/epoch"
+	"github.com/zond/diplicity/srv"
 	"github.com/zond/diplicity/unsubscribe"
 	"github.com/zond/diplicity/user"
 	"github.com/zond/godip/classical"
@@ -21,8 +20,8 @@ const (
 	DuringPhaseType dip.PhaseType = "During"
 )
 
-func ScheduleUnresolvedPhases(c common.SkinnyContext) (err error) {
-	return c.View(func(c common.SkinnyTXContext) (err error) {
+func ScheduleUnresolvedPhases(c srv.SkinnyContext) (err error) {
+	return c.View(func(c srv.SkinnyTXContext) (err error) {
 		unresolved := Phases{}
 		if err = c.TX().Query().Where(unbolted.Equals{"Resolved", false}).All(&unresolved); err != nil {
 			return
@@ -62,9 +61,9 @@ func (self *Phase) ShortString() string {
 	return fmt.Sprintf("%v %v, %v", self.Season, self.Year, self.Type)
 }
 
-func (self *Phase) autoResolve(c common.SkinnyContext) (err error) {
+func (self *Phase) autoResolve(c srv.SkinnyContext) (err error) {
 	c.Infof("Auto resolving %v/%v due to timeout", self.GameId, self.Id)
-	if err = c.Update(func(c common.SkinnyTXContext) (err error) {
+	if err = c.Update(func(c srv.SkinnyTXContext) (err error) {
 		if err = c.TX().Get(self); err != nil {
 			err = fmt.Errorf("While trying to load %+v: %v", self, err)
 			return
@@ -85,14 +84,14 @@ func (self *Phase) autoResolve(c common.SkinnyContext) (err error) {
 	return
 }
 
-func (self *Phase) Schedule(c common.SkinnyTXContext) (err error) {
+func (self *Phase) Schedule(c srv.SkinnyTXContext) (err error) {
 	if !self.Resolved {
 		var ep time.Duration
 		if ep, err = epoch.Get(c.TX()); err != nil {
 			return
 		}
 		timeout := self.Deadline - ep
-		if err = c.AfterTransaction(func(c common.SkinnyContext) (err error) {
+		if err = c.AfterTransaction(func(c srv.SkinnyContext) (err error) {
 			if timeout > 0 {
 				time.AfterFunc(timeout, func() {
 					if err = self.autoResolve(c); err != nil {
@@ -116,7 +115,7 @@ func (self *Phase) Schedule(c common.SkinnyTXContext) (err error) {
 	return
 }
 
-func (self *Phase) emailTo(c common.SkinnyTXContext, game *Game, member *Member, user *user.User) (err error) {
+func (self *Phase) emailTo(c srv.SkinnyTXContext, game *Game, member *Member, user *user.User) (err error) {
 	to := fmt.Sprintf("%v <%v>", member.Nation, user.Email)
 	unsubTag := &unsubscribe.UnsubscribeTag{
 		T: unsubscribe.UnsubscribePhaseEmail,
@@ -139,7 +138,7 @@ func (self *Phase) emailTo(c common.SkinnyTXContext, game *Game, member *Member,
 	return
 }
 
-func (self *Phase) sendStartedEmails(c common.SkinnyTXContext, game *Game) (err error) {
+func (self *Phase) sendStartedEmails(c srv.SkinnyTXContext, game *Game) (err error) {
 	members, err := game.Members(c.TX())
 	if err != nil {
 		return
@@ -151,7 +150,7 @@ func (self *Phase) sendStartedEmails(c common.SkinnyTXContext, game *Game) (err 
 		}
 		if !user.PhaseEmailDisabled {
 			subKey := fmt.Sprintf("/games/%v", game.Id)
-			if !c.IsSubscribing(user.Email, subKey, common.SubscriptionTimeout) {
+			if !c.IsSubscribing(user.Email, subKey, srv.SubscriptionTimeout) {
 				if err = self.emailTo(c, game, &member, user); err != nil {
 					c.Errorf("Failed sending to %#v: %v", user.Id.String(), err)
 					return

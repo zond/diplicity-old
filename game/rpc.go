@@ -3,25 +3,24 @@ package game
 import (
 	"encoding/base64"
 	"fmt"
-
-	"github.com/zond/diplicity/common"
+	"github.com/zond/diplicity/srv"
 	"github.com/zond/godip/classical/orders"
 	dip "github.com/zond/godip/common"
 	"github.com/zond/godip/state"
 )
 
-func UncommitPhase(c common.WSContext) (result interface{}, err error) {
+func UncommitPhase(c srv.WSContext) (result interface{}, err error) {
 	err = setPhaseCommitted(c, false)
 	return
 }
 
-func SeeMessage(c common.WSContext) (result interface{}, err error) {
+func SeeMessage(c srv.WSContext) (result interface{}, err error) {
 	messageId, err := base64.URLEncoding.DecodeString(c.Data().GetString("MessageId"))
 	if err != nil {
 		err = fmt.Errorf("Error trying to decode %#v: %v", c.Data().GetString("MessageId"), err)
 		return
 	}
-	err = c.Update(func(c common.WSTXContext) (err error) {
+	err = c.Update(func(c srv.WSTXContext) (err error) {
 		message := &Message{Id: messageId}
 		if err = c.TX().Get(message); err != nil {
 			return
@@ -48,17 +47,17 @@ func SeeMessage(c common.WSContext) (result interface{}, err error) {
 	return
 }
 
-func CommitPhase(c common.WSContext) (result interface{}, err error) {
+func CommitPhase(c srv.WSContext) (result interface{}, err error) {
 	err = setPhaseCommitted(c, true)
 	return
 }
 
-func setPhaseCommitted(c common.WSContext, commit bool) (err error) {
+func setPhaseCommitted(c srv.WSContext, commit bool) (err error) {
 	phaseId, err := base64.URLEncoding.DecodeString(c.Data().GetString("PhaseId"))
 	if err != nil {
 		return
 	}
-	return c.Update(func(c common.WSTXContext) (err error) {
+	return c.Update(func(c srv.WSTXContext) (err error) {
 		phase := &Phase{Id: phaseId}
 		if err = c.TX().Get(phase); err != nil {
 			return
@@ -106,12 +105,12 @@ func setPhaseCommitted(c common.WSContext, commit bool) (err error) {
 	})
 }
 
-func SetOrder(c common.WSContext) (result interface{}, err error) {
+func SetOrder(c srv.WSContext) (result interface{}, err error) {
 	var base64DecodedId []byte
 	if base64DecodedId, err = base64.URLEncoding.DecodeString(c.Data().GetString("GameId")); err != nil {
 		return
 	}
-	err = c.Update(func(c common.WSTXContext) (err error) {
+	err = c.Update(func(c srv.WSTXContext) (err error) {
 		game := Game{Id: base64DecodedId}
 		if err = c.TX().Get(&game); err != nil {
 			return
