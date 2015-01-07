@@ -44,25 +44,18 @@ const (
 )
 
 type Server struct {
-	sessionStore          *sessions.CookieStore
-	db                    *unbolted.DB
-	gmail                 *gmail.Client
-	env                   string
-	logLevel              int
-	svgTemplates          *template.Template
-	jsModelTemplates      *template.Template
-	jsCollectionTemplates *template.Template
-	jsTemplates           *template.Template
-	cssTemplates          *template.Template
-	_Templates            *template.Template
-	jsViewTemplates       *template.Template
-	gmailAccount          string
-	gmailPassword         string
-	smtpAccount           string
-	smtpHost              string
-	mailHandler           func(c SkinnyContext, msg *enmime.MIMEBody) error
-	router                *Router
-	secret                string
+	sessionStore  *sessions.CookieStore
+	db            *unbolted.DB
+	gmail         *gmail.Client
+	env           string
+	logLevel      int
+	gmailAccount  string
+	gmailPassword string
+	smtpAccount   string
+	smtpHost      string
+	mailHandler   func(c SkinnyContext, msg *enmime.MIMEBody) error
+	router        *Router
+	secret        string
 }
 
 func NewServer(secret, env, db string) (self *Server, err error) {
