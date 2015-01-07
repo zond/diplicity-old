@@ -14,7 +14,7 @@ import (
 	dip "github.com/zond/godip/common"
 	"github.com/zond/godip/state"
 	"github.com/zond/godip/variants"
-	"github.com/zond/kcwraps/kol"
+	"github.com/zond/unbolted"
 )
 
 type EndReason string
@@ -85,11 +85,11 @@ type Consequences struct {
 }
 
 type Game struct {
-	Id kol.Id
+	Id unbolted.Id
 
-	Closed             bool           `kol:"index"`
-	Private            bool           `kol:"index"`
-	State              meta.GameState `kol:"index"`
+	Closed             bool           `unbolted:"index"`
+	Private            bool           `unbolted:"index"`
+	State              meta.GameState `unbolted:"index"`
 	EndReason          EndReason
 	Variant            string
 	AllocationMethod   string
@@ -119,8 +119,8 @@ func (self *Game) Disallows(u *user.User) bool {
 		u.Reliability() < self.MinimumReliability
 }
 
-func (self *Game) allocate(d *kol.DB, phase *Phase) (err error) {
-	members, err := self.Members(d)
+func (self *Game) allocate(tx *unbolted.TX, phase *Phase) (err error) {
+	members, err := self.Members(tx)
 	if err != nil {
 		return
 	}
@@ -154,19 +154,19 @@ func (self *Game) allocate(d *kol.DB, phase *Phase) (err error) {
 			members[index].Committed = false
 			members[index].NoOrders = false
 		}
-		if err = d.Set(&members[index]); err != nil {
+		if err = tx.Set(&members[index]); err != nil {
 			return
 		}
 	}
 	return
 }
 
-func (self *Game) endPhaseConsequences(c common.SkinnyContext, phase *Phase, member *Member, opts dip.Options, waitFor, active, nonSurrendering *[]*Member) (err error) {
+func (self *Game) endPhaseConsequences(c common.SkinnyTXContext, phase *Phase, member *Member, opts dip.Options, waitFor, active, nonSurrendering *[]*Member) (err error) {
 	surrender := false
 	if !member.Committed {
 		alreadyHitReliability := false
 		if self.NonCommitConsequences.ReliabilityHit {
-			if err = member.ReliabilityDelta(c.DB(), -1); err != nil {
+			if err = member.ReliabilityDelta(c.TX(), -1); err != nil {
 				return
 			}
 			c.Infof("Increased MISSED deadlines for %#v by one because %+v, %+v and %+v", string(member.UserId), self, member, phase)
@@ -182,7 +182,7 @@ func (self *Game) endPhaseConsequences(c common.SkinnyContext, phase *Phase, mem
 		}
 		if len(phase.Orders[member.Nation]) == 0 {
 			if !alreadyHitReliability && self.NMRConsequences.ReliabilityHit {
-				if err = member.ReliabilityDelta(c.DB(), -1); err != nil {
+				if err = member.ReliabilityDelta(c.TX(), -1); err != nil {
 					return
 				}
 				c.Infof("Increased MISSED deadlines for %#v by one because %+v, %+v and %+v", string(member.UserId), self, member, phase)
@@ -198,7 +198,7 @@ func (self *Game) endPhaseConsequences(c common.SkinnyContext, phase *Phase, mem
 		}
 	} else {
 		if self.NonCommitConsequences.ReliabilityHit || self.NMRConsequences.ReliabilityHit {
-			if err = member.ReliabilityDelta(c.DB(), 1); err != nil {
+			if err = member.ReliabilityDelta(c.TX(), 1); err != nil {
 				return
 			}
 			c.Infof("Increased HELD deadlines for %#v by one because %+v, %+v and %+v", string(member.UserId), self, member, phase)
@@ -222,20 +222,20 @@ func (self *Game) endPhaseConsequences(c common.SkinnyContext, phase *Phase, mem
 			member.NoOrders = false
 		}
 	}
-	if err = c.DB().Set(member); err != nil {
+	if err = c.TX().Set(member); err != nil {
 		return
 	}
 	return
 }
 
-func (self *Game) end(c common.SkinnyContext, phase *Phase, members Members, winner *Member, reason EndReason) (err error) {
+func (self *Game) end(c common.SkinnyTXContext, phase *Phase, members Members, winner *Member, reason EndReason) (err error) {
 	self.EndReason = reason
 	self.State = meta.GameStateEnded
-	if err = c.DB().Set(self); err != nil {
+	if err = c.TX().Set(self); err != nil {
 		return
 	}
 	phase.Resolved = true
-	if err = c.DB().Set(phase); err != nil {
+	if err = c.TX().Set(phase); err != nil {
 		return
 	}
 	if self.Ranking && winner != nil {
@@ -244,37 +244,37 @@ func (self *Game) end(c common.SkinnyContext, phase *Phase, members Members, win
 		for index, _ := range members {
 			if !members[index].Id.Equals(winner.Id) {
 				user := &user.User{Id: members[index].UserId}
-				if err = c.DB().Get(user); err != nil {
+				if err = c.TX().Get(user); err != nil {
 					return
 				}
 				spend = user.Ranking * RankingBlind
 				pot += spend
 				user.Ranking -= spend
-				if err = c.DB().Set(user); err != nil {
+				if err = c.TX().Set(user); err != nil {
 					return
 				}
 			}
 		}
 		winnerUser := &user.User{Id: winner.UserId}
-		if err = c.DB().Get(winnerUser); err != nil {
+		if err = c.TX().Get(winnerUser); err != nil {
 			return
 		}
 		winnerUser.Ranking += pot
-		if err = c.DB().Set(winnerUser); err != nil {
+		if err = c.TX().Set(winnerUser); err != nil {
 			return
 		}
 	}
 	return
 }
 
-func (self *Game) resolve(c common.SkinnyContext, phase *Phase) (err error) {
+func (self *Game) resolve(c common.SkinnyTXContext, phase *Phase) (err error) {
 	// Check that we are in a phase where we CAN resolve
 	if self.State != meta.GameStateStarted {
 		err = fmt.Errorf("%+v is not started", self)
 		return
 	}
 	// Load our members
-	members, err := self.Members(c.DB())
+	members, err := self.Members(c.TX())
 	if err != nil {
 		return
 	}
@@ -284,7 +284,7 @@ func (self *Game) resolve(c common.SkinnyContext, phase *Phase) (err error) {
 		return
 	}
 	// Load "now"
-	epoch, err := epoch.Get(c.DB())
+	epoch, err := epoch.Get(c.TX())
 	if err != nil {
 		return
 	}
@@ -337,7 +337,7 @@ func (self *Game) resolve(c common.SkinnyContext, phase *Phase) (err error) {
 
 		// Mark the old phase as resolved, and save it
 		phase.Resolved = true
-		if err = c.DB().Set(phase); err != nil {
+		if err = c.TX().Set(phase); err != nil {
 			return
 		}
 
@@ -377,7 +377,7 @@ func (self *Game) resolve(c common.SkinnyContext, phase *Phase) (err error) {
 		}
 
 		// Store the next phase
-		if err = c.DB().Set(nextPhase); err != nil {
+		if err = c.TX().Set(nextPhase); err != nil {
 			return
 		}
 
@@ -386,7 +386,7 @@ func (self *Game) resolve(c common.SkinnyContext, phase *Phase) (err error) {
 			if err = nextPhase.Schedule(c); err != nil {
 				return
 			}
-			nextPhase.SendStartedEmails(c, self)
+			nextPhase.sendStartedEmails(c, self)
 			return
 		}
 		phase = nextPhase
@@ -394,14 +394,14 @@ func (self *Game) resolve(c common.SkinnyContext, phase *Phase) (err error) {
 	return
 }
 
-func (self *Game) Describe(c common.SkinnyContext) (result string, err error) {
+func (self *Game) Describe(tx *unbolted.TX) (result string, err error) {
 	switch self.State {
 	case meta.GameStateCreated:
 		result = "before game"
 		return
 	case meta.GameStateStarted:
 		var phase *Phase
-		if _, phase, err = self.Phase(c.DB(), 0); err != nil {
+		if _, phase, err = self.Phase(tx, 0); err != nil {
 			return
 		}
 		result = fmt.Sprintf("%v, %v, %v", phase.Season, phase.Year, phase.Type)
@@ -415,75 +415,79 @@ func (self *Game) Describe(c common.SkinnyContext) (result string, err error) {
 }
 
 func (self *Game) start(c common.SkinnyContext) (err error) {
-	if self.State != meta.GameStateCreated {
-		err = fmt.Errorf("%+v is already started", self)
-		return
-	}
-	self.State = meta.GameStateStarted
-	self.Closed = true
-	if err = c.DB().Set(self); err != nil {
-		return
-	}
-	var startState *state.State
-	if variant, found := variants.Variants[self.Variant]; !found {
-		err = fmt.Errorf("Unknown variant %v", self.Variant)
-		return
-	} else {
-		if startState, err = variant.Start(); err != nil {
+	return c.Update(func(c common.SkinnyTXContext) (err error) {
+		if self.State != meta.GameStateCreated {
+			err = fmt.Errorf("%+v is already started", self)
 			return
 		}
-	}
-	startPhase := startState.Phase()
-	epoch, err := epoch.Get(c.DB())
-	if err != nil {
-		return
-	}
-	phase := &Phase{
-		GameId:      self.Id,
-		Ordinal:     0,
-		Orders:      map[dip.Nation]map[dip.Province][]string{},
-		Resolutions: map[dip.Province]string{},
-		Season:      startPhase.Season(),
-		Year:        startPhase.Year(),
-		Type:        startPhase.Type(),
-		Deadline:    epoch + (time.Minute * time.Duration(self.Deadlines[startPhase.Type()])),
-	}
-	phase.Units, phase.SupplyCenters, phase.Dislodgeds, phase.Dislodgers, phase.Bounces, _ = startState.Dump()
-	if err = c.DB().Set(phase); err != nil {
-		return
-	}
-	if err = self.allocate(c.DB(), phase); err != nil {
-		return
-	}
-	if err = phase.Schedule(c); err != nil {
-		return
-	}
-	phase.SendStartedEmails(c, self)
-	return
-}
-
-func (self *Game) Updated(d *kol.DB, old *Game) (err error) {
-	if old != self {
-		members := Members{}
-		if members, err = self.Members(d); err != nil {
+		self.State = meta.GameStateStarted
+		self.Closed = true
+		if err = c.TX().Set(self); err != nil {
 			return
 		}
-		for _, member := range members {
-			if err = d.EmitUpdate(&member); err != nil {
+		var startState *state.State
+		if variant, found := variants.Variants[self.Variant]; !found {
+			err = fmt.Errorf("Unknown variant %v", self.Variant)
+			return
+		} else {
+			if startState, err = variant.Start(); err != nil {
 				return
 			}
 		}
-	}
+		startPhase := startState.Phase()
+		epoch, err := epoch.Get(c.TX())
+		if err != nil {
+			return
+		}
+		phase := &Phase{
+			GameId:      self.Id,
+			Ordinal:     0,
+			Orders:      map[dip.Nation]map[dip.Province][]string{},
+			Resolutions: map[dip.Province]string{},
+			Season:      startPhase.Season(),
+			Year:        startPhase.Year(),
+			Type:        startPhase.Type(),
+			Deadline:    epoch + (time.Minute * time.Duration(self.Deadlines[startPhase.Type()])),
+		}
+		phase.Units, phase.SupplyCenters, phase.Dislodgeds, phase.Dislodgers, phase.Bounces, _ = startState.Dump()
+		if err = c.TX().Set(phase); err != nil {
+			return
+		}
+		if err = self.allocate(c.TX(), phase); err != nil {
+			return
+		}
+		if err = phase.Schedule(c); err != nil {
+			return
+		}
+		phase.sendStartedEmails(c, self)
+		return
+	})
+}
+
+func (self *Game) Updated(d *unbolted.DB, old *Game) (err error) {
+	return d.View(func(tx *unbolted.TX) (err error) {
+		if old != self {
+			members := Members{}
+			if members, err = self.Members(tx); err != nil {
+				return
+			}
+			for _, member := range members {
+				if err = d.EmitUpdate(&member); err != nil {
+					return
+				}
+			}
+		}
+		return
+	})
+}
+
+func (self *Game) Phases(tx *unbolted.TX) (result Phases, err error) {
+	err = tx.Query().Where(unbolted.Equals{"GameId", self.Id}).All(&result)
 	return
 }
 
-func (self *Game) Phases(d *kol.DB) (result Phases, err error) {
-	err = d.Query().Where(kol.Equals{"GameId", self.Id}).All(&result)
-	return
-}
-
-func (self *Game) Phase(d *kol.DB, ordinal int) (result, last *Phase, err error) {
-	phases, err := self.Phases(d)
+func (self *Game) Phase(tx *unbolted.TX, ordinal int) (result, last *Phase, err error) {
+	phases, err := self.Phases(tx)
 	if err != nil {
 		return
 	}
@@ -498,16 +502,16 @@ func (self *Game) Phase(d *kol.DB, ordinal int) (result, last *Phase, err error)
 	return
 }
 
-func (self *Game) Members(d *kol.DB) (result Members, err error) {
-	if err = d.Query().Where(kol.Equals{"GameId", self.Id}).All(&result); err != nil {
+func (self *Game) Members(tx *unbolted.TX) (result Members, err error) {
+	if err = tx.Query().Where(unbolted.Equals{"GameId", self.Id}).All(&result); err != nil {
 		return
 	}
 	sort.Sort(result)
 	return
 }
 
-func (self *Game) UnseenMessages(d *kol.DB, viewer kol.Id) (result map[string]int, err error) {
-	msgs, err := self.Messages(d)
+func (self *Game) UnseenMessages(tx *unbolted.TX, viewer unbolted.Id) (result map[string]int, err error) {
+	msgs, err := self.Messages(tx)
 	if err != nil {
 		return
 	}
@@ -520,8 +524,8 @@ func (self *Game) UnseenMessages(d *kol.DB, viewer kol.Id) (result map[string]in
 	return
 }
 
-func (self *Game) ToState(d *kol.DB, members Members, member *Member) (result GameState, err error) {
-	_, phase, err := self.Phase(d, 0)
+func (self *Game) ToState(tx *unbolted.TX, members Members, member *Member) (result GameState, err error) {
+	_, phase, err := self.Phase(tx, 0)
 	if err != nil {
 		return
 	}
@@ -529,11 +533,11 @@ func (self *Game) ToState(d *kol.DB, members Members, member *Member) (result Ga
 	if phase != nil {
 		ordinal = phase.Ordinal
 	}
-	return self.toStateWithPhase(d, members, member, phase.redact(member), ordinal)
+	return self.toStateWithPhase(tx, members, member, phase.redact(member), ordinal)
 }
 
-func (self *Game) ToStateWithPhaseOrdinal(d *kol.DB, members Members, member *Member, ordinal int) (result GameState, err error) {
-	phase, last, err := self.Phase(d, ordinal)
+func (self *Game) ToStateWithPhaseOrdinal(tx *unbolted.TX, members Members, member *Member, ordinal int) (result GameState, err error) {
+	phase, last, err := self.Phase(tx, ordinal)
 	if err != nil {
 		return
 	}
@@ -544,28 +548,28 @@ func (self *Game) ToStateWithPhaseOrdinal(d *kol.DB, members Members, member *Me
 	if last == phase {
 		phase = phase.redact(member)
 	}
-	return self.toStateWithPhase(d, members, member, phase, last.Ordinal)
+	return self.toStateWithPhase(tx, members, member, phase, last.Ordinal)
 }
 
-func (self *Game) toStateWithPhase(d *kol.DB, members Members, member *Member, phase *Phase, phases int) (result GameState, err error) {
+func (self *Game) toStateWithPhase(tx *unbolted.TX, members Members, member *Member, phase *Phase, phases int) (result GameState, err error) {
 	email := ""
 	if member != nil {
 		email = string(member.UserId)
 	}
-	memberStates, err := members.ToStates(d, self, email, false)
+	memberStates, err := members.ToStates(tx, self, email, false)
 	if err != nil {
 		return
 	}
 	unseen := map[string]int{}
 	if member != nil {
-		unseen, err = self.UnseenMessages(d, member.Id)
+		unseen, err = self.UnseenMessages(tx, member.Id)
 		if err != nil {
 			return
 		}
 	}
 	var timeLeft time.Duration
 	if phase != nil {
-		timeLeft, err = epoch.Get(d)
+		timeLeft, err = epoch.Get(tx)
 		if err != nil {
 			return
 		}
@@ -582,32 +586,32 @@ func (self *Game) toStateWithPhase(d *kol.DB, members Members, member *Member, p
 	return
 }
 
-func (self *Game) Messages(d *kol.DB) (result Messages, err error) {
-	if err = d.Query().Where(kol.Equals{"GameId", self.Id}).All(&result); err != nil {
+func (self *Game) Messages(tx *unbolted.TX) (result Messages, err error) {
+	if err = tx.Query().Where(unbolted.Equals{"GameId", self.Id}).All(&result); err != nil {
 		return
 	}
 	sort.Sort(result)
 	return
 }
 
-func (self *Game) Member(d *kol.DB, email string) (result *Member, err error) {
+func (self *Game) Member(tx *unbolted.TX, email string) (result *Member, err error) {
 	var member Member
 	var found bool
-	if found, err = d.Query().Where(kol.And{kol.Equals{"GameId", self.Id}, kol.Equals{"UserId", kol.Id(email)}}).First(&member); found && err == nil {
+	if found, err = tx.Query().Where(unbolted.And{unbolted.Equals{"GameId", self.Id}, unbolted.Equals{"UserId", unbolted.Id(email)}}).First(&member); found && err == nil {
 		result = &member
 	}
 	return
 }
 
-func (self *Game) Users(d *kol.DB) (result user.Users, err error) {
-	members, err := self.Members(d)
+func (self *Game) Users(tx *unbolted.TX) (result user.Users, err error) {
+	members, err := self.Members(tx)
 	if err != nil {
 		return
 	}
 	result = make(user.Users, len(members))
 	for index, member := range members {
 		user := user.User{Id: member.UserId}
-		if err = d.Get(&user); err != nil {
+		if err = tx.Get(&user); err != nil {
 			return
 		}
 		result[index] = user

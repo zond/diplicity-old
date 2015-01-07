@@ -11,7 +11,7 @@ import (
 	"github.com/zond/godip/classical/orders"
 	dip "github.com/zond/godip/common"
 	"github.com/zond/godip/state"
-	"github.com/zond/kcwraps/kol"
+	"github.com/zond/unbolted"
 )
 
 const (
@@ -21,25 +21,27 @@ const (
 )
 
 func ScheduleUnresolvedPhases(c common.SkinnyContext) (err error) {
-	unresolved := Phases{}
-	if err = c.DB().Query().Where(kol.Equals{"Resolved", false}).All(&unresolved); err != nil {
+	return c.View(func(c common.SkinnyTXContext) (err error) {
+		unresolved := Phases{}
+		if err = c.TX().Query().Where(unbolted.Equals{"Resolved", false}).All(&unresolved); err != nil {
+			return
+		}
+		for index, _ := range unresolved {
+			(&unresolved[index]).Schedule(c)
+		}
 		return
-	}
-	for index, _ := range unresolved {
-		(&unresolved[index]).Schedule(c)
-	}
-	return
+	})
 }
 
 type Phase struct {
-	Id     kol.Id
-	GameId kol.Id `kol:"index"`
+	Id     unbolted.Id
+	GameId unbolted.Id `unbolted:"index"`
 
 	Season   dip.Season
 	Year     int
 	Type     dip.PhaseType
 	Ordinal  int
-	Resolved bool `kol:"index"`
+	Resolved bool `unbolted:"index"`
 
 	Units         map[dip.Province]dip.Unit
 	Orders        map[dip.Nation]map[dip.Province][]string
@@ -61,8 +63,8 @@ func (self *Phase) ShortString() string {
 
 func (self *Phase) autoResolve(c common.SkinnyContext) (err error) {
 	c.Infof("Auto resolving %v/%v due to timeout", self.GameId, self.Id)
-	if err = c.Transact(func(c common.SkinnyContext) (err error) {
-		if err = c.DB().Get(self); err != nil {
+	if err = c.Update(func(c common.SkinnyTXContext) (err error) {
+		if err = c.TX().Get(self); err != nil {
 			err = fmt.Errorf("While trying to load %+v: %v", self, err)
 			return
 		}
@@ -71,7 +73,7 @@ func (self *Phase) autoResolve(c common.SkinnyContext) (err error) {
 			return
 		}
 		game := &Game{Id: self.GameId}
-		if err = c.DB().Get(game); err != nil {
+		if err = c.TX().Get(game); err != nil {
 			err = fmt.Errorf("While trying to load %+v's game: %v", self, err)
 			return
 		}
@@ -82,14 +84,14 @@ func (self *Phase) autoResolve(c common.SkinnyContext) (err error) {
 	return
 }
 
-func (self *Phase) Schedule(c common.SkinnyContext) (err error) {
+func (self *Phase) Schedule(c common.SkinnyTXContext) (err error) {
 	if !self.Resolved {
 		var ep time.Duration
-		if ep, err = epoch.Get(c.DB()); err != nil {
+		if ep, err = epoch.Get(c.TX()); err != nil {
 			return
 		}
 		timeout := self.Deadline - ep
-		if err = c.BetweenTransactions(func(c common.SkinnyContext) (err error) {
+		if err = c.AfterTransaction(func(c common.SkinnyContext) (err error) {
 			if timeout > 0 {
 				time.AfterFunc(timeout, func() {
 					if err = self.autoResolve(c); err != nil {
@@ -113,7 +115,7 @@ func (self *Phase) Schedule(c common.SkinnyContext) (err error) {
 	return
 }
 
-func (self *Phase) emailTo(c common.SkinnyContext, game *Game, member *Member, user *user.User) (err error) {
+func (self *Phase) emailTo(c common.SkinnyTXContext, game *Game, member *Member, user *user.User) (err error) {
 	to := fmt.Sprintf("%v <%v>", member.Nation, user.Email)
 	unsubTag := &common.UnsubscribeTag{
 		T: common.UnsubscribePhaseEmail,
@@ -127,7 +129,7 @@ func (self *Phase) emailTo(c common.SkinnyContext, game *Game, member *Member, u
 	contextLink := fmt.Sprintf("To see this in context: http://%v/games/%v", user.DiplicityHost, self.GameId)
 	unsubLink := fmt.Sprintf("To unsubscribe: http://%v/unsubscribe/%v", user.DiplicityHost, encodedUnsubTag)
 	text := fmt.Sprintf("A new phase has been created")
-	subject, err := game.Describe(c)
+	subject, err := game.Describe(c.TX())
 	if err != nil {
 		return
 	}
@@ -136,14 +138,14 @@ func (self *Phase) emailTo(c common.SkinnyContext, game *Game, member *Member, u
 	return
 }
 
-func (self *Phase) SendStartedEmails(c common.SkinnyContext, game *Game) (err error) {
-	members, err := game.Members(c.DB())
+func (self *Phase) sendStartedEmails(c common.SkinnyTXContext, game *Game) (err error) {
+	members, err := game.Members(c.TX())
 	if err != nil {
 		return
 	}
 	for _, member := range members {
 		user := &user.User{Id: member.UserId}
-		if err = c.DB().Get(user); err != nil {
+		if err = c.TX().Get(user); err != nil {
 			return
 		}
 		if !user.PhaseEmailDisabled {
@@ -164,13 +166,13 @@ func (self *Phase) SendStartedEmails(c common.SkinnyContext, game *Game) (err er
 	return
 }
 
-func (self *Phase) Game(d *kol.DB) (result *Game, err error) {
+func (self *Phase) Game(tx *unbolted.TX) (result *Game, err error) {
 	result = &Game{Id: self.GameId}
-	err = d.Get(result)
+	err = tx.Get(result)
 	return
 }
 
-func (self *Phase) Updated(d *kol.DB, old *Phase) (err error) {
+func (self *Phase) Updated(d *unbolted.DB, old *Phase) (err error) {
 	g := Game{Id: self.GameId}
 	if err = d.Get(&g); err != nil {
 		return

@@ -8,7 +8,6 @@ import (
 	"github.com/zond/godip/classical/orders"
 	dip "github.com/zond/godip/common"
 	"github.com/zond/godip/state"
-	"github.com/zond/kcwraps/kol"
 )
 
 func UncommitPhase(c common.WSContext) (result interface{}, err error) {
@@ -22,17 +21,17 @@ func SeeMessage(c common.WSContext) (result interface{}, err error) {
 		err = fmt.Errorf("Error trying to decode %#v: %v", c.Data().GetString("MessageId"), err)
 		return
 	}
-	err = c.Transact(func(c common.WSContext) (err error) {
+	err = c.Update(func(c common.WSTXContext) (err error) {
 		message := &Message{Id: messageId}
-		if err = c.DB().Get(message); err != nil {
+		if err = c.TX().Get(message); err != nil {
 			return
 		}
 		game := &Game{Id: message.GameId}
-		if err = c.DB().Get(game); err != nil {
+		if err = c.TX().Get(game); err != nil {
 			return
 		}
 		var member *Member
-		if member, err = game.Member(c.DB(), c.Principal()); err != nil {
+		if member, err = game.Member(c.TX(), c.Principal()); err != nil {
 			return
 		}
 		if message.SeenBy == nil {
@@ -40,7 +39,7 @@ func SeeMessage(c common.WSContext) (result interface{}, err error) {
 		}
 		if !message.SeenBy[member.Id.String()] {
 			message.SeenBy[member.Id.String()] = true
-			if err = c.DB().Set(message); err != nil {
+			if err = c.TX().Set(message); err != nil {
 				return
 			}
 		}
@@ -59,16 +58,16 @@ func setPhaseCommitted(c common.WSContext, commit bool) (err error) {
 	if err != nil {
 		return
 	}
-	return c.Transact(func(c common.WSContext) (err error) {
+	return c.Update(func(c common.WSTXContext) (err error) {
 		phase := &Phase{Id: phaseId}
-		if err = c.DB().Get(phase); err != nil {
+		if err = c.TX().Get(phase); err != nil {
 			return
 		}
-		game, err := phase.Game(c.DB())
+		game, err := phase.Game(c.TX())
 		if err != nil {
 			return
 		}
-		members, err := game.Members(c.DB())
+		members, err := game.Members(c.TX())
 		if err != nil {
 			return
 		}
@@ -84,7 +83,7 @@ func setPhaseCommitted(c common.WSContext, commit bool) (err error) {
 		}
 		member.Committed = commit
 		member.NoWait = false
-		if err = c.DB().Set(member); err != nil {
+		if err = c.TX().Set(member); err != nil {
 			return
 		}
 		if !phase.Resolved {
@@ -95,14 +94,14 @@ func setPhaseCommitted(c common.WSContext, commit bool) (err error) {
 				}
 			}
 			if count == len(members) {
-				if err = game.resolve(c.Diet(), phase); err != nil {
+				if err = game.resolve(c.TXDiet(), phase); err != nil {
 					return
 				}
 				c.Infof("Resolved %v", game.Id)
 				return
 			}
 		}
-		err = c.DB().Set(phase)
+		err = c.TX().Set(phase)
 		return
 	})
 }
@@ -112,17 +111,17 @@ func SetOrder(c common.WSContext) (result interface{}, err error) {
 	if base64DecodedId, err = base64.URLEncoding.DecodeString(c.Data().GetString("GameId")); err != nil {
 		return
 	}
-	err = c.DB().Transact(func(d *kol.DB) (err error) {
+	err = c.Update(func(c common.WSTXContext) (err error) {
 		game := Game{Id: base64DecodedId}
-		if err = d.Get(&game); err != nil {
+		if err = c.TX().Get(&game); err != nil {
 			return
 		}
 		var member *Member
-		if member, err = game.Member(d, c.Principal()); err != nil {
+		if member, err = game.Member(c.TX(), c.Principal()); err != nil {
 			return
 		}
 		var phase *Phase
-		if _, phase, err = game.Phase(d, 0); err != nil {
+		if _, phase, err = game.Phase(c.TX(), 0); err != nil {
 			return
 		}
 		if phase == nil {
@@ -153,7 +152,7 @@ func SetOrder(c common.WSContext) (result interface{}, err error) {
 			}
 			nationOrders[dip.Province(order[0])] = order[1:]
 		}
-		if err = d.Set(phase); err != nil {
+		if err = c.TX().Set(phase); err != nil {
 			return
 		}
 		return

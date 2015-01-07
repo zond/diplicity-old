@@ -6,7 +6,7 @@ import (
 	"sync/atomic"
 
 	"github.com/zond/diplicity/common"
-	"github.com/zond/kcwraps/kol"
+	"github.com/zond/unbolted"
 )
 
 const (
@@ -16,16 +16,26 @@ const (
 var deltaPoint int64 = time.Now().UnixNano()
 
 type Epoch struct {
-	Id kol.Id
+	Id unbolted.Id
 	At time.Duration
 }
 
-func Get(d *kol.DB) (result time.Duration, err error) {
-	epoch := &Epoch{
-		Id: kol.Id(epochKey),
+func getDB(db *unbolted.DB) (result time.Duration, err error) {
+	if err = db.View(func(tx *unbolted.TX) (err error) {
+		result, err = Get(tx)
+		return
+	}); err != nil {
+		return
 	}
-	if err = d.Get(epoch); err != nil {
-		if err == kol.NotFound {
+	return
+}
+
+func Get(tx *unbolted.TX) (result time.Duration, err error) {
+	epoch := &Epoch{
+		Id: unbolted.Id(epochKey),
+	}
+	if err = tx.Get(epoch); err != nil {
+		if err == unbolted.ErrNotFound {
 			err = nil
 		} else {
 			return
@@ -35,9 +45,9 @@ func Get(d *kol.DB) (result time.Duration, err error) {
 	return
 }
 
-func Set(d *kol.DB, at time.Duration) (err error) {
+func set(d *unbolted.DB, at time.Duration) (err error) {
 	epoch := &Epoch{
-		Id: kol.Id(epochKey),
+		Id: unbolted.Id(epochKey),
 		At: at,
 	}
 	err = d.Set(epoch)
@@ -45,7 +55,7 @@ func Set(d *kol.DB, at time.Duration) (err error) {
 }
 
 func Start(c common.SkinnyContext) (err error) {
-	startedAt, err := Get(c.DB())
+	startedAt, err := getDB(c.DB())
 	if err != nil {
 		return
 	}
@@ -57,7 +67,7 @@ func Start(c common.SkinnyContext) (err error) {
 			time.Sleep(time.Minute)
 			currently = time.Now().Sub(startedTime) + startedAt
 			atomic.StoreInt64(&deltaPoint, int64(time.Now().UnixNano()))
-			if err = Set(c.DB(), currently); err != nil {
+			if err = set(c.DB(), currently); err != nil {
 				panic(err)
 			}
 			c.Debugf("Epoch %v", currently)

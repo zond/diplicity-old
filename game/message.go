@@ -19,14 +19,14 @@ import (
 	"github.com/zond/gmail"
 	dip "github.com/zond/godip/common"
 	"github.com/zond/godip/variants"
-	"github.com/zond/kcwraps/kol"
+	"github.com/zond/unbolted"
 )
 
 var emailPlusReg = regexp.MustCompile("^.+\\+(.+)@.+$")
 
 type MailTag struct {
-	M kol.Id
-	R kol.Id
+	M unbolted.Id
+	R unbolted.Id
 	H []byte
 }
 
@@ -83,9 +83,9 @@ func (self Messages) Swap(i, j int) {
 }
 
 type Message struct {
-	Id           kol.Id
-	GameId       kol.Id `kol:"index"`
-	SenderId     kol.Id
+	Id           unbolted.Id
+	GameId       unbolted.Id `unbolted:"index"`
+	SenderId     unbolted.Id
 	RecipientIds map[string]bool
 	SeenBy       map[string]bool
 	Public       bool
@@ -105,7 +105,7 @@ func (self *Message) ChannelId() string {
 	return strings.Join(recips, ".")
 }
 
-func (self *Message) Updated(d *kol.DB, old *Message) (err error) {
+func (self *Message) Updated(d *unbolted.DB, old *Message) (err error) {
 	g := Game{Id: self.GameId}
 	if err = d.Get(&g); err != nil {
 		return
@@ -113,7 +113,7 @@ func (self *Message) Updated(d *kol.DB, old *Message) (err error) {
 	return d.EmitUpdate(&g)
 }
 
-func (self *Message) Created(d *kol.DB) (err error) {
+func (self *Message) Created(d *unbolted.DB) (err error) {
 	g := Game{Id: self.GameId}
 	if err = d.Get(&g); err != nil {
 		return
@@ -151,25 +151,29 @@ func IncomingMail(c common.SkinnyContext, msg *enmime.MIMEBody) (err error) {
 			if match2 := emailPlusReg.FindStringSubmatch(match); match2 != nil {
 				var tag *MailTag
 				if tag, err = DecodeMailTag(c.Secret(), match2[1]); err == nil {
-					sender := &Member{Id: tag.R}
-					if err = c.DB().Get(sender); err != nil {
+					if err = c.Update(func(c common.SkinnyTXContext) (err error) {
+						sender := &Member{Id: tag.R}
+						if err = c.TX().Get(sender); err != nil {
+							return
+						}
+						parent := &Message{Id: tag.M}
+						if err = c.TX().Get(parent); err != nil {
+							return
+						}
+						game := &Game{Id: parent.GameId}
+						if err = c.TX().Get(game); err != nil {
+							return
+						}
+						message := &Message{
+							Body:         strings.TrimSpace(strings.Join(lines, "\n")),
+							GameId:       game.Id,
+							RecipientIds: parent.RecipientIds,
+						}
+						c.Infof("Mail resulted in %+v from %+v", message, sender.Nation)
+						return message.Send(c, game, sender)
+					}); err != nil {
 						return
 					}
-					parent := &Message{Id: tag.M}
-					if err = c.DB().Get(parent); err != nil {
-						return
-					}
-					game := &Game{Id: parent.GameId}
-					if err = c.DB().Get(game); err != nil {
-						return
-					}
-					message := &Message{
-						Body:         strings.TrimSpace(strings.Join(lines, "\n")),
-						GameId:       game.Id,
-						RecipientIds: parent.RecipientIds,
-					}
-					c.Infof("Mail resulted in %+v from %+v", message, sender.Nation)
-					return message.Send(c, game, sender)
 				}
 			}
 		}
@@ -177,13 +181,13 @@ func IncomingMail(c common.SkinnyContext, msg *enmime.MIMEBody) (err error) {
 	return nil
 }
 
-func (self *Message) Send(c common.SkinnyContext, game *Game, sender *Member) (err error) {
+func (self *Message) Send(c common.SkinnyTXContext, game *Game, sender *Member) (err error) {
 	c.Debugf("Sending %#v from %#v in %#v", self.Body, sender.Nation, game.Id.String())
 	// make sure the sender is correct
 	self.SenderId = sender.Id
 
 	senderUser := &user.User{Id: sender.UserId}
-	if err = c.DB().Get(senderUser); err != nil {
+	if err = c.TX().Get(senderUser); err != nil {
 		return
 	}
 
@@ -202,7 +206,7 @@ func (self *Message) Send(c common.SkinnyContext, game *Game, sender *Member) (e
 		phaseType = BeforePhaseType
 	case meta.GameStateStarted:
 		var phase *Phase
-		if _, phase, err = game.Phase(c.DB(), 0); err != nil {
+		if _, phase, err = game.Phase(c.TX(), 0); err != nil {
 			return
 		}
 		phaseType = phase.Type
@@ -217,7 +221,7 @@ func (self *Message) Send(c common.SkinnyContext, game *Game, sender *Member) (e
 	pressConfig := game.PressConfigs[phaseType]
 
 	// load game members
-	members, err := game.Members(c.DB())
+	members, err := game.Members(c.TX())
 	if err != nil {
 		return
 	}
@@ -257,7 +261,7 @@ func (self *Message) Send(c common.SkinnyContext, game *Game, sender *Member) (e
 		return
 	}
 
-	if err = c.DB().Set(self); err != nil {
+	if err = c.TX().Set(self); err != nil {
 		return
 	}
 
@@ -277,7 +281,7 @@ func (self *Message) Send(c common.SkinnyContext, game *Game, sender *Member) (e
 		for _, member := range members {
 			if memberId == member.Id.String() && self.SenderId.String() != memberId {
 				user := &user.User{Id: member.UserId}
-				if err = c.DB().Get(user); err != nil {
+				if err = c.TX().Get(user); err != nil {
 					c.Errorf("Trying to load user %#v: %v", member.UserId.String(), err)
 					return
 				}
@@ -301,7 +305,7 @@ func (self *Message) Send(c common.SkinnyContext, game *Game, sender *Member) (e
 	return
 }
 
-func (self *Message) emailTo(c common.SkinnyContext, game *Game, sender *Member, senderUser *user.User, recip *Member, recipUser *user.User, recipName string) (err error) {
+func (self *Message) emailTo(c common.SkinnyTXContext, game *Game, sender *Member, senderUser *user.User, recip *Member, recipUser *user.User, recipName string) (err error) {
 	mailTag := &MailTag{
 		M: self.Id,
 		R: recip.Id,
@@ -342,7 +346,7 @@ func (self *Message) emailTo(c common.SkinnyContext, game *Game, sender *Member,
 	contextLink := fmt.Sprintf("To see this message in context: http://%v/games/%v/messages/%v", recipUser.DiplicityHost, self.GameId, self.ChannelId())
 	unsubLink := fmt.Sprintf("To unsubscribe: http://%v/unsubscribe/%v", recipUser.DiplicityHost, encodedUnsubTag)
 	body := fmt.Sprintf(common.EmailTemplate, self.Body, contextLink, unsubLink)
-	subject, err := game.Describe(c)
+	subject, err := game.Describe(c.TX())
 	if err != nil {
 		return
 	}

@@ -16,7 +16,7 @@ import (
 	"github.com/zond/diplicity/user"
 	dip "github.com/zond/godip/common"
 	"github.com/zond/godip/variants"
-	"github.com/zond/kcwraps/kol"
+	"github.com/zond/unbolted"
 )
 
 func Resolve(c *common.HTTPContext) (err error) {
@@ -60,162 +60,173 @@ func Resolve(c *common.HTTPContext) (err error) {
 }
 
 func UnsubscribeEmails(c *common.HTTPContext) (err error) {
-	unsubTag, err := common.DecodeUnsubscribeTag(c.Secret(), c.Vars()["unsubscribe_tag"])
-	if err != nil {
+	return c.DB().Update(func(tx *unbolted.TX) (err error) {
+		unsubTag, err := common.DecodeUnsubscribeTag(c.Secret(), c.Vars()["unsubscribe_tag"])
+		if err != nil {
+			return
+		}
+		u := &user.User{Id: unsubTag.U}
+		if err = tx.Get(u); err != nil {
+			return
+		}
+		switch unsubTag.T {
+		case common.UnsubscribeMessageEmail:
+			u.MessageEmailDisabled = true
+		case common.UnsubscribePhaseEmail:
+			u.MessageEmailDisabled = true
+		}
+		if err = tx.Set(u); err != nil {
+			return
+		}
+		switch unsubTag.T {
+		case common.UnsubscribeMessageEmail:
+			fmt.Fprintf(c.Resp(), "%v has successfully been unsubscribed from message emails.", u.Email)
+		case common.UnsubscribePhaseEmail:
+			fmt.Fprintf(c.Resp(), "%v has successfully been unsubscribed from phase emails.", u.Email)
+		}
 		return
-	}
-	u := &user.User{Id: unsubTag.U}
-	if err = c.DB().Get(u); err != nil {
-		return
-	}
-	switch unsubTag.T {
-	case common.UnsubscribeMessageEmail:
-		u.MessageEmailDisabled = true
-	case common.UnsubscribePhaseEmail:
-		u.MessageEmailDisabled = true
-	}
-	if err = c.DB().Set(u); err != nil {
-		return
-	}
-	switch unsubTag.T {
-	case common.UnsubscribeMessageEmail:
-		fmt.Fprintf(c.Resp(), "%v has successfully been unsubscribed from message emails.", u.Email)
-	case common.UnsubscribePhaseEmail:
-		fmt.Fprintf(c.Resp(), "%v has successfully been unsubscribed from phase emails.", u.Email)
-	}
-	return
+	})
 }
 
 func AdminGetOptions(c *common.HTTPContext) (err error) {
-	gameId, err := base64.URLEncoding.DecodeString(c.Vars()["game_id"])
-	if err != nil {
+	var opts dip.Options
+	return c.DB().View(func(tx *unbolted.TX) (err error) {
+		gameId, err := base64.URLEncoding.DecodeString(c.Vars()["game_id"])
+		if err != nil {
+			return
+		}
+		game := &Game{Id: gameId}
+		if err = tx.Get(game); err != nil {
+			return
+		}
+		_, last, err := game.Phase(tx, 0)
+		if err != nil {
+			return
+		}
+		if opts, err = last.Options(dip.Nation(c.Vars()["nation"])); err != nil {
+			return
+		}
 		return
-	}
-	game := &Game{Id: gameId}
-	if err = c.DB().Get(game); err != nil {
-		return
-	}
-	_, last, err := game.Phase(c.DB(), 0)
-	if err != nil {
-		return
-	}
-	opts, err := last.Options(dip.Nation(c.Vars()["nation"]))
-	if err != nil {
-		return
-	}
+	})
 	return c.RenderJSON(opts)
 }
 
 func AdminReindexGames(c *common.HTTPContext) (err error) {
-	games := Games{}
-	if err = c.DB().Query().All(&games); err != nil {
-		return
-	}
-	for _, game := range games {
-		if err = c.DB().Index(game); err != nil {
+	return c.DB().Update(func(tx *unbolted.TX) (err error) {
+		games := Games{}
+		if err = tx.Query().All(&games); err != nil {
 			return
 		}
-		fmt.Fprintf(c.Resp(), "Reindexed %#v\n", game.Id.String())
-	}
-	return
+		for _, game := range games {
+			if err = tx.Index(game); err != nil {
+				return
+			}
+			fmt.Fprintf(c.Resp(), "Reindexed %#v\n", game.Id.String())
+		}
+		return
+	})
 }
 
 func AdminRecalcOptions(c *common.HTTPContext) (err error) {
-	gameId, err := base64.URLEncoding.DecodeString(c.Vars()["game_id"])
-	if err != nil {
-		return
-	}
-	g := &Game{Id: gameId}
-	if err = c.DB().Get(g); err != nil {
-		return
-	}
-	_, last, err := g.Phase(c.DB(), 0)
-	if err != nil {
-		return
-	}
-	members, err := g.Members(c.DB())
-	if err != nil {
-		return
-	}
-	for index, _ := range members {
-		opts := dip.Options{}
-		if opts, err = last.Options(members[index].Nation); err != nil {
+	return c.DB().Update(func(tx *unbolted.TX) (err error) {
+		gameId, err := base64.URLEncoding.DecodeString(c.Vars()["game_id"])
+		if err != nil {
 			return
 		}
-		members[index].Options = opts
-		if len(opts) == 0 {
-			members[index].Committed = true
-			members[index].NoOrders = true
-		} else {
-			members[index].Committed = false
-			members[index].NoOrders = false
-		}
-		if err = c.DB().Set(&members[index]); err != nil {
+		g := &Game{Id: gameId}
+		if err = tx.Get(g); err != nil {
 			return
 		}
-	}
-	return
+		_, last, err := g.Phase(tx, 0)
+		if err != nil {
+			return
+		}
+		members, err := g.Members(tx)
+		if err != nil {
+			return
+		}
+		for index, _ := range members {
+			opts := dip.Options{}
+			if opts, err = last.Options(members[index].Nation); err != nil {
+				return
+			}
+			members[index].Options = opts
+			if len(opts) == 0 {
+				members[index].Committed = true
+				members[index].NoOrders = true
+			} else {
+				members[index].Committed = false
+				members[index].NoOrders = false
+			}
+			if err = tx.Set(&members[index]); err != nil {
+				return
+			}
+		}
+		return
+	})
 }
 
 func AdminRollback(c *common.HTTPContext) (err error) {
-	gameId, err := base64.URLEncoding.DecodeString(c.Vars()["game_id"])
-	if err != nil {
-		return
-	}
-	epoch, err := epoch.Get(c.DB())
-	if err != nil {
-		return
-	}
-	g := &Game{Id: gameId}
-	if err = c.DB().Get(g); err != nil {
-		return
-	}
-	ordinal, err := strconv.Atoi(c.Vars()["until"])
-	if err != nil {
-		return
-	}
-	members, err := g.Members(c.DB())
-	if err != nil {
-		return
-	}
-	phases, err := g.Phases(c.DB())
-	if err != nil {
-		return
-	}
-	sort.Sort(phases)
-	for index, _ := range phases {
-		phase := &phases[index]
-		if phase.Ordinal == ordinal {
-			phase.Resolutions = map[dip.Province]string{}
-			phase.Resolved = false
-			phase.Deadline = epoch + (time.Minute * time.Duration(g.Deadlines[phase.Type]))
-			for index, _ := range members {
-				opts := dip.Options{}
-				if opts, err = phase.Options(members[index].Nation); err != nil {
+	return c.DB().Update(func(tx *unbolted.TX) (err error) {
+		gameId, err := base64.URLEncoding.DecodeString(c.Vars()["game_id"])
+		if err != nil {
+			return
+		}
+		epoch, err := epoch.Get(tx)
+		if err != nil {
+			return
+		}
+		g := &Game{Id: gameId}
+		if err = tx.Get(g); err != nil {
+			return
+		}
+		ordinal, err := strconv.Atoi(c.Vars()["until"])
+		if err != nil {
+			return
+		}
+		members, err := g.Members(tx)
+		if err != nil {
+			return
+		}
+		phases, err := g.Phases(tx)
+		if err != nil {
+			return
+		}
+		sort.Sort(phases)
+		for index, _ := range phases {
+			phase := &phases[index]
+			if phase.Ordinal == ordinal {
+				phase.Resolutions = map[dip.Province]string{}
+				phase.Resolved = false
+				phase.Deadline = epoch + (time.Minute * time.Duration(g.Deadlines[phase.Type]))
+				for index, _ := range members {
+					opts := dip.Options{}
+					if opts, err = phase.Options(members[index].Nation); err != nil {
+						return
+					}
+					members[index].Options = opts
+					if len(opts) == 0 {
+						members[index].Committed = true
+						members[index].NoOrders = true
+					} else {
+						members[index].Committed = false
+						members[index].NoOrders = false
+					}
+					if err = tx.Set(&members[index]); err != nil {
+						return
+					}
+				}
+				if err = tx.Set(phase); err != nil {
 					return
 				}
-				members[index].Options = opts
-				if len(opts) == 0 {
-					members[index].Committed = true
-					members[index].NoOrders = true
-				} else {
-					members[index].Committed = false
-					members[index].NoOrders = false
-				}
-				if err = c.DB().Set(&members[index]); err != nil {
+			} else if phase.Ordinal > ordinal {
+				if err = tx.Del(phase); err != nil {
 					return
 				}
-			}
-			if err = c.DB().Set(phase); err != nil {
-				return
-			}
-		} else if phase.Ordinal > ordinal {
-			if err = c.DB().Del(phase); err != nil {
-				return
 			}
 		}
-	}
-	return
+		return
+	})
 }
 
 type AdminGameState struct {
@@ -225,24 +236,30 @@ type AdminGameState struct {
 }
 
 func AdminGetGame(c *common.HTTPContext) (err error) {
-	gameId, err := base64.URLEncoding.DecodeString(c.Vars()["game_id"])
-	if err != nil {
+	var g *Game
+	var phases Phases
+	var memberStates []MemberState
+	if err = c.DB().View(func(tx *unbolted.TX) (err error) {
+		gameId, err := base64.URLEncoding.DecodeString(c.Vars()["game_id"])
+		if err != nil {
+			return
+		}
+		g = &Game{Id: gameId}
+		if err = tx.Get(g); err != nil {
+			return
+		}
+		members, err := g.Members(tx)
+		if err != nil {
+			return
+		}
+		if memberStates, err = members.ToStates(tx, g, "", true); err != nil {
+			return
+		}
+		if phases, err = g.Phases(tx); err != nil {
+			return
+		}
 		return
-	}
-	g := &Game{Id: gameId}
-	if err = c.DB().Get(g); err != nil {
-		return
-	}
-	members, err := g.Members(c.DB())
-	if err != nil {
-		return
-	}
-	memberStates, err := members.ToStates(c.DB(), g, "", true)
-	if err != nil {
-		return
-	}
-	phases, err := g.Phases(c.DB())
-	if err != nil {
+	}); err != nil {
 		return
 	}
 	sort.Sort(phases)
@@ -267,46 +284,48 @@ func CreateMessage(c common.WSContext) (err error) {
 		return
 	}
 
-	// and the game
-	game := &Game{Id: message.GameId}
-	if err := c.DB().Get(game); err != nil {
-		return err
-	}
-	// and the member
-	sender, err := game.Member(c.DB(), c.Principal())
-	if err != nil {
-		return
-	}
+	return c.Update(func(c common.WSTXContext) (err error) {
+		// and the game
+		game := &Game{Id: message.GameId}
+		if err := c.TX().Get(game); err != nil {
+			return err
+		}
+		// and the member
+		sender, err := game.Member(c.TX(), c.Principal())
+		if err != nil {
+			return
+		}
 
-	return message.Send(c.Diet(), game, sender)
+		return message.Send(c.TXDiet(), game, sender)
+	})
 }
 
 func DeleteMember(c common.WSContext) error {
-	return c.Transact(func(c common.WSContext) error {
-		decodedId, err := kol.DecodeId(c.Match()[1])
+	return c.Update(func(c common.WSTXContext) error {
+		decodedId, err := unbolted.DecodeId(c.Match()[1])
 		if err != nil {
 			return err
 		}
 		game := &Game{Id: decodedId}
-		if err := c.DB().Get(game); err != nil {
+		if err := c.TX().Get(game); err != nil {
 			return fmt.Errorf("Game not found: %v", err)
 		}
 		if game.State != meta.GameStateCreated {
 			return fmt.Errorf("%+v already started", game)
 		}
 		member := Member{}
-		if _, err := c.DB().Query().Where(kol.And{kol.Equals{"GameId", decodedId}, kol.Equals{"UserId", kol.Id(c.Principal())}}).First(&member); err != nil {
+		if _, err := c.TX().Query().Where(unbolted.And{unbolted.Equals{"GameId", decodedId}, unbolted.Equals{"UserId", unbolted.Id(c.Principal())}}).First(&member); err != nil {
 			return err
 		}
-		if err := c.DB().Del(&member); err != nil {
+		if err := c.TX().Del(&member); err != nil {
 			return err
 		}
-		left, err := game.Members(c.DB())
+		left, err := game.Members(c.TX())
 		if err != nil {
 			return err
 		}
 		if len(left) == 0 {
-			if err := c.DB().Del(game); err != nil {
+			if err := c.TX().Del(game); err != nil {
 				return err
 			}
 		}
@@ -317,9 +336,9 @@ func DeleteMember(c common.WSContext) error {
 func AddMember(c common.WSContext) error {
 	var state GameState
 	c.Data().Overwrite(&state)
-	return c.Transact(func(c common.WSContext) error {
+	return c.Update(func(c common.WSTXContext) error {
 		game := Game{Id: state.Game.Id}
-		if err := c.DB().Get(&game); err != nil {
+		if err := c.TX().Get(&game); err != nil {
 			return fmt.Errorf("Game not found")
 		}
 		if game.State != meta.GameStateCreated {
@@ -329,23 +348,23 @@ func AddMember(c common.WSContext) error {
 		if !found {
 			return fmt.Errorf("Unknown variant %v", game.Variant)
 		}
-		if alreadyMember, err := game.Member(c.DB(), c.Principal()); err != nil {
+		if alreadyMember, err := game.Member(c.TX(), c.Principal()); err != nil {
 			return err
 		} else if alreadyMember != nil {
 			return fmt.Errorf("%+v is already member of %v", alreadyMember, game.Id)
 		}
-		me := &user.User{Id: kol.Id(c.Principal())}
-		if err := c.DB().Get(me); err != nil {
+		me := &user.User{Id: unbolted.Id(c.Principal())}
+		if err := c.TX().Get(me); err != nil {
 			return err
 		}
 		if game.Disallows(me) {
 			return fmt.Errorf("Is not allowed to join this game due to game settings")
 		}
-		already, err := game.Members(c.DB())
+		already, err := game.Members(c.TX())
 		if err != nil {
 			return err
 		}
-		if disallows, err := already.Disallows(c.DB(), me); err != nil {
+		if disallows, err := already.Disallows(c.TX(), me); err != nil {
 			return err
 		} else if disallows {
 			return fmt.Errorf("Is not allowed to join this game due to blacklistings")
@@ -353,10 +372,10 @@ func AddMember(c common.WSContext) error {
 		if len(already) < len(variant.Nations) {
 			member := Member{
 				GameId:           state.Game.Id,
-				UserId:           kol.Id(c.Principal()),
+				UserId:           unbolted.Id(c.Principal()),
 				PreferredNations: state.Members[0].PreferredNations,
 			}
-			if err := c.DB().Set(&member); err != nil {
+			if err := c.TX().Set(&member); err != nil {
 				return err
 			}
 			if len(already) == len(variant.Nations)-1 {
@@ -398,14 +417,14 @@ func Create(c common.WSContext) error {
 	}
 
 	member := &Member{
-		UserId:           kol.Id(c.Principal()),
+		UserId:           unbolted.Id(c.Principal()),
 		PreferredNations: state.Members[0].PreferredNations,
 	}
-	return c.Transact(func(c common.WSContext) error {
-		if err := c.DB().Set(game); err != nil {
+	return c.Update(func(c common.WSTXContext) error {
+		if err := c.TX().Set(game); err != nil {
 			return err
 		}
 		member.GameId = game.Id
-		return c.DB().Set(member)
+		return c.TX().Set(member)
 	})
 }

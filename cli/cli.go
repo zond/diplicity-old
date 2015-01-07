@@ -8,14 +8,17 @@ import (
 	"io"
 	"io/ioutil"
 	"math/rand"
+	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"time"
 
-	"code.google.com/p/go.net/websocket"
+	"github.com/gorilla/websocket"
 	"github.com/zond/diplicity/common"
 	"github.com/zond/diplicity/game"
-	"github.com/zond/kcwraps/kol"
+	"github.com/zond/godip/variants"
+	"github.com/zond/unbolted"
 	"github.com/zond/wsubs/gosubs"
 )
 
@@ -42,7 +45,19 @@ func (self *cli) connect(email string) (ws *websocket.Conn, receiver chan gosubs
 	if err != nil {
 		return
 	}
-	if ws, err = websocket.Dial(fmt.Sprintf("ws://%v:%v/ws?token=%v", self.host, self.port, token), "tcp", "http://localhost/"); err != nil {
+	addr, err := net.ResolveTCPAddr("tcp", fmt.Sprintf("%v:%v", self.host, self.port))
+	if err != nil {
+		return
+	}
+	netconn, err := net.DialTCP("tcp", nil, addr)
+	if err != nil {
+		return
+	}
+	u, err := url.Parse(fmt.Sprintf("ws://%v:%v/ws?token=%v", self.host, self.port, token))
+	if err != nil {
+		return
+	}
+	if ws, _, err = websocket.NewClient(netconn, u, nil, 1024, 1024); err != nil {
 		return
 	}
 	receiver = make(chan gosubs.Message, 1024)
@@ -50,7 +65,7 @@ func (self *cli) connect(email string) (ws *websocket.Conn, receiver chan gosubs
 		var err error
 		for err == nil {
 			mess := gosubs.Message{}
-			if err = websocket.JSON.Receive(ws, &mess); err == nil {
+			if err = ws.ReadJSON(&mess); err == nil {
 				receiver <- mess
 			}
 		}
@@ -64,7 +79,7 @@ func (self *cli) send(email string, mess gosubs.Message) (err error) {
 		return
 	}
 	defer ws.Close()
-	if err = websocket.JSON.Send(ws, mess); err != nil {
+	if err = ws.WriteJSON(mess); err != nil {
 		return
 	}
 	return
@@ -103,7 +118,7 @@ func (self *cli) get(path string) (result io.ReadCloser, err error) {
 func (self *cli) createUser(email string) (err error) {
 	_, err = self.post("/admin/users", map[string]interface{}{
 		"Email":         email,
-		"Id":            kol.Id(email),
+		"Id":            unbolted.Id(email),
 		"DiplicityHost": fmt.Sprintf("%v:%v", self.host, self.port),
 	})
 	return
@@ -122,7 +137,7 @@ func (self *cli) rpc(email string, method string, data interface{}) (result inte
 	}
 	defer ws.Close()
 	id := fmt.Sprint(rand.Int63())
-	if err = websocket.JSON.Send(ws, gosubs.Message{
+	if err = ws.WriteJSON(gosubs.Message{
 		Type: gosubs.RPCType,
 		Method: &gosubs.Method{
 			Name: "Commit",
@@ -241,7 +256,7 @@ func main() {
 							Members: []game.MemberState{
 								game.MemberState{
 									Member: &game.Member{
-										PreferredNations: common.VariantMap[common.ClassicalString].Nations,
+										PreferredNations: variants.Variants["Classical"].Nations,
 									},
 								},
 							},

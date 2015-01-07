@@ -24,7 +24,7 @@ import (
 	"github.com/zond/diplicity/game/meta"
 	"github.com/zond/gmail"
 	"github.com/zond/godip/variants"
-	"github.com/zond/kcwraps/kol"
+	"github.com/zond/unbolted"
 	"github.com/zond/wsubs/gosubs"
 )
 
@@ -45,7 +45,7 @@ const (
 
 type Web struct {
 	sessionStore          *sessions.CookieStore
-	db                    *kol.DB
+	db                    *unbolted.DB
 	gmail                 *gmail.Client
 	env                   string
 	logLevel              int
@@ -71,7 +71,7 @@ func NewWeb(secret, env, db string) (self *Web, err error) {
 		env:          env,
 		sessionStore: sessions.NewCookieStore([]byte(secret)),
 	}
-	if self.db, err = kol.New(db); err != nil {
+	if self.db, err = unbolted.NewDB(db); err != nil {
 		return
 	}
 	self.router = newRouter(self)
@@ -160,9 +160,8 @@ func (self *Web) IncomingMail(msg *enmime.MIMEBody) error {
 }
 
 func (self *Web) Diet() SkinnyContext {
-	return skinnyWeb{
+	return &skinnyWeb{
 		Web: self,
-		db:  self.DB(),
 	}
 }
 
@@ -196,7 +195,7 @@ func (self *Web) SendMail(fromName, replyTo, subject, message string, recips []s
 	return
 }
 
-func (self *Web) DB() *kol.DB {
+func (self *Web) DB() *unbolted.DB {
 	return self.db
 }
 
@@ -409,4 +408,36 @@ func (self *Web) HandleStatic(router *mux.Router, dir string) (err error) {
 		return
 	})
 	return
+}
+
+type skinnyWeb struct {
+	*Web
+}
+
+func (self *skinnyWeb) AfterTransaction(f func(SkinnyContext) error) (err error) {
+	return self.Web.db.AfterTransaction(func(d *unbolted.DB) (err error) {
+		return f(self)
+	})
+}
+
+func (self *skinnyWeb) View(f func(c SkinnyTXContext) error) error {
+	return self.Web.db.View(func(tx *unbolted.TX) error {
+		return f(&skinnyTXContext{
+			SkinnyContext: self,
+			tx:            tx,
+		})
+	})
+}
+
+func (self *skinnyWeb) Update(f func(c SkinnyTXContext) error) error {
+	return self.Web.db.Update(func(tx *unbolted.TX) error {
+		return f(&skinnyTXContext{
+			SkinnyContext: self,
+			tx:            tx,
+		})
+	})
+}
+
+func (self *skinnyWeb) DB() *unbolted.DB {
+	return self.Web.db
 }

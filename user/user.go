@@ -4,16 +4,15 @@ import (
 	"fmt"
 	"time"
 
-	"code.google.com/p/go.net/websocket"
 	"github.com/zond/diplicity/common"
-	"github.com/zond/kcwraps/kol"
+	"github.com/zond/unbolted"
 	"github.com/zond/wsubs/gosubs"
 )
 
 type Users []User
 
 type User struct {
-	Id                   kol.Id
+	Id                   unbolted.Id
 	Email                string
 	Nickname             string
 	MessageEmailDisabled bool
@@ -32,10 +31,10 @@ func (self *User) Reliability() float64 {
 	return float64(self.HeldDeadlines+1) / float64(self.MissedDeadlines+1)
 }
 
-func (self *User) Blacklistings(d *kol.DB) (result map[string]bool, err error) {
+func (self *User) Blacklistings(tx *unbolted.TX) (result map[string]bool, err error) {
 	result = map[string]bool{}
 	var blacklistings []Blacklisting
-	if err = d.Query().Where(kol.Equals{"Blacklister", self.Id}).All(&blacklistings); err != nil {
+	if err = tx.Query().Where(unbolted.Equals{"Blacklister", self.Id}).All(&blacklistings); err != nil {
 		return
 	}
 	for _, blacklisting := range blacklistings {
@@ -45,16 +44,16 @@ func (self *User) Blacklistings(d *kol.DB) (result map[string]bool, err error) {
 }
 
 type Blacklisting struct {
-	Id          kol.Id
-	Blacklister kol.Id
-	Blacklistee kol.Id
+	Id          unbolted.Id
+	Blacklister unbolted.Id
+	Blacklistee unbolted.Id
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }
 
 func SubscribeEmail(c common.WSContext) error {
 	if c.Principal() == "" {
-		return websocket.JSON.Send(c.Conn(), gosubs.Message{
+		return c.Conn().WriteJSON(gosubs.Message{
 			Type: gosubs.FetchType,
 			Object: &gosubs.Object{
 				URI:  c.Match()[0],
@@ -63,7 +62,7 @@ func SubscribeEmail(c common.WSContext) error {
 		})
 	}
 	s := c.Pack().New(c.Match()[0])
-	return s.Subscribe(&User{Id: kol.Id(c.Principal())})
+	return s.Subscribe(&User{Id: unbolted.Id(c.Principal())})
 }
 
 func Update(c common.WSContext) (err error) {

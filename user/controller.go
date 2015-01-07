@@ -11,7 +11,7 @@ import (
 
 	"github.com/zond/diplicity/common"
 	"github.com/zond/goauth2"
-	"github.com/zond/kcwraps/kol"
+	"github.com/zond/unbolted"
 	"github.com/zond/wsubs/gosubs"
 )
 
@@ -84,9 +84,9 @@ func OAuth2Callback(clientId, clientSecret string) func(c *common.HTTPContext) (
 		if ok {
 			email = strings.ToLower(email)
 			c.Session().Values[common.SessionEmail] = email
-			u := &User{Id: kol.Id(email)}
+			u := &User{Id: unbolted.Id(email)}
 			err = c.DB().Get(u)
-			if err == kol.NotFound {
+			if err == unbolted.ErrNotFound {
 				err = nil
 				u.Email = email
 				u.Ranking = 1

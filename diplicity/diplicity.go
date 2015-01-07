@@ -30,8 +30,7 @@ func main() {
 	gmailAccount := flag.String("gmail_account", "", "The GMail account to use for sending and receiving message email")
 	gmailPassword := flag.String("gmail_password", "", "The GMail account password")
 	env := flag.String("env", common.Development, "What environment to run")
-	db := flag.String("db", "diplicity", "The path to the database file to use")
-	appcache := flag.Bool("appcache", true, "Whether to enable appcache")
+	db := flag.String("db", "diplicity.db", "The path to the database file to use")
 	logOutput := flag.String("log", "-", "Where to send the log output")
 	smtpAccount := flag.String("smtp_account", "", "What From-address to put in the outgoing email")
 	smtpHost := flag.String("smtp_host", "", "What host to use when sending out email")
@@ -149,7 +148,7 @@ func main() {
 			panic(err)
 		}
 	}
-	server.Infof("Listening to %v (env=%#v, appcache=%#v, gmail_account=%#v, smtp_account=%#v, smtp_host=%#v)", addr, *env, *appcache, *gmailAccount, *smtpAccount, *smtpHost)
+	server.Infof("Listening to %v (env=%#v, gmail_account=%#v, smtp_account=%#v, smtp_host=%#v)", addr, *env, *gmailAccount, *smtpAccount, *smtpHost)
 	server.Fatalf("%v", http.ListenAndServe(addr, router))
 
 }

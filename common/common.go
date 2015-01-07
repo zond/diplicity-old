@@ -13,8 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/zond/kcwraps/kol"
-	"github.com/zond/wsubs/gosubs"
+	"github.com/zond/unbolted"
 )
 
 type Translator interface {
@@ -32,54 +31,13 @@ type Mailer interface {
 	SendAddress() string
 }
 
-type SkinnyContext interface {
-	gosubs.Logger
-	gosubs.SubscriptionManager
-	Mailer
-	DB() *kol.DB
-	BetweenTransactions(func(SkinnyContext) error) error
-	Transact(func(SkinnyContext) error) error
-	Env() string
-	Secret() string
+type skinnyTXContext struct {
+	SkinnyContext
+	tx *unbolted.TX
 }
 
-type skinnyWeb struct {
-	*Web
-	db *kol.DB
-}
-
-func (self skinnyWeb) BetweenTransactions(f func(SkinnyContext) error) (err error) {
-	return self.db.BetweenTransactions(func(d *kol.DB) (err error) {
-		self.db = d
-		return f(self)
-	})
-}
-
-func (self skinnyWeb) Transact(f func(c SkinnyContext) error) error {
-	return self.db.Transact(func(d *kol.DB) error {
-		self.db = d
-		return f(self)
-	})
-}
-
-func (self skinnyWeb) DB() *kol.DB {
-	return self.db
-}
-
-type skinnyWSContext struct {
-	WSContext
-}
-
-func (self skinnyWSContext) BetweenTransactions(f func(SkinnyContext) error) (err error) {
-	return self.WSContext.BetweenTransactions(func(c WSContext) error {
-		return f(skinnyWSContext{c})
-	})
-}
-
-func (self skinnyWSContext) Transact(f func(c SkinnyContext) error) error {
-	return self.WSContext.Transact(func(c WSContext) error {
-		return f(skinnyWSContext{c})
-	})
+func (self *skinnyTXContext) TX() *unbolted.TX {
+	return self.tx
 }
 
 var prefPattern = regexp.MustCompile("^([^\\s;]+)(;q=([\\d.]+))?$")
@@ -125,7 +83,7 @@ const (
 
 type UnsubscribeTag struct {
 	T int
-	U kol.Id
+	U unbolted.Id
 	H []byte
 }
 

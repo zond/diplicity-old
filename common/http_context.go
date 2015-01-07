@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/sessions"
-	"github.com/zond/kcwraps/kol"
+	"github.com/zond/unbolted"
 )
 
 type HTTPContext struct {
@@ -20,7 +20,7 @@ func (self *HTTPContext) Env() string {
 	return self.web.Env()
 }
 
-func (self *HTTPContext) DB() *kol.DB {
+func (self *HTTPContext) DB() *unbolted.DB {
 	return self.web.db
 }
 

@@ -9,13 +9,13 @@ import (
 	"github.com/zond/diplicity/game/meta"
 	"github.com/zond/diplicity/user"
 	dip "github.com/zond/godip/common"
-	"github.com/zond/kcwraps/kol"
+	"github.com/zond/unbolted"
 )
 
 type Member struct {
-	Id     kol.Id
-	UserId kol.Id `kol:"index"`
-	GameId kol.Id `kol:"index"`
+	Id     unbolted.Id
+	UserId unbolted.Id `unbolted:"index"`
+	GameId unbolted.Id `unbolted:"index"`
 
 	Nation           dip.Nation
 	PreferredNations []dip.Nation
@@ -62,18 +62,18 @@ func (self Members) Contains(email string) bool {
 	return false
 }
 
-func (self Members) ToStates(d *kol.DB, g *Game, email string, isAdmin bool) (result []MemberState, err error) {
+func (self Members) ToStates(tx *unbolted.TX, g *Game, email string, isAdmin bool) (result []MemberState, err error) {
 	result = make([]MemberState, len(self))
 	isMember := false
 	for _, member := range self {
-		if member.UserId.Equals(kol.Id(email)) {
+		if member.UserId.Equals(unbolted.Id(email)) {
 			isMember = true
 			break
 		}
 	}
 	for index, member := range self {
 		var state *MemberState
-		if state, err = member.ToState(d, g, email, isMember, isAdmin); err != nil {
+		if state, err = member.ToState(tx, g, email, isMember, isAdmin); err != nil {
 			return
 		}
 		result[index] = *state
@@ -81,7 +81,7 @@ func (self Members) ToStates(d *kol.DB, g *Game, email string, isAdmin bool) (re
 	return
 }
 
-func (self *Member) ToState(d *kol.DB, g *Game, email string, isMember bool, isAdmin bool) (result *MemberState, err error) {
+func (self *Member) ToState(tx *unbolted.TX, g *Game, email string, isMember bool, isAdmin bool) (result *MemberState, err error) {
 	result = &MemberState{
 		Member: &Member{
 			Id: self.Id,
@@ -106,7 +106,7 @@ func (self *Member) ToState(d *kol.DB, g *Game, email string, isMember bool, isA
 	}
 	if isAdmin || isMe || !privacyConfig.SecretEmail || !privacyConfig.SecretNickname {
 		foundUser := &user.User{Id: self.UserId}
-		if err = d.Get(foundUser); err != nil {
+		if err = tx.Get(foundUser); err != nil {
 			return
 		}
 		if isAdmin || (isMember && (isMe || !privacyConfig.SecretEmail)) {
@@ -137,30 +137,32 @@ func (self *Member) ShortName(game *Game, user *user.User) string {
 	return string(self.Nation)
 }
 
-func (self *Member) Deleted(d *kol.DB) (err error) {
-	g := Game{Id: self.GameId}
-	if err = d.Get(&g); err == nil {
-		if err = d.EmitUpdate(&g); err != nil {
-			return
-		}
-		members := Members{}
-		if members, err = g.Members(d); err != nil {
-			return
-		}
-		for _, member := range members {
-			if bytes.Compare(member.Id, self.Id) != 0 {
-				if err = d.EmitUpdate(&member); err != nil {
-					return
+func (self *Member) Deleted(d *unbolted.DB) (err error) {
+	return d.View(func(tx *unbolted.TX) (err error) {
+		g := Game{Id: self.GameId}
+		if err = tx.Get(&g); err == nil {
+			if err = d.EmitUpdate(&g); err != nil {
+				return
+			}
+			members := Members{}
+			if members, err = g.Members(tx); err != nil {
+				return
+			}
+			for _, member := range members {
+				if bytes.Compare(member.Id, self.Id) != 0 {
+					if err = d.EmitUpdate(&member); err != nil {
+						return
+					}
 				}
 			}
+		} else if err == unbolted.ErrNotFound {
+			err = nil
 		}
-	} else if err == kol.NotFound {
-		err = nil
-	}
-	return
+		return
+	})
 }
 
-func (self *Member) Updated(d *kol.DB, old *Member) (err error) {
+func (self *Member) Updated(d *unbolted.DB, old *Member) (err error) {
 	if old != self {
 		g := Game{Id: self.GameId}
 		if err = d.Get(&g); err != nil {
@@ -173,31 +175,33 @@ func (self *Member) Updated(d *kol.DB, old *Member) (err error) {
 	return
 }
 
-func (self *Member) Created(d *kol.DB) (err error) {
-	g := Game{Id: self.GameId}
-	if err = d.Get(&g); err != nil {
-		return
-	}
-	if err = d.EmitUpdate(&g); err != nil {
-		return
-	}
-	members := Members{}
-	if members, err = g.Members(d); err != nil {
-		return
-	}
-	for _, member := range members {
-		if bytes.Compare(member.Id, self.Id) != 0 {
-			if err = d.EmitUpdate(&member); err != nil {
-				return
+func (self *Member) Created(d *unbolted.DB) (err error) {
+	return d.View(func(tx *unbolted.TX) (err error) {
+		g := Game{Id: self.GameId}
+		if err = tx.Get(&g); err != nil {
+			return
+		}
+		if err = d.EmitUpdate(&g); err != nil {
+			return
+		}
+		members := Members{}
+		if members, err = g.Members(tx); err != nil {
+			return
+		}
+		for _, member := range members {
+			if bytes.Compare(member.Id, self.Id) != 0 {
+				if err = d.EmitUpdate(&member); err != nil {
+					return
+				}
 			}
 		}
-	}
-	return
+		return
+	})
 }
 
-func (self *Member) ReliabilityDelta(d *kol.DB, i int) (err error) {
+func (self *Member) ReliabilityDelta(tx *unbolted.TX, i int) (err error) {
 	user := &user.User{Id: self.UserId}
-	if err = d.Get(user); err != nil {
+	if err = tx.Get(user); err != nil {
 		return
 	}
 	if i > 0 {
@@ -205,18 +209,18 @@ func (self *Member) ReliabilityDelta(d *kol.DB, i int) (err error) {
 	} else {
 		user.MissedDeadlines -= i
 	}
-	if err = d.Set(user); err != nil {
+	if err = tx.Set(user); err != nil {
 		return
 	}
 	return
 }
 
-func (self Members) Disallows(d *kol.DB, asking *user.User) (result bool, err error) {
+func (self Members) Disallows(tx *unbolted.TX, asking *user.User) (result bool, err error) {
 	if asking == nil {
 		return
 	}
 	var askerList map[string]bool
-	if askerList, err = asking.Blacklistings(d); err != nil {
+	if askerList, err = asking.Blacklistings(tx); err != nil {
 		return
 	}
 	for _, member := range self {
@@ -227,11 +231,11 @@ func (self Members) Disallows(d *kol.DB, asking *user.User) (result bool, err er
 	}
 	for _, member := range self {
 		memberUser := &user.User{Id: member.UserId}
-		if err = d.Get(memberUser); err != nil {
+		if err = tx.Get(memberUser); err != nil {
 			return
 		}
 		var memberList map[string]bool
-		if memberList, err = memberUser.Blacklistings(d); err != nil {
+		if memberList, err = memberUser.Blacklistings(tx); err != nil {
 			return
 		}
 		if memberList[asking.Id.String()] {

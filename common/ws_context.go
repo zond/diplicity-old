@@ -1,21 +1,12 @@
 package common
 
 import (
-	"github.com/zond/kcwraps/subs"
+	"github.com/zond/unbolted"
+	"github.com/zond/unbolted/pack"
 	"github.com/zond/wsubs/gosubs"
 )
 
-type WSContext interface {
-	subs.SubContext
-	BetweenTransactions(func(WSContext) error) error
-	Transact(func(WSContext) error) error
-	Mailer
-	Env() string
-	Diet() SkinnyContext
-	Secret() string
-}
-
-func NewWSContext(c subs.Context, web *Web) WSContext {
+func NewWSContext(c pack.Context, web *Web) WSContext {
 	return &defaultWSContext{
 		Context: c,
 		web:     web,
@@ -23,7 +14,7 @@ func NewWSContext(c subs.Context, web *Web) WSContext {
 }
 
 type defaultWSContext struct {
-	subs.Context
+	pack.Context
 	web *Web
 }
 
@@ -32,18 +23,11 @@ func (self *defaultWSContext) Secret() string {
 }
 
 func (self *defaultWSContext) Diet() SkinnyContext {
-	return skinnyWSContext{WSContext: self}
+	return &skinnyWSContext{WSContext: self}
 }
 
-func (self defaultWSContext) BetweenTransactions(f func(WSContext) error) (err error) {
-	return self.Context.BetweenTransactions(func(c subs.Context) (err error) {
-		self.Context = c
-		return f(&self)
-	})
-}
-
-func (self defaultWSContext) Transact(f func(c WSContext) error) error {
-	return self.Context.Transact(func(c subs.Context) error {
+func (self defaultWSContext) AfterTransaction(f func(WSContext) error) (err error) {
+	return self.Context.AfterTransaction(func(c pack.Context) (err error) {
 		self.Context = c
 		return f(&self)
 	})
@@ -51,6 +35,40 @@ func (self defaultWSContext) Transact(f func(c WSContext) error) error {
 
 func (self *defaultWSContext) Env() string {
 	return self.web.env
+}
+
+type defaultWSTXContext struct {
+	*defaultWSContext
+	tx *unbolted.TX
+}
+
+func (self *defaultWSTXContext) TXDiet() SkinnyTXContext {
+	return &skinnyTXContext{
+		SkinnyContext: self.Diet(),
+		tx:            self.tx,
+	}
+}
+
+func (self *defaultWSTXContext) TX() *unbolted.TX {
+	return self.tx
+}
+
+func (self *defaultWSContext) Update(f func(c WSTXContext) error) error {
+	return self.Context.Update(func(c pack.TXContext) error {
+		return f(&defaultWSTXContext{
+			defaultWSContext: self,
+			tx:               c.TX(),
+		})
+	})
+}
+
+func (self *defaultWSContext) View(f func(c WSTXContext) error) error {
+	return self.Context.View(func(c pack.TXContext) error {
+		return f(&defaultWSTXContext{
+			defaultWSContext: self,
+			tx:               c.TX(),
+		})
+	})
 }
 
 func (self *defaultWSContext) SendAddress() string {
@@ -66,13 +84,13 @@ func (self *defaultWSContext) SendMail(fromName, replyTo, subject, message strin
 }
 
 type Router struct {
-	*subs.Router
+	*pack.Router
 	web *Web
 }
 
 func newRouter(web *Web) (result *Router) {
 	result = &Router{
-		Router: subs.NewRouter(web.DB()),
+		Router: pack.NewRouter(web.DB()),
 		web:    web,
 	}
 	return
@@ -88,12 +106,12 @@ func (self *RPC) Auth() *RPC {
 }
 
 type Resource struct {
-	*subs.Resource
+	*pack.Resource
 	web *Web
 }
 
 func (self *Resource) Handle(op string, f func(c WSContext) error) *Resource {
-	self.Resource.Handle(op, func(c subs.Context) error {
+	self.Resource.Handle(op, func(c pack.Context) error {
 		return f(NewWSContext(c, self.web))
 	})
 	return self
@@ -113,8 +131,37 @@ func (self *Router) Resource(s string) *Resource {
 
 func (self *Router) RPC(m string, f func(c WSContext) (result interface{}, err error)) *RPC {
 	return &RPC{
-		RPC: self.Router.RPC(m, func(c subs.Context) (result interface{}, err error) {
+		RPC: self.Router.RPC(m, func(c pack.Context) (result interface{}, err error) {
 			return f(NewWSContext(c, self.web))
 		}),
 	}
+}
+
+type skinnyWSContext struct {
+	WSContext
+}
+
+func (self *skinnyWSContext) AfterTransaction(f func(SkinnyContext) error) (err error) {
+	return self.WSContext.AfterTransaction(func(c WSContext) error {
+		self.WSContext = c
+		return f(self)
+	})
+}
+
+func (self *skinnyWSContext) Update(f func(c SkinnyTXContext) error) error {
+	return self.WSContext.Update(func(c WSTXContext) error {
+		return f(&skinnyTXContext{
+			SkinnyContext: self,
+			tx:            c.TX(),
+		})
+	})
+}
+
+func (self *skinnyWSContext) View(f func(c SkinnyTXContext) error) error {
+	return self.WSContext.View(func(c WSTXContext) error {
+		return f(&skinnyTXContext{
+			SkinnyContext: self,
+			tx:            c.TX(),
+		})
+	})
 }
