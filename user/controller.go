@@ -16,19 +16,20 @@ import (
 )
 
 func AdminSetRank1(c *common.HTTPContext) (err error) {
-	users := Users{}
-	if err = c.DB().Query().All(&users); err != nil {
-		return
-	}
-	for _, user := range users {
-		user.Ranking = 1
-		if err = c.DB().Set(&user); err != nil {
+	return c.DB().Update(func(tx *unbolted.TX) (err error) {
+		users := Users{}
+		if err = tx.Query().All(&users); err != nil {
 			return
 		}
-		fmt.Fprintf(c.Resp(), "Set rank of %#v to 1\n", user.Email)
-	}
-	return
-
+		for _, user := range users {
+			user.Ranking = 1
+			if err = tx.Set(&user); err != nil {
+				return
+			}
+			fmt.Fprintf(c.Resp(), "Set rank of %#v to 1\n", user.Email)
+		}
+		return
+	})
 }
 
 func AdminBecome(c *common.HTTPContext) (err error) {
@@ -84,17 +85,22 @@ func OAuth2Callback(clientId, clientSecret string) func(c *common.HTTPContext) (
 		if ok {
 			email = strings.ToLower(email)
 			c.Session().Values[common.SessionEmail] = email
-			u := &User{Id: unbolted.Id(email)}
-			err = c.DB().Get(u)
-			if err == unbolted.ErrNotFound {
-				err = nil
-				u.Email = email
-				u.Ranking = 1
-			}
-			if err == nil {
-				u.DiplicityHost = c.Req().Host
-				u.LastLoginAt = time.Now()
-				err = c.DB().Set(u)
+			if err = c.DB().Update(func(tx *unbolted.TX) (err error) {
+				u := &User{Id: unbolted.Id(email)}
+				err = c.DB().Get(u)
+				if err == unbolted.ErrNotFound {
+					err = nil
+					u.Email = email
+					u.Ranking = 1
+				}
+				if err == nil {
+					u.DiplicityHost = c.Req().Host
+					u.LastLoginAt = time.Now()
+					err = c.DB().Set(u)
+				}
+				return
+			}); err != nil {
+				return
 			}
 		} else {
 			delete(c.Session().Values, common.SessionEmail)

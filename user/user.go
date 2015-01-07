@@ -68,17 +68,19 @@ func SubscribeEmail(c common.WSContext) error {
 func Update(c common.WSContext) (err error) {
 	var user User
 	c.Data().Overwrite(&user)
-	current := &User{Id: user.Id}
-	if err = c.DB().Get(current); err != nil {
+	return c.Update(func(c common.WSTXContext) (err error) {
+		current := &User{Id: user.Id}
+		if err = c.TX().Get(current); err != nil {
+			return
+		}
+		if current.Email != c.Principal() {
+			err = fmt.Errorf("Unauthorized")
+			return
+		}
+		current.Nickname = user.Nickname
+		current.MessageEmailDisabled = user.MessageEmailDisabled
+		current.PhaseEmailDisabled = user.PhaseEmailDisabled
+		err = c.TX().Set(current)
 		return
-	}
-	if current.Email != c.Principal() {
-		err = fmt.Errorf("Unauthorized")
-		return
-	}
-	current.Nickname = user.Nickname
-	current.MessageEmailDisabled = user.MessageEmailDisabled
-	current.PhaseEmailDisabled = user.PhaseEmailDisabled
-	err = c.DB().Set(current)
-	return
+	})
 }
