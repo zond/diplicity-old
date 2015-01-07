@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
 	"github.com/zond/diplicity/epoch"
 	"github.com/zond/diplicity/game/allocation"
 	"github.com/zond/diplicity/game/meta"
@@ -90,7 +91,7 @@ func UnsubscribeEmails(c *srv.HTTPContext) (err error) {
 
 func AdminGetOptions(c *srv.HTTPContext) (err error) {
 	var opts dip.Options
-	return c.DB().View(func(tx *unbolted.TX) (err error) {
+	if err = c.DB().View(func(tx *unbolted.TX) (err error) {
 		gameId, err := base64.URLEncoding.DecodeString(c.Vars()["game_id"])
 		if err != nil {
 			return
@@ -107,7 +108,9 @@ func AdminGetOptions(c *srv.HTTPContext) (err error) {
 			return
 		}
 		return
-	})
+	}); err != nil {
+		return
+	}
 	return c.RenderJSON(opts)
 }
 
