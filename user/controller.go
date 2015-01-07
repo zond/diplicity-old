@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+
 	"github.com/zond/diplicity/srv"
 	"github.com/zond/goauth2"
 	"github.com/zond/unbolted"
@@ -45,8 +46,7 @@ func AdminCreateUser(c *srv.HTTPContext) (err error) {
 	if err = json.NewDecoder(c.Req().Body).Decode(user); err != nil {
 		return
 	}
-	err = c.DB().Set(user)
-	return
+	return c.DB().Update(func(tx *unbolted.TX) error { return tx.Set(user) })
 }
 
 var nonces = map[string]struct{}{}
@@ -86,7 +86,7 @@ func OAuth2Callback(clientId, clientSecret string) func(c *srv.HTTPContext) (err
 			c.Session().Values[srv.SessionEmail] = email
 			if err = c.DB().Update(func(tx *unbolted.TX) (err error) {
 				u := &User{Id: unbolted.Id(email)}
-				err = c.DB().Get(u)
+				err = tx.Get(u)
 				if err == unbolted.ErrNotFound {
 					err = nil
 					u.Email = email
@@ -95,7 +95,7 @@ func OAuth2Callback(clientId, clientSecret string) func(c *srv.HTTPContext) (err
 				if err == nil {
 					u.DiplicityHost = c.Req().Host
 					u.LastLoginAt = time.Now()
-					err = c.DB().Set(u)
+					err = tx.Set(u)
 				}
 				return
 			}); err != nil {

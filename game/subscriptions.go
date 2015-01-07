@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strconv"
 	"time"
+
 	"github.com/zond/diplicity/epoch"
 	"github.com/zond/diplicity/game/meta"
 	"github.com/zond/diplicity/srv"
@@ -87,7 +88,7 @@ func SubscribeMine(c srv.WSContext) error {
 					})
 				} else {
 					game := &Game{Id: member.GameId}
-					if err = s.DB().Get(game); err != nil {
+					if err = c.TX().Get(game); err != nil {
 						return
 					}
 					var gameMembers Members

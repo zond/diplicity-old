@@ -107,19 +107,23 @@ func (self *Message) ChannelId() string {
 }
 
 func (self *Message) Updated(d *unbolted.DB, old *Message) (err error) {
-	g := Game{Id: self.GameId}
-	if err = d.Get(&g); err != nil {
-		return
-	}
-	return d.EmitUpdate(&g)
+	return d.View(func(tx *unbolted.TX) (err error) {
+		g := Game{Id: self.GameId}
+		if err = tx.Get(&g); err != nil {
+			return
+		}
+		return d.EmitUpdate(&g)
+	})
 }
 
 func (self *Message) Created(d *unbolted.DB) (err error) {
-	g := Game{Id: self.GameId}
-	if err = d.Get(&g); err != nil {
-		return
-	}
-	return d.EmitUpdate(&g)
+	return d.View(func(tx *unbolted.TX) (err error) {
+		g := Game{Id: self.GameId}
+		if err = tx.Get(&g); err != nil {
+			return
+		}
+		return d.EmitUpdate(&g)
+	})
 }
 
 type IllegalMessageError struct {

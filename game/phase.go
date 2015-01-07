@@ -3,6 +3,7 @@ package game
 import (
 	"fmt"
 	"time"
+
 	"github.com/zond/diplicity/epoch"
 	"github.com/zond/diplicity/srv"
 	"github.com/zond/diplicity/unsubscribe"
@@ -173,11 +174,13 @@ func (self *Phase) Game(tx *unbolted.TX) (result *Game, err error) {
 }
 
 func (self *Phase) Updated(d *unbolted.DB, old *Phase) (err error) {
-	g := Game{Id: self.GameId}
-	if err = d.Get(&g); err != nil {
-		return
-	}
-	return d.EmitUpdate(&g)
+	return d.View(func(tx *unbolted.TX) (err error) {
+		g := Game{Id: self.GameId}
+		if err = tx.Get(&g); err != nil {
+			return
+		}
+		return d.EmitUpdate(&g)
+	})
 }
 
 func (self *Phase) redact(member *Member) *Phase {

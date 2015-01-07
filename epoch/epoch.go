@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"sync/atomic"
+
 	"github.com/zond/diplicity/srv"
 	"github.com/zond/unbolted"
 )
@@ -49,8 +50,7 @@ func set(d *unbolted.DB, at time.Duration) (err error) {
 		Id: unbolted.Id(epochKey),
 		At: at,
 	}
-	err = d.Set(epoch)
-	return
+	return d.Update(func(tx *unbolted.TX) error { return tx.Set(epoch) })
 }
 
 func Start(c srv.SkinnyContext) (err error) {

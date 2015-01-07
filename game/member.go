@@ -163,16 +163,18 @@ func (self *Member) Deleted(d *unbolted.DB) (err error) {
 }
 
 func (self *Member) Updated(d *unbolted.DB, old *Member) (err error) {
-	if old != self {
-		g := Game{Id: self.GameId}
-		if err = d.Get(&g); err != nil {
-			return
+	return d.View(func(tx *unbolted.TX) (err error) {
+		if old != self {
+			g := Game{Id: self.GameId}
+			if err = tx.Get(&g); err != nil {
+				return
+			}
+			if err = d.EmitUpdate(&g); err != nil {
+				return
+			}
 		}
-		if err = d.EmitUpdate(&g); err != nil {
-			return
-		}
-	}
-	return
+		return
+	})
 }
 
 func (self *Member) Created(d *unbolted.DB) (err error) {
