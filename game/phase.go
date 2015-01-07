@@ -6,6 +6,7 @@ import (
 
 	"github.com/zond/diplicity/common"
 	"github.com/zond/diplicity/epoch"
+	"github.com/zond/diplicity/unsubscribe"
 	"github.com/zond/diplicity/user"
 	"github.com/zond/godip/classical"
 	"github.com/zond/godip/classical/orders"
@@ -117,8 +118,8 @@ func (self *Phase) Schedule(c common.SkinnyTXContext) (err error) {
 
 func (self *Phase) emailTo(c common.SkinnyTXContext, game *Game, member *Member, user *user.User) (err error) {
 	to := fmt.Sprintf("%v <%v>", member.Nation, user.Email)
-	unsubTag := &common.UnsubscribeTag{
-		T: common.UnsubscribePhaseEmail,
+	unsubTag := &unsubscribe.UnsubscribeTag{
+		T: unsubscribe.UnsubscribePhaseEmail,
 		U: user.Id,
 	}
 	unsubTag.H = unsubTag.Hash(c.Secret())
@@ -133,7 +134,7 @@ func (self *Phase) emailTo(c common.SkinnyTXContext, game *Game, member *Member,
 	if err != nil {
 		return
 	}
-	body := fmt.Sprintf(common.EmailTemplate, text, contextLink, unsubLink)
+	body := fmt.Sprintf(unsubscribe.EmailTemplate, text, contextLink, unsubLink)
 	go c.SendMail("diplicity", c.ReceiveAddress(), subject, body, []string{to})
 	return
 }

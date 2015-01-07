@@ -26,11 +26,11 @@ type WSTXContext interface {
 type SkinnyContext interface {
 	gosubs.Logger
 	gosubs.SubscriptionManager
-	Mailer
 	DB() *unbolted.DB
 	AfterTransaction(func(SkinnyContext) error) error
 	View(func(SkinnyTXContext) error) error
 	Update(func(SkinnyTXContext) error) error
+	Mailer
 	Env() string
 	Secret() string
 }

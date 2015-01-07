@@ -15,6 +15,7 @@ import (
 	"github.com/jhillyerd/go.enmime"
 	"github.com/zond/diplicity/common"
 	"github.com/zond/diplicity/game/meta"
+	"github.com/zond/diplicity/unsubscribe"
 	"github.com/zond/diplicity/user"
 	"github.com/zond/gmail"
 	dip "github.com/zond/godip/common"
@@ -316,8 +317,8 @@ func (self *Message) emailTo(c common.SkinnyTXContext, game *Game, sender *Membe
 		return
 	}
 
-	unsubTag := &common.UnsubscribeTag{
-		T: common.UnsubscribeMessageEmail,
+	unsubTag := &unsubscribe.UnsubscribeTag{
+		T: unsubscribe.UnsubscribeMessageEmail,
 		U: recipUser.Id,
 	}
 	unsubTag.H = unsubTag.Hash(c.Secret())
@@ -345,7 +346,7 @@ func (self *Message) emailTo(c common.SkinnyTXContext, game *Game, sender *Membe
 	sort.Sort(sort.StringSlice(memberIds))
 	contextLink := fmt.Sprintf("To see this message in context: http://%v/games/%v/messages/%v", recipUser.DiplicityHost, self.GameId, self.ChannelId())
 	unsubLink := fmt.Sprintf("To unsubscribe: http://%v/unsubscribe/%v", recipUser.DiplicityHost, encodedUnsubTag)
-	body := fmt.Sprintf(common.EmailTemplate, self.Body, contextLink, unsubLink)
+	body := fmt.Sprintf(unsubscribe.EmailTemplate, self.Body, contextLink, unsubLink)
 	subject, err := game.Describe(c.TX())
 	if err != nil {
 		return

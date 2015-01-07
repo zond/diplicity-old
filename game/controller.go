@@ -13,6 +13,7 @@ import (
 	"github.com/zond/diplicity/epoch"
 	"github.com/zond/diplicity/game/allocation"
 	"github.com/zond/diplicity/game/meta"
+	"github.com/zond/diplicity/unsubscribe"
 	"github.com/zond/diplicity/user"
 	dip "github.com/zond/godip/common"
 	"github.com/zond/godip/variants"
@@ -61,7 +62,7 @@ func Resolve(c *common.HTTPContext) (err error) {
 
 func UnsubscribeEmails(c *common.HTTPContext) (err error) {
 	return c.DB().Update(func(tx *unbolted.TX) (err error) {
-		unsubTag, err := common.DecodeUnsubscribeTag(c.Secret(), c.Vars()["unsubscribe_tag"])
+		unsubTag, err := unsubscribe.DecodeUnsubscribeTag(c.Secret(), c.Vars()["unsubscribe_tag"])
 		if err != nil {
 			return
 		}
@@ -70,18 +71,18 @@ func UnsubscribeEmails(c *common.HTTPContext) (err error) {
 			return
 		}
 		switch unsubTag.T {
-		case common.UnsubscribeMessageEmail:
+		case unsubscribe.UnsubscribeMessageEmail:
 			u.MessageEmailDisabled = true
-		case common.UnsubscribePhaseEmail:
+		case unsubscribe.UnsubscribePhaseEmail:
 			u.MessageEmailDisabled = true
 		}
 		if err = tx.Set(u); err != nil {
 			return
 		}
 		switch unsubTag.T {
-		case common.UnsubscribeMessageEmail:
+		case unsubscribe.UnsubscribeMessageEmail:
 			fmt.Fprintf(c.Resp(), "%v has successfully been unsubscribed from message emails.", u.Email)
-		case common.UnsubscribePhaseEmail:
+		case unsubscribe.UnsubscribePhaseEmail:
 			fmt.Fprintf(c.Resp(), "%v has successfully been unsubscribed from phase emails.", u.Email)
 		}
 		return
