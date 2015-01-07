@@ -12,7 +12,7 @@ type responseWriter struct {
 	request    *http.Request
 	start      time.Time
 	status     int
-	web        *Web
+	web        *Server
 }
 
 func (self *responseWriter) email() string {

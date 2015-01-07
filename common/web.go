@@ -43,7 +43,7 @@ const (
 	Trace
 )
 
-type Web struct {
+type Server struct {
 	sessionStore          *sessions.CookieStore
 	db                    *unbolted.DB
 	gmail                 *gmail.Client
@@ -65,8 +65,8 @@ type Web struct {
 	secret                string
 }
 
-func NewWeb(secret, env, db string) (self *Web, err error) {
-	self = &Web{
+func NewServer(secret, env, db string) (self *Server, err error) {
+	self = &Server{
 		secret:       secret,
 		env:          env,
 		sessionStore: sessions.NewCookieStore([]byte(secret)),
@@ -92,7 +92,7 @@ func NewWeb(secret, env, db string) (self *Web, err error) {
 
 var temps = template.Must(template.ParseGlob("templates/*"))
 
-func (self *Web) Index(c *HTTPContext) (err error) {
+func (self *Server) Index(c *HTTPContext) (err error) {
 	c.SetContentType("text/html; charset=UTF-8")
 	f, err := os.Open(filepath.Join("static", "index.html"))
 	if err != nil {
@@ -105,44 +105,44 @@ func (self *Web) Index(c *HTTPContext) (err error) {
 	return
 }
 
-func (self *Web) Go2JS(c *HTTPContext) (err error) {
+func (self *Server) Go2JS(c *HTTPContext) (err error) {
 	c.SetContentType("application/javascript; charset=UTF-8")
 	if err = temps.ExecuteTemplate(c.Resp(), "go.js", self); err != nil {
 		return
 	}
 	return
 }
-func (self *Web) Router() *Router {
+func (self *Server) Router() *Router {
 	return self.router
 }
 
-func (self *Web) Env() string {
+func (self *Server) Env() string {
 	return self.env
 }
 
-func (self *Web) IsSubscribing(principal, uri string, timeout time.Duration) bool {
+func (self *Server) IsSubscribing(principal, uri string, timeout time.Duration) bool {
 	return self.router.IsSubscribing(principal, uri, timeout)
 }
 
-func (self *Web) Secret() string {
+func (self *Server) Secret() string {
 	return self.secret
 }
 
-func (self *Web) SendAddress() string {
+func (self *Server) SendAddress() string {
 	return self.smtpAccount
 }
 
-func (self *Web) ReceiveAddress() string {
+func (self *Server) ReceiveAddress() string {
 	return self.gmailAccount
 }
 
-func (self *Web) SetSMTP(host, account string) *Web {
+func (self *Server) SetSMTP(host, account string) *Server {
 	self.smtpAccount = account
 	self.smtpHost = host
 	return self
 }
 
-func (self *Web) Start() (err error) {
+func (self *Server) Start() (err error) {
 	if self.gmailAccount != "" {
 		self.gmail = gmail.New(self.gmailAccount, self.gmailPassword).MailHandler(self.IncomingMail).ErrorHandler(func(e error) {
 			self.Fatalf("Mail handler: %v", e)
@@ -155,17 +155,17 @@ func (self *Web) Start() (err error) {
 	return
 }
 
-func (self *Web) IncomingMail(msg *enmime.MIMEBody) error {
+func (self *Server) IncomingMail(msg *enmime.MIMEBody) error {
 	return self.mailHandler(self.Diet(), msg)
 }
 
-func (self *Web) Diet() SkinnyContext {
-	return &skinnyWeb{
-		Web: self,
+func (self *Server) Diet() SkinnyContext {
+	return &skinnyServer{
+		Server: self,
 	}
 }
 
-func (self *Web) SendMail(fromName, replyTo, subject, message string, recips []string) (err error) {
+func (self *Server) SendMail(fromName, replyTo, subject, message string, recips []string) (err error) {
 	body := strings.Join([]string{
 		"Content-Type: text/plain; charset=\"utf-8\"",
 		fmt.Sprintf("Reply-To: %v", replyTo),
@@ -195,11 +195,11 @@ func (self *Web) SendMail(fromName, replyTo, subject, message string, recips []s
 	return
 }
 
-func (self *Web) DB() *unbolted.DB {
+func (self *Server) DB() *unbolted.DB {
 	return self.db
 }
 
-func (self *Web) GetContext(w http.ResponseWriter, r *http.Request) (result *HTTPContext) {
+func (self *Server) GetContext(w http.ResponseWriter, r *http.Request) (result *HTTPContext) {
 	result = &HTTPContext{
 		response: w,
 		request:  r,
@@ -210,12 +210,12 @@ func (self *Web) GetContext(w http.ResponseWriter, r *http.Request) (result *HTT
 	return
 }
 
-func (self *Web) SetGMail(account, password string, handler func(c SkinnyContext, msg *enmime.MIMEBody) error) *Web {
+func (self *Server) SetGMail(account, password string, handler func(c SkinnyContext, msg *enmime.MIMEBody) error) *Server {
 	self.gmailAccount, self.gmailPassword, self.mailHandler = account, password, handler
 	return self
 }
 
-func (self *Web) DevHandle(r *mux.Route, f func(c *HTTPContext) error) {
+func (self *Server) DevHandle(r *mux.Route, f func(c *HTTPContext) error) {
 	if self.Env() == Development {
 		self.Handle(r, func(c *HTTPContext) (err error) {
 			if c.Env() == Development {
@@ -227,7 +227,7 @@ func (self *Web) DevHandle(r *mux.Route, f func(c *HTTPContext) error) {
 	}
 }
 
-func (self *Web) AdminHandle(r *mux.Route, f func(c *HTTPContext) error) {
+func (self *Server) AdminHandle(r *mux.Route, f func(c *HTTPContext) error) {
 	self.Handle(r, func(c *HTTPContext) (err error) {
 		tokenStr := c.Req().FormValue("token")
 		if tokenStr == "" {
@@ -246,7 +246,7 @@ func (self *Web) AdminHandle(r *mux.Route, f func(c *HTTPContext) error) {
 	})
 }
 
-func (self *Web) Handle(r *mux.Route, f func(c *HTTPContext) error) {
+func (self *Server) Handle(r *mux.Route, f func(c *HTTPContext) error) {
 	r.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		rw := &responseWriter{
 			ResponseWriter: w,
@@ -283,39 +283,39 @@ func (self *Web) Handle(r *mux.Route, f func(c *HTTPContext) error) {
 	})
 }
 
-func (self *Web) Logf(level int, format string, args ...interface{}) {
+func (self *Server) Logf(level int, format string, args ...interface{}) {
 	if level <= self.logLevel {
 		log.Printf(format, args...)
 	}
 }
 
-func (self *Web) Errlog(err error) {
+func (self *Server) Errlog(err error) {
 	if err != nil {
 		self.Errorf("%v", err)
 	}
 }
 
-func (self *Web) Fatalf(format string, args ...interface{}) {
+func (self *Server) Fatalf(format string, args ...interface{}) {
 	self.Logf(Fatal, "\033[1;31mFATAL\t"+format+"\033[0m", args...)
 }
 
-func (self *Web) Errorf(format string, args ...interface{}) {
+func (self *Server) Errorf(format string, args ...interface{}) {
 	self.Logf(Error, "\033[31mERROR\t"+format+"\033[0m", args...)
 }
 
-func (self *Web) Infof(format string, args ...interface{}) {
+func (self *Server) Infof(format string, args ...interface{}) {
 	self.Logf(Info, "INFO\t"+format, args...)
 }
 
-func (self *Web) Debugf(format string, args ...interface{}) {
+func (self *Server) Debugf(format string, args ...interface{}) {
 	self.Logf(Debug, "\033[32mDEBUG\t"+format+"\033[0m", args...)
 }
 
-func (self *Web) Tracef(format string, args ...interface{}) {
+func (self *Server) Tracef(format string, args ...interface{}) {
 	self.Logf(Trace, "\033[1;32mTRACE\t"+format+"\033[0m", args...)
 }
 
-func (self *Web) OrderedAllocationMethods() (result string, err error) {
+func (self *Server) OrderedAllocationMethods() (result string, err error) {
 	b, err := json.Marshal(allocation.OrderedMethods)
 	if err != nil {
 		return
@@ -324,7 +324,7 @@ func (self *Web) OrderedAllocationMethods() (result string, err error) {
 	return
 }
 
-func (self *Web) OrderedVariants() (result string, err error) {
+func (self *Server) OrderedVariants() (result string, err error) {
 	b, err := json.Marshal(variants.OrderedVariants)
 	if err != nil {
 		return
@@ -333,7 +333,7 @@ func (self *Web) OrderedVariants() (result string, err error) {
 	return
 }
 
-func (self *Web) Variants() (result string, err error) {
+func (self *Server) Variants() (result string, err error) {
 	b, err := json.Marshal(variants.Variants)
 	if err != nil {
 		return
@@ -342,7 +342,7 @@ func (self *Web) Variants() (result string, err error) {
 	return
 }
 
-func (self *Web) GameStates() (result string, err error) {
+func (self *Server) GameStates() (result string, err error) {
 	b, err := json.Marshal(meta.GameStates)
 	if err != nil {
 		return
@@ -351,7 +351,7 @@ func (self *Web) GameStates() (result string, err error) {
 	return
 }
 
-func (self *Web) HandleStatic(router *mux.Router, dir string) (err error) {
+func (self *Server) HandleStatic(router *mux.Router, dir string) (err error) {
 	full := filepath.Join(".", dir)
 	legal, err := filepath.Abs(full)
 	if err != nil {
@@ -410,18 +410,18 @@ func (self *Web) HandleStatic(router *mux.Router, dir string) (err error) {
 	return
 }
 
-type skinnyWeb struct {
-	*Web
+type skinnyServer struct {
+	*Server
 }
 
-func (self *skinnyWeb) AfterTransaction(f func(SkinnyContext) error) (err error) {
-	return self.Web.db.AfterTransaction(func(d *unbolted.DB) (err error) {
+func (self *skinnyServer) AfterTransaction(f func(SkinnyContext) error) (err error) {
+	return self.Server.db.AfterTransaction(func(d *unbolted.DB) (err error) {
 		return f(self)
 	})
 }
 
-func (self *skinnyWeb) View(f func(c SkinnyTXContext) error) error {
-	return self.Web.db.View(func(tx *unbolted.TX) error {
+func (self *skinnyServer) View(f func(c SkinnyTXContext) error) error {
+	return self.Server.db.View(func(tx *unbolted.TX) error {
 		return f(&skinnyTXContext{
 			SkinnyContext: self,
 			tx:            tx,
@@ -429,8 +429,8 @@ func (self *skinnyWeb) View(f func(c SkinnyTXContext) error) error {
 	})
 }
 
-func (self *skinnyWeb) Update(f func(c SkinnyTXContext) error) error {
-	return self.Web.db.Update(func(tx *unbolted.TX) error {
+func (self *skinnyServer) Update(f func(c SkinnyTXContext) error) error {
+	return self.Server.db.Update(func(tx *unbolted.TX) error {
 		return f(&skinnyTXContext{
 			SkinnyContext: self,
 			tx:            tx,
@@ -438,6 +438,6 @@ func (self *skinnyWeb) Update(f func(c SkinnyTXContext) error) error {
 	})
 }
 
-func (self *skinnyWeb) DB() *unbolted.DB {
-	return self.Web.db
+func (self *skinnyServer) DB() *unbolted.DB {
+	return self.Server.db
 }

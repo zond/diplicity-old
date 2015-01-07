@@ -48,7 +48,7 @@ func main() {
 		log.SetOutput(z.MaxFiles(10).MaxSize(1024 * 1024 * 256))
 	}
 
-	server, err := common.NewWeb(*secret, *env, *db)
+	server, err := common.NewServer(*secret, *env, *db)
 	if err != nil {
 		panic(err)
 	}

@@ -13,7 +13,7 @@ type HTTPContext struct {
 	request  *http.Request
 	session  *sessions.Session
 	vars     map[string]string
-	web      *Web
+	web      *Server
 }
 
 func (self *HTTPContext) Env() string {

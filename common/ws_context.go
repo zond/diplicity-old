@@ -6,7 +6,7 @@ import (
 	"github.com/zond/wsubs/gosubs"
 )
 
-func NewWSContext(c pack.Context, web *Web) WSContext {
+func NewWSContext(c pack.Context, web *Server) WSContext {
 	return &defaultWSContext{
 		Context: c,
 		web:     web,
@@ -15,7 +15,7 @@ func NewWSContext(c pack.Context, web *Web) WSContext {
 
 type defaultWSContext struct {
 	pack.Context
-	web *Web
+	web *Server
 }
 
 func (self *defaultWSContext) Secret() string {
@@ -85,10 +85,10 @@ func (self *defaultWSContext) SendMail(fromName, replyTo, subject, message strin
 
 type Router struct {
 	*pack.Router
-	web *Web
+	web *Server
 }
 
-func newRouter(web *Web) (result *Router) {
+func newRouter(web *Server) (result *Router) {
 	result = &Router{
 		Router: pack.NewRouter(web.DB()),
 		web:    web,
@@ -107,7 +107,7 @@ func (self *RPC) Auth() *RPC {
 
 type Resource struct {
 	*pack.Resource
-	web *Web
+	web *Server
 }
 
 func (self *Resource) Handle(op string, f func(c WSContext) error) *Resource {
