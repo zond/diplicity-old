@@ -54,11 +54,13 @@ func main() {
 	}
 	server.SetGMail(*gmailAccount, *gmailPassword, game.IncomingMail).SetSMTP(*smtpHost, *smtpAccount)
 
-	if *oauthClientSecret == "" {
-		server.Errorf("No oauth_client_secret provided, you will not be able to use Google single sign on")
-	}
-	if *oauthClientId == "" {
-		server.Errorf("No oauth_client_id provided, you will not be able to use Google single sign on")
+	if *env != srv.Development {
+		if *oauthClientSecret == "" {
+			server.Errorf("No oauth_client_secret provided, you will not be able to use Google single sign on")
+		}
+		if *oauthClientId == "" {
+			server.Errorf("No oauth_client_id provided, you will not be able to use Google single sign on")
+		}
 	}
 
 	router := mux.NewRouter()
@@ -125,7 +127,8 @@ func main() {
 	server.AdminHandle(router.Path("/admin/games/{game_id}/recalc").Methods("POST"), game.AdminRecalcOptions)
 	server.AdminHandle(router.Path("/admin/games/reindex").Methods("POST"), game.AdminReindexGames)
 	server.AdminHandle(router.Path("/admin/users/setrank1").Methods("POST"), user.AdminSetRank1)
-	server.DevHandle(router.Path("/admin/become").Methods("POST"), user.AdminBecome)
+	server.DevHandle(router.Path("/admin/become").Methods("POST"), user.DevBecome)
+	server.DevHandle(router.Path("/admin/login").Methods("GET"), user.DevLogin)
 
 	server.Handle(router.Path("/resolve/{variant}").Methods("POST"), game.Resolve)
 

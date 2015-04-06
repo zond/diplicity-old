@@ -3,8 +3,12 @@ package user
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"math/rand"
+	"net/http"
 	"net/url"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -32,12 +36,39 @@ func AdminSetRank1(c *srv.HTTPContext) (err error) {
 	})
 }
 
-func AdminBecome(c *srv.HTTPContext) (err error) {
+func DevLogin(c *srv.HTTPContext) (err error) {
+	c.SetContentType("text/html; charset=UTF-8")
+	f, err := os.Open(filepath.Join("static", "devlogin.html"))
+	if err != nil {
+		return
+	}
+	defer f.Close()
+	if _, err = io.Copy(c.Resp(), f); err != nil {
+		return
+	}
+	return
+}
+
+func DevBecome(c *srv.HTTPContext) (err error) {
+	email := c.Req().FormValue("become")
+	if err = c.DB().Update(func(tx *unbolted.TX) (err error) {
+		user := &User{Id: unbolted.Id(email)}
+		err = tx.Get(user)
+		if err == unbolted.ErrNotFound {
+			user.Nickname = email
+			user.Email = email
+			user.Ranking = 1
+			user.LastLoginAt = time.Now()
+			user.DiplicityHost = c.Req().Host
+			return tx.Set(user)
+		}
+		return err
+	}); err != nil {
+		return
+	}
 	c.Session().Values[srv.SessionEmail] = c.Req().FormValue("become")
 	c.Close()
-	c.Resp().Header().Set("Location", "/")
-	c.Resp().WriteHeader(302)
-	fmt.Fprintln(c.Resp(), "/")
+	http.Redirect(c.Resp(), c.Req(), "/", 302)
 	return
 }
 
@@ -147,6 +178,12 @@ func Login(clientId string) func(c *srv.HTTPContext) (err error) {
 		if err != nil {
 			return
 		}
+
+		if c.Env() == srv.Development {
+			http.Redirect(c.Resp(), c.Req(), "/admin/login", 302)
+			return
+		}
+
 		redirectUrl, err := url.Parse(fmt.Sprintf("%v://%v/oauth2callback", returnTo.Scheme, c.Req().Host))
 		if err != nil {
 			return
@@ -160,9 +197,7 @@ func Login(clientId string) func(c *srv.HTTPContext) (err error) {
 		if err != nil {
 			return
 		}
-		c.Resp().Header().Set("Location", url.String())
-		c.Resp().WriteHeader(302)
-		fmt.Fprintln(c.Resp(), url.String())
+		http.Redirect(c.Resp(), c.Req(), url.String(), http.StatusTemporaryRedirect)
 		return
 	}
 }
