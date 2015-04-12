@@ -25,7 +25,7 @@ import (
 	"github.com/zond/gmail"
 	"github.com/zond/godip/variants"
 	"github.com/zond/unbolted"
-	"github.com/zond/wsubs/gosubs"
+	"github.com/zond/wsubs"
 )
 
 const (
@@ -227,7 +227,7 @@ func (self *Server) AdminHandle(r *mux.Route, f func(c *HTTPContext) error) {
 			err = fmt.Errorf("Missing token")
 			return
 		}
-		token, err := gosubs.DecodeToken(self.secret, tokenStr)
+		token, err := wsubs.DecodeToken(self.secret, tokenStr)
 		if err != nil {
 			return
 		}

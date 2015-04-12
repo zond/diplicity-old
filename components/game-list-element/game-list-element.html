@@ -11,6 +11,7 @@
 				margin: 0.35em;
 			}
 			.toggle-title {
+				margin-top: 0.23em;
 				text-transform: none !important;
 			}
 			table {
@@ -168,6 +169,7 @@
 	<script>
 		Polymer({
 			ready: function() {
+				console.log(this.game);
 				this.preferences = Variants[this.game.Variant].Nations;
 			},
 			toggleOpened: function() {

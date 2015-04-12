@@ -336,7 +336,7 @@ func DeleteMember(c srv.WSContext) error {
 	})
 }
 
-func AddMember(c srv.WSContext) error {
+func AddMember(c srv.WSContext) (err error) {
 	var state GameState
 	c.Data().Overwrite(&state)
 	return c.Update(func(c srv.WSTXContext) error {

@@ -6,7 +6,7 @@ import (
 
 	"github.com/zond/diplicity/srv"
 	"github.com/zond/unbolted"
-	"github.com/zond/wsubs/gosubs"
+	"github.com/zond/wsubs"
 )
 
 type Users []User
@@ -53,9 +53,9 @@ type Blacklisting struct {
 
 func SubscribeEmail(c srv.WSContext) error {
 	if c.Principal() == "" {
-		return c.Conn().WriteJSON(gosubs.Message{
-			Type: gosubs.FetchType,
-			Object: &gosubs.Object{
+		return c.Conn().WriteJSON(wsubs.Message{
+			Type: wsubs.FetchType,
+			Object: &wsubs.Object{
 				URI:  c.Match()[0],
 				Data: &User{},
 			},

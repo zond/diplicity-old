@@ -12,7 +12,7 @@ import (
 	"github.com/zond/diplicity/user"
 	"github.com/zond/godip/variants"
 	"github.com/zond/unbolted"
-	"github.com/zond/wsubs/gosubs"
+	"github.com/zond/wsubs"
 )
 
 type MemberState struct {
@@ -62,9 +62,9 @@ func (self SortedGameStates) Swap(i, j int) {
 
 func SubscribeMine(c srv.WSContext) error {
 	if c.Principal() == "" {
-		return c.Conn().WriteJSON(gosubs.Message{
-			Type: gosubs.FetchType,
-			Object: &gosubs.Object{
+		return c.Conn().WriteJSON(wsubs.Message{
+			Type: wsubs.FetchType,
+			Object: &wsubs.Object{
 				URI: c.Match()[0],
 			},
 		})
@@ -81,7 +81,7 @@ func SubscribeMine(c srv.WSContext) error {
 			}
 			states := GameStates{}
 			for _, member := range members {
-				if op == gosubs.DeleteType {
+				if op == wsubs.DeleteType {
 					states = append(states, GameState{
 						Game:    &Game{Id: member.GameId},
 						Members: []MemberState{MemberState{Member: member}},
@@ -102,7 +102,7 @@ func SubscribeMine(c srv.WSContext) error {
 					states = append(states, state)
 				}
 			}
-			if op == gosubs.FetchType || len(states) > 0 {
+			if op == wsubs.FetchType || len(states) > 0 {
 				states = states.SortAndLimit(func(a, b GameState) bool {
 					urgencyA := time.Hour * 24 * 365
 					urgencyB := time.Hour * 24 * 365
@@ -158,7 +158,7 @@ func SubscribeGame(c srv.WSContext) error {
 					return err
 				}
 				return s.Send(state, op)
-			} else if op == gosubs.FetchType {
+			} else if op == wsubs.FetchType {
 				return s.Send(GameState{}, op)
 			}
 			return
@@ -192,9 +192,9 @@ func SubscribeGamePhase(c srv.WSContext) (err error) {
 			if err != nil {
 				return err
 			}
-			return c.Conn().WriteJSON(gosubs.Message{
-				Type: gosubs.FetchType,
-				Object: &gosubs.Object{
+			return c.Conn().WriteJSON(wsubs.Message{
+				Type: wsubs.FetchType,
+				Object: &wsubs.Object{
 					URI:  c.Match()[0],
 					Data: state,
 				},
@@ -257,7 +257,7 @@ func SubscribeMessages(c srv.WSContext) (err error) {
 					result = append(result, *message)
 				}
 			}
-			if op == gosubs.FetchType || len(result) > 0 {
+			if op == wsubs.FetchType || len(result) > 0 {
 				sort.Sort(result)
 				return s.Send(result, op)
 			}
@@ -308,7 +308,7 @@ func subscribeOthers(c srv.WSContext, filter unbolted.QFilter, preLimiter func(s
 					}
 				}
 			}
-			if op == gosubs.FetchType || len(states) > 0 {
+			if op == wsubs.FetchType || len(states) > 0 {
 				if postLimiter != nil {
 					states = postLimiter(states)
 				}

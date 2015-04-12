@@ -16,7 +16,7 @@ import (
 	"github.com/zond/diplicity/srv"
 	"github.com/zond/goauth2"
 	"github.com/zond/unbolted"
-	"github.com/zond/wsubs/gosubs"
+	"github.com/zond/wsubs"
 )
 
 func AdminSetRank1(c *srv.HTTPContext) (err error) {
@@ -77,7 +77,9 @@ func AdminCreateUser(c *srv.HTTPContext) (err error) {
 	if err = json.NewDecoder(c.Req().Body).Decode(user); err != nil {
 		return
 	}
-	return c.DB().Update(func(tx *unbolted.TX) error { return tx.Set(user) })
+	return c.DB().Update(func(tx *unbolted.TX) error {
+		return tx.Set(user)
+	})
 }
 
 var nonces = map[string]struct{}{}
@@ -145,7 +147,7 @@ func OAuth2Callback(clientId, clientSecret string) func(c *srv.HTTPContext) (err
 
 func Token(c *srv.HTTPContext) (err error) {
 	if emailIf, found := c.Session().Values[srv.SessionEmail]; found {
-		token := &gosubs.Token{
+		token := &wsubs.Token{
 			Principal: fmt.Sprint(emailIf),
 			Timeout:   time.Now().Add(time.Second * 10),
 		}
@@ -154,7 +156,7 @@ func Token(c *srv.HTTPContext) (err error) {
 		}
 		err = c.RenderJSON(token)
 	} else {
-		err = c.RenderJSON(gosubs.Token{})
+		err = c.RenderJSON(wsubs.Token{})
 	}
 	return
 }

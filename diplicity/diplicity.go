@@ -11,7 +11,7 @@ import (
 	"github.com/zond/diplicity/game"
 	"github.com/zond/diplicity/srv"
 	"github.com/zond/diplicity/user"
-	"github.com/zond/wsubs/gosubs"
+	"github.com/zond/wsubs"
 	"github.com/zond/ziprot"
 )
 
@@ -74,27 +74,27 @@ func main() {
 	// Resource routes for the WebSocket
 	wsRouter := server.Router()
 	wsRouter.Resource("^/games/mine$").
-		Handle(gosubs.SubscribeType, game.SubscribeMine)
+		Handle(wsubs.SubscribeType, game.SubscribeMine)
 	wsRouter.Resource("^/games/open$").
-		Handle(gosubs.SubscribeType, game.SubscribeOthersOpen)
+		Handle(wsubs.SubscribeType, game.SubscribeOthersOpen)
 	wsRouter.Resource("^/games/closed$").
-		Handle(gosubs.SubscribeType, game.SubscribeOthersClosed)
+		Handle(wsubs.SubscribeType, game.SubscribeOthersClosed)
 	wsRouter.Resource("^/games/finished$").
-		Handle(gosubs.SubscribeType, game.SubscribeOthersFinished)
+		Handle(wsubs.SubscribeType, game.SubscribeOthersFinished)
 	wsRouter.Resource("^/user$").
-		Handle(gosubs.SubscribeType, user.SubscribeEmail).
-		Handle(gosubs.UpdateType, user.Update).Auth()
+		Handle(wsubs.SubscribeType, user.SubscribeEmail).
+		Handle(wsubs.UpdateType, user.Update).Auth()
 	wsRouter.Resource("^/games/(.+)/(\\d+)$").
-		Handle(gosubs.SubscribeType, game.SubscribeGamePhase)
+		Handle(wsubs.SubscribeType, game.SubscribeGamePhase)
 	wsRouter.Resource("^/games/(.+)/messages$").
-		Handle(gosubs.SubscribeType, game.SubscribeMessages).
-		Handle(gosubs.CreateType, game.CreateMessage).Auth()
+		Handle(wsubs.SubscribeType, game.SubscribeMessages).
+		Handle(wsubs.CreateType, game.CreateMessage).Auth()
 	wsRouter.Resource("^/games/(.+)$").
-		Handle(gosubs.SubscribeType, game.SubscribeGame).
-		Handle(gosubs.DeleteType, game.DeleteMember).Auth().
-		Handle(gosubs.UpdateType, game.AddMember).Auth()
+		Handle(wsubs.SubscribeType, game.SubscribeGame).
+		Handle(wsubs.DeleteType, game.DeleteMember).Auth().
+		Handle(wsubs.UpdateType, game.AddMember).Auth()
 	wsRouter.Resource("^/games$").
-		Handle(gosubs.CreateType, game.Create).Auth()
+		Handle(wsubs.CreateType, game.Create).Auth()
 
 	// RPC routes for the WebSocket
 	wsRouter.RPC("SetOrder", game.SetOrder).Auth()

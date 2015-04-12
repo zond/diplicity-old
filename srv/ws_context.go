@@ -3,7 +3,7 @@ package srv
 import (
 	"github.com/zond/unbolted"
 	"github.com/zond/unbolted/pack"
-	"github.com/zond/wsubs/gosubs"
+	"github.com/zond/wsubs"
 )
 
 func NewWSContext(c pack.Context, web *Server) WSContext {
@@ -97,7 +97,7 @@ func newRouter(web *Server) (result *Router) {
 }
 
 type RPC struct {
-	*gosubs.RPC
+	*wsubs.RPC
 }
 
 func (self *RPC) Auth() *RPC {

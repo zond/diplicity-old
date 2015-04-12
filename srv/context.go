@@ -3,7 +3,7 @@ package srv
 import (
 	"github.com/zond/unbolted"
 	"github.com/zond/unbolted/pack"
-	"github.com/zond/wsubs/gosubs"
+	"github.com/zond/wsubs"
 )
 
 type WSContext interface {
@@ -24,8 +24,8 @@ type WSTXContext interface {
 }
 
 type SkinnyContext interface {
-	gosubs.Logger
-	gosubs.SubscriptionManager
+	wsubs.Logger
+	wsubs.SubscriptionManager
 	DB() *unbolted.DB
 	AfterTransaction(func(SkinnyContext) error) error
 	View(func(SkinnyTXContext) error) error

@@ -19,7 +19,7 @@ import (
 	"github.com/zond/diplicity/srv"
 	"github.com/zond/godip/variants"
 	"github.com/zond/unbolted"
-	"github.com/zond/wsubs/gosubs"
+	"github.com/zond/wsubs"
 )
 
 type cli struct {
@@ -29,7 +29,7 @@ type cli struct {
 }
 
 func (self *cli) token(email string) (result string, err error) {
-	token := &gosubs.Token{
+	token := &wsubs.Token{
 		Principal: email,
 		Timeout:   time.Now().Add(time.Second * 10),
 	}
@@ -40,7 +40,7 @@ func (self *cli) token(email string) (result string, err error) {
 	return
 }
 
-func (self *cli) connect(email string) (ws *websocket.Conn, receiver chan gosubs.Message, err error) {
+func (self *cli) connect(email string) (ws *websocket.Conn, receiver chan wsubs.Message, err error) {
 	token, err := self.token(email)
 	if err != nil {
 		return
@@ -60,11 +60,11 @@ func (self *cli) connect(email string) (ws *websocket.Conn, receiver chan gosubs
 	if ws, _, err = websocket.NewClient(netconn, u, nil, 1024, 1024); err != nil {
 		return
 	}
-	receiver = make(chan gosubs.Message, 1024)
+	receiver = make(chan wsubs.Message, 1024)
 	go func() {
 		var err error
 		for err == nil {
-			mess := gosubs.Message{}
+			mess := wsubs.Message{}
 			if err = ws.ReadJSON(&mess); err == nil {
 				receiver <- mess
 			}
@@ -73,12 +73,11 @@ func (self *cli) connect(email string) (ws *websocket.Conn, receiver chan gosubs
 	return
 }
 
-func (self *cli) send(email string, mess gosubs.Message) (err error) {
+func (self *cli) send(email string, mess wsubs.Message) (err error) {
 	ws, _, err := self.connect(email)
 	if err != nil {
 		return
 	}
-	defer ws.Close()
 	if err = ws.WriteJSON(mess); err != nil {
 		return
 	}
@@ -137,9 +136,9 @@ func (self *cli) rpc(email string, method string, data interface{}) (result inte
 	}
 	defer ws.Close()
 	id := fmt.Sprint(rand.Int63())
-	if err = ws.WriteJSON(gosubs.Message{
-		Type: gosubs.RPCType,
-		Method: &gosubs.Method{
+	if err = ws.WriteJSON(wsubs.Message{
+		Type: wsubs.RPCType,
+		Method: &wsubs.Method{
 			Name: "Commit",
 			Id:   id,
 			Data: data,
@@ -147,8 +146,8 @@ func (self *cli) rpc(email string, method string, data interface{}) (result inte
 	}); err != nil {
 		return
 	}
-	var mess gosubs.Message
-	for mess = <-rec; mess.Type != gosubs.RPCType || mess.Method.Id != id; mess = <-rec {
+	var mess wsubs.Message
+	for mess = <-rec; mess.Type != wsubs.RPCType || mess.Method.Id != id; mess = <-rec {
 	}
 	result = mess.Method.Data
 	return
@@ -245,9 +244,9 @@ func main() {
 				if err := cli.createUser(*email); err != nil {
 					panic(err)
 				}
-				if err := cli.send(*email, gosubs.Message{
-					Type: gosubs.UpdateType,
-					Object: &gosubs.Object{
+				if err := cli.send(*email, wsubs.Message{
+					Type: wsubs.UpdateType,
+					Object: &wsubs.Object{
 						URI: fmt.Sprintf("/games/%v", *join),
 						Data: game.GameState{
 							Game: &game.Game{

@@ -1,6 +1,6 @@
+<link rel="import" href="/bower_components/more-routing/more-routing.html">
 <link rel="import" href="/bower_components/paper-tabs/paper-tabs.html">
 <link rel="import" href="/components/subscribing-game-list/subscribing-game-list.html">
-<link rel="import" href="/components/path-selector/path-selector.html">
 
 <polymer-element name="other-games" attributes="subscriber user joiner leaver" noscript>
   <template>
@@ -12,33 +12,31 @@
 				height: 1.75em;
 			}
 	  </style>
-		<paper-tabs valueattr="path" selected="{{ path }}" self-end>
-		  <paper-tab path="/games/other">Open</paper-tab>
-		  <paper-tab path="/games/other/closed">Closed</paper-tab>
-		  <paper-tab path="/games/other/finished">Finished</paper-tab>
-		</paper-tabs>
-		<path-selector path="{{ path }}">
-		  <div path="/games/other">
-				<div cross-fade>
+		<more-route-selector>
+  		<paper-tabs>
+		    <paper-tab route="other-open-games">Open</paper-tab>
+		    <paper-tab route="other-closed-games">Closed</paper-tab>
+		    <paper-tab route="other-finished-games">Finished</paper-tab>
+			</paper-tabs>
+		</more-route-selector>
+		<more-route-selector>
+		  <core-animated-pages transitions="cross-fade">
+				<div route="other-open-games" cross-fade>
 					<template if="{{ path == '/games/other' || path == 0 }}">
 					  <subscribing-game-list joiner="{{ joiner }}" leaver="{{ leaver }}" user="{{ user }}" subscriber="{{ subscriber }}" path="/games/open"></subscribing-game-list>
 					</template>
 				</div>
-			</div>
-			<div path="/games/other/closed">
-				<div cross-fade>
+				<div route="other-closed-games" cross-fade>
 					<template if="{{ path == '/games/other/closed' }}">
 					  <subscribing-game-list joiner="{{ joiner }}" leaver="{{ leaver }}" user="{{ user }}" subscriber="{{ subscriber }}" path="/games/closed"></subscribing-game-list>
 					</template>
 				</div>
-			</div>
-		  <div path="/games/other/finished">
-				<div cross-fade>
+				<div route="other-finished-games" cross-fade>
 					<template if="{{ path == '/games/other/finished' }}">
 					  <subscribing-game-list joiner="{{ joiner }}" leaver="{{ leaver }}" user="{{ user }}" subscriber="{{ subscriber }}" path="/games/finished"></subscribing-game-list>
 					</template>
 				</div>
-			</div>
+			</core-animated-pages>
 		</path-selector>
 	</template>
 </polymer-element>

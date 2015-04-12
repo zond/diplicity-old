@@ -7,9 +7,23 @@
 <link rel="import" href="/bower_components/core-item/core-item.html">
 <link rel="import" href="/bower_components/paper-tabs/paper-tabs.html">
 <link rel="import" href="/bower_components/core-animated-pages/transitions/cross-fade.html">
+<link rel="import" href="/bower_components/more-routing/more-routing.html">
 <link rel="import" href="/components/create-game/create-game.html">
 <link rel="import" href="/components/my-games/my-games.html">
 <link rel="import" href="/components/other-games/other-games.html">
+
+<more-routing-config driver="path"></more-routing-config>
+<more-route name="my-games" path="/games/mine">
+  <more-route name="my-running-games" path="/running"></more-route>
+  <more-route name="my-forming-games" path="/forming"></more-route>
+  <more-route name="my-finished-games" path="/finished"></more-route>
+</more-route>
+<more-route name="other-games" path="/games/other">
+  <more-route name="other-open-games" path="/open"></more-route>
+  <more-route name="other-closed-games" path="/closed"></more-route>
+  <more-route name="other-finished-games" path="/finished"></more-route>
+</more-route>
+<more-route name="create-game" path="/games/create"></more-route>
 
 <polymer-element name="diplicity-app">
   <template>
@@ -44,42 +58,38 @@
 			</core-header-panel>
 	    <div tool flex>
 				<template if="{{ user.Id }}">
-				  <paper-tabs valueattr="path" selected="{{ path }}" self-end>
-			      <paper-tab path="/">My games</paper-tab>
-						<paper-tab path="/games/other">Other games</paper-tab>
-			    	<paper-tab path="/games/create">Create game</paper-tab>
-					</paper-tabs>
+  				<more-route-selector>
+					  <paper-tabs>
+			        <paper-tab route="my-games">My games</paper-tab>
+						  <paper-tab route="other-games">Other games</paper-tab>
+			    	  <paper-tab route="create-game">Create game</paper-tab>
+						</paper-tabs>
+					</more-route-selector>
 				</template>
 				<template if="{{ !user.Id }}">
-				  <paper-tabs valueattr="path" selected="/" self-end>
-						<paper-tab path="/">Games</paper-tab>
+				  <paper-tabs>
+						<paper-tab>Games</paper-tab>
 					</paper-tabs>
 				</template>
       </div>
 			<div flex>
 				<template if="{{ user.Id }}">
-					<path-selector path="{{ path }}">
-				    <div path="/">
-				    	<div cross-fade>
-								<my-games user="{{ user }}" leaver="{{ gameLeaver() }}" joiner="{{ gameJoiner() }}" subscriber="{{ subscriber() }}"></my-games>
-				    	</div>
-				    </div>
-				    <div path="/games/other">
-				    	<div cross-fade>
-				    		<other-games user="{{ user }}" leaver="{{ gameLeaver() }}" joiner="{{ gameJoiner() }}" subscriber="{{ subscriber() }}"></other-games>
-				    	</div>
-				    </div>
-				    <div path="/games/create">
-				    	<div cross-fade>
-				    		<create-game creator="{{ gameCreator() }}"></create-game>
-				    	</div>
-				    </div>
-					</path-selector>
+   				<more-route-selector>
+    			  <core-animated-pages transitions="cross-fade">
+    				  <div route="my-games" cross-fade>
+    						<my-games user="{{ user }}" leaver="{{ gameLeaver() }}" joiner="{{ gameJoiner() }}" subscriber="{{ subscriber() }}"></my-games>
+    					</div>
+    					<div route="other-games" cross-fade>
+    						<other-games user="{{ user }}" leaver="{{ gameLeaver() }}" joiner="{{ gameJoiner() }}" subscriber="{{ subscriber() }}"></other-games>
+    					</div>
+    					<div route="create-game" cross-fade>
+    						<create-game creator="{{ gameCreator() }}"></create-game>
+    					</div>
+    				</core-animated-pages>
+					</more-route-selector>
 				</template>
 				<template if="{{ !user.Id }}">
-				  <div cross-fade>
-						<other-games user="{{ user }}" leaver="{{ gameLeaver() }}" joiner="{{ gameJoiner() }}" subscriber="{{ subscriber() }}"></other-games>
-					</div>
+				  <other-games user="{{ user }}" leaver="{{ gameLeaver() }}" joiner="{{ gameJoiner() }}" subscriber="{{ subscriber() }}"></other-games>
 				</template>
 			</div>
 		</core-scaffold>
@@ -272,7 +282,7 @@
 								Data: g,
 							},
 						}));
-						this.path = "/";
+						MoreRouting.navigateTo('my-forming-games');
 					}.bind(this),
 				};
 			},
