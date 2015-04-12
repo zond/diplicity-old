@@ -7,8 +7,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/zond/unbolted"
 )
 
 type Translator interface {
@@ -24,15 +22,6 @@ type Mailer interface {
 	SendMail(fromName, replyTo, subject, message string, recips []string) error
 	ReceiveAddress() string
 	SendAddress() string
-}
-
-type skinnyTXContext struct {
-	SkinnyContext
-	tx *unbolted.TX
-}
-
-func (self *skinnyTXContext) TX() *unbolted.TX {
-	return self.tx
 }
 
 var prefPattern = regexp.MustCompile("^([^\\s;]+)(;q=([\\d.]+))?$")

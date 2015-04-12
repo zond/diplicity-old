@@ -19,12 +19,14 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
+	"github.com/gorilla/websocket"
 	"github.com/jhillyerd/go.enmime"
 	"github.com/zond/diplicity/game/allocation"
 	"github.com/zond/diplicity/game/meta"
 	"github.com/zond/gmail"
 	"github.com/zond/godip/variants"
 	"github.com/zond/unbolted"
+	"github.com/zond/unbolted/pack"
 	"github.com/zond/wsubs"
 )
 
@@ -53,7 +55,7 @@ type Server struct {
 	gmailPassword string
 	smtpAccount   string
 	smtpHost      string
-	mailHandler   func(c SkinnyContext, msg *enmime.MIMEBody) error
+	mailHandler   func(c Context, msg *enmime.MIMEBody) error
 	router        *Router
 	secret        string
 }
@@ -149,11 +151,11 @@ func (self *Server) Start() (err error) {
 }
 
 func (self *Server) IncomingMail(msg *enmime.MIMEBody) error {
-	return self.mailHandler(self.Diet(), msg)
+	return self.mailHandler(self.Context(), msg)
 }
 
-func (self *Server) Diet() SkinnyContext {
-	return &skinnyServer{
+func (self *Server) Context() Context {
+	return &serverContext{
 		Server: self,
 	}
 }
@@ -203,7 +205,7 @@ func (self *Server) GetContext(w http.ResponseWriter, r *http.Request) (result *
 	return
 }
 
-func (self *Server) SetGMail(account, password string, handler func(c SkinnyContext, msg *enmime.MIMEBody) error) *Server {
+func (self *Server) SetGMail(account, password string, handler func(c Context, msg *enmime.MIMEBody) error) *Server {
 	self.gmailAccount, self.gmailPassword, self.mailHandler = account, password, handler
 	return self
 }
@@ -290,6 +292,7 @@ func (self *Server) Errlog(err error) {
 
 func (self *Server) Fatalf(format string, args ...interface{}) {
 	self.Logf(Fatal, "\033[1;31mFATAL\t"+format+"\033[0m", args...)
+	panic(fmt.Sprintf(format, args...))
 }
 
 func (self *Server) Errorf(format string, args ...interface{}) {
@@ -403,34 +406,84 @@ func (self *Server) HandleStatic(router *mux.Router, dir string) (err error) {
 	return
 }
 
-type skinnyServer struct {
+type serverContext struct {
 	*Server
+	tx      *unbolted.TX
+	writing bool
 }
 
-func (self *skinnyServer) AfterTransaction(f func(SkinnyContext) error) (err error) {
+func (self *serverContext) AfterTransaction(f func(Context) error) (err error) {
 	return self.Server.db.AfterTransaction(func(d *unbolted.DB) (err error) {
 		return f(self)
 	})
 }
 
-func (self *skinnyServer) View(f func(c SkinnyTXContext) error) error {
-	return self.Server.db.View(func(tx *unbolted.TX) error {
-		return f(&skinnyTXContext{
-			SkinnyContext: self,
-			tx:            tx,
-		})
-	})
+func (self *serverContext) TX() *unbolted.TX {
+	return self.tx
 }
 
-func (self *skinnyServer) Update(f func(c SkinnyTXContext) error) error {
+func (self *serverContext) SetMatch(s []string) {
+	self.Fatalf("SetMatch() not valid for %#v", self)
+}
+
+func (self *serverContext) SetData(s wsubs.JSON) {
+	self.Fatalf("SetData() not valid for %#v", self)
+}
+
+func (self *serverContext) Conn() *websocket.Conn {
+	self.Fatalf("Conn() not valid for %#v", self)
+	return nil
+}
+
+func (self *serverContext) Data() wsubs.JSON {
+	self.Fatalf("Data() not valid for %#v", self)
+	return wsubs.JSON{}
+}
+
+func (self *serverContext) Match() []string {
+	self.Fatalf("Match() not valid for %#v", self)
+	return nil
+}
+
+func (self *serverContext) Message() *wsubs.Message {
+	self.Fatalf("Message() not valid for %#v", self)
+	return nil
+}
+
+func (self *serverContext) Pack() *pack.Pack {
+	self.Fatalf("Pack() not valid for %#v", self)
+	return nil
+}
+
+func (self *serverContext) Principal() string {
+	self.Fatalf("Principal() not valid for %#v", self)
+	return ""
+}
+
+func (self serverContext) Update(f func(c Context) error) error {
+	if self.tx != nil {
+		if !self.writing {
+			return fmt.Errorf("%+v began with a View transaction!", self)
+		}
+		return f(&self)
+	}
 	return self.Server.db.Update(func(tx *unbolted.TX) error {
-		return f(&skinnyTXContext{
-			SkinnyContext: self,
-			tx:            tx,
-		})
+		self.tx = tx
+		self.writing = true
+		return f(&self)
 	})
 }
 
-func (self *skinnyServer) DB() *unbolted.DB {
+func (self serverContext) View(f func(c Context) error) error {
+	if self.tx != nil {
+		return f(&self)
+	}
+	return self.Server.db.View(func(tx *unbolted.TX) error {
+		self.tx = tx
+		return f(&self)
+	})
+}
+
+func (self *serverContext) DB() *unbolted.DB {
 	return self.Server.db
 }

@@ -135,7 +135,7 @@ func (self IllegalMessageError) Error() string {
 	return self.Description
 }
 
-func IncomingMail(c srv.SkinnyContext, msg *enmime.MIMEBody) (err error) {
+func IncomingMail(c srv.Context, msg *enmime.MIMEBody) (err error) {
 	text := gmail.DecodeText(msg.Text, msg.GetHeader("Content-Type"))
 	c.Debugf("Incoming mail to %#v\n%v", msg.GetHeader("To"), text)
 	if match := gmail.AddrReg.FindString(msg.GetHeader("To")); match != "" {
@@ -156,7 +156,7 @@ func IncomingMail(c srv.SkinnyContext, msg *enmime.MIMEBody) (err error) {
 			if match2 := emailPlusReg.FindStringSubmatch(match); match2 != nil {
 				var tag *MailTag
 				if tag, err = DecodeMailTag(c.Secret(), match2[1]); err == nil {
-					if err = c.Update(func(c srv.SkinnyTXContext) (err error) {
+					if err = c.Update(func(c srv.Context) (err error) {
 						sender := &Member{Id: tag.R}
 						if err = c.TX().Get(sender); err != nil {
 							return
@@ -186,7 +186,7 @@ func IncomingMail(c srv.SkinnyContext, msg *enmime.MIMEBody) (err error) {
 	return nil
 }
 
-func (self *Message) Send(c srv.SkinnyTXContext, game *Game, sender *Member) (err error) {
+func (self *Message) Send(c srv.Context, game *Game, sender *Member) (err error) {
 	c.Debugf("Sending %#v from %#v in %#v", self.Body, sender.Nation, game.Id.String())
 	// make sure the sender is correct
 	self.SenderId = sender.Id
@@ -310,7 +310,7 @@ func (self *Message) Send(c srv.SkinnyTXContext, game *Game, sender *Member) (er
 	return
 }
 
-func (self *Message) emailTo(c srv.SkinnyTXContext, game *Game, sender *Member, senderUser *user.User, recip *Member, recipUser *user.User, recipName string) (err error) {
+func (self *Message) emailTo(c srv.Context, game *Game, sender *Member, senderUser *user.User, recip *Member, recipUser *user.User, recipName string) (err error) {
 	mailTag := &MailTag{
 		M: self.Id,
 		R: recip.Id,

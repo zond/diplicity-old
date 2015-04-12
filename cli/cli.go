@@ -78,6 +78,7 @@ func (self *cli) send(email string, mess wsubs.Message) (err error) {
 	if err != nil {
 		return
 	}
+	defer ws.Close()
 	if err = ws.WriteJSON(mess); err != nil {
 		return
 	}

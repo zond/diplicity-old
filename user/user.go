@@ -51,7 +51,7 @@ type Blacklisting struct {
 	UpdatedAt   time.Time
 }
 
-func SubscribeEmail(c srv.WSContext) error {
+func SubscribeEmail(c srv.Context) error {
 	if c.Principal() == "" {
 		return c.Conn().WriteJSON(wsubs.Message{
 			Type: wsubs.FetchType,
@@ -65,10 +65,10 @@ func SubscribeEmail(c srv.WSContext) error {
 	return s.Subscribe(&User{Id: unbolted.Id(c.Principal())})
 }
 
-func Update(c srv.WSContext) (err error) {
+func Update(c srv.Context) (err error) {
 	var user User
 	c.Data().Overwrite(&user)
-	return c.Update(func(c srv.WSTXContext) (err error) {
+	return c.Update(func(c srv.Context) (err error) {
 		current := &User{Id: user.Id}
 		if err = c.TX().Get(current); err != nil {
 			return

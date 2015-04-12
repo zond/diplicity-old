@@ -20,9 +20,9 @@ type Epoch struct {
 	At time.Duration
 }
 
-func getDB(db *unbolted.DB) (result time.Duration, err error) {
-	if err = db.View(func(tx *unbolted.TX) (err error) {
-		result, err = Get(tx)
+func getDB(c srv.Context) (result time.Duration, err error) {
+	if err = c.View(func(c srv.Context) (err error) {
+		result, err = Get(c.TX())
 		return
 	}); err != nil {
 		return
@@ -45,16 +45,16 @@ func Get(tx *unbolted.TX) (result time.Duration, err error) {
 	return
 }
 
-func set(d *unbolted.DB, at time.Duration) (err error) {
+func set(c srv.Context, at time.Duration) (err error) {
 	epoch := &Epoch{
 		Id: unbolted.Id(epochKey),
 		At: at,
 	}
-	return d.Update(func(tx *unbolted.TX) error { return tx.Set(epoch) })
+	return c.Update(func(c srv.Context) error { return c.TX().Set(epoch) })
 }
 
-func Start(c srv.SkinnyContext) (err error) {
-	startedAt, err := getDB(c.DB())
+func Start(c srv.Context) (err error) {
+	startedAt, err := getDB(c)
 	if err != nil {
 		return
 	}
@@ -66,7 +66,7 @@ func Start(c srv.SkinnyContext) (err error) {
 			time.Sleep(time.Minute)
 			currently = time.Now().Sub(startedTime) + startedAt
 			atomic.StoreInt64(&deltaPoint, int64(time.Now().UnixNano()))
-			if err = set(c.DB(), currently); err != nil {
+			if err = set(c, currently); err != nil {
 				panic(err)
 			}
 			c.Debugf("Epoch %v", currently)

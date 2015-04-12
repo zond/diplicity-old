@@ -143,11 +143,11 @@ func main() {
 	if err := server.Start(); err != nil {
 		panic(err)
 	}
-	if err := epoch.Start(server.Diet()); err != nil {
+	if err := epoch.Start(server.Context()); err != nil {
 		panic(err)
 	}
 	if *schedule {
-		if err := game.ScheduleUnresolvedPhases(server.Diet()); err != nil {
+		if err := game.ScheduleUnresolvedPhases(server.Context()); err != nil {
 			panic(err)
 		}
 	}

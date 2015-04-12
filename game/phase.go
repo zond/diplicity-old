@@ -21,8 +21,8 @@ const (
 	DuringPhaseType dip.PhaseType = "During"
 )
 
-func ScheduleUnresolvedPhases(c srv.SkinnyContext) (err error) {
-	return c.View(func(c srv.SkinnyTXContext) (err error) {
+func ScheduleUnresolvedPhases(c srv.Context) (err error) {
+	return c.View(func(c srv.Context) (err error) {
 		unresolved := Phases{}
 		if err = c.TX().Query().Where(unbolted.Equals{"Resolved", false}).All(&unresolved); err != nil {
 			return
@@ -62,9 +62,9 @@ func (self *Phase) ShortString() string {
 	return fmt.Sprintf("%v %v, %v", self.Season, self.Year, self.Type)
 }
 
-func (self *Phase) autoResolve(c srv.SkinnyContext) (err error) {
+func (self *Phase) autoResolve(c srv.Context) (err error) {
 	c.Infof("Auto resolving %v/%v due to timeout", self.GameId, self.Id)
-	if err = c.Update(func(c srv.SkinnyTXContext) (err error) {
+	if err = c.Update(func(c srv.Context) (err error) {
 		if err = c.TX().Get(self); err != nil {
 			err = fmt.Errorf("While trying to load %+v: %v", self, err)
 			return
@@ -85,14 +85,14 @@ func (self *Phase) autoResolve(c srv.SkinnyContext) (err error) {
 	return
 }
 
-func (self *Phase) Schedule(c srv.SkinnyTXContext) (err error) {
+func (self *Phase) Schedule(c srv.Context) (err error) {
 	if !self.Resolved {
 		var ep time.Duration
 		if ep, err = epoch.Get(c.TX()); err != nil {
 			return
 		}
 		timeout := self.Deadline - ep
-		if err = c.AfterTransaction(func(c srv.SkinnyContext) (err error) {
+		if err = c.AfterTransaction(func(c srv.Context) (err error) {
 			if timeout > 0 {
 				time.AfterFunc(timeout, func() {
 					if err = self.autoResolve(c); err != nil {
@@ -116,7 +116,7 @@ func (self *Phase) Schedule(c srv.SkinnyTXContext) (err error) {
 	return
 }
 
-func (self *Phase) emailTo(c srv.SkinnyTXContext, game *Game, member *Member, user *user.User) (err error) {
+func (self *Phase) emailTo(c srv.Context, game *Game, member *Member, user *user.User) (err error) {
 	to := fmt.Sprintf("%v <%v>", member.Nation, user.Email)
 	unsubTag := &unsubscribe.UnsubscribeTag{
 		T: unsubscribe.UnsubscribePhaseEmail,
@@ -139,7 +139,7 @@ func (self *Phase) emailTo(c srv.SkinnyTXContext, game *Game, member *Member, us
 	return
 }
 
-func (self *Phase) sendStartedEmails(c srv.SkinnyTXContext, game *Game) (err error) {
+func (self *Phase) sendStartedEmails(c srv.Context, game *Game) (err error) {
 	members, err := game.Members(c.TX())
 	if err != nil {
 		return

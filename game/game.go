@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"sort"
 	"time"
+
 	"github.com/zond/diplicity/epoch"
 	"github.com/zond/diplicity/game/allocation"
 	"github.com/zond/diplicity/game/meta"
@@ -160,7 +161,7 @@ func (self *Game) allocate(tx *unbolted.TX, phase *Phase) (err error) {
 	return
 }
 
-func (self *Game) endPhaseConsequences(c srv.SkinnyTXContext, phase *Phase, member *Member, opts dip.Options, waitFor, active, nonSurrendering *[]*Member) (err error) {
+func (self *Game) endPhaseConsequences(c srv.Context, phase *Phase, member *Member, opts dip.Options, waitFor, active, nonSurrendering *[]*Member) (err error) {
 	surrender := false
 	if !member.Committed {
 		alreadyHitReliability := false
@@ -227,7 +228,7 @@ func (self *Game) endPhaseConsequences(c srv.SkinnyTXContext, phase *Phase, memb
 	return
 }
 
-func (self *Game) end(c srv.SkinnyTXContext, phase *Phase, members Members, winner *Member, reason EndReason) (err error) {
+func (self *Game) end(c srv.Context, phase *Phase, members Members, winner *Member, reason EndReason) (err error) {
 	self.EndReason = reason
 	self.State = meta.GameStateEnded
 	if err = c.TX().Set(self); err != nil {
@@ -266,7 +267,7 @@ func (self *Game) end(c srv.SkinnyTXContext, phase *Phase, members Members, winn
 	return
 }
 
-func (self *Game) resolve(c srv.SkinnyTXContext, phase *Phase) (err error) {
+func (self *Game) resolve(c srv.Context, phase *Phase) (err error) {
 	// Check that we are in a phase where we CAN resolve
 	if self.State != meta.GameStateStarted {
 		err = fmt.Errorf("%+v is not started", self)
@@ -413,8 +414,10 @@ func (self *Game) Describe(tx *unbolted.TX) (result string, err error) {
 	return
 }
 
-func (self *Game) start(c srv.SkinnyContext) (err error) {
-	return c.Update(func(c srv.SkinnyTXContext) (err error) {
+func (self *Game) start(c srv.Context) (err error) {
+	fmt.Printf("start game with %#v\n", c)
+	return c.Update(func(c srv.Context) (err error) {
+		fmt.Printf("Update created %#v\n", c)
 		if self.State != meta.GameStateCreated {
 			err = fmt.Errorf("%+v is already started", self)
 			return

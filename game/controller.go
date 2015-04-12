@@ -273,7 +273,7 @@ func AdminGetGame(c *srv.HTTPContext) (err error) {
 	})
 }
 
-func CreateMessage(c srv.WSContext) (err error) {
+func CreateMessage(c srv.Context) (err error) {
 	// load the  message provided by the client
 	message := &Message{}
 	c.Data().Overwrite(message)
@@ -287,7 +287,7 @@ func CreateMessage(c srv.WSContext) (err error) {
 		return
 	}
 
-	return c.Update(func(c srv.WSTXContext) (err error) {
+	return c.Update(func(c srv.Context) (err error) {
 		// and the game
 		game := &Game{Id: message.GameId}
 		if err := c.TX().Get(game); err != nil {
@@ -299,12 +299,12 @@ func CreateMessage(c srv.WSContext) (err error) {
 			return
 		}
 
-		return message.Send(c.TXDiet(), game, sender)
+		return message.Send(c, game, sender)
 	})
 }
 
-func DeleteMember(c srv.WSContext) error {
-	return c.Update(func(c srv.WSTXContext) error {
+func DeleteMember(c srv.Context) error {
+	return c.Update(func(c srv.Context) error {
 		decodedId, err := unbolted.DecodeId(c.Match()[1])
 		if err != nil {
 			return err
@@ -336,10 +336,12 @@ func DeleteMember(c srv.WSContext) error {
 	})
 }
 
-func AddMember(c srv.WSContext) (err error) {
+func AddMember(c srv.Context) (err error) {
 	var state GameState
 	c.Data().Overwrite(&state)
-	return c.Update(func(c srv.WSTXContext) error {
+	fmt.Printf("AddMember with %#v\n", c)
+	return c.Update(func(c srv.Context) error {
+		fmt.Printf("Updated created %#v\n", c)
 		game := Game{Id: state.Game.Id}
 		if err := c.TX().Get(&game); err != nil {
 			return fmt.Errorf("Game not found")
@@ -382,7 +384,7 @@ func AddMember(c srv.WSContext) (err error) {
 				return err
 			}
 			if len(already) == len(variant.Nations)-1 {
-				if err := game.start(c.Diet()); err != nil {
+				if err := game.start(c); err != nil {
 					return err
 				}
 				c.Infof("Started %v", game.Id)
@@ -392,7 +394,7 @@ func AddMember(c srv.WSContext) (err error) {
 	})
 }
 
-func Create(c srv.WSContext) error {
+func Create(c srv.Context) error {
 	var state GameState
 	c.Data().Overwrite(&state)
 
@@ -423,7 +425,7 @@ func Create(c srv.WSContext) error {
 		UserId:           unbolted.Id(c.Principal()),
 		PreferredNations: state.Members[0].PreferredNations,
 	}
-	return c.Update(func(c srv.WSTXContext) error {
+	return c.Update(func(c srv.Context) error {
 		if err := c.TX().Set(game); err != nil {
 			return err
 		}
