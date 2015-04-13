@@ -58,12 +58,12 @@
 			</core-header-panel>
 	    <div tool flex>
 				<template if="{{ user.Id }}">
-  				<more-route-selector>
-					  <paper-tabs>
-			        <paper-tab route="my-games">My games</paper-tab>
-						  <paper-tab route="other-games">Other games</paper-tab>
-			    	  <paper-tab route="create-game">Create game</paper-tab>
-						</paper-tabs>
+				  <more-route-selector>
+    			  <paper-tabs>
+						  <paper-tab on-click="{{ changeRoute }}" to-route="my-running-games" route="my-games">My games</paper-tab>
+    				  <paper-tab on-click="{{ changeRoute }}" to-route="other-open-games" route="other-games">Other games</paper-tab>
+    		  	  <paper-tab route="create-game">Create game</paper-tab>
+    				</paper-tabs>
 					</more-route-selector>
 				</template>
 				<template if="{{ !user.Id }}">
@@ -286,7 +286,13 @@
 					}.bind(this),
 				};
 			},
+			changeRoute: function(ev) {
+				MoreRouting.navigateTo($(ev.target).attr('to-route'));
+			},
 			ready: function() {
+				if (window.location.pathname == "/") {
+					MoreRouting.navigateTo('my-running-games');
+				}
 				this.socket = null;
 				this.token = null;
         this.user = {};
