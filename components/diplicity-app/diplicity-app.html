@@ -58,13 +58,11 @@
 			</core-header-panel>
 	    <div tool flex>
 				<template if="{{ user.Id }}">
-				  <more-route-selector>
-    			  <paper-tabs>
-						  <paper-tab on-click="{{ changeRoute }}" to-route="my-running-games" route="my-games">My games</paper-tab>
-    				  <paper-tab on-click="{{ changeRoute }}" to-route="other-open-games" route="other-games">Other games</paper-tab>
-    		  	  <paper-tab route="create-game">Create game</paper-tab>
-    				</paper-tabs>
-					</more-route-selector>
+				  <paper-tabs valueattr="route" selected="{{ topTab }}">
+					  <paper-tab route="/">My games</paper-tab>
+    			  <paper-tab route="/games/other">Other games</paper-tab>
+    			  <paper-tab route="/games/create">Create game</paper-tab>
+    			</paper-tabs>
 				</template>
 				<template if="{{ !user.Id }}">
 				  <paper-tabs>
@@ -74,19 +72,17 @@
       </div>
 			<div flex>
 				<template if="{{ user.Id }}">
-   				<more-route-selector>
-    			  <core-animated-pages transitions="cross-fade">
-    				  <div route="my-games" cross-fade>
-    						<my-games user="{{ user }}" leaver="{{ gameLeaver() }}" joiner="{{ gameJoiner() }}" subscriber="{{ subscriber() }}"></my-games>
-    					</div>
-    					<div route="other-games" cross-fade>
-    						<other-games user="{{ user }}" leaver="{{ gameLeaver() }}" joiner="{{ gameJoiner() }}" subscriber="{{ subscriber() }}"></other-games>
-    					</div>
-    					<div route="create-game" cross-fade>
-    						<create-game creator="{{ gameCreator() }}"></create-game>
-    					</div>
-    				</core-animated-pages>
-					</more-route-selector>
+  				<core-animated-pages valueattr="route" selected="{{ topTab }}" transitions="cross-fade">
+    			  <div route="/" cross-fade>
+							<my-games user="{{ user }}" leaver="{{ gameLeaver() }}" joiner="{{ gameJoiner() }}" subscriber="{{ subscriber() }}" tab="{{ bottomTab }}"></my-games>
+    				</div>
+    				<div route="/games/other" cross-fade>
+							<other-games user="{{ user }}" leaver="{{ gameLeaver() }}" joiner="{{ gameJoiner() }}" subscriber="{{ subscriber() }}" tab="{{ bottomTab }}"></other-games>
+    				</div>
+    				<div route="/games/create" cross-fade>
+    					<create-game creator="{{ gameCreator() }}"></create-game>
+    				</div>
+    			</core-animated-pages>
 				</template>
 				<template if="{{ !user.Id }}">
 				  <other-games user="{{ user }}" leaver="{{ gameLeaver() }}" joiner="{{ gameJoiner() }}" subscriber="{{ subscriber() }}"></other-games>
@@ -286,13 +282,42 @@
 					}.bind(this),
 				};
 			},
-			changeRoute: function(ev) {
-				MoreRouting.navigateTo($(ev.target).attr('to-route'));
+			tabSelected: function(params) {
+				console.log(params);
+			},
+			parseLocation: function() {
+				console.log(this, 'parseLocation', window.location.pathname);
+				if (window.location.pathname == '/') {
+					this.topTab = '/';
+					this.bottomTab = '/';
+				} else if (window.location.pathname == '/games/create') {
+				  this.topTab = window.location.pathname;
+					this.bottomTab = window.location.pathname;
+				} else if (window.location.pathname.indexOf('/games/mine') == 0) {
+          this.topTab = '/';
+					this.bottomTab = window.location.pathname;
+					console.log('parseLocation found', window.location.pathname, this.topTab, this.bottomTab);
+				} else if (window.location.pathname.indexOf('/games/other/') == 0) {
+          this.topTab = '/games/other';
+					this.bottomTab = window.location.pathname;
+				}
+			},
+			topTabChanged: function(oldVal, newVal) {
+				if (newVal != 0) {
+					if (newVal == '/') {
+						this.bottomTab = newVal;
+					} else if (newVal == '/games/other') {
+					  this.bottomTab = '/games/other/open';
+					}
+				}
+			},
+			bottomTabChanged: function(oldVal, newVal) {
+				if (newVal != 0) {
+					console.log('bottom tab pushing', newVal);
+					window.history.pushState({ path: newVal }, newVal, newVal);
+				}
 			},
 			ready: function() {
-				if (window.location.pathname == "/") {
-					MoreRouting.navigateTo('my-running-games');
-				}
 				this.socket = null;
 				this.token = null;
         this.user = {};
@@ -308,6 +333,8 @@
 				};
 				this.subscribe("/user", this.userSubscription);
 				this.fetchToken();
+				$(window).on('popstate', this.parseLocation.bind(this));
+				this.parseLocation();
 			},
 			detached: function() {
 				this.unsubscribe('/user', this.userSubscription);

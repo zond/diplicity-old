@@ -1,8 +1,7 @@
 <link rel="import" href="/bower_components/paper-tabs/paper-tabs.html">
-<link rel="import" href="/bower_components/more-routing/more-routing.html">
 <link rel="import" href="/components/game-list/game-list.html">
 
-<polymer-element name="my-games" attributes="subscriber user leaver joiner">
+<polymer-element name="my-games" attributes="subscriber user leaver joiner tab">
   <template>
 	  <style>
 			paper-tabs::shadow > * {
@@ -12,26 +11,22 @@
 				height: 1.75em;
 			}
 	  </style>
-		<more-route-selector>
-  		<paper-tabs>
-	  	  <paper-tab route="my-running-games">Running</paper-tab>
-  		  <paper-tab route="my-forming-games">Forming</paper-tab>
-  		  <paper-tab route="my-finished-games">Finished</paper-tab>
-  		</paper-tabs>
-		</more-route-selector>
-		<more-route-selector>
-    	<core-animated-pages transitions="cross-fade">
-				<div route="my-running-games" cross-fade>
-					<game-list user="{{ user }}" joiner="{{ joiner }}" leaver="{{ leaver }}" games="{{ runningGames }}"></game-list>
-				</div>
-				<div route="my-forming-games" cross-fade>
-					<game-list user="{{ user }}" joiner="{{ joiner }}" leaver="{{ leaver }}" games="{{ formingGames }}"></game-list>
-				</div>
-				<div route="my-finished-games" cross-fade>
-					<game-list user="{{ user }}" joiner="{{ joiner }}" leaver="{{ leaver}}" games="{{ finishedGames }}"></game-list>
-				</div>
-			</core-animated-pages>
-		</more-route-selector>
+		<paper-tabs valueattr="route" selected="{{ tab }}">
+	    <paper-tab route="/">Running</paper-tab>
+  	  <paper-tab route="/games/mine/forming">Forming</paper-tab>
+  	  <paper-tab route="/games/mine/finished">Finished</paper-tab>
+  	</paper-tabs>
+		<core-animated-pages valueattr="route" selected="{{ tab }}" transitions="cross-fade">
+			<div route="/" cross-fade>
+				<game-list user="{{ user }}" joiner="{{ joiner }}" leaver="{{ leaver }}" games="{{ runningGames }}"></game-list>
+			</div>
+			<div route="/games/mine/forming" cross-fade>
+				<game-list user="{{ user }}" joiner="{{ joiner }}" leaver="{{ leaver }}" games="{{ formingGames }}"></game-list>
+			</div>
+			<div route="/games/mine/finished" cross-fade>
+				<game-list user="{{ user }}" joiner="{{ joiner }}" leaver="{{ leaver}}" games="{{ finishedGames }}"></game-list>
+			</div>
+		</core-animated-pages>
 	</template>
 	<script>
 		Polymer({
